@@ -64,16 +64,18 @@ See:
 
 ### Size
 
-Code bytes, text plus rodata, of the library's share of each `test/size` program on Cortex-M4F (`armv7e-m`), built `-Os`:
+Code bytes, text plus rodata, of the library's share of each `test/size` program on Cortex-M4F (`armv7e-m`), built `-Os`.
+- **Bytes:** our figures come from the `release` build (the size flavour).
+- **Ratios:** each other library divided by rtoskit-libc. Above 1 means larger than rtoskit-libc.
 
-| Program | rtoskit-libc | rtoskit + AOR | picolibc | newlib-nano |
-|---|---:|---:|---:|---:|
-| `printf("%d")` | 6397 | 6593 | 6381 | 6896 |
-| `printf("%d")`, `libc-minimal-printf.a` | 3447 | — | — | — |
-| `printf("%f")` | 7717 ¹ | 8181 | 6381 | 17575 |
-| `puts` | 1148 ² | 5180 ³ | 212 | 3488 |
-| `malloc` / `free` heavy | 1016 | 4982 ³ | 960 | 2156 |
-| float math (`sinf`, `expf`, `logf`, ...) | 4408 | 7492 | 6444 | 8237 |
+| Program | rtoskit-libc | rtoskit + AOR | picolibc | newlib-nano | rtoskit + AOR ratio | picolibc ratio | newlib-nano ratio |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `printf("%d")` | 6397 | 6593 | 6381 | 6896 | 1.03 | 1.00 | 1.08 |
+| `printf("%d")`, `libc-minimal-printf.a` | 3447 | — | — | — | — | — | — |
+| `printf("%f")` | 7717 ¹ | 8181 | 6381 | 17575 | 1.06 | 0.83 | 2.28 |
+| `puts` | 1148 ² | 5180 ³ | 212 | 3488 | 4.51 | 0.18 | 3.04 |
+| `malloc` / `free` heavy | 1016 | 4982 ³ | 960 | 2156 | 4.90 | 0.94 | 2.12 |
+| float math (`sinf`, `expf`, `logf`, ...) | 4408 | 7492 | 6444 | 8237 | 1.70 | 1.46 | 1.87 |
 
 1. Includes the soft-double helpers. Since [D100](docs/plan/PLAN.md#2-decision-log) the library defines them itself instead of taking them from libgcc, which the picolibc and newlib-nano columns do not count.
 2. rtoskit's `puts` goes through a buffered, locked `FILE`. picolibc's writes unbuffered through semihosting.
@@ -87,9 +89,12 @@ See [`docs/size/phase-2.md`](docs/size/phase-2.md) (against picolibc and newlib-
 
 ### Performance
 
-Geometric means of guest instructions per operation, counted under qemu, as a ratio to rtoskit's speed flavour. Above 1 means more instructions than rtoskit.
+Geometric means of guest instructions per operation, counted under qemu. Each column is divided by the count of rtoskit's speed flavour, so that column is 1.00. Above 1 means more instructions than the speed flavour.
+- **release (size flavour):** rtoskit's `release` build, the smallest code and the default to ship. The column shows what it costs in speed.
+- **speed flavour:** rtoskit's `speed` build, the reference.
+- **The other columns:** the same programs built against each library: rtoskit's speed flavour with AOR's routines linked in, picolibc and newlib-nano.
 
-| Cortex-M4F (`armv7e-m`) | rtoskit size | rtoskit speed | rtoskit + AOR | picolibc | newlib-nano |
+| Cortex-M4F (`armv7e-m`) | rtoskit release (size flavour) | rtoskit speed flavour | rtoskit + AOR | picolibc | newlib-nano |
 |---|---:|---:|---:|---:|---:|
 | string (603 cases) | 1.44 | 1.00 | 0.98 | 1.40 | 1.12 |
 | stdio (23) | 1.22 | 1.00 | 1.00 | 1.15 | 0.92 |
