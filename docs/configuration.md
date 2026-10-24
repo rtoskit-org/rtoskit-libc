@@ -171,6 +171,54 @@ The library reaches the OS only through the `__rtos_*` functions declared in
   everything up to the heap's end, or all but a reserve for the RTOS's other
   `sbrk` users, which keep working from the break above the block.
 
+## Building from another project (D105)
+
+`make library` builds and installs only what a program links against: the
+headers, the `libc*.a` archives and the port archives. It skips the tests,
+the examples and the size and benchmark programs, and keeps the full build's
+ordering (the toolchain, then `libc` and `port`), so it works on a fresh tree.
+Like `all`, it loops over `BOARDS` and `BUILDS` unless `BOARD_TYPE` and
+`BUILD_TYPE` name one.
+
+A parent build can run it as a sub-make. Two rules apply:
+
+- **Pass every root and the board explicitly.** The top-level `Makefile`
+  takes `PROJECT_ROOT`, `TOOLS_ROOT`, `OUTPUT_ROOT`, `PREFIX`, `BOARD_TYPE`
+  and `BUILD_TYPE` from the environment when they are set there. A parent
+  with the same conventions (pi-pico exports all six) would otherwise hand
+  over its own values, and the sub-make fails to find `tools/` or builds the
+  wrong board. Values on the sub-make's command line win over the
+  environment and over the parent's `MAKEFLAGS`. The board files and the
+  build-type logic assign everything else (`ARCH_CROSS`, `BUILD_ROOT`,
+  `INSTALL_ROOT`, ...) with `:=`, so the parent's exports of those do not
+  leak in.
+- **Optionally pass `CROSS_COMPILE`,** to use the parent's compiler instead
+  of the GCC 16.2 that `make setup` downloads into `local/` (GCC 14 or newer,
+  D9).
+
+```make
+LIBC_DIR := $(abspath third-party/rtoskit-libc)
+
+rtoskit-libc:
+	$(MAKE) -C $(LIBC_DIR) \
+		PROJECT_ROOT=$(LIBC_DIR) TOOLS_ROOT=$(LIBC_DIR)/tools \
+		OUTPUT_ROOT=$(BUILD_ROOT)/rtoskit-libc PREFIX=$(BUILD_ROOT)/rtoskit-libc-install \
+		BOARD_TYPE=linux-armv8-m.main BUILD_TYPE=release \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
+		library
+```
+
+The parent then compiles with
+`-nostdinc -isystem $(BUILD_ROOT)/rtoskit-libc-install/<board>/release/include`
+and links that tree's `lib/` archives as in "Linking a program" above.
+
+The boards are the `linux-*` test boards, so a parent picks the one whose
+core matches its own (`linux-armv8-m.main` for a Cortex-M33). The library and
+`librtos-none.a` are the same for any board of that core; the `linux` port
+archive is installed too and simply not linked. A configuration without a
+board file (`make ARCH_CROSS=<arch> ... install`, a sysroot layout and
+`install-headers`) is the rest of D16, tracked in issue #65.
+
 ## Build variables
 
 | Variable | Default | Effect |

@@ -40,6 +40,12 @@ check:
 	done
 .PHONY: check
 
+library:
+	@for board in ${BOARDS}; do \
+		${MAKE} --no-print-directory -f ${PROJECT_ROOT}/Makefile BOARD_TYPE=$$board library || exit $$?; \
+	done
+.PHONY: library
+
 bench:
 	@for board in ${BOARDS}; do \
 		${MAKE} --no-print-directory -f ${PROJECT_ROOT}/Makefile BOARD_TYPE=$$board bench || exit $$?; \
@@ -75,6 +81,12 @@ check:
 	done
 .PHONY: check
 
+library:
+	@for build_type in ${BUILDS}; do \
+		${MAKE} --no-print-directory -f ${PROJECT_ROOT}/Makefile BUILD_TYPE=$$build_type library || exit $$?; \
+	done
+.PHONY: library
+
 # Benchmarks measure the two flavours: release (size) and speed (PLAN D73)
 bench:
 	@for build_type in release speed; do \
@@ -104,7 +116,7 @@ include ${TOOLS_ROOT}/makefiles/tree.mk
 
 # Dependency ordering only active for full builds (all/clean/install)
 # Individual module targets (make libc, make test/unit/smoke) are dep-free
-ifneq ($(filter-out all target clean install check bench aor,${MAKECMDGOALS}),)
+ifneq ($(filter-out all target clean install check bench aor library,${MAKECMDGOALS}),)
 target:
 else
 # The cross toolchain is downloaded into local/ on first use (tools/makefiles/setup.mk)
@@ -112,6 +124,11 @@ libc port: setup-tools
 example test: libc port
 target: example test
 endif
+
+# The library alone, for a parent project (docs/configuration.md, "Building from another project", PLAN D105):
+# the headers, the libc*.a archives and the port archives, installed into ${INSTALL_ROOT}; no tests or examples
+library: libc port
+.PHONY: library
 
 # Build, then run every unit test (a test directory may provide <name>.run to drive its binary)
 # and the libc-test tests against test/libc-test/expected/<board>.txt; LIBC_TEST_UPDATE=1 records improvements.
@@ -171,6 +188,7 @@ help:
 	@echo "  clean                  Clean all build artifacts"
 	@echo "  install                Install all build artifacts"
 	@echo "  check                  Build and run the tests"
+	@echo "  library                Build and install only the headers, libc*.a and the port archives"
 	@echo "  bench                  Build release and speed, run the benchmarks against docs/perf"
 	@echo "  setup-bench            Build the instruction-counting qemu for bench into local/"
 	@echo "  aor                    Fetch and build Arm Optimized Routines for comparison, run its smoke test"
