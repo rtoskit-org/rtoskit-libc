@@ -144,6 +144,29 @@ The library is written in C23 and its headers use C23. Everything that compiles 
 - **Arm test runs:** `qemu-user`. On Ubuntu 24.04: `apt-get install -y gcc-14 qemu-user`.
 - **libc-test:** `git submodule update --init`.
 
+### Selecting the architecture
+
+Each build targets one architecture, named by `ARCH_CROSS`. Without it, `make` builds all six ([D106](docs/plan/PLAN.md#2-decision-log)). The architecture fixes the compiler flags, the FPU code, `<fenv.h>` and the string kernels; there is nothing else to configure.
+
+| `ARCH_CROSS` | Cores | Compiler flags | FPU and `<fenv.h>` |
+|---|---|---|---|
+| `armv6-m` | Armv6-M parts without the OS extension (no `SVC`) | `-mthumb -march=armv6-m -mfloat-abi=soft` | none; soft float, round to nearest only |
+| `armv6s-m` | Cortex-M0, M0+ | `-mthumb -march=armv6s-m -mfloat-abi=soft` | none; soft float, round to nearest only |
+| `armv7e-m` | Cortex-M4F, and Cortex-M7 with the single-precision FPU | `-mthumb -march=armv7e-m+fp -mfloat-abi=hard` | FPv4-SP; round to nearest only |
+| `armv7e-m-dp` | Cortex-M7 with the double-precision FPU | `-mthumb -march=armv7e-m+fp.dp -mfloat-abi=hard` | FPv5-D16; every rounding direction and exception flag |
+| `armv8-m.main` | Cortex-M33 (and M35P) with FPU and DSP | `-mthumb -march=armv8-m.main+fp+dsp -mfloat-abi=hard` | FPv5-SP; round to nearest only |
+| `x86_64` | the development host | `-mlong-double-64` | SSE2; full. Runs only through the Linux test port. |
+
+- **Another core:** use the build whose instruction set and float ABI the core supports. For example, a Cortex-M3, or a Cortex-M4 without an FPU, can link `armv6s-m` (Thumb-1, soft float).
+- **Program flags must match:** compile your program with the same `-march` and `-mfloat-abi` as the build it links.
+- **Per-core detail:** the libm layers and string kernels each core uses are in [`docs/configuration.md`](docs/configuration.md#choosing-the-core).
+
+```sh
+make -j$(nproc) ARCH_CROSS=armv8-m.main                          # Cortex-M33, all three build types
+make -j$(nproc) ARCHS="armv6s-m armv8-m.main" BUILD_TYPE=release # two cores, size flavour only
+make ARCH_CROSS=cortex-m33                                       # stops: lists the valid architectures
+```
+
 ### Make goals
 
 Always run `make` from the project root. Without a goal, `make` builds everything.
@@ -218,6 +241,17 @@ make ARCH_CROSS=x86_64 BUILD_TYPE=debug test/unit/printf
 make ARCH_CROSS=armv7e-m BUILD_TYPE=release info
 ```
 
+### Leaving out the tests
+
+`make` (`all`) always builds the unit tests, libc-test, the examples and the size and benchmark programs; `make check` needs them. To build only the library, use the `library` goal. It builds and installs the headers, `libc*.a`, `libm.a` and the port archives, and nothing else. It works on a fresh tree, downloading the Arm toolchain first if needed, and loops over architectures and build types like `all`.
+
+```sh
+make -j$(nproc) library                                          # every architecture and build type, no tests
+make -j$(nproc) ARCH_CROSS=armv7e-m BUILD_TYPE=release library   # one core, size flavour, no tests
+```
+
+The libc-test submodule is only needed for `make check`; `make library` builds without it.
+
 ### Build types
 
 `BUILD_TYPE` picks one of three builds of the same sources. Without it, `make` builds all three. Each build has its own build tree and install.
@@ -265,6 +299,30 @@ arm-none-eabi-gcc -march=armv7e-m+fp -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
 - To pick a flavour, link its archive (for example `libc-minimal-printf.a`) instead of `libc.a`.
 - Compile in C23 mode (`-std=c23` or `-std=gnu23`): the headers need it.
 - The compiler flags must match the architecture the library was built for.
+
+### Choosing printf
+
+The `printf` and `scanf` flavour is chosen when you link, not when you build: every build installs all the flavour archives. Link one of them in place of `libc.a` ([D53](docs/plan/PLAN.md#2-decision-log), [D54](docs/plan/PLAN.md#2-decision-log)):
+
+| Archive | `printf`/`scanf` | Whole `printf("%d")` program on Cortex-M4F / M0+ |
+|---|---|---:|
+| `libc.a` | everything, including exact `%a %e %f %g` | 7165 / 7757 bytes |
+| `libc-nofloat.a` | no floating conversions: `%a %e %f %g` fail with `EINVAL`. `strtod` still works. | 4451 / 4975 bytes |
+| `libc-minimal-printf.a` | as `libc-nofloat.a`, and `%n` and lengths wider than `long` (`ll`, `j`, 64-bit `z`) fail with `EINVAL`, so no 64-bit division is linked | 4211 / 4707 bytes |
+
+- **Unsupported conversions fail loudly:** the call returns an error (`EINVAL`) instead of printing nothing.
+- **Allocator:** `libc-tinymalloc.a` is a fourth flavour archive. It swaps the allocator for the smallest one, `tiny`, without rebuilding. `LIBC_MALLOC` changes the allocator inside `libc.a` itself.
+- **With the spec file:** select a flavour with `--libc=`.
+
+```sh
+# Directly
+arm-none-eabi-gcc ... -Wl,--start-group images/armv7e-m/release/lib/librtos-none.a \
+    images/armv7e-m/release/lib/libc-minimal-printf.a $(arm-none-eabi-gcc ... -print-libgcc-file-name) -Wl,--end-group
+# With the spec file
+arm-none-eabi-gcc ... -specs=rtoskit-libc.specs --libc=nofloat -T board.ld startup.o app.o -o app.elf
+```
+
+Sizes are whole images of the `test/size` reference programs, release build, from [`docs/size/baseline-armv7e-m.json`](docs/size/baseline-armv7e-m.json) and [`baseline-armv6-m.json`](docs/size/baseline-armv6-m.json). More detail is in [`docs/configuration.md`](docs/configuration.md#flavour-archives-d53-d54).
 
 ### A GCC spec file
 
