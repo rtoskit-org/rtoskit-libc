@@ -144,21 +144,79 @@ The library is written in C23 and its headers use C23. Everything that compiles 
 - **Arm test runs:** `qemu-user`. On Ubuntu 24.04: `apt-get install -y gcc-14 qemu-user`.
 - **libc-test:** `git submodule update --init`.
 
-### Make
+### Make goals
 
-Always run `make` from the project root:
+Always run `make` from the project root. Without a goal, `make` builds everything.
+
+| Goal | What it does |
+|---|---|
+| `all` (the default) | Builds and installs the library, the ports, the tests, the examples and the size and benchmark programs |
+| `library` | Builds and installs only what a program links against: the headers, the `libc*.a` archives and the port archives ([D105](docs/plan/PLAN.md#2-decision-log)) |
+| `check` | Builds, then runs the unit tests, libc-test against its baseline, and the libgcc check |
+| `bench` | Builds the `release` and `speed` flavours and runs the benchmarks against [`docs/perf`](docs/perf/); needs `make setup-bench` once |
+| `aor` | Fetches and builds Arm Optimized Routines for comparison, and runs its smoke test (measurement only) |
+| `setup`, `setup-bench` | Downloads the Arm toolchain into `local/` (the first build does this itself); builds the instruction-counting qemu |
+| `info` | Prints the configuration one architecture and build type resolve to |
+| `clean`, `distclean`, `realclean` | Removes build artifacts; also `build/` and `images/`; also the downloaded tools in `local/` |
+| `db` | Writes `compile_commands.json` (needs `bear`) |
+| `<module>`, e.g. `libc/string`, `test/unit/printf` | Rebuilds one module, with no dependencies. Needs one `ARCH_CROSS`, one `BUILD_TYPE` and a previous full build |
+| `help` | Lists the goals and variables |
+
+### Build options
+
+Pass these on the `make` command line.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `ARCH_CROSS` | `all` | One architecture: `x86_64`, `armv6-m`, `armv6s-m`, `armv7e-m`, `armv7e-m-dp` or `armv8-m.main` ([D106](docs/plan/PLAN.md#2-decision-log)). An unknown name stops with the list. |
+| `ARCHS` | all six | The architectures `ARCH_CROSS=all` loops over, e.g. `ARCHS="armv6-m armv8-m.main"` |
+| `BUILD_TYPE` | `all` | One build type: `debug`, `release` or `speed` (see [Build types](#build-types)) |
+| `BUILDS` | `debug release speed` | The build types `BUILD_TYPE=all` loops over |
+| `LIBC_MALLOC` | `nano` | The allocator inside `libc.a`: `nano`, `tlsf` or `tiny` ([D32](docs/plan/PLAN.md#2-decision-log), [D54](docs/plan/PLAN.md#2-decision-log)). Run `make clean` after changing it. Every allocator is still built and tested. |
+| `HOST_CC` | found | The host GCC for x86-64; must be GCC 14 or newer ([D107](docs/plan/PLAN.md#2-decision-log)) |
+| `CROSS_COMPILE` | downloaded GCC 16.2 | The prefix of your own arm-none-eabi toolchain, e.g. `/opt/arm/bin/arm-none-eabi-`; must be GCC 14 or newer |
+| `OUTPUT_ROOT` | `build` | Where the build trees go |
+| `PREFIX` | `images` | Where the installs go |
+| `V=1` | off | Shows the full commands |
+| `LIBC_TEST_UPDATE=1` | off | With `check`: records libc-test improvements in the architecture's baseline. It refuses while anything regressed. |
+| `BENCH_UPDATE=1` | off | With `bench`: records the results as the new benchmark baseline |
+
+Parallel builds (`make -j`, with or without a job count) are supported. More variables, and the ones a parent build must pass, are in [`docs/configuration.md`](docs/configuration.md#build-variables).
+
+### Examples
 
 ```sh
-make                                  # every architecture x every build type
-make ARCH_CROSS=armv7e-m              # one architecture
-make ARCH_CROSS=x86_64 BUILD_TYPE=release
-make check                            # build, then the unit tests, libc-test and the libgcc check
-make library                          # only the headers and archives a program links against
-make bench                            # benchmarks against docs/perf (needs `make setup-bench`)
-make help
-```
+# Everything: all six architectures x debug, release and speed
+make -j$(nproc)
 
-**Architectures (`ARCH_CROSS`, [D106](docs/plan/PLAN.md#2-decision-log)):** `x86_64`, `armv6-m`, `armv6s-m`, `armv7e-m`, `armv7e-m-dp`, `armv8-m.main`.
+# One architecture, all three build types
+make -j$(nproc) ARCH_CROSS=armv7e-m
+
+# Only the size flavour, for two Cortex-M cores
+make -j$(nproc) ARCHS="armv6-m armv8-m.main" BUILD_TYPE=release
+
+# Only what a program links against, for one core, into your own directories
+make -j$(nproc) ARCH_CROSS=armv8-m.main BUILD_TYPE=release \
+    OUTPUT_ROOT=$HOME/tmp/rtoskit-build PREFIX=$HOME/opt/rtoskit library
+
+# libc.a with the TLSF allocator
+make clean
+make -j$(nproc) LIBC_MALLOC=tlsf
+
+# Your own compilers instead of the found host GCC and the downloaded Arm GCC
+make -j$(nproc) HOST_CC=gcc-15 CROSS_COMPILE=/opt/arm/bin/arm-none-eabi-
+
+# Test one configuration, then record any libc-test improvements in its baseline
+make -j$(nproc) ARCH_CROSS=x86_64 BUILD_TYPE=debug check
+make ARCH_CROSS=x86_64 BUILD_TYPE=debug check LIBC_TEST_UPDATE=1
+
+# After a full build: rebuild one module, or one unit test, showing the commands
+make ARCH_CROSS=armv7e-m BUILD_TYPE=release V=1 libc/string
+make ARCH_CROSS=x86_64 BUILD_TYPE=debug test/unit/printf
+
+# The configuration one build resolves to (toolchain, FPU, paths)
+make ARCH_CROSS=armv7e-m BUILD_TYPE=release info
+```
 
 ### Build types
 
@@ -184,8 +242,7 @@ Details are in [`docs/configuration.md`](docs/configuration.md#size-or-speed).
 - Installs go to `images/<arch>/<build-type>/`:
   - `include/`;
   - `lib/` with `libc.a`, `libm.a`, the flavour archives, `librtos-none.a` and `librtos-linux.a`.
-
-The allocator inside `libc.a` is chosen with `LIBC_MALLOC=nano|tlsf|tiny` ([D32](docs/plan/PLAN.md#2-decision-log), [D54](docs/plan/PLAN.md#2-decision-log)). Run `make clean` after changing it.
+- `OUTPUT_ROOT` and `PREFIX` move the two roots; the `<arch>/<build-type>/` layout below them stays the same.
 
 ## Using it
 
