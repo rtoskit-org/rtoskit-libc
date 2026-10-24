@@ -81,7 +81,8 @@ ${CURDIR}/libc-tinymalloc.a: ${TARGET_OBJ} ${LIBC_TINYMALLOC_OBJ} ${EXTRA_DEPS}
 
 ${INSTALL_ROOT}/lib/libc-%.a: ${CURDIR}/libc-%.a
 	@echo "INSTALLING ${@}"
-	$(INSTALL) -m 644 -D ${<} ${@}
+	mkdir -p $(@D)
+	$(INSTALL) -m 644 ${<} ${@}
 
 # libm is part of libc.a (D46); an empty libm.a keeps "-lm" working
 ${CURDIR}/libm.a: ${EXTRA_DEPS}
@@ -91,14 +92,17 @@ ${CURDIR}/libm.a: ${EXTRA_DEPS}
 
 ${INSTALL_ROOT}/lib/libm.a: ${CURDIR}/libm.a
 	@echo "INSTALLING ${@}"
-	$(INSTALL) -m 644 -D ${<} ${@}
+	mkdir -p $(@D)
+	$(INSTALL) -m 644 ${<} ${@}
 
 ${INSTALL_ROOT}/lib/libc.a: ${CURDIR}/libc.a
 	@echo "INSTALLING ${@}"
-	$(INSTALL) -m 644 -D ${<} ${@}
+	mkdir -p $(@D)
+	$(INSTALL) -m 644 ${<} ${@}
 
 ${INSTALL_ROOT}/include/%.h: ${PROJECT_ROOT}/include/%.h
 	@echo "INSTALLING ${@}"
-	$(INSTALL) -m 644 -D ${<} ${@}
+	mkdir -p $(@D)
+	$(INSTALL) -m 644 ${<} ${@}
 
 endif

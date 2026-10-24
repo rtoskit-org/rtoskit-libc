@@ -30,6 +30,7 @@ all: ${INSTALL_ROOT}/lib/librtos-linux.a
 
 ${INSTALL_ROOT}/lib/librtos-linux.a: ${CURDIR}/librtos-linux.a
 	@echo "INSTALLING ${@}"
-	$(INSTALL) -m 644 -D ${<} ${@}
+	mkdir -p $(@D)
+	$(INSTALL) -m 644 ${<} ${@}
 
 endif

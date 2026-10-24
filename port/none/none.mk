@@ -29,6 +29,7 @@ all: ${INSTALL_ROOT}/lib/librtos-none.a
 
 ${INSTALL_ROOT}/lib/librtos-none.a: ${CURDIR}/librtos-none.a
 	@echo "INSTALLING ${@}"
-	$(INSTALL) -m 644 -D ${<} ${@}
+	mkdir -p $(@D)
+	$(INSTALL) -m 644 ${<} ${@}
 
 endif

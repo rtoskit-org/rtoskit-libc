@@ -26,6 +26,7 @@ all: ${INSTALL_ROOT}/hello-world
 
 ${INSTALL_ROOT}/hello-world: ${CURDIR}/hello-world.elf
 	@echo "INSTALLING ${@}"
-	$(INSTALL) -m 755 -D ${<} ${@}
+	mkdir -p $(@D)
+	$(INSTALL) -m 755 ${<} ${@}
 
 endif
