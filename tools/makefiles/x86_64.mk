@@ -33,7 +33,9 @@ export LIBC_STRING_KERNELS = ${LIBC_STRING_KERNELS_${LIBC_FLAVOUR}}
 # The host compiler: any GCC 14 or newer (PLAN D9, D107). tools/scripts/host-cc picks plain gcc when it is new
 # enough, else the newest gcc-NN, and checks a HOST_CC given by the user. The result is exported with a marker so
 # the sub-makes inherit it instead of running the check again.
-ifneq (${HOST_CC_CHECKED},${HOST_CC})
+ifeq (${HOST_CC},)
+override HOST_CC := $(shell ${PROJECT_ROOT}/tools/scripts/host-cc)
+else ifneq (${HOST_CC_CHECKED},${HOST_CC})
 override HOST_CC := $(shell ${PROJECT_ROOT}/tools/scripts/host-cc)
 endif
 ifeq (${HOST_CC},)
