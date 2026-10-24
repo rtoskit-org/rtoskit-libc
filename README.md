@@ -126,12 +126,25 @@ See:
 
 ## Building
 
-You need:
-- **x86-64:** any GCC ≥ 14. The build uses plain `gcc` when it is new enough, otherwise the newest `gcc-NN` it finds; set `HOST_CC` to choose one ([D107](docs/plan/PLAN.md#2-decision-log)). Ubuntu 24.04's `gcc` is 13, so install `gcc-14` there.
-- **Arm boards:** `qemu-user`. On Ubuntu 24.04: `apt-get install -y gcc-14 qemu-user`.
+### Compiler requirements
+
+The library is written in C23 and its headers use C23. Everything that compiles against it needs a C23 compiler.
+
+| What | Compiler | Notes |
+|---|---|---|
+| Building the library for x86-64 | Host GCC 14 or newer | Uses plain `gcc` when it is new enough, otherwise the newest `gcc-NN` found; set `HOST_CC` to choose one ([D107](docs/plan/PLAN.md#2-decision-log)). Ubuntu 24.04's `gcc` is 13, so install `gcc-14` there. |
+| Building the library for Arm | arm-none-eabi GCC 14 or newer | By default the first build downloads GCC 16.2 into `local/`. Pass `CROSS_COMPILE=<prefix>` to use your own instead; it is checked for version 14 or newer ([D105](docs/plan/PLAN.md#2-decision-log)). |
+| Compiling programs that use the library | GCC 14 or newer, in C23 mode | The installed headers need `-std=c23` or `-std=gnu23`; in C11/C17 mode they do not compile. GCC 15 and newer default to `gnu23`. GCC 14 defaults to `gnu17`, so pass the flag (the [spec file](#a-gcc-spec-file) adds `-std=gnu23` when no `-std` is given). |
+
+- **GCC only:** the build relies on GCC options (`-fcallgraph-info`, `-muclibc` on x86-64), so Clang cannot build the library today. Compiling programs against it with Clang 19 or newer in C23 mode is untested.
+- **Versions:** the versions this project is tested with are in [`docs/toolchain.md`](docs/toolchain.md).
+
+### Other tools
+
+- **Arm test runs:** `qemu-user`. On Ubuntu 24.04: `apt-get install -y gcc-14 qemu-user`.
 - **libc-test:** `git submodule update --init`.
 
-The Arm toolchain, arm-none-eabi GCC 16.2, is downloaded into `local/` on the first build. Versions are in [`docs/toolchain.md`](docs/toolchain.md).
+### Make
 
 Always run `make` from the project root:
 
@@ -183,7 +196,7 @@ Compile against the installed headers only, and link with `-nostdlib`. List the 
 ```sh
 arm-none-eabi-gcc -march=armv7e-m+fp -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
     -nostdinc -isystem images/armv7e-m/release/include \
-    -Os -ffunction-sections -fdata-sections -c app.c
+    -std=c23 -Os -ffunction-sections -fdata-sections -c app.c
 arm-none-eabi-gcc -march=armv7e-m+fp -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
     -nostdlib -static -Wl,--gc-sections -T board.ld app.o startup.o \
     -Wl,--start-group images/armv7e-m/release/lib/librtos-none.a \
@@ -193,6 +206,7 @@ arm-none-eabi-gcc -march=armv7e-m+fp -mfloat-abi=hard -mfpu=fpv4-sp-d16 \
 ```
 
 - To pick a flavour, link its archive (for example `libc-minimal-printf.a`) instead of `libc.a`.
+- Compile in C23 mode (`-std=c23` or `-std=gnu23`): the headers need it.
 - The compiler flags must match the architecture the library was built for.
 
 ### A GCC spec file
@@ -204,6 +218,11 @@ A spec file folds those options into one `-specs=` flag, the way `picolibc.specs
 
 *cpp_unique_options:
 -nostdinc -isystem %:getenv(RTOSKIT_LIBC /include) -include stdc-predef.h %(rtoskit_cpp_unique_options)
+
+%rename cc1 rtoskit_cc1
+
+*cc1:
+%{!std=*:-std=gnu23} %(rtoskit_cc1)
 
 %rename link rtoskit_link
 
@@ -221,7 +240,9 @@ A spec file folds those options into one `-specs=` flag, the way `picolibc.specs
 ```
 
 What it does:
-- **Compiling:** uses only this library's headers, and pre-includes its `stdc-predef.h`, which defines `__STDC_IEC_559__` where the hardware supports it.
+- **Compiling:**
+  - uses only this library's headers, and pre-includes its `stdc-predef.h`, which defines `__STDC_IEC_559__` where the hardware supports it;
+  - compiles as `-std=gnu23` unless you pass your own `-std`, which GCC 14 needs (its default is `gnu17`).
 - **Linking:**
   - puts the library's `lib/` ahead of the toolchain's own, so `-lc` is this `libc.a` and not the toolchain's;
   - garbage-collects unused sections;
