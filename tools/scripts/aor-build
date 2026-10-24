@@ -87,6 +87,14 @@ MATH_SKIP = ['tgamma128.c']
 MATH_LIBRARIES = {'math': '-O3', 'math-size': '-Os'}
 
 
+def host_cc():
+	"""The host GCC 14 or newer that tools/scripts/host-cc picks (PLAN D9, D107)"""
+	result = subprocess.run([os.path.join('tools', 'scripts', 'host-cc')], stdout=subprocess.PIPE, text=True)
+	if result.returncode != 0:
+		raise SystemExit(1)
+	return result.stdout.strip()
+
+
 def is_arm(arch):
 	return arch != 'x86_64'
 
@@ -98,7 +106,7 @@ def family_of(arch):
 def tool(arch, name):
 	if is_arm(arch):
 		return os.path.join('local', 'bin', f'arm-none-eabi-{name}')
-	return {'gcc': 'gcc-14'}.get(name, name)
+	return {'gcc': host_cc()}.get(name, name)
 
 
 def cross_flags(arch):

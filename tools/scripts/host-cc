@@ -1,0 +1,47 @@
+#!/bin/sh
+#
+# Copyright (C) 2026 Red Rocket Computing, LLC
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# host-cc
+#
+# Created on: Oct 24, 2026
+#     Author: Stephen Street (stephen@redrocketcomputing.com)
+#
+# Prints the host C compiler for the x86_64 build and the host-side tools: any GCC 14 or newer (PLAN D9, D107).
+# HOST_CC, when set, is checked and used as given. Otherwise plain gcc when it is new enough, else the newest
+# gcc-NN on the PATH (Ubuntu 24.04's gcc is 13 and GCC 14 is the separate gcc-14 package). Exits 1 with a
+# message on stderr when there is none.
+
+major()
+{
+	version=$("$1" -dumpversion 2>/dev/null) || return 1
+	echo "${version%%.*}"
+}
+
+if [ -n "${HOST_CC}" ]; then
+	found=$(major "${HOST_CC}") || {
+		echo "host-cc: HOST_CC='${HOST_CC}' does not run" >&2
+		exit 1
+	}
+	if [ "${found}" -lt 14 ]; then
+		echo "host-cc: HOST_CC='${HOST_CC}' is GCC ${found}; the x86_64 build needs GCC 14 or newer (C23)" >&2
+		exit 1
+	fi
+	echo "${HOST_CC}"
+	exit 0
+fi
+
+for cc in gcc gcc-20 gcc-19 gcc-18 gcc-17 gcc-16 gcc-15 gcc-14; do
+	found=$(major "${cc}") || continue
+	if [ "${found}" -ge 14 ] 2>/dev/null; then
+		echo "${cc}"
+		exit 0
+	fi
+done
+
+echo "host-cc: no GCC 14 or newer found (gcc is $(major gcc || echo missing)); install one (Ubuntu 24.04: apt-get install gcc-14) or set HOST_CC" >&2
+exit 1

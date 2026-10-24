@@ -257,6 +257,7 @@ A sysroot layout (`make ARCH_CROSS=<arch> ... install` with `MULTIDIR`) and
 | `ARCH_CROSS` | every architecture in `ARCHS` | one architecture, e.g. `armv7e-m` |
 | `BUILD_TYPE` | `debug`, `release` and `speed` | one build type (`speed` is the speed flavour) |
 | `LIBC_MALLOC` | `nano` | the allocator in `libc.a` |
+| `HOST_CC` | `gcc` if it is GCC 14 or newer, else the newest `gcc-NN` | the host compiler for the x86_64 build; it must be GCC 14 or newer (D107) |
 | `V=1` | off | show the commands |
 
 `ARCH_CROSS` names the architecture's toolchain file under

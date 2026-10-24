@@ -127,7 +127,7 @@ See:
 ## Building
 
 You need:
-- **x86-64:** GCC ≥ 14 (or Clang ≥ 19).
+- **x86-64:** any GCC ≥ 14. The build uses plain `gcc` when it is new enough, otherwise the newest `gcc-NN` it finds; set `HOST_CC` to choose one ([D107](docs/plan/PLAN.md#2-decision-log)). Ubuntu 24.04's `gcc` is 13, so install `gcc-14` there.
 - **Arm boards:** `qemu-user`. On Ubuntu 24.04: `apt-get install -y gcc-14 qemu-user`.
 - **libc-test:** `git submodule update --init`.
 

@@ -108,7 +108,9 @@ make library                           # headers, libc*.a and the port archives 
 - **Module order:** set in the top-level `Makefile` (`example test: libc port`).
 - **Extending the build system:** add architecture and port files under
   `tools/makefiles/`. Do not restructure the existing tools makefiles.
-- **Toolchain floor:** GCC ≥ 14 / Clang ≥ 19 (D9). On Ubuntu 24.04:
+- **Toolchain floor:** GCC ≥ 14 / Clang ≥ 19 (D9). The x86_64 build takes the host GCC from
+  `tools/scripts/host-cc` (plain `gcc` when new enough, else the newest `gcc-NN`; `HOST_CC` overrides, D107);
+  never name a compiler version in a makefile or script. On Ubuntu 24.04 (whose `gcc` is 13):
   `apt-get install -y gcc-14 qemu-user`; arm-none-eabi GCC 16.2 from `make setup`.
 
 ## Code rules

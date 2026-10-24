@@ -45,6 +45,14 @@ DOUBLE_FUNCTIONS = ['exp', 'exp2', 'exp10', 'log', 'log2', 'erf', 'pow']
 ALL_FUNCTIONS = FLOAT_FUNCTIONS + ['powf'] + DOUBLE_FUNCTIONS
 
 
+def host_cc():
+	"""The host GCC 14 or newer that tools/scripts/host-cc picks (PLAN D9, D107)"""
+	result = subprocess.run([os.path.join('tools', 'scripts', 'host-cc')], stdout=subprocess.PIPE, text=True)
+	if result.returncode != 0:
+		raise SystemExit(1)
+	return result.stdout.strip()
+
+
 def run(command, **kwargs):
 	result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, **kwargs)
 	if result.returncode != 0:
@@ -72,7 +80,7 @@ def build(name='accuracy'):
 	run(['cp', theirs, aor])
 	run(['objcopy', f'--redefine-syms={table}', aor])
 	program = os.path.join(WORK, name)
-	run(['gcc-14', '-std=c23', '-O2', '-Wall', '-Werror', '-no-pie', '-o', program, os.path.join('tools', 'aor', 'accuracy.c'), rt, aor, '-lmpfr', '-lgmp', '-lm', '-lpthread'])
+	run([host_cc(), '-std=c23', '-O2', '-Wall', '-Werror', '-no-pie', '-o', program, os.path.join('tools', 'aor', 'accuracy.c'), rt, aor, '-lmpfr', '-lgmp', '-lm', '-lpthread'])
 	return program
 
 

@@ -32,6 +32,14 @@ import sys
 WORK = os.path.join('build', 'x86_64', 'libm-hard-cases')
 
 
+def host_cc():
+	"""The host GCC 14 or newer that tools/scripts/host-cc picks (PLAN D9, D107)"""
+	result = subprocess.run([os.path.join('tools', 'scripts', 'host-cc')], stdout=subprocess.PIPE, text=True)
+	if result.returncode != 0:
+		raise SystemExit(1)
+	return result.stdout.strip()
+
+
 def run(command):
 	result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 	if result.returncode != 0:
@@ -48,7 +56,7 @@ def main():
 	run(['cp', library, prefixed])
 	run(['objcopy', '--prefix-symbols=rt_', prefixed])
 	program = os.path.join(WORK, 'float_hard_cases')
-	run(['gcc-14', '-std=c23', '-O2', '-Wall', '-Werror', '-no-pie', '-o', program, os.path.join('tools', 'libm', 'float_hard_cases.c'), prefixed, '-lmpfr', '-lgmp', '-lm', '-lpthread'])
+	run([host_cc(), '-std=c23', '-O2', '-Wall', '-Werror', '-no-pie', '-o', program, os.path.join('tools', 'libm', 'float_hard_cases.c'), prefixed, '-lmpfr', '-lgmp', '-lm', '-lpthread'])
 	wrong = 0
 	with subprocess.Popen([program] + sys.argv[1:], stdout=subprocess.PIPE, text=True) as search:
 		for line in search.stdout:

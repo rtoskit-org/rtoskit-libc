@@ -4,7 +4,7 @@ Recorded in P1.01 (2026-10-18), Ubuntu 24.04 cloud container; the Arm toolchain 
 
 | Tool | Version | Source | Used for |
 |---|---|---|---|
-| GCC | 14.2.0 (`gcc-14`) | apt `gcc-14` | x86_64 libc and tests (`-std=c23`; GCC 13 rejects it, see PLAN D9) |
+| GCC | 14.2.0 (`gcc-14`) | apt `gcc-14` | x86_64 libc and tests (`-std=c23`; GCC 13 rejects it, see PLAN D9). Any GCC 14 or newer works: `tools/scripts/host-cc` picks plain `gcc` when it is new enough, else the newest `gcc-NN`, and `HOST_CC` overrides (D107). |
 | binutils | 2.42 | apt (default) | x86_64 `as`, `ld`, `ar` |
 | qemu-user | 8.2.2 | apt `qemu-user` | runs ARM test binaries from P1.06 |
 | clang-format | 18.1.3 | apt `clang-format` | formatting with `tools/clang-format` |

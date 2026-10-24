@@ -30,9 +30,21 @@ LIBC_STRING_KERNELS_size :=
 LIBC_STRING_KERNELS_speed := x86_64
 export LIBC_STRING_KERNELS = ${LIBC_STRING_KERNELS_${LIBC_FLAVOUR}}
 
-CC := gcc-14
-CXX := g++-14
-LD := gcc-14
+# The host compiler: any GCC 14 or newer (PLAN D9, D107). tools/scripts/host-cc picks plain gcc when it is new
+# enough, else the newest gcc-NN, and checks a HOST_CC given by the user. The result is exported with a marker so
+# the sub-makes inherit it instead of running the check again.
+ifneq (${HOST_CC_CHECKED},${HOST_CC})
+override HOST_CC := $(shell ${PROJECT_ROOT}/tools/scripts/host-cc)
+endif
+ifeq (${HOST_CC},)
+$(error x86_64 needs GCC 14 or newer: install one, set HOST_CC, or build the Arm architectures alone with ARCH_CROSS or ARCHS)
+endif
+export HOST_CC
+export HOST_CC_CHECKED := ${HOST_CC}
+
+CC := ${HOST_CC}
+CXX := $(subst gcc,g++,${HOST_CC})
+LD := ${HOST_CC}
 AR := ar
 AS := as
 OBJCOPY := objcopy
