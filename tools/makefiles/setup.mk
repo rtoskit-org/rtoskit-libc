@@ -31,6 +31,19 @@ AOR_TARGET := ${AOR_ROOT}/.fetched
 SETUP_TARGETS := ${COMPILER_TARGET}
 SETUP_PATHS := ${COMPILER_PATH}
 
+# A compiler handed in from outside (a parent build passing CROSS_COMPILE, PLAN D105) is used as it is:
+# nothing is downloaded, but it must exist and be GCC 14 or newer (D9)
+ifneq ($(filter command line environment,$(origin CROSS_COMPILE)),)
+ifeq ($(wildcard ${CROSS_COMPILE}gcc),)
+$(error CROSS_COMPILE=${CROSS_COMPILE}: ${CROSS_COMPILE}gcc does not exist)
+endif
+COMPILER_MAJOR := $(firstword $(subst ., ,$(shell ${CROSS_COMPILE}gcc -dumpversion)))
+ifneq ($(shell [ '${COMPILER_MAJOR}' -ge 14 ] 2>/dev/null && echo ok),ok)
+$(error CROSS_COMPILE=${CROSS_COMPILE}: GCC ${COMPILER_MAJOR} is older than the GCC 14 the library needs (PLAN D9))
+endif
+SETUP_TARGETS := $(filter-out ${COMPILER_TARGET},${SETUP_TARGETS})
+endif
+
 include ${PROJECT_ROOT}/tools/makefiles/common.mk
 
 ${COMPILER_TARGET}:

@@ -180,7 +180,9 @@ ordering (the toolchain, then `libc` and `port`), so it works on a fresh tree.
 Like `all`, it loops over `BOARDS` and `BUILDS` unless `BOARD_TYPE` and
 `BUILD_TYPE` name one.
 
-A parent build can run it as a sub-make. Two rules apply:
+### The sub-make
+
+A parent build runs `make library` in this tree with two rules:
 
 - **Pass every root and the board explicitly.** The top-level `Makefile`
   takes `PROJECT_ROOT`, `TOOLS_ROOT`, `OUTPUT_ROOT`, `PREFIX`, `BOARD_TYPE`
@@ -192,32 +194,63 @@ A parent build can run it as a sub-make. Two rules apply:
   build-type logic assign everything else (`ARCH_CROSS`, `BUILD_ROOT`,
   `INSTALL_ROOT`, ...) with `:=`, so the parent's exports of those do not
   leak in.
-- **Optionally pass `CROSS_COMPILE`,** to use the parent's compiler instead
-  of the GCC 16.2 that `make setup` downloads into `local/` (GCC 14 or newer,
-  D9).
+- **Pass `CROSS_COMPILE` to use the parent's compiler.** A `CROSS_COMPILE`
+  given on the command line or in the environment is used as it is: setup
+  downloads nothing into `local/`, stops if `${CROSS_COMPILE}gcc` does not
+  exist, and stops if it is older than GCC 14 (D9). Without it, the first
+  build downloads GCC 16.2 into this tree's `local/` as usual.
 
 ```make
-LIBC_DIR := $(abspath third-party/rtoskit-libc)
-
-rtoskit-libc:
-	$(MAKE) -C $(LIBC_DIR) \
-		PROJECT_ROOT=$(LIBC_DIR) TOOLS_ROOT=$(LIBC_DIR)/tools \
-		OUTPUT_ROOT=$(BUILD_ROOT)/rtoskit-libc PREFIX=$(BUILD_ROOT)/rtoskit-libc-install \
-		BOARD_TYPE=linux-armv8-m.main BUILD_TYPE=release \
-		CROSS_COMPILE=$(CROSS_COMPILE) \
-		library
+$(MAKE) -C $(LIBC_DIR) \
+	PROJECT_ROOT=$(LIBC_DIR) TOOLS_ROOT=$(LIBC_DIR)/tools \
+	OUTPUT_ROOT=<build dir> PREFIX=<install dir> \
+	BOARD_TYPE=linux-armv8-m.main BUILD_TYPE=release \
+	CROSS_COMPILE=$(CROSS_COMPILE) \
+	library
 ```
 
-The parent then compiles with
-`-nostdinc -isystem $(BUILD_ROOT)/rtoskit-libc-install/<board>/release/include`
-and links that tree's `lib/` archives as in "Linking a program" above.
-
-The boards are the `linux-*` test boards, so a parent picks the one whose
-core matches its own (`linux-armv8-m.main` for a Cortex-M33). The library and
+The libraries install into `<install dir>/<board>/<build type>/{include,lib}`;
+link them as in "Linking a program" above. The boards are the `linux-*` test
+boards, so a parent picks the one whose core matches its own. The library and
 `librtos-none.a` are the same for any board of that core; the `linux` port
-archive is installed too and simply not linked. A configuration without a
-board file (`make ARCH_CROSS=<arch> ... install`, a sysroot layout and
-`install-headers`) is the rest of D16, tracked in issue #65.
+archive is installed too and simply not linked.
+
+### Module glue in a pi-pico-style parent
+
+A parent that uses this project's own conventions (pi-pico) wraps the
+sub-make in a module makefile of its own, the way pi-pico's `libc/libc.mk`
+wraps picolibc. With this tree checked out as `<parent>/rtoskit-libc/` and the
+parent's glue as `rtoskit-libc.mk` at the root of that checkout, the parent's
+module search (`<dir>/<dir>.mk`, one level down) finds it as the module
+`rtoskit-libc`. This project's own build never reads that file: its module
+search also starts one level down, inside the checkout. The glue has to:
+
+1. **Stop the parent's tree walk at the module.** The parent's `target.mk`
+   derives `SUBDIRS` from every `*/*.mk` below the module, which here means
+   this project's `libc/`, `port/`, `test/`, ... Set `SUBDIRS :=` before
+   including it, and prune the checkout from the parent's module search, as
+   pi-pico's `tree.mk` already prunes `libc/picolibc`.
+2. **Run the sub-make above** in its build-directory branch, with
+   `PROJECT_ROOT` and `TOOLS_ROOT` pointing at the checkout and
+   `OUTPUT_ROOT`/`PREFIX` inside the module's build directory, so a parent
+   `make clean` removes them.
+3. **Map the parent's core to a board:** pi-pico's `cortex-m33` to
+   `linux-armv8-m.main` and `cortex-m0plus` to `linux-armv6s-m`, with an
+   override variable for anything else.
+4. **Give the parent fixed paths,** for example by linking
+   `<install dir>/<board>/<build type>/{include,lib}` to
+   `${BUILD_ROOT}/rtoskit-libc/{include,lib}`. The parent's core files then
+   compile with `-nostdinc -isystem ${BUILD_ROOT}/rtoskit-libc/include` in
+   place of picolibc's `--specs`, and link `libc.a` (or a flavour archive),
+   its own port archive and libgcc in a group.
+5. **Hand over the parent's compiler** with `CROSS_COMPILE`, so nothing is
+   downloaded twice; it must be GCC 14 or newer.
+6. **Order the parent's build** so that the modules which used to depend on
+   `libc` depend on `rtoskit-libc`.
+
+A configuration without a board file (`make ARCH_CROSS=<arch> ... install`,
+a sysroot layout and `install-headers`) is the rest of D16, tracked in issue
+#65.
 
 ## Build variables
 
