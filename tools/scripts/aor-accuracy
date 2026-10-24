@@ -19,9 +19,9 @@
 #   tools/scripts/aor-accuracy host [--quick]   build tools/aor/accuracy.c against rtoskit-libc's x86_64
 #                                               libc.a (every symbol prefixed rt_) and AOR's x86_64 math
 #                                               (entry points renamed aor_), run it, and write the raw
-#                                               results to build/linux-x86_64/aor/accuracy/results.txt
-#   tools/scripts/aor-accuracy arm [--board B ...]
-#                                               evaluate tools/aor/arm-sample.c on Arm boards under their
+#                                               results to build/x86_64/aor/accuracy/results.txt
+#   tools/scripts/aor-accuracy arm [--arch A ...]
+#                                               evaluate tools/aor/arm-sample.c on Arm architectures under their
 #                                               runner (rtoskit size and speed flavours, and AOR), and
 #                                               measure the records on the host: arm-results.txt
 #   tools/scripts/aor-accuracy markdown [FILE]  print the tables of a results file (host or arm)
@@ -38,7 +38,7 @@ import re
 import subprocess
 import sys
 
-BUILD = os.path.join('build', 'linux-x86_64')
+BUILD = os.path.join('build', 'x86_64')
 WORK = os.path.join(BUILD, 'aor', 'accuracy')
 FLOAT_FUNCTIONS = ['expf', 'exp2f', 'logf', 'log2f', 'log10f', 'sinf', 'cosf', 'erff']
 DOUBLE_FUNCTIONS = ['exp', 'exp2', 'exp10', 'log', 'log2', 'erf', 'pow']
@@ -108,8 +108,8 @@ def command_host(args):
 	return 0
 
 
-# The Arm check: tools/aor/arm-sample.c on these boards, linked three ways, its records measured on the host
-ARM_BOARDS = ['linux-armv6-m', 'linux-armv7e-m', 'linux-armv7e-m-dp']
+# The Arm check: tools/aor/arm-sample.c on these architectures, linked three ways, its records measured on the host
+ARM_ARCHS = ['armv6-m', 'armv7e-m', 'armv7e-m-dp']
 ARM_SAMPLES = 16384
 
 
@@ -128,30 +128,30 @@ def command_arm(args):
 	aor = aor_build()
 	results = os.path.join(WORK, 'arm-results.txt')
 	with open(results, 'w') as out:
-		for board in args.board:
-			top = os.path.join(aor.aor_dir('build', board), 'accuracy')
+		for arch in args.arch:
+			top = os.path.join(aor.aor_dir('build', arch), 'accuracy')
 			os.makedirs(top, exist_ok=True)
 			obj = os.path.join(top, 'arm-sample.o')
-			aor.run([aor.tool(board, 'gcc')] + aor.c_flags(board) + ['-std=c23', '-O2', '-fno-builtin', '-c', os.path.join('tools', 'aor', 'arm-sample.c'), '-o', obj])
-			manifest = aor.read_manifest('build', board)
+			aor.run([aor.tool(arch, 'gcc')] + aor.c_flags(arch) + ['-std=c23', '-O2', '-fno-builtin', '-c', os.path.join('tools', 'aor', 'arm-sample.c'), '-o', obj])
+			manifest = aor.read_manifest('build', arch)
 			names = [name for name in ('string', 'math', 'fp') if name in manifest['provided']]
 			provided = [symbol for name in names for symbol in manifest['provided'][name]]
 			variants = {
-				'size': (os.path.join('build', board, 'release'), []),
-				'speed': (os.path.join('build', board, 'speed'), []),
-				'aor': (os.path.join('build', board, 'release'), [aor.library_path('build', board, name) for name in names]),
+				'size': (os.path.join('build', arch, 'release'), []),
+				'speed': (os.path.join('build', arch, 'speed'), []),
+				'aor': (os.path.join('build', arch, 'release'), [aor.library_path('build', arch, name) for name in names]),
 			}
 			for variant, (build_dir, libraries) in variants.items():
 				elf = os.path.join(top, f'arm-sample-{variant}.elf')
-				mapfile = aor.link(board, build_dir, [obj], libraries, elf, provided if libraries else [])
+				mapfile = aor.link(arch, build_dir, [obj], libraries, elf, provided if libraries else [])
 				if libraries:
-					aor.check_substitution(board, elf, mapfile, provided)
-				print(f'{board} {variant}', file=sys.stderr, flush=True)
-				data = subprocess.run(aor.target_runner(board) + [elf], stdout=subprocess.PIPE, check=True, timeout=7200).stdout
+					aor.check_substitution(arch, elf, mapfile, provided)
+				print(f'{arch} {variant}', file=sys.stderr, flush=True)
+				data = subprocess.run(aor.target_runner(arch) + [elf], stdout=subprocess.PIPE, check=True, timeout=7200).stdout
 				records = os.path.join(top, f'{variant}.bin')
 				with open(records, 'wb') as f:
 					f.write(data)
-				out.write(run([program, 'records', f'{aor.arch_of(board)}/{variant}', records, str(ARM_SAMPLES)]))
+				out.write(run([program, 'records', f'{arch}/{variant}', records, str(ARM_SAMPLES)]))
 				out.flush()
 	print(results)
 	return 0
@@ -261,7 +261,7 @@ def main():
 	p.add_argument('--quick', action='store_true')
 	p.add_argument('--resume', action='store_true', help='keep results.txt and run only the steps it lacks')
 	p = sub.add_parser('arm')
-	p.add_argument('--board', nargs='+', default=ARM_BOARDS)
+	p.add_argument('--arch', nargs='+', default=ARM_ARCHS)
 	p = sub.add_parser('markdown')
 	p.add_argument('file', nargs='?', default=os.path.join(WORK, 'results.txt'))
 	args = parser.parse_args()

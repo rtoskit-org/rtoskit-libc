@@ -1,7 +1,6 @@
 {
  "aor": "f67e7daa5457646fad9f75580263dba654c988aa",
  "arch": "armv6-m",
- "board": "linux-armv6-m",
  "images": {
   "float-exact": {
    "aor": {

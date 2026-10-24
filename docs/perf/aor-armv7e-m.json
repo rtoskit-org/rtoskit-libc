@@ -1,7 +1,6 @@
 {
  "aor": "f67e7daa5457646fad9f75580263dba654c988aa",
  "arch": "armv7e-m",
- "board": "linux-armv7e-m",
  "build_type": "speed",
  "order": {
   "malloc": [

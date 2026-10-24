@@ -1,7 +1,6 @@
 {
  "aor": "f67e7daa5457646fad9f75580263dba654c988aa",
  "arch": "x86_64",
- "board": "linux-x86_64",
  "build_type": "speed",
  "order": {
   "malloc": [

@@ -1,6 +1,5 @@
 {
  "arch": "armv7e-m-dp",
- "board": "linux-armv7e-m-dp",
  "build_type": "release",
  "images": {
   "float-exact": {

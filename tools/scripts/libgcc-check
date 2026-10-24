@@ -21,7 +21,7 @@
 #
 #   tools/scripts/libgcc-check --nm NM --libgcc LIBGCC BUILD_ROOT
 #
-# reads every link map under BUILD_ROOT (build/<board>/<build type>), lists
+# reads every link map under BUILD_ROOT (build/<arch>/<build type>), lists
 # the libgcc members each one includes, and reports every member that
 # defines a global symbol some libc*.a under BUILD_ROOT/libc also defines.
 

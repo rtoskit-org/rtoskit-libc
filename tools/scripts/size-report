@@ -14,10 +14,10 @@
 # The phase 2 size measurements (PLAN D51, docs/research/size-measurement.md).
 # Run from the project root after a release build ("make BUILD_TYPE=release"):
 #
-#   tools/scripts/size-report report [--board B ...]     write docs/size/baseline-<arch>.json
-#   tools/scripts/size-report diff [--board B ...]       compare the build with the baselines;
+#   tools/scripts/size-report report [--arch A ...]     write docs/size/baseline-<arch>.json
+#   tools/scripts/size-report diff [--arch A ...]       compare the build with the baselines;
 #                                                        exit status 1 when anything grew
-#   tools/scripts/size-report markdown --board B         print the summary of a baseline
+#   tools/scripts/size-report markdown --arch A         print the summary of a baseline
 #   tools/scripts/size-report compare                    build test/size with picolibc and
 #                                                        newlib-nano; print a Markdown table
 #   tools/scripts/size-report budget [--flavour F]       check the test/size images against
@@ -49,7 +49,7 @@ import subprocess
 import sys
 import urllib.request
 
-BOARDS = ['linux-x86_64', 'linux-armv6-m', 'linux-armv6s-m', 'linux-armv7e-m', 'linux-armv7e-m-dp', 'linux-armv8-m.main']
+ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 PROGRAMS = ['hello-puts', 'hello-printf-int', 'hello-printf-float', 'malloc-heavy', 'math-mix', 'float-exact', 'math-float']
 # The same programs linked against the flavour archives (PLAN D53, D54); not built for the comparison
 FLAVOUR_PROGRAMS = ['hello-printf-int-nofloat', 'hello-printf-int-minimal', 'malloc-heavy-tiny']
@@ -82,10 +82,6 @@ SHF_ALLOC = 0x2
 SHF_EXECINSTR = 0x4
 SHF_TLS = 0x400
 SHT_NOBITS = 8
-
-
-def arch_of(board):
-	return board[len('linux-'):]
 
 
 def elf_headers(data):
@@ -489,11 +485,11 @@ def library_graph(build, archive):
 	return graph
 
 
-def measure(board, build_type, build_root='build'):
-	build = os.path.join(build_root, board, build_type)
+def measure(arch, build_type, build_root='build'):
+	build = os.path.join(build_root, arch, build_type)
 	archive = os.path.join(build, 'libc', 'libc.a')
 	if not os.path.exists(archive):
-		raise SystemExit(f'{archive}: missing; build first (make BOARD_TYPE={board} BUILD_TYPE={build_type})')
+		raise SystemExit(f'{archive}: missing; build first (make ARCH_CROSS={arch} BUILD_TYPE={build_type})')
 	members = member_table(archive)
 	totals = dict.fromkeys(CLASSES, 0)
 	for sizes in members.values():
@@ -515,8 +511,7 @@ def measure(board, build_type, build_root='build'):
 		image['main'] = graph.extended(program, obj[:-2] + '.ci').depth('main')
 		images[program] = image
 	return {
-		'board': board,
-		'arch': arch_of(board),
+		'arch': arch,
 		'build_type': build_type,
 		'libc': {'totals': totals, 'members': members},
 		'images': images,
@@ -524,14 +519,14 @@ def measure(board, build_type, build_root='build'):
 	}
 
 
-def baseline_path(directory, board):
-	return os.path.join(directory, f'baseline-{arch_of(board)}.json')
+def baseline_path(directory, arch):
+	return os.path.join(directory, f'baseline-{arch}.json')
 
 
 def command_report(args):
-	for board in args.board:
-		result = measure(board, args.build_type, args.build_root)
-		path = baseline_path(args.baseline_dir, board)
+	for arch in args.arch:
+		result = measure(arch, args.build_type, args.build_root)
+		path = baseline_path(args.baseline_dir, arch)
 		with open(path, 'w') as f:
 			json.dump(result, f, indent=1, sort_keys=True)
 			f.write('\n')
@@ -549,12 +544,12 @@ def signed(value):
 
 def command_diff(args):
 	grew = False
-	for board in args.board:
-		path = baseline_path(args.baseline_dir, board)
+	for arch in args.arch:
+		path = baseline_path(args.baseline_dir, arch)
 		with open(path) as f:
 			old = json.load(f)
-		new = measure(board, args.build_type, args.build_root)
-		print(f'== {board} (against {path})')
+		new = measure(arch, args.build_type, args.build_root)
+		print(f'== {arch} (against {path})')
 		old_totals = old['libc']['totals']
 		new_totals = new['libc']['totals']
 		print('libc.a  ' + '  '.join(f'{c} {new_totals[c]} ({signed(new_totals[c] - old_totals[c])})' for c in CLASSES))
@@ -630,8 +625,8 @@ def command_diff(args):
 
 
 def command_markdown(args):
-	for board in args.board:
-		with open(baseline_path(args.baseline_dir, board)) as f:
+	for arch in args.arch:
+		with open(baseline_path(args.baseline_dir, arch)) as f:
 			data = json.load(f)
 		print_markdown(data, args.top)
 	return 0
@@ -762,10 +757,9 @@ def command_compare(args):
 	ram = ['data', 'bss', 'tdata', 'tbss']
 	print('| Arch | Program | rtoskit libc code | picolibc libc code | newlib-nano libc code | rtoskit libc RAM | picolibc libc RAM | newlib-nano libc RAM | rtoskit image code | picolibc image code | newlib-nano image code |')
 	print('|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|')
-	for board in BOARDS[1:]:
-		arch = arch_of(board)
+	for arch in ARCHS[1:]:
 		for program in PROGRAMS:
-			directory = os.path.join(args.build_root, board, args.build_type, 'test', 'size', program)
+			directory = os.path.join(args.build_root, arch, args.build_type, 'test', 'size', program)
 			ours = analyze_image(os.path.join(directory, program + '.elf'), os.path.join(directory, program + '.map'), [os.path.join(directory, program + '.o')])
 			pico = build_with('picolibc', roots, arch, program, work)
 			nano = build_with('newlib', roots, arch, program, work)
@@ -777,7 +771,7 @@ def command_compare(args):
 	return 0
 
 
-# The size budget (P2.07, PLAN D71): code and RAM per reference program per arch, locked at the end
+# The size budget (P2.07, PLAN D71): code and RAM per reference program per architecture, locked at the end
 # of phase 2; the size flavour may not exceed it, a speed flavour by at most its margin, or by a program's
 # own margin where the budget file gives one (PLAN D87: the speed flavour's math images)
 BUDGET_MARGINS = {'size': 0, 'speed': 10}
@@ -794,27 +788,26 @@ def image_figures(image):
 
 def command_budget(args):
 	path = budget_path(args.baseline_dir)
-	boards = [board for board in args.board if board != 'linux-x86_64']
+	arches = [arch for arch in args.arch if arch != 'x86_64']
 	if args.lock:
 		budget = {'margins_percent': BUDGET_MARGINS, 'images': {}}
-		for board in boards:
-			images = measure(board, args.build_type, args.build_root)['images']
-			budget['images'][arch_of(board)] = {program: image_figures(images[program]) for program in PROGRAMS + FLAVOUR_PROGRAMS}
+		for arch in arches:
+			images = measure(arch, args.build_type, args.build_root)['images']
+			budget['images'][arch] = {program: image_figures(images[program]) for program in PROGRAMS + FLAVOUR_PROGRAMS}
 		with open(path, 'w') as f:
 			json.dump(budget, f, indent=1, sort_keys=True)
 			f.write('\n')
-		print(f'{path}: {len(budget["images"])} arches locked')
+		print(f'{path}: {len(budget["images"])} architectures locked')
 		return 0
 	with open(path) as f:
 		budget = json.load(f)
 	margin = budget['margins_percent'][args.flavour]
 	program_margins = budget.get('program_margins_percent', {}).get(args.flavour, {})
 	over = False
-	for board in boards:
-		arch = arch_of(board)
+	for arch in arches:
 		if arch not in budget['images']:
 			continue
-		images = measure(board, args.build_type, args.build_root)['images']
+		images = measure(arch, args.build_type, args.build_root)['images']
 		for program, limits in budget['images'][arch].items():
 			figures = image_figures(images[program])
 			program_margin = program_margins.get(program, margin)
@@ -849,14 +842,14 @@ def aor_entry_point(symbol):
 	return not symbol.startswith('arm_math_')
 
 
-def used_symbols(aor, board, build_root):
-	"""The symbols the board's own reference and benchmark programs contain: the routines worth sizing
+def used_symbols(aor, arch, build_root):
+	"""The symbols the architecture's own reference and benchmark programs contain: the routines worth sizing
 	(a soft-float helper the FPU makes unnecessary never appears)."""
 	used = set()
 	for build_type in ('release', 'speed'):
-		build = os.path.join(build_root, board, build_type)
+		build = os.path.join(build_root, arch, build_type)
 		for elf in glob.glob(os.path.join(build, 'test', 'size', '*', '*.elf')) + glob.glob(os.path.join(build, 'test', 'bench', '*', '*.elf')):
-			used |= set(aor.defined_addresses(board, elf))
+			used |= set(aor.defined_addresses(arch, elf))
 	return used
 
 
@@ -865,62 +858,62 @@ def image_totals(elf, map_path, obj):
 	return {'code': total(sections, CODE), 'ram': total(sections, RAM)}
 
 
-def aor_routine_costs(aor, board, build_root, routines):
+def aor_routine_costs(aor, arch, build_root, routines):
 	"""Code and RAM each routine adds to an empty program: rtoskit's size and speed flavours with libgcc,
 	and AOR (-Os math) on the size flavour."""
-	top = os.path.join(aor.aor_dir(build_root, board), 'size')
+	top = os.path.join(aor.aor_dir(build_root, arch), 'size')
 	os.makedirs(top, exist_ok=True)
 	obj = os.path.join(top, 'size-main.o')
-	aor.run([aor.tool(board, 'gcc')] + aor.c_flags(board) + ['-std=c23', '-Os', '-c', os.path.join('tools', 'aor', 'size-main.c'), '-o', obj])
-	manifest = aor.read_manifest(build_root, board)
+	aor.run([aor.tool(arch, 'gcc')] + aor.c_flags(arch) + ['-std=c23', '-Os', '-c', os.path.join('tools', 'aor', 'size-main.c'), '-o', obj])
+	manifest = aor.read_manifest(build_root, arch)
 	names = [name for name in AOR_LIBRARIES if name in manifest['provided']]
 	provided = [symbol for name in names for symbol in manifest['provided'][name]]
 	variants = {
-		'size': (os.path.join(build_root, board, 'release'), []),
-		'speed': (os.path.join(build_root, board, 'speed'), []),
-		'aor': (os.path.join(build_root, board, 'release'), [aor.library_path(build_root, board, name) for name in names]),
+		'size': (os.path.join(build_root, arch, 'release'), []),
+		'speed': (os.path.join(build_root, arch, 'speed'), []),
+		'aor': (os.path.join(build_root, arch, 'release'), [aor.library_path(build_root, arch, name) for name in names]),
 	}
 	costs = {}
 	for variant, (build, libraries) in variants.items():
 		elf = os.path.join(top, f'{variant}-empty.elf')
-		mapfile = aor.link(board, build, [obj], libraries, elf, provided if libraries else [])
+		mapfile = aor.link(arch, build, [obj], libraries, elf, provided if libraries else [])
 		empty = image_totals(elf, mapfile, obj)
 		for routine in routines:
 			elf = os.path.join(top, f'{variant}-{routine}.elf')
-			mapfile = aor.link(board, build, [obj], libraries, elf, provided if libraries else [], undefined=[routine])
-			if routine not in aor.defined_addresses(board, elf):
+			mapfile = aor.link(arch, build, [obj], libraries, elf, provided if libraries else [], undefined=[routine])
+			if routine not in aor.defined_addresses(arch, elf):
 				continue
 			if libraries:
-				aor.check_substitution(board, elf, mapfile, provided)
+				aor.check_substitution(arch, elf, mapfile, provided)
 			sizes = image_totals(elf, mapfile, obj)
 			costs.setdefault(routine, {})[variant] = {key: sizes[key] - empty[key] for key in sizes}
 	return costs
 
 
-def aor_images(aor, board, build_root):
+def aor_images(aor, arch, build_root):
 	"""The reference programs of the release (size) build relinked with AOR's archives."""
-	build = os.path.join(build_root, board, 'release')
-	manifest = aor.read_manifest(build_root, board)
+	build = os.path.join(build_root, arch, 'release')
+	manifest = aor.read_manifest(build_root, arch)
 	names = [name for name in AOR_LIBRARIES if name in manifest['provided']]
-	libraries = [aor.library_path(build_root, board, name) for name in names]
+	libraries = [aor.library_path(build_root, arch, name) for name in names]
 	provided = [symbol for name in names for symbol in manifest['provided'][name]]
-	top = os.path.join(aor.aor_dir(build_root, board), 'size')
+	top = os.path.join(aor.aor_dir(build_root, arch), 'size')
 	images = {}
 	for program in PROGRAMS:
 		directory = os.path.join(build, 'test', 'size', program)
 		obj = os.path.join(directory, program + '.o')
-		ours = {build_type: image_totals(os.path.join(build_root, board, build_type, 'test', 'size', program, program + '.elf'),
-						 os.path.join(build_root, board, build_type, 'test', 'size', program, program + '.map'),
-						 os.path.join(build_root, board, build_type, 'test', 'size', program, program + '.o')) for build_type in ('release', 'speed')}
+		ours = {build_type: image_totals(os.path.join(build_root, arch, build_type, 'test', 'size', program, program + '.elf'),
+						 os.path.join(build_root, arch, build_type, 'test', 'size', program, program + '.map'),
+						 os.path.join(build_root, arch, build_type, 'test', 'size', program, program + '.o')) for build_type in ('release', 'speed')}
 		elf = os.path.join(top, program + '.elf')
-		mapfile = aor.link(board, build, [obj], libraries, elf, provided)
-		substituted = [symbol for symbol in aor.check_substitution(board, elf, mapfile, provided) if aor_entry_point(symbol)]
+		mapfile = aor.link(arch, build, [obj], libraries, elf, provided)
+		substituted = [symbol for symbol in aor.check_substitution(arch, elf, mapfile, provided) if aor_entry_point(symbol)]
 		images[program] = {'size': ours['release'], 'speed': ours['speed'], 'aor': image_totals(elf, mapfile, obj), 'substituted': substituted}
 	return images
 
 
-def aor_record_path(directory, board):
-	return os.path.join(directory, f'aor-{arch_of(board)}.json')
+def aor_record_path(directory, arch):
+	return os.path.join(directory, f'aor-{arch}.json')
 
 
 def aor_markdown(data):
@@ -949,23 +942,23 @@ def aor_markdown(data):
 
 def command_aor(args):
 	aor = aor_build()
-	for board in args.board:
+	for arch in args.arch:
 		if args.from_record:
-			with open(aor_record_path(args.baseline_dir, board)) as f:
+			with open(aor_record_path(args.baseline_dir, arch)) as f:
 				data = json.load(f)
 		else:
-			manifest = aor.read_manifest(args.build_root, board)
-			used = used_symbols(aor, board, args.build_root)
+			manifest = aor.read_manifest(args.build_root, arch)
+			used = used_symbols(aor, arch, args.build_root)
 			order = []
 			for name in AOR_LIBRARIES:
 				for symbol in manifest['provided'].get(name, []):
 					if aor_entry_point(symbol) and symbol in used and symbol not in order:
 						order.append(symbol)
-			data = {'board': board, 'arch': arch_of(board), 'aor': manifest['revision'], 'order': order,
-				'routines': aor_routine_costs(aor, board, args.build_root, order), 'images': aor_images(aor, board, args.build_root)}
+			data = {'arch': arch, 'aor': manifest['revision'], 'order': order,
+				'routines': aor_routine_costs(aor, arch, args.build_root, order), 'images': aor_images(aor, arch, args.build_root)}
 			data['order'] = [routine for routine in order if routine in data['routines']]
 			if args.record:
-				with open(aor_record_path(args.baseline_dir, board), 'w') as f:
+				with open(aor_record_path(args.baseline_dir, arch), 'w') as f:
 					json.dump(data, f, indent=1, sort_keys=True)
 					f.write('\n')
 		print('\n'.join(aor_markdown(data)))
@@ -980,21 +973,21 @@ def main():
 	sub = parser.add_subparsers(dest='command', required=True)
 	for name in ('report', 'diff', 'markdown'):
 		p = sub.add_parser(name)
-		p.add_argument('--board', action='append', choices=BOARDS)
+		p.add_argument('--arch', action='append', choices=ARCHS)
 		p.add_argument('--top', type=int, default=20)
 	p = sub.add_parser('budget')
-	p.add_argument('--board', action='append', choices=BOARDS)
+	p.add_argument('--arch', action='append', choices=ARCHS)
 	p.add_argument('--flavour', choices=sorted(BUDGET_MARGINS), default='size')
 	p.add_argument('--lock', action='store_true', help='write the budget from this build')
 	p = sub.add_parser('compare')
 	p.add_argument('--work', default=os.path.join('tmp', 'size-compare'))
 	p = sub.add_parser('aor')
-	p.add_argument('--board', action='append', choices=BOARDS)
+	p.add_argument('--arch', action='append', choices=ARCHS)
 	p.add_argument('--record', action='store_true', help='also write the results to docs/size/aor-<arch>.json')
 	p.add_argument('--from-record', action='store_true', help='print the tables of docs/size/aor-<arch>.json without building')
 	args = parser.parse_args()
-	if getattr(args, 'board', None) is None:
-		args.board = BOARDS
+	if getattr(args, 'arch', None) is None:
+		args.arch = ARCHS
 	commands = {'report': command_report, 'diff': command_diff, 'markdown': command_markdown, 'compare': command_compare, 'budget': command_budget, 'aor': command_aor}
 	return commands[args.command](args)
 

@@ -5,16 +5,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# linux-x86_64.mk
+# port-linux-x86_64.mk
 #
-# Created on: Oct 18, 2026
+# Created on: Oct 24, 2026
 #     Author: Stephen Street (stephen@redrocketcomputing.com)
 #
 
-# Linux process on x86_64: the native libc-test host, bound to port/linux
-
-export ARCH_CROSS := x86_64
-export RTOS_PORT := linux
-
-# The allocator built into libc.a: nano (small, the default) or tlsf (constant time); PLAN D32
-export LIBC_MALLOC ?= nano
+# The Linux test port on x86_64 (PLAN D106): the programs the build links run natively

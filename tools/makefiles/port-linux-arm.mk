@@ -5,22 +5,17 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #
-# linux-armv7e-m.mk
+# port-linux-arm.mk
 #
-# Created on: Oct 19, 2026
+# Created on: Oct 24, 2026
 #     Author: Stephen Street (stephen@redrocketcomputing.com)
 #
 
-# Linux process on armv7e-m, run under qemu-user and bound to port/linux
-
-export ARCH_CROSS := armv7e-m
-export RTOS_PORT := linux
+# The Linux test port on the Arm cores (PLAN D106): the programs the build links (unit tests,
+# libc-test, examples, size and benchmark programs) are Linux processes run under qemu-user
 
 # qemu-arm runs the M-profile code on its A-profile "max" CPU; see docs/research/arm-bring-up.md
 export TARGET_RUNNER := qemu-arm -cpu max
 
-# Load the ELF headers so the port finds the TLS segment through __ehdr_start
-export BOARD_LDFLAGS := -Wl,-T,${PROJECT_ROOT}/port/linux/arm/headers.ld
-
-# The allocator built into libc.a: nano (small, the default) or tlsf (constant time); PLAN D32
-export LIBC_MALLOC ?= nano
+# Room for the ELF and program headers in the first loaded segment, so the port finds PT_TLS
+LDFLAGS += -Wl,-T,${PROJECT_ROOT}/port/linux/arm/headers.ld

@@ -29,7 +29,7 @@ import os
 import subprocess
 import sys
 
-WORK = os.path.join('build', 'linux-x86_64', 'libm-hard-cases')
+WORK = os.path.join('build', 'x86_64', 'libm-hard-cases')
 
 
 def run(command):
@@ -40,9 +40,9 @@ def run(command):
 
 
 def main():
-	library = os.path.join('build', 'linux-x86_64', 'release', 'libc', 'libc.a')
+	library = os.path.join('build', 'x86_64', 'release', 'libc', 'libc.a')
 	if not os.path.exists(library):
-		raise SystemExit(f'{library}: missing; build it first (make BOARD_TYPE=linux-x86_64 BUILD_TYPE=release)')
+		raise SystemExit(f'{library}: missing; build it first (make ARCH_CROSS=x86_64 BUILD_TYPE=release)')
 	os.makedirs(WORK, exist_ok=True)
 	prefixed = os.path.join(WORK, 'librt.a')
 	run(['cp', library, prefixed])

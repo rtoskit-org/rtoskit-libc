@@ -1,6 +1,5 @@
 {
  "arch": "armv6s-m",
- "board": "linux-armv6s-m",
  "build_type": "release",
  "flavour": "size",
  "programs": {

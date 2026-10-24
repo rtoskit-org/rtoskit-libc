@@ -23,8 +23,8 @@ decision log D*, open questions Q*), then the active phase file
    standard text (`docs/standard/library-7.pdf`, `docs/standard/annex-b.pdf`; extract text with
    `pdftotext -layout`) and your own research notes.
 5. Implement, then build and validate on **every enabled arch** (see the phase
-   board): `make` and `make check`.
-6. Update `test/libc-test/manifest.txt` and `test/libc-test/expected/<board>.txt`
+   architecture): `make` and `make check`.
+6. Update `test/libc-test/manifest.txt` and `test/libc-test/expected/<arch>.txt`
    (improvements only; a PASS→FAIL is never accepted into the baseline).
 7. Tick the checkboxes, append any new decisions to the PLAN.md decision log
    (never rewrite old entries; supersede them), and record open questions as Q*.
@@ -39,26 +39,28 @@ tell the user.
 Always run `make` from the project root; never `make -C <subdir>` or `make -f <subdir>/x.mk`.
 
 ```sh
-make                                   # every board in BOARDS x every build type in BUILDS
-make BUILD_TYPE=debug                  # debug only (all boards); BUILD_TYPE=speed is the speed flavour (D73)
-make BOARD_TYPE=linux-x86_64           # one board
-# One module (dep-free, assumes a prior full build); needs a concrete board and build type
-make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug libc
-make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug libc/string
-make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug test/unit/smoke
-make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug info
+make                                   # every architecture in ARCHS x every build type in BUILDS
+make BUILD_TYPE=debug                  # debug only (all architectures); BUILD_TYPE=speed is the speed flavour (D73)
+make ARCH_CROSS=x86_64                 # one architecture
+# One module (dep-free, assumes a prior full build); needs a concrete architecture and build type
+make ARCH_CROSS=x86_64 BUILD_TYPE=debug libc
+make ARCH_CROSS=x86_64 BUILD_TYPE=debug libc/string
+make ARCH_CROSS=x86_64 BUILD_TYPE=debug test/unit/smoke
+make ARCH_CROSS=x86_64 BUILD_TYPE=debug info
 make help | clean | distclean
 V=1 make ...                           # verbose
-make check                             # build, then run the unit tests (+ libc-test from P1.02) for every board and build type
-make bench                             # build, then run the benchmarks (release and speed, every board) against docs/perf
-make aor                               # Phase 4: fetch and build Arm Optimized Routines into build/<board>/aor/ (measurement only, D92, D93)
-make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug check
+make check                             # build, then run the unit tests (+ libc-test from P1.02) for every architecture and build type
+make bench                             # build, then run the benchmarks (release and speed, every architecture) against docs/perf
+make aor                               # Phase 4: fetch and build Arm Optimized Routines into build/<arch>/aor/ (measurement only, D92, D93)
+make ARCH_CROSS=x86_64 BUILD_TYPE=debug check
+make library                           # headers, libc*.a and the port archives only (D105)
 ```
 
-- **Boards and toolchains:** `BOARD_TYPE` files (`tools/makefiles/linux-x86_64.mk`,
-  `linux-armv6-m.mk`, `linux-armv6s-m.mk`, `linux-armv7e-m.mk`, `linux-armv7e-m-dp.mk`,
-  `linux-armv8-m.main.mk`) export `ARCH_CROSS`, `RTOS_PORT`, and for the Arm boards
-  `TARGET_RUNNER` (`qemu-arm -cpu max`, D36) and `BOARD_LDFLAGS`. The `ARCH_CROSS`
+- **Architectures and toolchains (D106):** the build loops over `ARCHS`; `ARCH_CROSS`
+  selects one. Programs the build links (tests, examples, size and benchmark
+  programs) bind to the Linux test port (`RTOS_PORT := linux`, `common.mk`), whose
+  per-family file (`tools/makefiles/port-linux-arm.mk`, `port-linux-x86_64.mk`) sets
+  `TARGET_RUNNER` (`qemu-arm -cpu max` on Arm, D36) and the Arm link flags. The `ARCH_CROSS`
   file (`tools/makefiles/x86_64.mk`, `armv6-m.mk`, `armv6s-m.mk`, `armv7e-m.mk`, `armv7e-m-dp.mk`,
   `armv8-m.main.mk`; architecture names, `-march` not `-mcpu`, D24) sets the
   toolchain and all flags, including `LIBC_CFLAGS` for library code, and exports
@@ -69,7 +71,7 @@ make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug check
 - **Arm toolchain:** arm-none-eabi GCC 16.2 lives in `local/` (gitignored). The
   first build downloads it (`make setup`, `tools/makefiles/setup.mk`).
 - **Allocator:** `LIBC_MALLOC` picks the allocator built into `libc.a`:
-  `nano` (default, set in the board file), `tlsf` or `tiny`
+  `nano` (default, set in `common.mk`), `tlsf` or `tiny`
   (`make LIBC_MALLOC=tlsf ...`; run `make clean` after changing it). Every
   variant under `libc/malloc/` is always built and tested (D32, D54).
 - **Size and speed flavours (D73):** the `release` build type is the size
@@ -82,8 +84,8 @@ make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug check
 - **Flavour archives (D53, D54):** `libc-nofloat.a`, `libc-minimal-printf.a`
   and `libc-tinymalloc.a` are `libc.a` with some members replaced; a program
   links one instead of `libc.a`.
-- **Output:** `build/<board>/<build-type>/<module path>/`; installs go to
-  `images/<board>/<build-type>/`.
+- **Output:** `build/<arch>/<build-type>/<module path>/`; installs go to
+  `images/<arch>/<build-type>/`.
 - **Modules:** every source directory is a module with its own `<dirname>.mk`
   (`tools/scripts/mksrc <path>` or `tools/templates/src-template.mk`) and
   compiles in place. A directory holding only sub-modules is a tree node.
@@ -104,7 +106,7 @@ make BOARD_TYPE=linux-x86_64 BUILD_TYPE=debug check
   `EXTRA_ELF_DEPS := ${BUILD_ROOT}/libc/libc.a` so the executable relinks when
   the library changes, then add `all: ${CURDIR}/<name>.elf`.
 - **Module order:** set in the top-level `Makefile` (`example test: libc port`).
-- **Extending the build system:** add board and toolchain files under
+- **Extending the build system:** add architecture and port files under
   `tools/makefiles/`. Do not restructure the existing tools makefiles.
 - **Toolchain floor:** GCC ≥ 14 / Clang ≥ 19 (D9). On Ubuntu 24.04:
   `apt-get install -y gcc-14 qemu-user`; arm-none-eabi GCC 16.2 from `make setup`.
@@ -193,9 +195,9 @@ Any exception needs a PLAN.md decision entry.
 ## Testing
 
 - **libc-test** (`third-party/libc-test`, a submodule) is the conformance gate
-  at every step of every phase (PLAN §5). Run it natively on `linux-x86_64`
+  at every step of every phase (PLAN §5). Run it natively on `x86_64`
   through `port/linux`, and under `qemu-arm -cpu max` (`TARGET_RUNNER`) for the
-  five ARM boards (D36, D37).
+  five Arm architectures (D36, D37).
 - `make check` builds, then runs every unit test through `test/unit/run-unit`. A
   test passes when it exits with 0, unless an executable `<name>.run` next to
   its source decides instead (see `test/unit/smoke/smoke.run`). `TARGET_RUNNER`
@@ -206,7 +208,7 @@ Any exception needs a PLAN.md decision entry.
   `test/libc-test/{api,functional,math,regression}` build one ELF per `run`
   test through `tools/makefiles/libc-test.mk` (D27).
 - `make check` compares the libc-test results with
-  `test/libc-test/expected/<board>.txt` and fails on PASS→FAIL and on failures
+  `test/libc-test/expected/<arch>.txt` and fails on PASS→FAIL and on failures
   missing from the baseline. Record improvements with
   `make check LIBC_TEST_UPDATE=1` (it refuses while anything regressed).
 - `make check` ends with `tools/scripts/libgcc-check`: it fails when any link map includes a libgcc member that
@@ -225,7 +227,7 @@ Any exception needs a PLAN.md decision entry.
   step's reductions are recorded in `docs/size/<arch>.md`.
 - **Speed (phase 3, D72):** `test/bench/` holds the benchmark programs (built,
   run only by `tools/scripts/bench-runner`). `make bench` measures the release
-  (size) and speed builds of every board: guest instructions per operation under a qemu built with
+  (size) and speed builds of every architecture: guest instructions per operation under a qemu built with
   TCG plugins (`make setup-bench`, into `local/`), plus `rdtsc` cycles on x86_64
   (not gated). It fails when a case grew by more than 1 %; record a step's
   improvements with `make bench BENCH_UPDATE=1` and the tables in

@@ -13,18 +13,18 @@
 #
 # Arm Optimized Routines (AOR) for the phase 4 comparison (PLAN D91, D92,
 # docs/research/optimized-routines.md). AOR is measured, never part of
-# libc.a: this compiles the AOR files that run on each board, with the
-# board's flags, into archives whose symbols carry the standard and run-time
+# libc.a: this compiles the AOR files that run on each architecture, with
+# its flags, into archives whose symbols carry the standard and run-time
 # ABI names, so that a program linked with them ahead of libc.a uses AOR's
 # routine and everything else from rtoskit-libc. Run from the project root
 # after "make setup-aor" ("make aor" does both and the smoke test):
 #
-#   tools/scripts/aor-build build [--board B ...]       build/<board>/aor/libaor-{string,math,math-size,fp}.a
+#   tools/scripts/aor-build build [--arch A ...]       build/<arch>/aor/libaor-{string,math,math-size,fp}.a
 #                                                       and aor.json (the symbols each archive provides)
-#   tools/scripts/aor-build smoke [--board B ...] [--build-type T]
+#   tools/scripts/aor-build smoke [--arch A ...] [--build-type T]
 #                                                       link tools/aor/smoke.c with every archive against
 #                                                       the build, check that AOR's definitions were the
-#                                                       ones linked, and run it under the board's runner
+#                                                       ones linked, and run it under the architecture's runner
 #
 # Other tools import this file for link() and check_substitution().
 
@@ -39,7 +39,7 @@ import sys
 
 AOR_REVISION = 'f67e7daa5457646fad9f75580263dba654c988aa'
 AOR_ROOT = os.path.join('local', f'aor-{AOR_REVISION}')
-BOARDS = ['linux-x86_64', 'linux-armv6-m', 'linux-armv6s-m', 'linux-armv7e-m', 'linux-armv7e-m-dp', 'linux-armv8-m.main']
+ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 THUMB1 = ['armv6-m', 'armv6s-m']
 THUMB2 = ['armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 
@@ -47,7 +47,7 @@ THUMB2 = ['armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 # and strcpy.c are A32-only and strcmp.S needs the A32 ISA; memchr.S and memset.S are Thumb-2, so
 # they are left out on Armv6-M. Both force ".arch armv7-a" (memchr.S below Armv8-M), which marks the
 # object A-profile and lets the assembler accept A-profile instructions; the build drops that
-# directive, so they are assembled and checked for the board's own -march (as Microcontroller
+# directive, so they are assembled and checked for the architecture's own -march (as Microcontroller
 # profile objects the linker can take). qemu-arm -cpu max runs A-profile code too, so only the
 # assembler can tell.
 FORCED_ARCH = re.compile(r'^\s*\.arch\s+armv7-a\s*$', re.M)
@@ -78,7 +78,7 @@ for precision, mode in (('f', 's'), ('d', 'd')):
 	})
 
 # math: AOR's config.mk.dist flags, with -std=c23 for our headers, no errno (MATH_ERREXCEPT, D45) and no
-# glibc aliases; tgamma128.c is the 128-bit long double gamma, which no board here has
+# glibc aliases; tgamma128.c is the 128-bit long double gamma, which no arch here has
 MATH_FLAGS = ['-std=c23', '-frounding-math', '-fexcess-precision=standard', '-fno-stack-protector', '-ffp-contract=fast', '-fno-math-errno',
 	      '-DWANT_ERRNO=0', '-DUSE_GLIBC_ABI=0', '-DWANT_EXPERIMENTAL_MATH=0', '-DWANT_SVE_TESTS=0', '-DWANT_EXP10_TESTS=1',
 	      '-DWANT_C23_TESTS=0', '-DWANT_FP16_TESTS=0', '-DUSE_MPFR=0']
@@ -87,46 +87,43 @@ MATH_SKIP = ['tgamma128.c']
 MATH_LIBRARIES = {'math': '-O3', 'math-size': '-Os'}
 
 
-def arch_of(board):
-	return board[len('linux-'):]
+def is_arm(arch):
+	return arch != 'x86_64'
 
 
-def is_arm(board):
-	return arch_of(board) != 'x86_64'
+def family_of(arch):
+	return 'arm' if is_arm(arch) else 'x86_64'
 
 
-def family_of(board):
-	return 'arm' if is_arm(board) else 'x86_64'
-
-
-def tool(board, name):
-	if is_arm(board):
+def tool(arch, name):
+	if is_arm(arch):
 		return os.path.join('local', 'bin', f'arm-none-eabi-{name}')
 	return {'gcc': 'gcc-14'}.get(name, name)
 
 
-def cross_flags(board):
-	with open(os.path.join('tools', 'makefiles', arch_of(board) + '.mk')) as f:
+def cross_flags(arch):
+	with open(os.path.join('tools', 'makefiles', arch + '.mk')) as f:
 		return re.search(r'^CROSS_FLAGS \?= (.*)$', f.read(), re.M).group(1).split()
 
 
-def target_runner(board):
-	with open(os.path.join('tools', 'makefiles', board + '.mk')) as f:
+def target_runner(arch):
+	"""The runner the Linux test port uses for the architecture's family (tools/makefiles/port-linux-<family>.mk, PLAN D106)"""
+	with open(os.path.join('tools', 'makefiles', f'port-linux-{family_of(arch)}.mk')) as f:
 		match = re.search(r'^export TARGET_RUNNER := (.*)$', f.read(), re.M)
 	return match.group(1).split() if match else []
 
 
-def c_flags(board):
+def c_flags(arch):
 	"""What every C file of a comparison build is compiled with: our headers, as the library's are (D8)."""
-	flags = cross_flags(board) + ['-nostdinc', '-isystem', 'include', '-include', os.path.join('include', 'stdc-predef.h'), '-ffunction-sections', '-fdata-sections', '-Wall', '-Werror', '-g']
-	if not is_arm(board):
+	flags = cross_flags(arch) + ['-nostdinc', '-isystem', 'include', '-include', os.path.join('include', 'stdc-predef.h'), '-ffunction-sections', '-fdata-sections', '-Wall', '-Werror', '-g']
+	if not is_arm(arch):
 		# As tools/makefiles/x86_64.mk: no PIE, no unwind tables, no sincos fusion
 		flags += ['-muclibc', '-fno-pie', '-fno-stack-protector', '-fno-asynchronous-unwind-tables', '-fno-unwind-tables']
 	return flags
 
 
-def aor_dir(build_root, board):
-	return os.path.join(build_root, board, 'aor')
+def aor_dir(build_root, arch):
+	return os.path.join(build_root, arch, 'aor')
 
 
 def run(command):
@@ -136,39 +133,38 @@ def run(command):
 	return result.stdout
 
 
-def defined_symbols(board, path):
-	output = run([tool(board, 'nm'), '--defined-only', '-g', path])
+def defined_symbols(arch, path):
+	output = run([tool(arch, 'nm'), '--defined-only', '-g', path])
 	return sorted({line.split()[-1] for line in output.splitlines() if len(line.split()) == 3 and line.split()[1] in 'TDRBW'})
 
 
-def archive(board, directory, name, objects, renames):
+def archive(arch, directory, name, objects, renames):
 	"""Rename the symbols of the objects, archive them; the global symbols the archive defines."""
 	if renames:
 		table = os.path.join(directory, f'{name}.redefine')
 		with open(table, 'w') as f:
 			f.writelines(f'{old} {new}\n' for old, new in sorted(renames.items()))
 		for obj in objects:
-			run([tool(board, 'objcopy'), f'--redefine-syms={table}', obj])
+			run([tool(arch, 'objcopy'), f'--redefine-syms={table}', obj])
 	library = os.path.join(directory, f'libaor-{name}.a')
 	if os.path.exists(library):
 		os.remove(library)
-	run([tool(board, 'ar'), 'rcs', library] + objects)
-	return defined_symbols(board, library)
+	run([tool(arch, 'ar'), 'rcs', library] + objects)
+	return defined_symbols(arch, library)
 
 
-def compile_all(board, sources, directory, flags):
+def compile_all(arch, sources, directory, flags):
 	os.makedirs(directory, exist_ok=True)
 	objects = []
 	for source in sources:
 		obj = os.path.join(directory, os.path.basename(source) + '.o')
-		run([tool(board, 'gcc')] + flags + ['-c', source, '-o', obj])
+		run([tool(arch, 'gcc')] + flags + ['-c', source, '-o', obj])
 		objects.append(obj)
 	return objects
 
 
-def build_board(board, build_root):
-	arch = arch_of(board)
-	top = aor_dir(build_root, board)
+def build_arch(arch, build_root):
+	top = aor_dir(build_root, arch)
 	os.makedirs(top, exist_ok=True)
 	provided = {}
 
@@ -185,52 +181,52 @@ def build_board(board, build_root):
 			with open(source, 'w') as f:
 				f.write(FORCED_ARCH.sub('', text))
 			sources.append(source)
-		flags = cross_flags(board) + ['-I' + os.path.join(AOR_ROOT, 'string', 'arm'), '-I' + os.path.join(AOR_ROOT, 'string', 'include')]
-		objects = compile_all(board, sources, os.path.join(top, 'string'), flags)
+		flags = cross_flags(arch) + ['-I' + os.path.join(AOR_ROOT, 'string', 'arm'), '-I' + os.path.join(AOR_ROOT, 'string', 'include')]
+		objects = compile_all(arch, sources, os.path.join(top, 'string'), flags)
 		renames = {old: new for symbols in files.values() for old, new in symbols.items()}
-		provided['string'] = archive(board, top, 'string', objects, renames)
+		provided['string'] = archive(arch, top, 'string', objects, renames)
 		missing = set(renames.values()) - set(provided['string'])
 		if missing:
-			raise SystemExit(f'{board}: AOR string archive lacks {", ".join(sorted(missing))}')
+			raise SystemExit(f'{arch}: AOR string archive lacks {", ".join(sorted(missing))}')
 
-	# math, every board, at -O3 and at -Os
+	# math, every architecture, at -O3 and at -Os
 	sources = sorted(source for source in glob.glob(os.path.join(AOR_ROOT, 'math', '*.c')) if os.path.basename(source) not in MATH_SKIP)
 	for name, optimisation in MATH_LIBRARIES.items():
-		flags = c_flags(board) + MATH_FLAGS + [optimisation, '-I' + os.path.join(AOR_ROOT, 'math', 'include'), '-I' + os.path.join(AOR_ROOT, 'math')]
-		objects = compile_all(board, sources, os.path.join(top, name), flags)
-		provided[name] = archive(board, top, name, objects, {})
+		flags = c_flags(arch) + MATH_FLAGS + [optimisation, '-I' + os.path.join(AOR_ROOT, 'math', 'include'), '-I' + os.path.join(AOR_ROOT, 'math')]
+		objects = compile_all(arch, sources, os.path.join(top, name), flags)
+		provided[name] = archive(arch, top, name, objects, {})
 
 	# fp: Thumb-1 on Armv6-M, the full A32/Thumb-2 set on the others; AOR's own fp/Dir.mk adds
 	# -Wa,-mimplicit-it=always
-	if is_arm(board):
+	if is_arm(arch):
 		subdir = 'armv6-m' if arch in THUMB1 else 'at32'
 		sources = sorted(glob.glob(os.path.join(AOR_ROOT, 'fp', subdir, '*.S')))
-		flags = cross_flags(board) + ['-Wa,-mimplicit-it=always', '-I' + os.path.join(AOR_ROOT, 'fp', 'include'), '-I' + os.path.join(AOR_ROOT, 'fp', subdir)]
-		objects = compile_all(board, sources, os.path.join(top, 'fp'), flags)
+		flags = cross_flags(arch) + ['-Wa,-mimplicit-it=always', '-I' + os.path.join(AOR_ROOT, 'fp', 'include'), '-I' + os.path.join(AOR_ROOT, 'fp', subdir)]
+		objects = compile_all(arch, sources, os.path.join(top, 'fp'), flags)
 		common = sorted(glob.glob(os.path.join(AOR_ROOT, 'fp', 'common', '*.c')))
-		objects += compile_all(board, common, os.path.join(top, 'fp'), c_flags(board) + ['-std=c23', '-O3', '-I' + os.path.join(AOR_ROOT, 'fp', 'include')])
+		objects += compile_all(arch, common, os.path.join(top, 'fp'), c_flags(arch) + ['-std=c23', '-O3', '-I' + os.path.join(AOR_ROOT, 'fp', 'include')])
 		renames = {f'arm_fp_{op}': name for op, name in FP_NAMES.items()}
-		provided['fp'] = archive(board, top, 'fp', objects, renames)
+		provided['fp'] = archive(arch, top, 'fp', objects, renames)
 		leftover = [symbol for symbol in provided['fp'] if symbol.startswith('arm_fp_')]
 		if leftover:
-			raise SystemExit(f'{board}: AOR fp symbols without a run-time ABI name: {", ".join(leftover)}')
+			raise SystemExit(f'{arch}: AOR fp symbols without a run-time ABI name: {", ".join(leftover)}')
 
 	with open(os.path.join(top, 'aor.json'), 'w') as f:
-		json.dump({'revision': AOR_REVISION, 'board': board, 'provided': provided}, f, indent=1, sort_keys=True)
+		json.dump({'revision': AOR_REVISION, 'provided': provided}, f, indent=1, sort_keys=True)
 		f.write('\n')
 	return provided
 
 
-def read_manifest(build_root, board):
-	path = os.path.join(aor_dir(build_root, board), 'aor.json')
+def read_manifest(build_root, arch):
+	path = os.path.join(aor_dir(build_root, arch), 'aor.json')
 	if not os.path.exists(path):
 		raise SystemExit(f'{path}: missing; run "make aor" first')
 	with open(path) as f:
 		return json.load(f)
 
 
-def library_path(build_root, board, name):
-	return os.path.join(aor_dir(build_root, board), f'libaor-{name}.a')
+def library_path(build_root, arch, name):
+	return os.path.join(aor_dir(build_root, arch), f'libaor-{name}.a')
 
 
 def port_objects(build):
@@ -243,21 +239,21 @@ def port_objects(build):
 	return objects
 
 
-def link_once(board, build, objects, libraries, elf, forced):
-	flags = cross_flags(board) + ['-static', '-nostdlib', '-Wl,--gc-sections']
-	if is_arm(board):
+def link_once(arch, build, objects, libraries, elf, forced):
+	flags = cross_flags(arch) + ['-static', '-nostdlib', '-Wl,--gc-sections']
+	if is_arm(arch):
 		flags += ['-Wl,-T,' + os.path.join('port', 'linux', 'arm', 'headers.ld'), '-Wl,-z,noexecstack']
 	else:
 		flags += ['-no-pie']
-	libgcc = run([tool(board, 'gcc')] + cross_flags(board) + ['-print-libgcc-file-name']).strip()
+	libgcc = run([tool(arch, 'gcc')] + cross_flags(arch) + ['-print-libgcc-file-name']).strip()
 	mapfile = os.path.splitext(elf)[0] + '.map'
-	command = [tool(board, 'gcc')] + flags + ['-Wl,--allow-multiple-definition', f'-Wl,-Map,{mapfile}', '-o', elf] + [f'-Wl,-u,{symbol}' for symbol in sorted(forced)] + \
+	command = [tool(arch, 'gcc')] + flags + ['-Wl,--allow-multiple-definition', f'-Wl,-Map,{mapfile}', '-o', elf] + [f'-Wl,-u,{symbol}' for symbol in sorted(forced)] + \
 		objects + port_objects(build) + ['-Wl,--start-group'] + libraries + [os.path.join(build, 'libc', 'libc.a'), libgcc, '-Wl,--end-group']
 	run(command)
 	return mapfile
 
 
-def link(board, build, objects, libraries, elf, provided, undefined=()):
+def link(arch, build, objects, libraries, elf, provided, undefined=()):
 	"""Link objects with the AOR archives ahead of libc.a and libgcc, as tools/makefiles/<arch>.mk links
 	every program, so that every routine AOR provides comes from AOR (D92). Leading the group is not
 	enough: a libgcc member pulled in for another symbol takes the helpers it calls from libgcc itself.
@@ -268,8 +264,8 @@ def link(board, build, objects, libraries, elf, provided, undefined=()):
 	program can be linked for one routine alone (size-report aor)."""
 	forced = set(undefined)
 	while True:
-		mapfile = link_once(board, build, objects, libraries, elf, forced)
-		present = set(defined_addresses(board, elf)) & set(provided)
+		mapfile = link_once(arch, build, objects, libraries, elf, forced)
+		present = set(defined_addresses(arch, elf)) & set(provided)
 		if present <= forced:
 			return mapfile
 		forced |= present
@@ -288,21 +284,21 @@ def aor_ranges(mapfile):
 	return ranges
 
 
-def defined_addresses(board, elf):
+def defined_addresses(arch, elf):
 	"""Symbol addresses of a linked program; a Thumb function's without its bit 0."""
 	addresses = {}
-	for line in run([tool(board, 'nm'), '--defined-only', elf]).splitlines():
+	for line in run([tool(arch, 'nm'), '--defined-only', elf]).splitlines():
 		fields = line.split()
 		if len(fields) == 3:
-			addresses[fields[2]] = int(fields[0], 16) & (~1 if is_arm(board) else ~0)
+			addresses[fields[2]] = int(fields[0], 16) & (~1 if is_arm(arch) else ~0)
 	return addresses
 
 
-def check_substitution(board, elf, mapfile, provided):
+def check_substitution(arch, elf, mapfile, provided):
 	"""Every symbol an AOR archive provides that the program contains must be AOR's definition;
 	returns the substituted symbols."""
 	ranges = aor_ranges(mapfile)
-	addresses = defined_addresses(board, elf)
+	addresses = defined_addresses(arch, elf)
 	substituted = []
 	wrong = []
 	for symbol in sorted(set(provided)):
@@ -325,18 +321,18 @@ SMOKE_EXPECTED = {
 }
 
 
-def smoke_board(board, build_root, build_type):
-	build = os.path.join(build_root, board, build_type)
-	manifest = read_manifest(build_root, board)
-	top = aor_dir(build_root, board)
-	group = 'thumb1' if arch_of(board) in THUMB1 else 'thumb2'
+def smoke_arch(arch, build_root, build_type):
+	build = os.path.join(build_root, arch, build_type)
+	manifest = read_manifest(build_root, arch)
+	top = aor_dir(build_root, arch)
+	group = 'thumb1' if arch in THUMB1 else 'thumb2'
 	obj = os.path.join(top, 'smoke.o')
-	run([tool(board, 'gcc')] + c_flags(board) + ['-std=c23', '-Os', '-fno-builtin', '-c', os.path.join('tools', 'aor', 'smoke.c'), '-o', obj])
+	run([tool(arch, 'gcc')] + c_flags(arch) + ['-std=c23', '-Os', '-fno-builtin', '-c', os.path.join('tools', 'aor', 'smoke.c'), '-o', obj])
 	elf = os.path.join(top, 'smoke.elf')
 	names = [name for name in ('string', 'math', 'fp') if name in manifest['provided']]
 	provided = [symbol for name in names for symbol in manifest['provided'][name]]
-	mapfile = link(board, build, [obj], [library_path(build_root, board, name) for name in names], elf, provided)
-	substituted = check_substitution(board, elf, mapfile, provided)
+	mapfile = link(arch, build, [obj], [library_path(build_root, arch, name) for name in names], elf, provided)
+	substituted = check_substitution(arch, elf, mapfile, provided)
 	expected = []
 	for name in names:
 		entry = SMOKE_EXPECTED[name]
@@ -344,11 +340,11 @@ def smoke_board(board, build_root, build_type):
 	missing = sorted(set(expected) - set(substituted))
 	if missing:
 		raise SystemExit(f'{elf}: expected AOR\'s {", ".join(missing)}')
-	result = subprocess.run(target_runner(board) + [elf], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=600)
+	result = subprocess.run(target_runner(arch) + [elf], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=600)
 	sys.stdout.write(result.stdout)
 	if result.returncode != 0:
 		raise SystemExit(f'{elf}: exit status {result.returncode}')
-	print(f'{board}: AOR smoke test passed; {len(substituted)} AOR symbols linked: {" ".join(substituted)}')
+	print(f'{arch}: AOR smoke test passed; {len(substituted)} AOR symbols linked: {" ".join(substituted)}')
 
 
 def main():
@@ -356,19 +352,19 @@ def main():
 	parser.add_argument('--build-root', default='build')
 	sub = parser.add_subparsers(dest='command', required=True)
 	p = sub.add_parser('build')
-	p.add_argument('--board', nargs='+', default=BOARDS)
+	p.add_argument('--arch', nargs='+', default=ARCHS)
 	p = sub.add_parser('smoke')
-	p.add_argument('--board', nargs='+', default=BOARDS)
+	p.add_argument('--arch', nargs='+', default=ARCHS)
 	p.add_argument('--build-type', default='release')
 	args = parser.parse_args()
 	if not os.path.exists(os.path.join(AOR_ROOT, '.fetched')):
 		raise SystemExit(f'{AOR_ROOT}: missing; run "make setup-aor" (or "make aor")')
-	for board in args.board:
+	for arch in args.arch:
 		if args.command == 'build':
-			provided = build_board(board, args.build_root)
-			print(f'{board}: ' + ', '.join(f'libaor-{name}.a ({len(symbols)} symbols)' for name, symbols in provided.items()))
+			provided = build_arch(arch, args.build_root)
+			print(f'{arch}: ' + ', '.join(f'libaor-{name}.a ({len(symbols)} symbols)' for name, symbols in provided.items()))
 		else:
-			smoke_board(board, args.build_root, args.build_type)
+			smoke_arch(arch, args.build_root, args.build_type)
 	return 0
 
 

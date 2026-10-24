@@ -20,11 +20,11 @@
 #   assembly against those models.
 # Every case is compared bit for bit, and with the default float stride of 3
 # every float goes through the conversion from float. Run from the project
-# root after a build of the boards:
+# root after a build of the architectures:
 #
-#   tools/scripts/softdp-diff [--board BOARD ...] [--iterations N] [--float-stride S] [--build-type TYPE]
+#   tools/scripts/softdp-diff [--arch ARCH ...] [--iterations N] [--float-stride S] [--build-type TYPE]
 #
-# About 28 minutes per Arm board for the default 100 million cases and the
+# About 28 minutes per Arm architecture for the default 100 million cases and the
 # float sweep; 2 minutes on x86_64. Exits 1 if any case
 # differs.
 
@@ -34,28 +34,28 @@ import subprocess
 import sys
 import time
 
-BOARDS = ['linux-x86_64', 'linux-armv7e-m', 'linux-armv8-m.main']
+ARCHS = ['x86_64', 'armv7e-m', 'armv8-m.main']
 
 
 def main():
 	parser = argparse.ArgumentParser(description='The long comparison of the soft-dp layer against its models and the hardware (PLAN D102)')
-	parser.add_argument('--board', action='append', choices=BOARDS, help='a board to run (default: all three)')
+	parser.add_argument('--arch', action='append', choices=ARCHS, help='an architecture to run (default: all three)')
 	parser.add_argument('--iterations', type=int, default=100_000_000, help='random cases (default 100,000,000)')
 	parser.add_argument('--float-stride', type=int, default=3, help='every n-th float, and the two after it, through the conversion from float (default 3: every float)')
 	parser.add_argument('--build-type', default='release')
 	args = parser.parse_args()
 
 	failed = False
-	for board in args.board or BOARDS:
-		elf = os.path.join('build', board, args.build_type, 'test', 'unit', 'softdp', 'softdp.elf')
+	for arch in args.arch or ARCHS:
+		elf = os.path.join('build', arch, args.build_type, 'test', 'unit', 'softdp', 'softdp.elf')
 		if not os.path.exists(elf):
-			raise SystemExit(f'{elf}: missing; build it first (make BOARD_TYPE={board} BUILD_TYPE={args.build_type})')
-		command = ([] if board == 'linux-x86_64' else ['qemu-arm', '-cpu', 'max']) + [elf, str(args.iterations), str(args.float_stride)]
+			raise SystemExit(f'{elf}: missing; build it first (make ARCH_CROSS={arch} BUILD_TYPE={args.build_type})')
+		command = ([] if arch == 'x86_64' else ['qemu-arm', '-cpu', 'max']) + [elf, str(args.iterations), str(args.float_stride)]
 		start = time.monotonic()
 		run = subprocess.run(command, capture_output=True, text=True)
 		lines = run.stdout.splitlines()
 		failures = [line for line in lines if line.startswith('fail')]
-		print(f'{board}: {args.iterations} cases, float stride {args.float_stride}: {"pass" if run.returncode == 0 else "FAIL"} ({len(failures)} failures, {time.monotonic() - start:.0f} s)')
+		print(f'{arch}: {args.iterations} cases, float stride {args.float_stride}: {"pass" if run.returncode == 0 else "FAIL"} ({len(failures)} failures, {time.monotonic() - start:.0f} s)')
 		for line in failures[:20]:
 			print(f'  {line}')
 		failed |= run.returncode != 0

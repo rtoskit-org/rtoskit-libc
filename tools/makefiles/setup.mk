@@ -21,7 +21,7 @@ QEMU_TARGET := ${QEMU_ROOT}/bin/qemu-arm
 BENCH_PLUGIN := ${QEMU_ROOT}/lib/bench-roi.so
 
 # Arm Optimized Routines (Phase 4, PLAN D91, D92): fetched only to measure rtoskit-libc against it,
-# built by tools/scripts/aor-build into build/<board>/aor/ and never into libc.a ("make setup-aor").
+# built by tools/scripts/aor-build into build/<arch>/aor/ and never into libc.a ("make setup-aor").
 # A shallow fetch of the pinned commit; the commit ID is the content check.
 AOR_URL := https://github.com/ARM-software/optimized-routines.git
 AOR_REVISION := f67e7daa5457646fad9f75580263dba654c988aa

@@ -3,7 +3,7 @@
 # <suite>/<name> <status> [# note]
 #
 # status:
-#   run             built and run by make check; the outcome is compared with expected/<board>.txt
+#   run             built and run by make check; the outcome is compared with expected/<arch>.txt
 #   pending:<step>  in scope, enabled by the named step of docs/plan/phase-1.md
 #   skip:posix      out of scope (PLAN.md section 1): POSIX, BSD or GNU interfaces
 #   skip:wide       out of scope: wide-character and multibyte interfaces

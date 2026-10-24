@@ -15,23 +15,23 @@
 # Run from the project root after a release build and "make setup-bench"
 # ("make bench" does all three):
 #
-#   tools/scripts/bench-runner [--build-type T] run [--board B ...]
+#   tools/scripts/bench-runner [--build-type T] run [--arch A ...]
 #                                                        measure; write results.json in the build
 #                                                        (release: the size flavour, the default;
 #                                                        speed: the speed flavour, PLAN D73)
-#   tools/scripts/bench-runner diff [--board B ...]      compare results.json with docs/perf/baseline-<arch>[-speed].json;
+#   tools/scripts/bench-runner diff [--arch A ...]      compare results.json with docs/perf/baseline-<arch>[-speed].json;
 #                                                        exit status 1 when a case regressed
-#   tools/scripts/bench-runner report [--board B ...]    write the baselines from results.json
-#   tools/scripts/bench-runner markdown --board B [--previous REF | --against FILE]
+#   tools/scripts/bench-runner report [--arch A ...]    write the baselines from results.json
+#   tools/scripts/bench-runner markdown --arch A [--previous REF | --against FILE]
 #                                                        print the summary tables of a baseline, against
 #                                                        the baseline at git revision REF, or the baseline
 #                                                        file FILE (<arch> replaced), if given
-#   tools/scripts/bench-runner compare [--board B ...] [--work DIR]
+#   tools/scripts/bench-runner compare [--arch A ...] [--work DIR]
 #                                                        build the test/bench programs against picolibc and
 #                                                        newlib-nano (the packages of size-report compare),
 #                                                        count them the same way and print a Markdown table
 #                                                        beside the baselines (context, not a gate; P3.06)
-#   tools/scripts/bench-runner aor [--board B ...] [--record | --from-record]
+#   tools/scripts/bench-runner aor [--arch A ...] [--record | --from-record]
 #                                                        relink the speed build's programs with Arm Optimized
 #                                                        Routines ("make aor" first), count them and print the
 #                                                        tables against the baselines; --record keeps the results
@@ -39,7 +39,7 @@
 #
 # Figures: per case of each test/bench program, the guest instructions per
 # operation counted by the qemu plugin tools/qemu-plugins/bench-roi.c (on
-# every board; x86_64 runs under qemu-x86_64 for this), and on x86_64 the
+# every architecture; x86_64 runs under qemu-x86_64 for this), and on x86_64 the
 # time stamp counter cycles per operation of a native run (the fastest of 15, see
 # test/bench/harness/bench.h). Instruction counts are exact and repeatable,
 # so they are what diff gates; cycles are reported, not gated.
@@ -56,7 +56,7 @@ import shutil
 import subprocess
 import sys
 
-BOARDS = ['linux-x86_64', 'linux-armv6-m', 'linux-armv6s-m', 'linux-armv7e-m', 'linux-armv7e-m-dp', 'linux-armv8-m.main']
+ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 PROGRAMS = ['string', 'stdio', 'strto', 'malloc', 'malloc-tiny', 'qsort', 'math', 'softfloat', 'threads']
 QEMU_VERSION = '8.2.2'
 QEMU_ROOT = os.path.join('local', f'qemu-{QEMU_VERSION}')
@@ -71,12 +71,8 @@ SUMMARY_SIZES = [0, 1, 4, 16, 64, 256, 1024]
 STRING_FUNCTIONS = ['memcpy', 'memmove-down', 'memmove-up', 'memset', 'memcmp', 'memchr', 'strlen', 'strchr', 'strcmp', 'strcpy']
 
 
-def arch_of(board):
-	return board[len('linux-'):]
-
-
-def is_arm(board):
-	return arch_of(board) != 'x86_64'
+def is_arm(arch):
+	return arch != 'x86_64'
 
 
 def program_path(build, program):
@@ -92,20 +88,20 @@ def flavour_of(build_type):
 	return 'speed' if build_type == 'speed' else 'size'
 
 
-def baseline_path(directory, board, build_type):
+def baseline_path(directory, arch, build_type):
 	suffix = '-speed' if flavour_of(build_type) == 'speed' else ''
-	return os.path.join(directory, f'baseline-{arch_of(board)}{suffix}.json')
+	return os.path.join(directory, f'baseline-{arch}{suffix}.json')
 
 
-def symbol_addresses(board, elf, names):
-	nm = os.path.join('local', 'bin', 'arm-none-eabi-nm') if is_arm(board) else 'nm'
+def symbol_addresses(arch, elf, names):
+	nm = os.path.join('local', 'bin', 'arm-none-eabi-nm') if is_arm(arch) else 'nm'
 	output = subprocess.run([nm, elf], check=True, capture_output=True, text=True).stdout
 	addresses = {}
 	for line in output.splitlines():
 		fields = line.split()
 		if len(fields) == 3 and fields[2] in names:
 			addresses[fields[2]] = int(fields[0], 16)
-	if is_arm(board):
+	if is_arm(arch):
 		# A Thumb function symbol has bit 0 set; its first instruction is at the even address
 		addresses = {name: address & ~1 for name, address in addresses.items()}
 	missing = set(names) - set(addresses)
@@ -129,11 +125,11 @@ def parse_cases(text, elf):
 	return cases
 
 
-def count_instructions(board, elf):
-	addresses = symbol_addresses(board, elf, ['bench_roi_begin', 'bench_roi_end'])
-	qemu = os.path.join(QEMU_ROOT, 'bin', 'qemu-arm' if is_arm(board) else 'qemu-x86_64')
+def count_instructions(arch, elf):
+	addresses = symbol_addresses(arch, elf, ['bench_roi_begin', 'bench_roi_end'])
+	qemu = os.path.join(QEMU_ROOT, 'bin', 'qemu-arm' if is_arm(arch) else 'qemu-x86_64')
 	plugin = f'{PLUGIN},begin={addresses["bench_roi_begin"]:#x},end={addresses["bench_roi_end"]:#x}'
-	command = [qemu] + (['-cpu', 'max'] if is_arm(board) else []) + ['-plugin', plugin, '-d', 'plugin', elf, 'count']
+	command = [qemu] + (['-cpu', 'max'] if is_arm(arch) else []) + ['-plugin', plugin, '-d', 'plugin', elf, 'count']
 	run = subprocess.run(command, capture_output=True, text=True, timeout=1800)
 	if run.returncode != 0:
 		raise SystemExit(f'{elf}: exit status {run.returncode}\n{run.stderr}')
@@ -154,15 +150,15 @@ def time_cycles(elf):
 	return {name: round(cycles / operations, 2) for name, operations, cycles in parse_cases(run.stdout, elf)[1:]}
 
 
-def measure(board, build_type, build_root):
-	build = os.path.join(build_root, board, build_type)
-	result = {'arch': arch_of(board), 'board': board, 'build_type': build_type, 'flavour': flavour_of(build_type), 'qemu': QEMU_VERSION, 'programs': {}}
+def measure(arch, build_type, build_root):
+	build = os.path.join(build_root, arch, build_type)
+	result = {'arch': arch, 'build_type': build_type, 'flavour': flavour_of(build_type), 'qemu': QEMU_VERSION, 'programs': {}}
 	for program in PROGRAMS:
 		elf = program_path(build, program)
 		if not os.path.exists(elf):
-			raise SystemExit(f'{elf}: not built (make BOARD_TYPE={board} BUILD_TYPE={build_type})')
-		cases = {name: {'insns': insns} for name, insns in count_instructions(board, elf).items()}
-		if not is_arm(board):
+			raise SystemExit(f'{elf}: not built (make ARCH_CROSS={arch} BUILD_TYPE={build_type})')
+		cases = {name: {'insns': insns} for name, insns in count_instructions(arch, elf).items()}
+		if not is_arm(arch):
 			for name, cycles in time_cycles(elf).items():
 				cases[name]['cycles'] = cycles
 		result['programs'][program] = cases
@@ -188,9 +184,9 @@ def check_tools():
 
 def command_run(args):
 	check_tools()
-	for board in args.board:
-		build = os.path.join(args.build_root, board, args.build_type)
-		result = measure(board, args.build_type, args.build_root)
+	for arch in args.arch:
+		build = os.path.join(args.build_root, arch, args.build_type)
+		result = measure(arch, args.build_type, args.build_root)
 		write_json(results_path(build), result)
 		print(f'{results_path(build)}: {sum(len(c) for c in result["programs"].values())} cases')
 	return 0
@@ -217,13 +213,13 @@ def regressed(old, new):
 
 def command_diff(args):
 	failed = False
-	for board in args.board:
-		build = os.path.join(args.build_root, board, args.build_type)
-		baseline = read_json(baseline_path(args.baseline_dir, board, args.build_type))
+	for arch in args.arch:
+		build = os.path.join(args.build_root, arch, args.build_type)
+		baseline = read_json(baseline_path(args.baseline_dir, arch, args.build_type))
 		changed, only = compare(baseline, read_json(results_path(build)))
 		worse = [c for c in changed if regressed(c[2], c[3])]
 		better = [c for c in changed if c[3] < c[2]]
-		print(f'{board}: {len(better)} faster, {len(worse)} regressed, {len(changed) - len(better) - len(worse)} within noise, {len(only)} added or removed')
+		print(f'{arch}: {len(better)} faster, {len(worse)} regressed, {len(changed) - len(better) - len(worse)} within noise, {len(only)} added or removed')
 		for program, case, old, new in sorted(changed, key=lambda c: (c[3] - c[2]) / max(c[2], 1)):
 			if args.verbose or (program, case, old, new) in worse:
 				mark = ' REGRESSED' if (program, case, old, new) in worse else ''
@@ -235,10 +231,10 @@ def command_diff(args):
 
 
 def command_report(args):
-	for board in args.board:
-		build = os.path.join(args.build_root, board, args.build_type)
+	for arch in args.arch:
+		build = os.path.join(args.build_root, arch, args.build_type)
 		result = read_json(results_path(build))
-		path = baseline_path(args.baseline_dir, board, args.build_type)
+		path = baseline_path(args.baseline_dir, arch, args.build_type)
 		write_json(path, result)
 		print(f'{path}: {sum(len(c) for c in result["programs"].values())} cases')
 	return 0
@@ -308,15 +304,15 @@ def math_table(cases, before, cycles):
 
 
 def command_markdown(args):
-	for board in args.board:
-		path = baseline_path(args.baseline_dir, board, args.build_type)
+	for arch in args.arch:
+		path = baseline_path(args.baseline_dir, arch, args.build_type)
 		data = read_json(path)
 		if args.against:
-			previous = read_json(args.against.replace('<arch>', arch_of(board)))
+			previous = read_json(args.against.replace('<arch>', arch))
 		else:
 			previous = previous_baseline(args.previous, path) if args.previous else None
-		cycles = not is_arm(board)
-		print(f'Instructions per operation (qemu {data["qemu"]}, {data["build_type"]}, {data["flavour"]} flavour)' + (f', change against {args.previous or args.against.replace("<arch>", arch_of(board))}' if previous else '') + '.\n')
+		cycles = not is_arm(arch)
+		print(f'Instructions per operation (qemu {data["qemu"]}, {data["build_type"]}, {data["flavour"]} flavour)' + (f', change against {args.previous or args.against.replace("<arch>", arch)}' if previous else '') + '.\n')
 		for program in [p for p in PROGRAMS if p in data['programs']]:
 			cases = data['programs'][program]
 			before = previous['programs'].get(program) if previous else None
@@ -358,9 +354,8 @@ def size_report():
 	return module
 
 
-def compare_build(report, roots, library, board, program, work):
+def compare_build(report, roots, library, arch, program, work):
 	gcc = os.path.abspath(os.path.join('local', 'bin', 'arm-none-eabi-gcc'))
-	arch = arch_of(board)
 	flags = report.cross_flags(arch) + COMPARE_FLAGS + ['-I' + os.path.join('test', 'bench', 'harness')]
 	sources = [os.path.join('tools', 'bench-compare', 'start.S'), os.path.join('tools', 'bench-compare', 'picolibc.c' if library == 'picolibc' else 'newlib.c'),
 		   os.path.join('test', 'bench', 'harness', 'bench.c'), os.path.join('test', 'bench', program, program + '.c')]
@@ -397,12 +392,11 @@ def command_compare(args):
 	report = size_report()
 	os.makedirs(args.work, exist_ok=True)
 	roots = report.fetch_packages(args.work)
-	for board in [b for b in args.board if is_arm(b)]:
-		arch = arch_of(board)
-		ours = {flavour: read_json(baseline_path(args.baseline_dir, board, build_type))['programs'] for flavour, build_type in (('size', 'release'), ('speed', 'speed'))}
+	for arch in [b for b in args.arch if is_arm(b)]:
+		ours = {flavour: read_json(baseline_path(args.baseline_dir, arch, build_type))['programs'] for flavour, build_type in (('size', 'release'), ('speed', 'speed'))}
 		theirs = {}
 		for library in COMPARE_LIBRARIES:
-			theirs[library] = {program: count_instructions(board, compare_build(report, roots, library, board, program, args.work)) for program in COMPARE_PROGRAMS}
+			theirs[library] = {program: count_instructions(arch, compare_build(report, roots, library, arch, program, args.work)) for program in COMPARE_PROGRAMS}
 			write_json(os.path.join(args.work, library, arch, 'results.json'), theirs[library])
 		print(f'### {arch}\n')
 		print('Instructions per operation; the geometric mean is over every case all four builds share, as a ratio to rtoskit\'s speed flavour.\n')
@@ -437,30 +431,30 @@ def aor_build():
 	return module
 
 
-def aor_record_path(directory, board):
-	return os.path.join(directory, f'aor-{arch_of(board)}.json')
+def aor_record_path(directory, arch):
+	return os.path.join(directory, f'aor-{arch}.json')
 
 
-def aor_measure(aor, board, build_root):
-	build = os.path.join(build_root, board, 'speed')
-	manifest = aor.read_manifest(build_root, board)
+def aor_measure(aor, arch, build_root):
+	build = os.path.join(build_root, arch, 'speed')
+	manifest = aor.read_manifest(build_root, arch)
 	names = [name for name in AOR_LIBRARIES if name in manifest['provided']]
-	libraries = [aor.library_path(build_root, board, name) for name in names]
+	libraries = [aor.library_path(build_root, arch, name) for name in names]
 	provided = [symbol for name in names for symbol in manifest['provided'][name]]
-	directory = os.path.join(aor.aor_dir(build_root, board), 'bench')
+	directory = os.path.join(aor.aor_dir(build_root, arch), 'bench')
 	os.makedirs(directory, exist_ok=True)
 	harness = os.path.join(build, 'test', 'bench', 'harness')
-	common = sorted(glob.glob(os.path.join(harness, '*.o'))) + sorted(glob.glob(os.path.join(harness, 'arm' if is_arm(board) else 'x86_64', '*.o')))
+	common = sorted(glob.glob(os.path.join(harness, '*.o'))) + sorted(glob.glob(os.path.join(harness, 'arm' if is_arm(arch) else 'x86_64', '*.o')))
 	# The JSON is key-sorted, so the run order of the cases, which the tables follow, is kept beside them
-	result = {'arch': arch_of(board), 'board': board, 'build_type': 'speed', 'aor': manifest['revision'], 'qemu': QEMU_VERSION, 'programs': {}, 'order': {}, 'substituted': {}}
+	result = {'arch': arch, 'build_type': 'speed', 'aor': manifest['revision'], 'qemu': QEMU_VERSION, 'programs': {}, 'order': {}, 'substituted': {}}
 	for program in AOR_PROGRAMS:
 		objects = sorted(glob.glob(os.path.join(build, 'test', 'bench', program, '*.o')))
 		if not objects:
-			raise SystemExit(f'{build}: test/bench/{program} not built (make BOARD_TYPE={board} BUILD_TYPE=speed)')
+			raise SystemExit(f'{build}: test/bench/{program} not built (make ARCH_CROSS={arch} BUILD_TYPE=speed)')
 		elf = os.path.join(directory, f'bench-{program}.elf')
-		mapfile = aor.link(board, build, objects + common, libraries, elf, provided)
-		result['substituted'][program] = aor.check_substitution(board, elf, mapfile, provided)
-		result['programs'][program] = {name: {'insns': insns} for name, insns in count_instructions(board, elf).items()}
+		mapfile = aor.link(arch, build, objects + common, libraries, elf, provided)
+		result['substituted'][program] = aor.check_substitution(arch, elf, mapfile, provided)
+		result['programs'][program] = {name: {'insns': insns} for name, insns in count_instructions(arch, elf).items()}
 		result['order'][program] = list(result['programs'][program])
 		print(f'{elf}: {len(result["programs"][program])} cases, {len(result["substituted"][program])} AOR symbols', file=sys.stderr)
 	return result
@@ -477,9 +471,9 @@ def is_entry_point(symbol):
 	return not symbol.startswith('arm_math_')
 
 
-def aor_markdown(board, ours, theirs):
-	"""The tables of one board: rtoskit's size and speed flavours and the speed flavour with AOR's routines."""
-	lines = [f'### {arch_of(board)}', '', 'Instructions per operation: rtoskit-libc\'s size and speed flavours, and the speed flavour with AOR\'s routines linked in. '
+def aor_markdown(arch, ours, theirs):
+	"""The tables of one architecture: rtoskit's size and speed flavours and the speed flavour with AOR's routines."""
+	lines = [f'### {arch}', '', 'Instructions per operation: rtoskit-libc\'s size and speed flavours, and the speed flavour with AOR\'s routines linked in. '
 		 'The ratio is AOR against the speed flavour, as a geometric mean over the cases whose count changed.', '',
 		 '| Program | Cases changed | AOR / speed (geometric mean) | AOR symbols linked |', '|---|---:|---:|---|']
 	for program in AOR_PROGRAMS:
@@ -529,16 +523,16 @@ def aor_markdown(board, ours, theirs):
 def command_aor(args):
 	check_tools()
 	aor = aor_build()
-	for board in args.board:
+	for arch in args.arch:
 		if args.from_record:
-			theirs = read_json(aor_record_path(args.baseline_dir, board))
+			theirs = read_json(aor_record_path(args.baseline_dir, arch))
 		else:
-			theirs = aor_measure(aor, board, args.build_root)
-			write_json(os.path.join(aor.aor_dir(args.build_root, board), 'bench-results.json'), theirs)
+			theirs = aor_measure(aor, arch, args.build_root)
+			write_json(os.path.join(aor.aor_dir(args.build_root, arch), 'bench-results.json'), theirs)
 			if args.record:
-				write_json(aor_record_path(args.baseline_dir, board), theirs)
-		ours = {flavour: read_json(baseline_path(args.baseline_dir, board, build_type))['programs'] for flavour, build_type in (('size', 'release'), ('speed', 'speed'))}
-		print('\n'.join(aor_markdown(board, ours, theirs)))
+				write_json(aor_record_path(args.baseline_dir, arch), theirs)
+		ours = {flavour: read_json(baseline_path(args.baseline_dir, arch, build_type))['programs'] for flavour, build_type in (('size', 'release'), ('speed', 'speed'))}
+		print('\n'.join(aor_markdown(arch, ours, theirs)))
 	return 0
 
 
@@ -550,22 +544,22 @@ def main():
 	sub = parser.add_subparsers(dest='command', required=True)
 	for name in ('run', 'diff', 'report', 'markdown'):
 		p = sub.add_parser(name)
-		p.add_argument('--board', action='append', choices=BOARDS)
+		p.add_argument('--arch', action='append', choices=ARCHS)
 		if name == 'diff':
 			p.add_argument('--verbose', action='store_true', help='list every changed case, not only the regressions')
 		if name == 'markdown':
 			p.add_argument('--previous', help='a git revision whose baseline to compare with')
 			p.add_argument('--against', help='a baseline file to compare with (<arch> is replaced), e.g. the other flavour')
 	p = sub.add_parser('compare')
-	p.add_argument('--board', action='append', choices=BOARDS)
+	p.add_argument('--arch', action='append', choices=ARCHS)
 	p.add_argument('--work', default=os.path.join('build', 'bench-compare'), help='where the packages are unpacked and the programs built')
 	p = sub.add_parser('aor')
-	p.add_argument('--board', action='append', choices=BOARDS)
+	p.add_argument('--arch', action='append', choices=ARCHS)
 	p.add_argument('--record', action='store_true', help='also write the results to docs/perf/aor-<arch>.json')
 	p.add_argument('--from-record', action='store_true', help='print the tables of docs/perf/aor-<arch>.json without measuring')
 	args = parser.parse_args()
-	if getattr(args, 'board', None) is None:
-		args.board = BOARDS
+	if getattr(args, 'arch', None) is None:
+		args.arch = ARCHS
 	commands = {'run': command_run, 'diff': command_diff, 'report': command_report, 'markdown': command_markdown, 'compare': command_compare, 'aor': command_aor}
 	return commands[args.command](args)
 

@@ -22,7 +22,7 @@
  * their double arithmetic in soft-float and ours their float-float or
  * fixed-point paths. tools/scripts/aor-accuracy links it against
  * rtoskit-libc alone or with AOR's archives in front, runs it under the
- * board's runner and hands the records to the host checker
+ * architecture's runner and hands the records to the host checker
  * (tools/aor/accuracy.c, "records"), which measures them against MPFR.
  *
  * Output, per function: its name in 16 bytes, then SAMPLES records of three

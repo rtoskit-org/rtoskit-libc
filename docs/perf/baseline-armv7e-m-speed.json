@@ -1,6 +1,5 @@
 {
  "arch": "armv7e-m",
- "board": "linux-armv7e-m",
  "build_type": "speed",
  "flavour": "speed",
  "programs": {

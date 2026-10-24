@@ -1,6 +1,5 @@
 {
  "arch": "armv8-m.main",
- "board": "linux-armv8-m.main",
  "build_type": "speed",
  "flavour": "speed",
  "programs": {

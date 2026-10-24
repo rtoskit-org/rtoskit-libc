@@ -13,7 +13,7 @@
 
 # Shared part of the Arm M-profile toolchain files: the architecture file sets
 # CROSS_FLAGS, ARCH_FAMILY and LIBC_FPU, then includes this file (PLAN D22, D24, D34).
-# A board adds its link options (e.g. a linker script) through BOARD_LDFLAGS.
+# The port file common.mk includes next appends its link options (PLAN D106).
 
 CROSS_COMPILE ?= ${PROJECT_ROOT}/local/bin/arm-none-eabi-
 
@@ -46,6 +46,6 @@ LIBC_CFLAGS := -ffreestanding -fno-builtin -fno-tree-loop-distribute-patterns -f
 
 LDSCRIPTS :=
 # Bare-metal objects carry no .note.GNU-stack; the stack is never executable, so say so instead of letting ld warn
-LDFLAGS := ${CROSS_FLAGS} ${BOARD_LDFLAGS} -static -nostdlib -Wl,--gc-sections -Wl,-z,noexecstack
+LDFLAGS := ${CROSS_FLAGS} -static -nostdlib -Wl,--gc-sections -Wl,-z,noexecstack
 LOADLIBES :=
 LDLIBS := -Wl,--start-group ${BUILD_ROOT}/libc/libc.a $(shell ${CC} ${CROSS_FLAGS} -print-libgcc-file-name) -Wl,--end-group
