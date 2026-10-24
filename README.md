@@ -70,12 +70,12 @@ Code bytes, text plus rodata, of the library's share of each `test/size` program
 
 | Program | rtoskit-libc | rtoskit + AOR | picolibc | newlib-nano | rtoskit + AOR ratio | picolibc ratio | newlib-nano ratio |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| `printf("%d")` | 6397 | 6593 | 6381 | 6896 | 1.03 | 1.00 | 1.08 |
-| `printf("%d")`, `libc-minimal-printf.a` | 3447 | — | — | — | — | — | — |
-| `printf("%f")` | 7717 ¹ | 8181 | 6381 | 17575 | 1.06 | 0.83 | 2.28 |
-| `puts` | 1148 ² | 5180 ³ | 212 | 3488 | 4.51 | 0.18 | 3.04 |
-| `malloc` / `free` heavy | 1016 | 4982 ³ | 960 | 2156 | 4.90 | 0.94 | 2.12 |
-| float math (`sinf`, `expf`, `logf`, ...) | 4408 | 7492 | 6444 | 8237 | 1.70 | 1.46 | 1.87 |
+| `printf("%d")` | 6369 | 6565 | 6381 | 6896 | 1.03 | 1.00 | 1.08 |
+| `printf("%d")`, `libc-minimal-printf.a` | 3419 | — | — | — | — | — | — |
+| `printf("%f")` | 7689 ¹ | 8153 | 6381 | 17575 | 1.06 | 0.83 | 2.29 |
+| `puts` | 1120 ² | 5152 ³ | 212 | 3488 | 4.60 | 0.19 | 3.11 |
+| `malloc` / `free` heavy | 988 | 4954 ³ | 960 | 2156 | 5.01 | 0.97 | 2.18 |
+| float math (`sinf`, `expf`, `logf`, ...) | 4380 | 7464 | 6444 | 8237 | 1.70 | 1.47 | 1.88 |
 
 1. Includes the soft-double helpers. Since [D100](docs/plan/PLAN.md#2-decision-log) the library defines them itself instead of taking them from libgcc, which the picolibc and newlib-nano columns do not count.
 2. rtoskit's `puts` goes through a buffered, locked `FILE`. picolibc's writes unbuffered through semihosting.
