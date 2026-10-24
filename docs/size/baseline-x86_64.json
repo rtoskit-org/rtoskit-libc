@@ -21,7 +21,7 @@
      "rodata": 108,
      "tbss": 0,
      "tdata": 0,
-     "text": 2380,
+     "text": 2358,
      "unwind": 0
     },
     "libgcc": {
@@ -48,7 +48,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 301,
+     "text": 324,
      "unwind": 0
     },
     "program": {
@@ -67,7 +67,7 @@
     "rodata": 152,
     "tbss": 0,
     "tdata": 0,
-    "text": 3104,
+    "text": 3105,
     "unwind": 0
    }
   },
@@ -94,7 +94,7 @@
      "rodata": 745,
      "tbss": 4,
      "tdata": 0,
-     "text": 8811,
+     "text": 8789,
      "unwind": 0
     },
     "libgcc": {
@@ -121,7 +121,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 649,
+     "text": 672,
      "unwind": 0
     },
     "program": {
@@ -140,7 +140,7 @@
     "rodata": 880,
     "tbss": 4,
     "tdata": 4,
-    "text": 9519,
+    "text": 9520,
     "unwind": 0
    }
   },
@@ -167,7 +167,7 @@
      "rodata": 745,
      "tbss": 4,
      "tdata": 0,
-     "text": 8811,
+     "text": 8789,
      "unwind": 0
     },
     "libgcc": {
@@ -194,7 +194,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 649,
+     "text": 672,
      "unwind": 0
     },
     "program": {
@@ -213,7 +213,7 @@
     "rodata": 848,
     "tbss": 4,
     "tdata": 4,
-    "text": 9504,
+    "text": 9505,
     "unwind": 0
    }
   },
@@ -240,7 +240,7 @@
      "rodata": 503,
      "tbss": 4,
      "tdata": 0,
-     "text": 4825,
+     "text": 4803,
      "unwind": 0
     },
     "libgcc": {
@@ -267,7 +267,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 649,
+     "text": 672,
      "unwind": 0
     },
     "program": {
@@ -286,7 +286,7 @@
     "rodata": 552,
     "tbss": 4,
     "tdata": 4,
-    "text": 5518,
+    "text": 5519,
     "unwind": 0
    }
   },
@@ -313,7 +313,7 @@
      "rodata": 623,
      "tbss": 4,
      "tdata": 0,
-     "text": 5085,
+     "text": 5063,
      "unwind": 0
     },
     "libgcc": {
@@ -340,7 +340,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 649,
+     "text": 672,
      "unwind": 0
     },
     "program": {
@@ -359,7 +359,7 @@
     "rodata": 672,
     "tbss": 4,
     "tdata": 4,
-    "text": 5778,
+    "text": 5779,
     "unwind": 0
    }
   },
@@ -384,7 +384,7 @@
      "rodata": 2,
      "tbss": 4,
      "tdata": 0,
-     "text": 1616,
+     "text": 1594,
      "unwind": 0
     },
     "libgcc": {
@@ -411,7 +411,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 649,
+     "text": 672,
      "unwind": 0
     },
     "program": {
@@ -430,7 +430,7 @@
     "rodata": 15,
     "tbss": 4,
     "tdata": 4,
-    "text": 2285,
+    "text": 2286,
     "unwind": 0
    }
   },
@@ -453,7 +453,7 @@
      "rodata": 0,
      "tbss": 4,
      "tdata": 0,
-     "text": 1532,
+     "text": 1510,
      "unwind": 0
     },
     "libgcc": {
@@ -480,7 +480,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 703,
+     "text": 726,
      "unwind": 0
     },
     "program": {
@@ -499,7 +499,7 @@
     "rodata": 0,
     "tbss": 4,
     "tdata": 4,
-    "text": 2517,
+    "text": 2518,
     "unwind": 0
    }
   },
@@ -522,7 +522,7 @@
      "rodata": 0,
      "tbss": 4,
      "tdata": 0,
-     "text": 1415,
+     "text": 1393,
      "unwind": 0
     },
     "libgcc": {
@@ -549,7 +549,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 703,
+     "text": 726,
      "unwind": 0
     },
     "program": {
@@ -568,7 +568,7 @@
     "rodata": 0,
     "tbss": 4,
     "tdata": 4,
-    "text": 2400,
+    "text": 2401,
     "unwind": 0
    }
   },
@@ -592,7 +592,7 @@
      "rodata": 3413,
      "tbss": 0,
      "tdata": 0,
-     "text": 9434,
+     "text": 9412,
      "unwind": 0
     },
     "libgcc": {
@@ -619,7 +619,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 301,
+     "text": 324,
      "unwind": 0
     },
     "program": {
@@ -638,7 +638,7 @@
     "rodata": 3456,
     "tbss": 0,
     "tdata": 0,
-    "text": 9954,
+    "text": 9955,
     "unwind": 0
    }
   },
@@ -662,7 +662,7 @@
      "rodata": 3970,
      "tbss": 0,
      "tdata": 0,
-     "text": 12123,
+     "text": 12101,
      "unwind": 0
     },
     "libgcc": {
@@ -689,7 +689,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 301,
+     "text": 324,
      "unwind": 0
     },
     "program": {
@@ -708,7 +708,7 @@
     "rodata": 4064,
     "tbss": 0,
     "tdata": 0,
-    "text": 12924,
+    "text": 12925,
     "unwind": 0
    }
   }
@@ -1594,7 +1594,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 79,
+    "text": 57,
     "unwind": 0
    },
    "__libc_stderr.o": {
@@ -7571,7 +7571,7 @@
    "rodata": 17598,
    "tbss": 618,
    "tdata": 8,
-   "text": 100288,
+   "text": 100266,
    "unwind": 0
   }
  },

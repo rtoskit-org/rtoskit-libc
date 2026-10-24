@@ -568,3 +568,9 @@ case) and the inline halfway test, and share the out-of-line lookup
 links `cosf`, `logf` and `sinf`), which leaves `math-float` 64 bytes
 inside the size budget. No other image changes; the soft-float cores do not
 use these wrappers.
+
+
+## D104 — `.preinit_array` moves to the port
+
+`__libc_start_main` runs only `.init_array` (28 bytes smaller); the port's start-up code walks `.preinit_array`. Every
+reference image changes by −4 bytes.

@@ -704,3 +704,9 @@ and `__aeabi_f2ulz` (80), and the nofp layer's `__aeabi_d2uiz` (80) and `__aeabi
 converted a double to a 64-bit integer linked libgcc's conversions, which subtract in floating point and brought in
 libgcc's `subdf3.o` (its own `__aeabi_dadd`, about 1.4 KB) in place of D85's. No reference program converts to a
 64-bit integer, so every image is unchanged and both budgets hold.
+
+
+## D104 — `.preinit_array` moves to the port
+
+`__libc_start_main` runs only `.init_array` (24 bytes smaller); the port's start-up code walks `.preinit_array`. Every
+reference image changes by −4 bytes. The baseline also records the D102 members (the soft-int and nofp conversions, `docs/size/armv6-m.md` D102), which that step did not write.

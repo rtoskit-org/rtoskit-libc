@@ -230,9 +230,18 @@ void *__libc_tls_init(void *block, const struct __libc_tls_image *image);
 
 /*
  * Program start. The port's startup code establishes the stack and the
- * initial thread's TLS, then calls this. It runs the static constructors,
- * calls main and passes its result to exit.
+ * initial thread's TLS, then calls this. It runs the static constructors
+ * (.init_array), calls main and passes its result to exit.
+ *
+ * .preinit_array belongs to the port (PLAN D104): it is an ELF convention,
+ * not a C or compiler requirement, and an RTOS may have early hooks of its
+ * own there. A port that supports the convention runs the table, whose
+ * bounds the default linker scripts define, before calling
+ * __libc_start_main; libc never runs it.
  */
 [[noreturn]] void __libc_start_main(int (*main)(int, char **), int argc, char **argv);
+
+extern void (*const __preinit_array_start[])(void);
+extern void (*const __preinit_array_end[])(void);
 
 #endif /* _RTOS_RTOS_PORT_H */

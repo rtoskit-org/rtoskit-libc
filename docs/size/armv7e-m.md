@@ -691,3 +691,9 @@ The faster `__divdc3` and `__divsc3` (see `docs/perf/armv7e-m.md`, D100) add 140
 ## D101 — the comparisons in Thumb-2 assembly
 
 `math-mix` grows by 24 bytes. `__aeabi_dcmpgt` and `__aeabi_dcmpge` exchange their operands before calling the shared ordering (+12 and +8 bytes); `__libc_softdouble_compare` is 106 bytes against 100 in C. That pays for comparisons 34 % faster. The size budget holds; no other image changes.
+
+
+## D104 — `.preinit_array` moves to the port
+
+`__libc_start_main` runs only `.init_array` (28 bytes smaller); the port's start-up code walks `.preinit_array`. Every
+reference image changes by −4 bytes.

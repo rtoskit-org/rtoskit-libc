@@ -27,5 +27,10 @@ static char *arguments[1];
 		__rtos_abort();
 
 	__rtos_none_set_tp(__libc_tls_init(tls_block, tls));
+
+	/* The port runs .preinit_array (PLAN D104), with the TLS already in place */
+	for (void (*const *entry)(void) = __preinit_array_start; entry < __preinit_array_end; ++entry)
+		(*entry)();
+
 	__libc_start_main(main, 0, arguments);
 }

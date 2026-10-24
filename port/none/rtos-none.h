@@ -47,8 +47,8 @@ struct __rtos_thread {
  * initialises memory, describes the TLS image from its linker script
  * symbols and calls __rtos_none_start, which places the thread's TLS block
  * in a static buffer of __RTOS_NONE_TLS_BLOCK_SIZE bytes (aborting if the
- * image needs more), installs the thread pointer and runs main through
- * __libc_start_main.
+ * image needs more), installs the thread pointer, runs .preinit_array
+ * (PLAN D104) and runs main through __libc_start_main.
  */
 #define __RTOS_NONE_TLS_BLOCK_SIZE 1024
 

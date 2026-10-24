@@ -15,8 +15,6 @@
 #define _INTERNAL_SECTIONS_H
 
 /* Constructor tables delimited by the linker (provided by the default GNU ld and lld scripts) */
-extern void (*const __preinit_array_start[])(void);
-extern void (*const __preinit_array_end[])(void);
 extern void (*const __init_array_start[])(void);
 extern void (*const __init_array_end[])(void);
 

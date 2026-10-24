@@ -117,6 +117,18 @@ static void destructor(void *value)
 	destructor_ran = value == &tls_value;
 }
 
+/* __rtos_none_start runs .preinit_array once, after the TLS is in place (PLAN D104) */
+static int preinit_runs;
+static int preinit_tls_value;
+
+static void preinit_hook(void)
+{
+	++preinit_runs;
+	preinit_tls_value = tls_value;
+}
+
+[[gnu::section(".preinit_array"), gnu::used]] static void (*const preinit_entry)(void) = preinit_hook;
+
 /* Runs inside exit(EXIT_SUCCESS) after main's thrd_exit */
 static void report(void)
 {
@@ -137,6 +149,7 @@ int main(int argc, char **argv)
 	char *block;
 
 	CHECK(argc == 0 && argv != nullptr && argv[0] == nullptr);
+	CHECK(preinit_runs == 1 && preinit_tls_value == 1234);
 
 	/* The static TLS block holds the initial values */
 	CHECK(tls_value == 1234 && tls_buffer[0] == 0);

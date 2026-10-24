@@ -73,6 +73,20 @@ The kernel enters `_start` with `argc` at `%rsp`, followed by `argv[]`,
 `__preinit_array_*` and `__init_array_*`, which the default linker scripts
 provide.
 
+**Who runs which table (D104).** Neither C nor the compilers know
+`.preinit_array`: C23 only requires static objects to be initialised before
+`main`, and GCC and Clang put constructors (`[[gnu::constructor]]`, C++
+static initialisation) in `.init_array`. `.preinit_array` is an ELF gABI
+section (`DT_PREINIT_ARRAY`, executables only, run before `.init_array`) that
+gets entries only from code that places pointers there by hand; newlib,
+picolibc, glibc and musl run it at startup by convention. An RTOS may use it
+for its own early tiers (pi-pico's `PREINIT_*` macros, walked by its own
+`_start`), so the table belongs to the port: the port's startup runs it,
+after the initial thread's TLS is in place, and `__libc_start_main` runs only
+`.init_array`. Both ports here run it, so code that follows the ELF
+convention works unchanged; an RTOS port that walks the table itself earlier
+simply does not run it again.
+
 ## Chosen approach (implemented in P1.01)
 
 - The seam struct `__libc_tls_image { init, init_size, size, align }`

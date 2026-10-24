@@ -61,5 +61,9 @@ void __rtos_linux_start(long *stack)
 
 	setup_initial_tls();
 
+	/* The port runs .preinit_array (PLAN D104), with the TLS already in place */
+	for (void (*const *entry)(void) = __preinit_array_start; entry < __preinit_array_end; ++entry)
+		(*entry)();
+
 	__libc_start_main(main, argc, argv);
 }

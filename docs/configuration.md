@@ -149,7 +149,8 @@ The library reaches the OS only through the `__rtos_*` functions declared in
 - **`port/none`** (bare metal, single thread), as a board uses it:
   - **Startup:** the reset code initialises memory and calls
     `__rtos_none_start(&tls_image)`. That places the TLS block in a static
-    1024-byte buffer and runs `main` through `__libc_start_main`.
+    1024-byte buffer, runs `.preinit_array` and runs `main` through
+    `__libc_start_main`, which runs only `.init_array` (D104).
   - **Heap:** the linker script defines `__rtos_none_heap_start` and
     `__rtos_none_heap_end`. Or the board defines its own
     `__rtos_heap_region` for several regions.

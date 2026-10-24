@@ -16,16 +16,10 @@
 
 #include "internal/sections.h"
 
-static void run_array(void (*const *start)(void), void (*const *end)(void))
-{
-	for (void (*const *entry)(void) = start; entry < end; ++entry)
-		(*entry)();
-}
-
+/* C23 5.1.2.3.2; .preinit_array is the port's to run before this (rtos-port.h, PLAN D104) */
 void __libc_start_main(int (*main)(int, char **), int argc, char **argv)
 {
-	run_array(__preinit_array_start, __preinit_array_end);
-	run_array(__init_array_start, __init_array_end);
-
+	for (void (*const *entry)(void) = __init_array_start; entry < __init_array_end; ++entry)
+		(*entry)();
 	exit(main(argc, argv));
 }
