@@ -17,13 +17,16 @@
  * docs/research/softfloat-thumb2.md).
  *
  * The significands with the hidden bit at bit 31 give the 64-bit product
- * r5:r3 from one UMULL; below 2^63 it shifts left once. r5 then holds the
- * 24-bit significand above the guard bit (bit 7); its bits 6-0 and r3 are
- * sticky. A result below the normal range is shifted right onto the
- * subnormal grid first, r3 folded into a sticky bit, so it is rounded
- * once. Subnormal operands are normalised with CLZ, their exponents then 0
- * or below. A NaN gives the first NaN, quiet; zero times infinity is the
- * default NaN (7.2); a zero or an infinity takes the signs' difference.
+ * r1:ip from one UMULL; below 2^63 it shifts left once. r1 then holds the
+ * 24-bit significand above the guard bit (bit 7); its bits 6-0 and ip are
+ * sticky. Packing adds the significand, whose hidden bit restores the
+ * exponent, to the sign and the exponent less one, with the guard bit as
+ * the carry in; a tie clears the last bit for the even neighbour. A result
+ * below the normal range is shifted right onto the subnormal grid first,
+ * ip folded into a sticky bit, so it is rounded once. Subnormal operands
+ * are normalised with CLZ, their exponents then 0 or below. A NaN gives
+ * the first NaN, quiet; zero times infinity is the default NaN (7.2); a
+ * zero or an infinity takes the signs' difference.
  */
 	.syntax unified
 	.thumb
@@ -31,141 +34,144 @@
 	.global __aeabi_fmul
 	.type __aeabi_fmul, %function
 __aeabi_fmul:
-	push {r4, r5}
-	eor ip, r0, r1
+	/* An exponent field of 0 or 255 on either side: zero, subnormal, infinity or NaN */
 	ubfx r2, r0, #23, #8
 	ubfx r3, r1, #23, #8
+	sub ip, r2, #1
+	cmp ip, #254
+	bhs .Lspecial
+	sub ip, r3, #1
+	cmp ip, #254
+	bhs .Lspecial
 
-	/* An exponent field of 0 or 255 on either side: zero, subnormal, infinity or NaN */
-	sub r4, r2, #1
-	cmp r4, #254
-	bhs .Lspecial
-	sub r4, r3, #1
-	cmp r4, #254
-	bhs .Lspecial
-	lsl r4, r0, #8
-	orr r4, r4, #0x80000000
-	lsl r5, r1, #8
-	orr r5, r5, #0x80000000
+	/* r2 = ea + eb, r3 the sign, the significands with the hidden bit at 31 */
+	add r2, r2, r3
+	eor r3, r0, r1
+	lsl r0, r0, #8
+	orr r0, r0, #0x80000000
+	lsl r1, r1, #8
+	orr r1, r1, #0x80000000
 
 .Lproduct:
-	/* r5:r3 = r4 r5; e = ea + eb - 126, or one less after normalising a product below 2^63 */
-	add r2, r2, r3
-	umull r3, r5, r4, r5
-	cmp r5, #0
+	/* r1:ip = r0 r1; e - 1 = ea + eb - 127, or one less after normalising a product below 2^63 */
+	umull ip, r1, r0, r1
+	cmp r1, #0
 	blt 1f
-	adds r3, r3, r3
-	adc r5, r5, r5
+	adds ip, ip, ip
+	adc r1, r1, r1
 	subs r2, r2, #1
 1:
-	sub r2, r2, #126
-	/* The biased exponent e must lie in [1, 254] */
-	sub r4, r2, #1
-	cmp r4, #253
+	sub r2, r2, #127
+
+	/* e - 1 must lie in [0, 253] */
+	cmp r2, #253
 	bhi .Lrange
 
 .Lpack:
-	/* sign | (e - 1) 2^23 + r5 >> 8; round to nearest on bit 7, bits 6-0 of r5 and r3 being sticky */
-	and r0, ip, #0x80000000
-	subs r2, r2, #1
+	/* sign | (e - 1) 2^23 + r1 >> 8, the guard bit as carry in; a tie (bits 6-0 of r1 and ip zero) clears the last bit */
+	and r0, r3, #0x80000000
 	add r0, r0, r2, lsl #23
-	add r0, r0, r5, lsr #8
-	lsls r4, r5, #24
-	bpl 2f
-	adds r0, r0, #1
-	orrs r4, r3, r4, lsl #1
+	and r2, r1, #0xff
+	lsrs r1, r1, #8
+	adc r0, r0, r1
+	cmp r2, #0x80
+	it eq
+	cmpeq ip, #0
 	it eq
 	biceq r0, r0, #1
-2:
-	pop {r4, r5}
 	bx lr
 
 .Lrange:
-	/* Above the range: infinity. Below it: shift right s = 1 - e (at most 31) with a sticky bit, onto the subnormal grid */
+	/* Above the range: infinity. Below it: shift right s = -(e - 1) (at most 31) with a sticky bit, onto the subnormal grid */
 	cmp r2, #0
 	bgt .Linfinity
-	cmp r3, #0
+	cmp ip, #0
 	it ne
-	orrne r5, r5, #1
-	rsb r2, r2, #1
+	orrne r1, r1, #1
+	rsb r2, r2, #0
 	cmp r2, #31
 	it hi
 	movhi r2, #31
-	rsb r3, r2, #32
-	lsl r3, r5, r3
-	lsr r5, r5, r2
-	movs r2, #1
+	rsb ip, r2, #32
+	lsl ip, r1, ip
+	lsr r1, r1, r2
+	movs r2, #0
 	b .Lpack
 
 .Linfinity:
-	and r0, ip, #0x80000000
+	and r0, r3, #0x80000000
 	orr r0, r0, #0x7f800000
-	pop {r4, r5}
-	bx lr
-.Lzero:
-	and r0, ip, #0x80000000
-	pop {r4, r5}
-	bx lr
-.Lnan_a:
-	orr r0, r0, #0x00400000
-	pop {r4, r5}
-	bx lr
-.Lnan_b:
-	orr r0, r1, #0x00400000
-	pop {r4, r5}
-	bx lr
-.Ldefault_nan:
-	movs r0, #0
-	movt r0, #0x7fc0
-	pop {r4, r5}
 	bx lr
 
 .Lspecial:
-	lsl r4, r0, #1
-	lsl r5, r1, #1
-	cmp r4, #0xff000000
+	lsls ip, r0, #1
+	cmp ip, #0xff000000
 	bhi .Lnan_a
-	cmp r5, #0xff000000
+	lsls ip, r1, #1
+	cmp ip, #0xff000000
 	bhi .Lnan_b
 	beq .Linfinite_b
-	cmp r4, #0xff000000
+	lsls ip, r0, #1
+	cmp ip, #0xff000000
 	beq .Linfinite_a
-	cmp r4, #0
-	it ne
-	cmpne r5, #0
-	beq .Lzero
+	lsls ip, r0, #1
+	beq .Lsigned_zero
+	lsls ip, r1, #1
+	beq .Lsigned_zero
 
 	/* Normalise: the hidden bit at 31, a subnormal's exponent 1 - CLZ */
-	lsl r4, r0, #8
+	eor ip, r0, r1
+	lsl r0, r0, #8
 	cmp r2, #0
-	bne 3f
-	clz r2, r4
-	lsl r4, r4, r2
+	bne 2f
+	clz r2, r0
+	lsl r0, r0, r2
 	rsb r2, r2, #1
-	b 4f
+	b 3f
+2:
+	orr r0, r0, #0x80000000
 3:
-	orr r4, r4, #0x80000000
-4:
-	lsl r5, r1, #8
+	lsl r1, r1, #8
 	cmp r3, #0
-	bne 5f
-	clz r3, r5
-	lsl r5, r5, r3
+	bne 4f
+	clz r3, r1
+	lsl r1, r1, r3
 	rsb r3, r3, #1
-	b .Lproduct
+	b 5f
+4:
+	orr r1, r1, #0x80000000
 5:
-	orr r5, r5, #0x80000000
+	add r2, r2, r3
+	mov r3, ip
 	b .Lproduct
 
 .Linfinite_a:
 	/* Infinity times a finite b: zero gives the default NaN, otherwise infinity */
-	cmp r5, #0
+	lsls ip, r1, #1
 	beq .Ldefault_nan
-	b .Linfinity
+	b .Lsigned_infinity
 .Linfinite_b:
-	cmp r4, #0
+	lsls ip, r0, #1
 	beq .Ldefault_nan
-	b .Linfinity
+.Lsigned_infinity:
+	eor r0, r0, r1
+	and r0, r0, #0x80000000
+	orr r0, r0, #0x7f800000
+	bx lr
+.Lsigned_zero:
+	eor r0, r0, r1
+	and r0, r0, #0x80000000
+	bx lr
+.Lnan_a:
+	orr r0, r0, #0x00400000
+	bx lr
+.Lnan_b:
+	orr r0, r1, #0x00400000
+	bx lr
+.Ldefault_nan:
+	movs r0, #0
+	movt r0, #0x7fc0
+	bx lr
 	.size __aeabi_fmul, . - __aeabi_fmul
 
 	.section .note.GNU-stack, "", %progbits
