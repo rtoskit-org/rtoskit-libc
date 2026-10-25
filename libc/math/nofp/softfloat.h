@@ -100,4 +100,51 @@ static inline uint32_t __libc_softfloat_pack(uint32_t sign, int exponent, uint32
 	return sign | bits;
 }
 
+/*
+ * The float nearest a 32-bit magnitude, with the sign (PLAN D109): the
+ * leading one moved to bit 31, then its 24 significant bits above a guard
+ * bit (bit 7) and a sticky bit for bits 6-0, the layout
+ * __libc_softfloat_pack rounds. A magnitude m 2^-k after the shift is
+ * that layout x times 2^(6 - k), so the exponent is 158 - k.
+ */
+static inline uint32_t __libc_softfloat_from_u32(uint32_t sign, uint32_t magnitude)
+{
+	if (magnitude == 0)
+		return sign;
+
+	int shift = (int)stdc_leading_zeros(magnitude);
+	uint32_t normal = magnitude << shift;
+	uint32_t x = (normal >> 7) << 1 | ((normal & 0x7f) != 0);
+
+	return __libc_softfloat_pack(sign, 158 - shift, x);
+}
+
+/*
+ * The float nearest a 64-bit magnitude, with the sign (PLAN D109): the
+ * leading one moved to bit 63, the low word folded into a sticky bit 0 of
+ * the high word (below the guard bit), and the high word rounded as
+ * above, 32 places higher: the exponent is 190 - k.
+ */
+static inline uint32_t __libc_softfloat_from_u64(uint32_t sign, uint64_t magnitude)
+{
+	if (magnitude == 0)
+		return sign;
+
+	int shift = (int)stdc_leading_zeros(magnitude);
+	uint64_t normal = magnitude << shift;
+	uint32_t high = (uint32_t)(normal >> 32) | ((uint32_t)normal != 0);
+	uint32_t x = (high >> 7) << 1 | ((high & 0x7f) != 0);
+
+	return __libc_softfloat_pack(sign, 190 - shift, x);
+}
+
+/*
+ * The compiler's own helpers whose libgcc versions call the float helpers
+ * from inside libgcc, where the linker would take libgcc's grouped float
+ * objects to resolve them on armv7-m (PLAN D100, D109); their prototypes
+ * are the compiler's
+ */
+_Complex float __mulsc3(float a, float b, float c, float d);
+float __powisf2(float x, int n);
+
 #endif /* _SOFTFLOAT_H */

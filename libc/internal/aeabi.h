@@ -56,5 +56,15 @@ __LIBC_AEABI float __aeabi_fadd(float a, float b);
 __LIBC_AEABI float __aeabi_fsub(float a, float b);
 __LIBC_AEABI float __aeabi_fmul(float a, float b);
 __LIBC_AEABI float __aeabi_fdiv(float a, float b);
+__LIBC_AEABI float __aeabi_frsub(float a, float b);
+__LIBC_AEABI int __aeabi_fcmpeq(float a, float b);
+__LIBC_AEABI int __aeabi_fcmplt(float a, float b);
+__LIBC_AEABI int __aeabi_fcmple(float a, float b);
+__LIBC_AEABI int __aeabi_fcmpge(float a, float b);
+__LIBC_AEABI int __aeabi_fcmpgt(float a, float b);
+__LIBC_AEABI float __aeabi_i2f(int a);
+__LIBC_AEABI float __aeabi_ui2f(unsigned int a);
+__LIBC_AEABI float __aeabi_l2f(long long a);
+__LIBC_AEABI float __aeabi_ul2f(unsigned long long a);
 
 #endif /* _INTERNAL_AEABI_H */

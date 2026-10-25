@@ -21,11 +21,11 @@ export LIBC_FPU := nofp
 # <fenv.h> implementation: x86_64, fpv5-dp (every floating type in the FPU), or soft (D44)
 export LIBC_FENV := soft
 # libm layers: libc/math/<layer> replaces the generic files of the same name and may add helpers (D46, D55);
-# nofp is the integer sqrtf and the speed flavour's fixed-point paths (D85, D88); the float helpers are libgcc's
-# Thumb-2 assembly, whose objects group fadd with fsub, so the Armv6-M nofp-thumb1 helpers are not listed (D108)
+# nofp is the integer sqrtf and the speed flavour's fixed-point paths (D85, D88); soft-sp the float helpers, which
+# replace libgcc's grouped Thumb-2 objects whole (D109), so the Armv6-M nofp-thumb1 helpers are not listed (D108)
 # soft-dp is the double-precision run-time ABI helpers in integers (D99), soft-dp-nodsp its multiplication
 # without UMAAL (D108); soft-int is the conversions to 64-bit integers, in integers (D102)
-export LIBC_MATH_LAYERS := sp sp-nearest nofp soft-dp soft-dp-nodsp soft-int
+export LIBC_MATH_LAYERS := sp sp-nearest nofp soft-sp soft-dp soft-dp-nodsp soft-int
 # Hand-written string kernels (libc/string/<kernels>; the first directory with a function wins)
 # per flavour: the speed build type sets LIBC_FLAVOUR (PLAN D69, D70, D73); no thumb2-dsp (D108)
 LIBC_FLAVOUR ?= size
