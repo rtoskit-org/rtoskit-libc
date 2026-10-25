@@ -22,7 +22,7 @@ least 256 bytes of code (D111).
 - [x] `size-report budget`: a flavour's code allowance is the larger of its percentage and `floor_bytes` (256 for the speed flavour); RAM keeps the percentage; architectures with their own flavour figures (D110) keep no margin.
   *D111. Speed headroom of the small images: `malloc-heavy` 25–37 → 96–144 bytes on every core. `hello-printf-int-nofloat` (about 4.4 KB, whose 10 % already exceeds 256 bytes) is unchanged at 97–101 bytes.*
 
-## P5.02 — Thumb-2 `strlen` in the speed flavour  `[ ]`
+## P5.02 — Thumb-2 `strlen` in the speed flavour  `[~]`
 - [ ] armv7e-m, armv7e-m-dp, armv8-m.main (and armv7-m if a DSP-free version gains): the double-word `strlen` that P3.02b measured 10 % faster for +56 bytes and dropped for the `malloc-heavy` budget (Q16). Research note, `test/unit/string_kernels` coverage, budget check.
 - [ ] armv7-m: its speed figures are locked exactly (D110); re-lock them only with a decision entry.
 
