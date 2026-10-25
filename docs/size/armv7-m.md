@@ -153,3 +153,10 @@ of the size flavour's instructions on this core. Since PLAN D110,
 | float-exact | 2980 | 20 |
 | math-float | 10536 | 20 |
 | math-mix | 32400 | 20 |
+
+## D112 — Thumb-2 `strlen` in the speed flavour
+
+The speed flavour's `strlen` is the Thumb-2 kernel (108 bytes, against the
+Thumb-1 kernel's 44). The images that link it grow by 64 bytes, and armv7-m's
+speed figures are re-locked with them (PLAN D112): `hello-puts` 2051,
+`malloc-heavy` 2138, `malloc-heavy-tiny` 2078. The size flavour is unchanged.

@@ -45,19 +45,26 @@ budget (Q16). D111's 256-byte floor now leaves that image 96–144 bytes.
 - **Each word has its own exit**, so the first word's flags need not be merged
   into the second's. The exit finds the byte with `RBIT` and `CLZ` (both base
   Armv7-M): the index is the flags' trailing zeros divided by 8.
-- **A byte loop to the 8-byte boundary.** At most 7 bytes, 4 instructions each.
-  Masking the bytes before the start of the first aligned double word would
-  save branches for misaligned starts but costs more at an aligned start, which
-  most strings (from `malloc` and the stack) have.
+- **A byte loop to the word boundary, then one word to the 8-byte boundary.**
+  The first version walked bytes up to the 8-byte boundary (up to 7 bytes, 4
+  instructions each). It was 4–12 % slower than the Thumb-1 kernel for short
+  strings starting at offset 1 (`strlen` and `strcpy` of 7, 15 and 31 bytes),
+  since Thumb-1 only walks to a word boundary. Walking at most 3 bytes and then
+  testing one word (an aligned `LDR` stays inside a granule too) removed every
+  regression for 24 more bytes. Masking the bytes before the start of the first
+  aligned double word would save the byte loop but costs more at an aligned
+  start, which most strings (from `malloc` and the stack) have.
 
 ## Chosen approach
 
-`libc/string/thumb2/strlen.S`: r12 keeps the start; bytes until r0 is 8-byte
-aligned (returning at a terminator); then `LDRD` of two words per iteration,
-each tested; at the flagged word, length = word address − start + index.
+`libc/string/thumb2/strlen.S`: r12 keeps the start; bytes until r0 is word
+aligned (returning at a terminator); one word if r0 is not 8-byte aligned; then
+`LDRD` of two words per iteration, each tested; at the flagged word, length =
+word address − start + index. 108 bytes against the Thumb-1 kernel's 44.
 
-Expected (P3.02b's measurement): 1186 instructions for 1024 bytes against 1315
-for the Thumb-1 kernel, no length slower, about +56 bytes. It replaces the
+Measured on armv7e-m (instructions per call, Thumb-1 → Thumb-2): 1 byte 42 →
+35, 7 bytes 61 → 36 (61 → 55 at offset 1), 1024 bytes 1315 → 1187, `mix/strlen`
+113 → 103; no case slower, 119 faster. It replaces the
 Thumb-1 kernel in the speed flavour of every Thumb-2 core (armv7-m,
 armv7e-m, armv7e-m-dp, armv8-m.main); the size flavour keeps Thumb-1.
 

@@ -14,13 +14,14 @@
 /*
  * C23 7.26.6.4 for Thumb-2 (Armv7-M, Armv7E-M, Armv8-M Mainline), written
  * for speed (PLAN D112, docs/research/strlen-thumb2.md). Bytes until the
- * pointer is 8-byte aligned, then two words per LDRD: aligned to 8, each read
- * stays inside one 32-byte MPU granule, the smallest region (LDRD itself needs
- * word alignment, Armv7-M ARM A3.2.1). Each word gets the classic test
- * (w - 0x01010101) & ~w & 0x80808080, whose lowest set bit marks the first
- * zero byte exactly (both constants are immediates, so nothing is pushed),
- * and its own exit: RBIT and CLZ give 8 times that byte's index. 4.5
- * instructions a word against the Thumb-1 loop's 5. r12 keeps the start.
+ * pointer is word aligned, one word if it is not 8-byte aligned yet, then two
+ * words per LDRD. Aligned like that, every read stays inside one 32-byte MPU
+ * granule, the smallest region (LDRD itself needs word alignment, Armv7-M ARM
+ * A3.2.1). Each word gets the classic test (w - 0x01010101) & ~w & 0x80808080,
+ * whose lowest set bit marks the first zero byte exactly (both constants are
+ * immediates, so nothing is pushed), and its own exit: RBIT and CLZ give 8
+ * times that byte's index. 4.5 instructions a word against the Thumb-1 loop's
+ * 5. r12 keeps the start.
  */
 	.syntax unified
 	.thumb
@@ -30,14 +31,23 @@
 strlen:
 	mov ip, r0
 1:
-	tst r0, #7
-	beq 2f
+	tst r0, #3
+	beq 5f
 	ldrb r1, [r0], #1
 	cmp r1, #0
 	bne 1b
 	sub r0, r0, ip
 	subs r0, #1
 	bx lr
+5:
+	/* Word aligned: one word, if needed, to reach the 8-byte boundary (at most 3 bytes go through the byte loop) */
+	tst r0, #4
+	beq 2f
+	ldr r1, [r0], #4
+	sub r3, r1, #0x01010101
+	bic r3, r3, r1
+	ands r3, r3, #0x80808080
+	bne 3f
 2:
 	ldrd r1, r2, [r0], #8
 	sub r3, r1, #0x01010101

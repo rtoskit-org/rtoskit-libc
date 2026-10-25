@@ -528,7 +528,7 @@
     "insns": 2151.0
    },
    "fputs/line": {
-    "insns": 255.0
+    "insns": 242.0
    },
    "snprintf/%-20s": {
     "insns": 575.0
@@ -1682,7 +1682,7 @@
     "insns": 41.71
    },
    "mix/strlen": {
-    "insns": 113.36
+    "insns": 103.24
    },
    "strchr/0/0": {
     "insns": 52.0
@@ -2051,358 +2051,358 @@
     "insns": 62.0
    },
    "strcpy/0/1:1": {
-    "insns": 55.0
+    "insns": 52.0
    },
    "strcpy/0/3:2": {
-    "insns": 55.0
+    "insns": 52.0
    },
    "strcpy/1/0:0": {
-    "insns": 69.0
-   },
-   "strcpy/1/0:1": {
-    "insns": 69.0
-   },
-   "strcpy/1/1:1": {
     "insns": 62.0
    },
+   "strcpy/1/0:1": {
+    "insns": 62.0
+   },
+   "strcpy/1/1:1": {
+    "insns": 57.0
+   },
    "strcpy/1/3:2": {
-    "insns": 69.0
+    "insns": 64.0
    },
    "strcpy/1024/0:0": {
-    "insns": 1484.0
+    "insns": 1356.0
    },
    "strcpy/1024/0:1": {
-    "insns": 1749.0
+    "insns": 1621.0
    },
    "strcpy/1024/1:1": {
-    "insns": 1525.0
+    "insns": 1385.0
    },
    "strcpy/1024/3:2": {
-    "insns": 1772.0
+    "insns": 1622.0
    },
    "strcpy/128/0:0": {
-    "insns": 252.0
+    "insns": 236.0
    },
    "strcpy/128/0:1": {
-    "insns": 293.0
+    "insns": 277.0
    },
    "strcpy/128/1:1": {
-    "insns": 293.0
+    "insns": 265.0
    },
    "strcpy/128/3:2": {
-    "insns": 316.0
+    "insns": 278.0
    },
    "strcpy/15/0:0": {
-    "insns": 106.0
+    "insns": 80.0
    },
    "strcpy/15/0:1": {
-    "insns": 106.0
+    "insns": 80.0
    },
    "strcpy/15/1:1": {
-    "insns": 106.0
+    "insns": 99.0
    },
    "strcpy/15/3:2": {
-    "insns": 106.0
+    "insns": 89.0
    },
    "strcpy/16/0:0": {
-    "insns": 92.0
+    "insns": 90.0
    },
    "strcpy/16/0:1": {
-    "insns": 92.0
+    "insns": 90.0
    },
    "strcpy/16/1:1": {
-    "insns": 115.0
+    "insns": 101.0
    },
    "strcpy/16/3:2": {
-    "insns": 115.0
+    "insns": 91.0
    },
    "strcpy/2/0:0": {
-    "insns": 78.0
+    "insns": 64.0
    },
    "strcpy/2/0:1": {
-    "insns": 78.0
+    "insns": 64.0
    },
    "strcpy/2/1:1": {
-    "insns": 71.0
+    "insns": 64.0
    },
    "strcpy/2/3:2": {
-    "insns": 78.0
+    "insns": 66.0
    },
    "strcpy/256/0:0": {
-    "insns": 428.0
+    "insns": 396.0
    },
    "strcpy/256/0:1": {
-    "insns": 501.0
-   },
-   "strcpy/256/1:1": {
     "insns": 469.0
    },
+   "strcpy/256/1:1": {
+    "insns": 425.0
+   },
    "strcpy/256/3:2": {
-    "insns": 524.0
+    "insns": 470.0
    },
    "strcpy/3/0:0": {
-    "insns": 83.0
+    "insns": 62.0
    },
    "strcpy/3/0:1": {
-    "insns": 83.0
+    "insns": 62.0
    },
    "strcpy/3/1:1": {
-    "insns": 83.0
+    "insns": 74.0
    },
    "strcpy/3/3:2": {
-    "insns": 83.0
+    "insns": 64.0
    },
    "strcpy/31/0:0": {
-    "insns": 134.0
+    "insns": 106.0
    },
    "strcpy/31/0:1": {
-    "insns": 153.0
+    "insns": 125.0
    },
    "strcpy/31/1:1": {
-    "insns": 153.0
+    "insns": 144.0
    },
    "strcpy/31/3:2": {
-    "insns": 151.0
+    "insns": 132.0
    },
    "strcpy/32/0:0": {
-    "insns": 120.0
+    "insns": 116.0
    },
    "strcpy/32/0:1": {
-    "insns": 137.0
+    "insns": 133.0
    },
    "strcpy/32/1:1": {
-    "insns": 160.0
+    "insns": 144.0
    },
    "strcpy/32/3:2": {
-    "insns": 160.0
+    "insns": 134.0
    },
    "strcpy/4/0:0": {
-    "insns": 69.0
+    "insns": 65.0
    },
    "strcpy/4/0:1": {
-    "insns": 69.0
+    "insns": 65.0
    },
    "strcpy/4/1:1": {
-    "insns": 92.0
+    "insns": 76.0
    },
    "strcpy/4/3:2": {
-    "insns": 92.0
+    "insns": 66.0
    },
    "strcpy/64/0:0": {
-    "insns": 164.0
+    "insns": 156.0
    },
    "strcpy/64/0:1": {
-    "insns": 189.0
+    "insns": 181.0
    },
    "strcpy/64/1:1": {
-    "insns": 205.0
+    "insns": 185.0
    },
    "strcpy/64/3:2": {
-    "insns": 212.0
+    "insns": 182.0
    },
    "strcpy/7/0:0": {
-    "insns": 92.0
+    "insns": 67.0
    },
    "strcpy/7/0:1": {
-    "insns": 92.0
+    "insns": 67.0
    },
    "strcpy/7/1:1": {
-    "insns": 92.0
+    "insns": 86.0
    },
    "strcpy/7/3:2": {
-    "insns": 92.0
+    "insns": 76.0
    },
    "strcpy/8/0:0": {
-    "insns": 78.0
+    "insns": 77.0
    },
    "strcpy/8/0:1": {
-    "insns": 78.0
+    "insns": 77.0
    },
    "strcpy/8/1:1": {
-    "insns": 101.0
+    "insns": 88.0
    },
    "strcpy/8/3:2": {
-    "insns": 101.0
+    "insns": 78.0
    },
    "strlen/0/0": {
     "insns": 35.0
    },
    "strlen/0/1": {
-    "insns": 28.0
+    "insns": 25.0
    },
    "strlen/0/2": {
-    "insns": 28.0
+    "insns": 25.0
    },
    "strlen/0/3": {
-    "insns": 28.0
+    "insns": 25.0
    },
    "strlen/1/0": {
-    "insns": 42.0
+    "insns": 35.0
    },
    "strlen/1/1": {
-    "insns": 35.0
+    "insns": 30.0
    },
    "strlen/1/2": {
-    "insns": 35.0
+    "insns": 30.0
    },
    "strlen/1/3": {
-    "insns": 42.0
+    "insns": 37.0
    },
    "strlen/1024/0": {
-    "insns": 1315.0
+    "insns": 1187.0
    },
    "strlen/1024/1": {
-    "insns": 1338.0
+    "insns": 1198.0
    },
    "strlen/1024/2": {
-    "insns": 1338.0
+    "insns": 1193.0
    },
    "strlen/1024/3": {
-    "insns": 1338.0
+    "insns": 1188.0
    },
    "strlen/128/0": {
-    "insns": 195.0
+    "insns": 179.0
    },
    "strlen/128/1": {
-    "insns": 218.0
+    "insns": 190.0
    },
    "strlen/128/2": {
-    "insns": 218.0
+    "insns": 185.0
    },
    "strlen/128/3": {
-    "insns": 218.0
+    "insns": 180.0
    },
    "strlen/15/0": {
-    "insns": 71.0
-   },
-   "strlen/15/1": {
-    "insns": 71.0
-   },
-   "strlen/15/2": {
-    "insns": 71.0
-   },
-   "strlen/15/3": {
-    "insns": 71.0
-   },
-   "strlen/16/0": {
-    "insns": 55.0
-   },
-   "strlen/16/1": {
-    "insns": 78.0
-   },
-   "strlen/16/2": {
-    "insns": 78.0
-   },
-   "strlen/16/3": {
-    "insns": 78.0
-   },
-   "strlen/2/0": {
-    "insns": 49.0
-   },
-   "strlen/2/1": {
-    "insns": 42.0
-   },
-   "strlen/2/2": {
-    "insns": 49.0
-   },
-   "strlen/2/3": {
-    "insns": 49.0
-   },
-   "strlen/256/0": {
-    "insns": 355.0
-   },
-   "strlen/256/1": {
-    "insns": 378.0
-   },
-   "strlen/256/2": {
-    "insns": 378.0
-   },
-   "strlen/256/3": {
-    "insns": 378.0
-   },
-   "strlen/3/0": {
-    "insns": 56.0
-   },
-   "strlen/3/1": {
-    "insns": 56.0
-   },
-   "strlen/3/2": {
-    "insns": 56.0
-   },
-   "strlen/3/3": {
-    "insns": 56.0
-   },
-   "strlen/31/0": {
-    "insns": 91.0
-   },
-   "strlen/31/1": {
-    "insns": 91.0
-   },
-   "strlen/31/2": {
-    "insns": 91.0
-   },
-   "strlen/31/3": {
-    "insns": 91.0
-   },
-   "strlen/32/0": {
-    "insns": 75.0
-   },
-   "strlen/32/1": {
-    "insns": 98.0
-   },
-   "strlen/32/2": {
-    "insns": 98.0
-   },
-   "strlen/32/3": {
-    "insns": 98.0
-   },
-   "strlen/4/0": {
-    "insns": 40.0
-   },
-   "strlen/4/1": {
-    "insns": 63.0
-   },
-   "strlen/4/2": {
-    "insns": 63.0
-   },
-   "strlen/4/3": {
-    "insns": 63.0
-   },
-   "strlen/64/0": {
-    "insns": 115.0
-   },
-   "strlen/64/1": {
-    "insns": 138.0
-   },
-   "strlen/64/2": {
-    "insns": 138.0
-   },
-   "strlen/64/3": {
-    "insns": 138.0
-   },
-   "strlen/7/0": {
-    "insns": 61.0
-   },
-   "strlen/7/1": {
-    "insns": 61.0
-   },
-   "strlen/7/2": {
-    "insns": 61.0
-   },
-   "strlen/7/3": {
-    "insns": 61.0
-   },
-   "strlen/8/0": {
     "insns": 45.0
    },
+   "strlen/15/1": {
+    "insns": 64.0
+   },
+   "strlen/15/2": {
+    "insns": 59.0
+   },
+   "strlen/15/3": {
+    "insns": 54.0
+   },
+   "strlen/16/0": {
+    "insns": 53.0
+   },
+   "strlen/16/1": {
+    "insns": 64.0
+   },
+   "strlen/16/2": {
+    "insns": 59.0
+   },
+   "strlen/16/3": {
+    "insns": 54.0
+   },
+   "strlen/2/0": {
+    "insns": 35.0
+   },
+   "strlen/2/1": {
+    "insns": 35.0
+   },
+   "strlen/2/2": {
+    "insns": 42.0
+   },
+   "strlen/2/3": {
+    "insns": 37.0
+   },
+   "strlen/256/0": {
+    "insns": 323.0
+   },
+   "strlen/256/1": {
+    "insns": 334.0
+   },
+   "strlen/256/2": {
+    "insns": 329.0
+   },
+   "strlen/256/3": {
+    "insns": 324.0
+   },
+   "strlen/3/0": {
+    "insns": 35.0
+   },
+   "strlen/3/1": {
+    "insns": 47.0
+   },
+   "strlen/3/2": {
+    "insns": 42.0
+   },
+   "strlen/3/3": {
+    "insns": 37.0
+   },
+   "strlen/31/0": {
+    "insns": 63.0
+   },
+   "strlen/31/1": {
+    "insns": 82.0
+   },
+   "strlen/31/2": {
+    "insns": 77.0
+   },
+   "strlen/31/3": {
+    "insns": 72.0
+   },
+   "strlen/32/0": {
+    "insns": 71.0
+   },
+   "strlen/32/1": {
+    "insns": 82.0
+   },
+   "strlen/32/2": {
+    "insns": 77.0
+   },
+   "strlen/32/3": {
+    "insns": 72.0
+   },
+   "strlen/4/0": {
+    "insns": 36.0
+   },
+   "strlen/4/1": {
+    "insns": 47.0
+   },
+   "strlen/4/2": {
+    "insns": 42.0
+   },
+   "strlen/4/3": {
+    "insns": 37.0
+   },
+   "strlen/64/0": {
+    "insns": 107.0
+   },
+   "strlen/64/1": {
+    "insns": 118.0
+   },
+   "strlen/64/2": {
+    "insns": 113.0
+   },
+   "strlen/64/3": {
+    "insns": 108.0
+   },
+   "strlen/7/0": {
+    "insns": 36.0
+   },
+   "strlen/7/1": {
+    "insns": 55.0
+   },
+   "strlen/7/2": {
+    "insns": 50.0
+   },
+   "strlen/7/3": {
+    "insns": 45.0
+   },
+   "strlen/8/0": {
+    "insns": 44.0
+   },
    "strlen/8/1": {
-    "insns": 68.0
+    "insns": 55.0
    },
    "strlen/8/2": {
-    "insns": 68.0
+    "insns": 50.0
    },
    "strlen/8/3": {
-    "insns": 68.0
+    "insns": 45.0
    }
   },
   "strto": {

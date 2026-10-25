@@ -23,15 +23,15 @@
      "ram": 348
     },
     "hello-puts": {
-     "code": 1987,
+     "code": 2051,
      "ram": 348
     },
     "malloc-heavy": {
-     "code": 2074,
+     "code": 2138,
      "ram": 52
     },
     "malloc-heavy-tiny": {
-     "code": 2014,
+     "code": 2078,
      "ram": 48
     },
     "math-float": {
