@@ -56,7 +56,7 @@ import shutil
 import subprocess
 import sys
 
-ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
+ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 PROGRAMS = ['string', 'stdio', 'strto', 'malloc', 'malloc-tiny', 'qsort', 'math', 'softfloat', 'threads']
 QEMU_VERSION = '8.2.2'
 QEMU_ROOT = os.path.join('local', f'qemu-{QEMU_VERSION}')

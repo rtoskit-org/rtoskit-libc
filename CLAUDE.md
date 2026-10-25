@@ -61,7 +61,7 @@ make library                           # headers, libc*.a and the port archives 
   programs) bind to the Linux test port (`RTOS_PORT := linux`, `common.mk`), whose
   per-family file (`tools/makefiles/port-linux-arm.mk`, `port-linux-x86_64.mk`) sets
   `TARGET_RUNNER` (`qemu-arm -cpu max` on Arm, D36) and the Arm link flags. The `ARCH_CROSS`
-  file (`tools/makefiles/x86_64.mk`, `armv6-m.mk`, `armv6s-m.mk`, `armv7e-m.mk`, `armv7e-m-dp.mk`,
+  file (`tools/makefiles/x86_64.mk`, `armv6-m.mk`, `armv6s-m.mk`, `armv7-m.mk`, `armv7e-m.mk`, `armv7e-m-dp.mk`,
   `armv8-m.main.mk`; architecture names, `-march` not `-mcpu`, D24) sets the
   toolchain and all flags, including `LIBC_CFLAGS` for library code, and exports
   `ARCH_FAMILY` (`x86_64`, `arm`), on Arm `LIBC_FPU` (D34), `LIBC_FENV` (the `<fenv.h>`
@@ -199,7 +199,7 @@ Any exception needs a PLAN.md decision entry.
 - **libc-test** (`third-party/libc-test`, a submodule) is the conformance gate
   at every step of every phase (PLAN §5). Run it natively on `x86_64`
   through `port/linux`, and under `qemu-arm -cpu max` (`TARGET_RUNNER`) for the
-  five Arm architectures (D36, D37).
+  six Arm architectures (D36, D37, D108).
 - `make check` builds, then runs every unit test through `test/unit/run-unit`. A
   test passes when it exits with 0, unless an executable `<name>.run` next to
   its source decides instead (see `test/unit/smoke/smoke.run`). `TARGET_RUNNER`

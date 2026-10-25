@@ -49,7 +49,7 @@ import subprocess
 import sys
 import urllib.request
 
-ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
+ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 PROGRAMS = ['hello-puts', 'hello-printf-int', 'hello-printf-float', 'malloc-heavy', 'math-mix', 'float-exact', 'math-float']
 # The same programs linked against the flavour archives (PLAN D53, D54); not built for the comparison
 FLAVOUR_PROGRAMS = ['hello-printf-int-nofloat', 'hello-printf-int-minimal', 'malloc-heavy-tiny']

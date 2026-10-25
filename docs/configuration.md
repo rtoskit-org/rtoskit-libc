@@ -46,13 +46,21 @@ automatically; there is nothing to configure per function.
 
 | Core (`ARCH_CROSS`) | FPU | `<fenv.h>` | libm layers (D46, D56, D57) | String kernels (D69, D70, D73) |
 |---|---|---|---|---|
-| `armv6-m`, `armv6s-m` | none | soft: round to nearest, no flags | `sp sp-nearest nofp` | `thumb1`; speed: `thumb1-speed thumb1` |
-| `armv7e-m` | FPv4-SP | soft | `sp sp-nearest fpv4-sp` | `thumb1`; speed: `thumb2 thumb1` |
-| `armv8-m.main` | FPv5-SP | soft | `sp sp-nearest fpv5-sp` | `thumb1`; speed: `thumb2 thumb1` |
-| `armv7e-m-dp` | FPv5-DP | full: every direction and flag | `sp fpv5-sp fpv5-dp` | `thumb1`; speed: `thumb2 thumb1` |
+| `armv6-m`, `armv6s-m` | none | soft: round to nearest, no flags | `sp sp-nearest nofp nofp-thumb1 soft-int` | `thumb1`; speed: `thumb1-speed thumb1` |
+| `armv7-m` | none | soft: round to nearest, no flags | `sp sp-nearest nofp soft-dp soft-dp-nodsp soft-int` | `thumb1`; speed: `thumb2 thumb1` |
+| `armv7e-m` | FPv4-SP | soft | `sp sp-nearest fpv4-sp soft-dp soft-int` | `thumb1`; speed: `thumb2-dsp thumb2 thumb1` |
+| `armv8-m.main` | FPv5-SP | soft | `sp sp-nearest fpv5-sp soft-dp soft-int` | `thumb1`; speed: `thumb2-dsp thumb2 thumb1` |
+| `armv7e-m-dp` | FPv5-DP | full: every direction and flag | `sp fpv5-sp fpv5-dp` | `thumb1`; speed: `thumb2-dsp thumb2 thumb1` |
 | `x86_64` (tests) | SSE | full | `x86_64` | none (C); speed: `x86_64` (SSE2) |
 
 What the layers mean for a program:
+
+- **armv7-m** (Cortex-M3, D108) is Thumb-2 without an FPU or the DSP
+  extension. Its float helpers are libgcc's Thumb-2 assembly, its double
+  helpers the `soft-dp` layer with a multiplication that avoids `UMAAL`
+  (`soft-dp-nodsp`), and its speed flavour leaves out the DSP `strchr`
+  (`thumb2-dsp`). `nofp-thumb1` holds the Armv6-M soft-float helpers, which
+  would clash with libgcc's grouped Armv7-M objects.
 
 - **float functions on the single-precision cores** (`sp`, `sp-nearest`):
   - they compute in float or float-float only and link no double
@@ -234,7 +242,7 @@ search also starts one level down, inside the checkout. The glue has to:
    `OUTPUT_ROOT`/`PREFIX` inside the module's build directory, so a parent
    `make clean` removes them.
 3. **Map the parent's core to an architecture:** pi-pico's `cortex-m33` to
-   `armv8-m.main` and `cortex-m0plus` to `armv6s-m`, with an override
+   `armv8-m.main`, `cortex-m3` to `armv7-m` and `cortex-m0plus` to `armv6s-m`, with an override
    variable for anything else.
 4. **Give the parent fixed paths,** for example by linking
    `<install dir>/<arch>/<build type>/{include,lib}` to

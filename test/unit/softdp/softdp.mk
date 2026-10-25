@@ -20,11 +20,11 @@ EXTRA_ELF_DEPS := ${BUILD_ROOT}/libc/libc.a
 
 TARGET_OBJ_LIBS := port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY}
 
-# On x86_64 the C helpers of the soft-dp and soft-int layers, and the nofp layer's unsigned conversions, are
+# On x86_64 the C helpers of the soft-dp and soft-int layers, and the nofp-thumb1 layer's unsigned conversions, are
 # compiled into the test, so that the comparison with the hardware runs natively (PLAN D99, D102)
 ifeq (${ARCH_FAMILY},x86_64)
 SOFTDOUBLE_SRC := $(wildcard ${PROJECT_ROOT}/libc/math/soft-dp/*.c ${PROJECT_ROOT}/libc/math/soft-int/*.c)
-SOFTDOUBLE_SRC += ${PROJECT_ROOT}/libc/math/nofp/__aeabi_d2uiz.c ${PROJECT_ROOT}/libc/math/nofp/__aeabi_f2uiz.c
+SOFTDOUBLE_SRC += ${PROJECT_ROOT}/libc/math/nofp-thumb1/__aeabi_d2uiz.c ${PROJECT_ROOT}/libc/math/nofp-thumb1/__aeabi_f2uiz.c
 EXTRA_OBJS := $(patsubst ${PROJECT_ROOT}/libc/math/%.c,${CURDIR}/layers/%.o,${SOFTDOUBLE_SRC})
 endif
 

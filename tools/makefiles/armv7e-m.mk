@@ -27,7 +27,7 @@ export LIBC_MATH_LAYERS := sp sp-nearest fpv4-sp soft-dp soft-int
 # per flavour: the speed build type sets LIBC_FLAVOUR (PLAN D69, D70, D73)
 LIBC_FLAVOUR ?= size
 LIBC_STRING_KERNELS_size := thumb1
-LIBC_STRING_KERNELS_speed := thumb2 thumb1
+LIBC_STRING_KERNELS_speed := thumb2-dsp thumb2 thumb1
 export LIBC_STRING_KERNELS = ${LIBC_STRING_KERNELS_${LIBC_FLAVOUR}}
 
 include ${PROJECT_ROOT}/tools/makefiles/arm-none-eabi.mk

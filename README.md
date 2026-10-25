@@ -19,7 +19,7 @@ It binds to an RTOS through a single link-time seam
   - A port implements them in its own archive.
   - `port/none` (bare metal, single thread) and `port/linux` (the test port) are included.
 - **Targets:**
-  - Armv6-M (Cortex-M0/M0+), Armv7E-M with FPv4-SP (Cortex-M4F) or with FPv5-D16 (Cortex-M7), and Armv8-M Mainline with FPv5-SP (Cortex-M33).
+  - Armv6-M (Cortex-M0/M0+), Armv7-M without an FPU (Cortex-M3), Armv7E-M with FPv4-SP (Cortex-M4F) or with FPv5-D16 (Cortex-M7), and Armv8-M Mainline with FPv5-SP (Cortex-M33).
   - x86-64, used as the development host.
 - **Flavours:**
   - a size build (`release`) and a speed build (`speed`) of the same sources;
@@ -39,7 +39,7 @@ A short summary. The full tables, methods and caveats are in the documents linke
 
 | | rtoskit-libc |
 |---|---|
-| libc-test (musl's suite) | 219 of 219 applicable tests pass on all six architectures. 207 tests are skipped as out of scope: POSIX, wide characters, `fork` ([`manifest.txt`](test/libc-test/manifest.txt)). |
+| libc-test (musl's suite) | 219 of 219 applicable tests pass on all seven architectures. 207 tests are skipped as out of scope: POSIX, wide characters, `fork` ([`manifest.txt`](test/libc-test/manifest.txt)). |
 | Annex B header audit | Checks 689 identifiers, 642 exact prototypes and 73 generic names across 28 headers. It runs in `make check` (`test/unit/annexb`). |
 | Freestanding check | The freestanding headers' functions link without any port (`test/unit/freestanding`). |
 | `<threads.h>` | Implemented over the seam. picolibc and newlib-nano have none. |
@@ -146,18 +146,19 @@ The library is written in C23 and its headers use C23. Everything that compiles 
 
 ### Selecting the architecture
 
-Each build targets one architecture, named by `ARCH_CROSS`. Without it, `make` builds all six ([D106](docs/plan/PLAN.md#2-decision-log)). The architecture fixes the compiler flags, the FPU code, `<fenv.h>` and the string kernels; there is nothing else to configure.
+Each build targets one architecture, named by `ARCH_CROSS`. Without it, `make` builds all seven ([D106](docs/plan/PLAN.md#2-decision-log)). The architecture fixes the compiler flags, the FPU code, `<fenv.h>` and the string kernels; there is nothing else to configure.
 
 | `ARCH_CROSS` | Cores | Compiler flags | FPU and `<fenv.h>` |
 |---|---|---|---|
 | `armv6-m` | Armv6-M parts without the OS extension (no `SVC`) | `-mthumb -march=armv6-m -mfloat-abi=soft` | none; soft float, round to nearest only |
 | `armv6s-m` | Cortex-M0, M0+ | `-mthumb -march=armv6s-m -mfloat-abi=soft` | none; soft float, round to nearest only |
+| `armv7-m` | Cortex-M3; a Cortex-M4 or M33 built without its FPU | `-mthumb -march=armv7-m -mfloat-abi=soft` | none; soft float, round to nearest only ([D108](docs/plan/PLAN.md#2-decision-log)) |
 | `armv7e-m` | Cortex-M4F, and Cortex-M7 with the single-precision FPU | `-mthumb -march=armv7e-m+fp -mfloat-abi=hard` | FPv4-SP; round to nearest only |
 | `armv7e-m-dp` | Cortex-M7 with the double-precision FPU | `-mthumb -march=armv7e-m+fp.dp -mfloat-abi=hard` | FPv5-D16; every rounding direction and exception flag |
 | `armv8-m.main` | Cortex-M33 (and M35P) with FPU and DSP | `-mthumb -march=armv8-m.main+fp+dsp -mfloat-abi=hard` | FPv5-SP; round to nearest only |
 | `x86_64` | the development host | `-mlong-double-64` | SSE2; full. Runs only through the Linux test port. |
 
-- **Another core:** use the build whose instruction set and float ABI the core supports. For example, a Cortex-M3, or a Cortex-M4 without an FPU, can link `armv6s-m` (Thumb-1, soft float).
+- **Another core:** use the build whose instruction set and float ABI the core supports. For example, a Cortex-M23 (Armv8-M Baseline) can link `armv6s-m`, and a Cortex-M55 or M85 can link `armv8-m.main`.
 - **Program flags must match:** compile your program with the same `-march` and `-mfloat-abi` as the build it links.
 - **Per-core detail:** the libm layers and string kernels each core uses are in [`docs/configuration.md`](docs/configuration.md#choosing-the-core).
 
@@ -191,8 +192,8 @@ Pass these on the `make` command line.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `ARCH_CROSS` | `all` | One architecture: `x86_64`, `armv6-m`, `armv6s-m`, `armv7e-m`, `armv7e-m-dp` or `armv8-m.main` ([D106](docs/plan/PLAN.md#2-decision-log)). An unknown name stops with the list. |
-| `ARCHS` | all six | The architectures `ARCH_CROSS=all` loops over, e.g. `ARCHS="armv6-m armv8-m.main"` |
+| `ARCH_CROSS` | `all` | One architecture: `x86_64`, `armv6-m`, `armv6s-m`, `armv7-m`, `armv7e-m`, `armv7e-m-dp` or `armv8-m.main` ([D106](docs/plan/PLAN.md#2-decision-log)). An unknown name stops with the list. |
+| `ARCHS` | all seven | The architectures `ARCH_CROSS=all` loops over, e.g. `ARCHS="armv6-m armv8-m.main"` |
 | `BUILD_TYPE` | `all` | One build type: `debug`, `release` or `speed` (see [Build types](#build-types)) |
 | `BUILDS` | `debug release speed` | The build types `BUILD_TYPE=all` loops over |
 | `LIBC_MALLOC` | `nano` | The allocator inside `libc.a`: `nano`, `tlsf` or `tiny` ([D32](docs/plan/PLAN.md#2-decision-log), [D54](docs/plan/PLAN.md#2-decision-log)). Run `make clean` after changing it. Every allocator is still built and tested. |
@@ -209,7 +210,7 @@ Parallel builds (`make -j`, with or without a job count) are supported. More var
 ### Examples
 
 ```sh
-# Everything: all six architectures x debug, release and speed
+# Everything: all seven architectures x debug, release and speed
 make -j$(nproc)
 
 # One architecture, all three build types
@@ -426,8 +427,8 @@ Then it links `<install dir>/armv8-m.main/release/{include,lib}` as shown above,
 | Toolchain versions and setup | [`docs/toolchain.md`](docs/toolchain.md) |
 | Implementation-defined behaviour (Annex J) | [`docs/implementation-defined.md`](docs/implementation-defined.md) |
 | Research notes: algorithms, trade-offs, sources, test vectors | [`docs/research/`](docs/research/) |
-| Size reports | [phase 1](docs/size/phase-1.md), [phase 2](docs/size/phase-2.md), [phase 4 (AOR)](docs/size/phase-4.md), [picolibc/newlib baseline](docs/size/comparison.md), and per architecture: [x86_64](docs/size/x86_64.md), [armv6-m](docs/size/armv6-m.md), [armv6s-m](docs/size/armv6s-m.md), [armv7e-m](docs/size/armv7e-m.md), [armv7e-m-dp](docs/size/armv7e-m-dp.md), [armv8-m.main](docs/size/armv8-m.main.md) |
-| Performance reports | [phase 3](docs/perf/phase-3.md), [phase 4 (AOR)](docs/perf/phase-4.md), and per architecture: [x86_64](docs/perf/x86_64.md), [armv6-m](docs/perf/armv6-m.md), [armv6s-m](docs/perf/armv6s-m.md), [armv7e-m](docs/perf/armv7e-m.md), [armv7e-m-dp](docs/perf/armv7e-m-dp.md), [armv8-m.main](docs/perf/armv8-m.main.md) |
+| Size reports | [phase 1](docs/size/phase-1.md), [phase 2](docs/size/phase-2.md), [phase 4 (AOR)](docs/size/phase-4.md), [picolibc/newlib baseline](docs/size/comparison.md), and per architecture: [x86_64](docs/size/x86_64.md), [armv6-m](docs/size/armv6-m.md), [armv6s-m](docs/size/armv6s-m.md), [armv7-m](docs/size/armv7-m.md), [armv7e-m](docs/size/armv7e-m.md), [armv7e-m-dp](docs/size/armv7e-m-dp.md), [armv8-m.main](docs/size/armv8-m.main.md) |
+| Performance reports | [phase 3](docs/perf/phase-3.md), [phase 4 (AOR)](docs/perf/phase-4.md), and per architecture: [x86_64](docs/perf/x86_64.md), [armv6-m](docs/perf/armv6-m.md), [armv6s-m](docs/perf/armv6s-m.md), [armv7-m](docs/perf/armv7-m.md), [armv7e-m](docs/perf/armv7e-m.md), [armv7e-m-dp](docs/perf/armv7e-m-dp.md), [armv8-m.main](docs/perf/armv8-m.main.md) |
 | Contributor rules: workflow, code style, tests | [`CLAUDE.md`](CLAUDE.md) |
 | The standard text used for the clean-room work | [`docs/standard/`](docs/standard/) |
 

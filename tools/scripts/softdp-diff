@@ -16,7 +16,7 @@
 # than make check does.
 # - On x86_64 it checks the layer's C helpers and the C models of its
 #   assembly against the hardware.
-# - On armv7e-m and armv8-m.main (under qemu-arm) it checks the Thumb-2
+# - On armv7-m, armv7e-m and armv8-m.main (under qemu-arm) it checks the Thumb-2
 #   assembly against those models.
 # Every case is compared bit for bit, and with the default float stride of 3
 # every float goes through the conversion from float. Run from the project
@@ -34,7 +34,7 @@ import subprocess
 import sys
 import time
 
-ARCHS = ['x86_64', 'armv7e-m', 'armv8-m.main']
+ARCHS = ['x86_64', 'armv7-m', 'armv7e-m', 'armv8-m.main']
 
 
 def main():

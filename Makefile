@@ -4,7 +4,7 @@ MAKECMDGOALS := all
 endif
 
 # The architectures (ARCH_CROSS toolchain files under tools/makefiles/, PLAN D24, D106)
-ARCHS ?= x86_64 armv6-m armv6s-m armv7e-m armv7e-m-dp armv8-m.main
+ARCHS ?= x86_64 armv6-m armv6s-m armv7-m armv7e-m armv7e-m-dp armv8-m.main
 BUILDS ?= debug release speed
 
 export ARCH_CROSS ?= all
