@@ -47,7 +47,7 @@ automatically; there is nothing to configure per function.
 | Core (`ARCH_CROSS`) | FPU | `<fenv.h>` | libm layers (D46, D56, D57) | String kernels (D69, D70, D73) |
 |---|---|---|---|---|
 | `armv6-m`, `armv6s-m` | none | soft: round to nearest, no flags | `sp sp-nearest nofp nofp-thumb1 soft-int` | `thumb1`; speed: `thumb1-speed thumb1` |
-| `armv7-m` | none | soft: round to nearest, no flags | `sp sp-nearest nofp soft-dp soft-dp-nodsp soft-int` | `thumb1`; speed: `thumb2 thumb1` |
+| `armv7-m` | none | soft: round to nearest, no flags | `sp sp-nearest nofp soft-sp soft-dp soft-dp-nodsp soft-int` | `thumb1`; speed: `thumb2 thumb1` |
 | `armv7e-m` | FPv4-SP | soft | `sp sp-nearest fpv4-sp soft-dp soft-int` | `thumb1`; speed: `thumb2-dsp thumb2 thumb1` |
 | `armv8-m.main` | FPv5-SP | soft | `sp sp-nearest fpv5-sp soft-dp soft-int` | `thumb1`; speed: `thumb2-dsp thumb2 thumb1` |
 | `armv7e-m-dp` | FPv5-DP | full: every direction and flag | `sp fpv5-sp fpv5-dp` | `thumb1`; speed: `thumb2-dsp thumb2 thumb1` |
@@ -56,11 +56,13 @@ automatically; there is nothing to configure per function.
 What the layers mean for a program:
 
 - **armv7-m** (Cortex-M3, D108) is Thumb-2 without an FPU or the DSP
-  extension. Its float helpers are libgcc's Thumb-2 assembly, its double
+  extension. Its float helpers are the `soft-sp` layer's Thumb-2 assembly
+  (D109: `fadd fsub frsub fmul fdiv`, the comparisons and the integer-to-float
+  conversions, replacing libgcc's grouped objects whole), its double
   helpers the `soft-dp` layer with a multiplication that avoids `UMAAL`
   (`soft-dp-nodsp`), and its speed flavour leaves out the DSP `strchr`
   (`thumb2-dsp`). `nofp-thumb1` holds the Armv6-M soft-float helpers, which
-  would clash with libgcc's grouped Armv7-M objects.
+  would clash with Armv7-M's grouped objects.
 
 - **float functions on the single-precision cores** (`sp`, `sp-nearest`):
   - they compute in float or float-float only and link no double

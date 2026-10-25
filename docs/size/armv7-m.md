@@ -98,3 +98,36 @@ Largest members (text+rodata+unwind+data+bss+tdata+tbss), top 20:
 | `atan2pi.o` | 1468 | 0 | 0 | 0 | 0 | 0 | 0 |
 | `catanh.o` | 1420 | 0 | 0 | 0 | 0 | 0 | 0 |
 | `__divdc3.o` | 1358 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+## D109 — `soft-sp`: the library's own float helpers
+
+The float run-time ABI helpers are now the `soft-sp` layer's Thumb-2 assembly
+instead of libgcc's (PLAN D109, `docs/research/softfloat-thumb2.md`). The layer
+replaces libgcc's three grouped objects whole (`_arm_addsubsf3.o`,
+`_arm_muldivsf3.o`, `_arm_cmpsf2.o`), so a program links only the helpers it
+calls instead of a whole group. Whole-image code bytes:
+
+| Program | D108 | D109 | change | libc share | libgcc share |
+|---|---:|---:|---:|---:|---:|
+| hello-printf-float | 9850 | 9026 | -824 | +388 | -1212 |
+| float-exact | 3164 | 2980 | -184 | +952 | -1136 |
+| math-float | 8300 | 8192 | -108 | +1340 | -1448 |
+| math-mix | 30104 | 29992 | -112 | +1340 | -1448 (and 4 bytes of padding) |
+
+The integer programs do not change. `libc.a` grows by 2252 bytes of text: the
+twenty new members.
+
+| Member | text | Member | text |
+|---|---:|---|---:|
+| `__mulsc3.o` | 636 | `__aeabi_fadd.o` | 402 |
+| `__aeabi_fmul.o` | 354 | `__aeabi_fdiv.o` | 354 |
+| `__aeabi_l2f.o` | 88 | `__powisf2.o` | 76 |
+| `__aeabi_ul2f.o` | 76 | `__libc_softfloat_compare.o` | 62 |
+| `__aeabi_i2f.o` | 44 | `__aeabi_ui2f.o` | 34 |
+| the five `fcmp*` | 82 | `cfcmple`, `cfcmpeq`, `cfrcmple` | 28 |
+| `fsub`, `frsub` | 16 | | |
+
+- `__mulsc3` (64 bytes of stack) and `__powisf2` (24) are libgcc's callers of
+  the replaced group, which the layer must define too (D100); no entry point's
+  stack depth changes.
+- The size budget holds (`size-report budget`).

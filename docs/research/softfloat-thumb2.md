@@ -43,7 +43,7 @@ AOR and libgcc are only measured here; nothing of their code is used.
 
 ## Approach
 
-A layer `libc/math/soft-sp`, listed on armv7-m only. Thumb-2 assembly for the arithmetic and the comparisons, C for the conversions and the two libgcc callers. NaN rules:
+A layer `libc/math/soft-sp`, listed on armv7-m only. Thumb-2 assembly for the arithmetic, the comparisons and the conversions; C for the two libgcc callers. NaN rules:
 - a NaN operand gives that NaN, quietened; of two, the one with the larger magnitude, since the addition orders its operands by magnitude;
 - an invalid operation gives the default NaN `0x7fc00000`;
 - no exception flags (D44).
@@ -51,11 +51,10 @@ A layer `libc/math/soft-sp`, listed on armv7-m only. Thumb-2 assembly for the ar
 ### Addition
 
 `fsub` flips b's sign and falls into `fadd`; `frsub` flips a's.
-- **Order and unpack.** The operands are ordered by magnitude, so |a| ≥ |b| and a decides the sign, and each significand is unpacked with its hidden bit at bit 30. A subnormal is taken with exponent 1 and no hidden bit, which keeps both on one grid.
-- **Align.** b is shifted right by the exponent difference d, at most 31: from 31 on, b only supplies the sticky bit. The bits shifted out set bit 0.
-- **Same signs.** Add; a carry into bit 31 shifts right once, keeping its sticky bit.
-- **Opposite signs.** Subtract. A zero difference is +0. Otherwise normalise by `CLZ`, but never below exponent 1, so a subnormal result comes out exactly, with no rounding.
-- **Pack.** (exponent − 1) · 2^23 plus the significand (bits 30–7) takes the hidden bit into the exponent field. Bit 6 is the guard bit, bits 5–0 are sticky, and ties go to even. A carry out of the significand reaches the exponent through the addition, and at the top it becomes exactly infinity's encoding.
+- **Order.** The operands are ordered by magnitude, so |a| ≥ |b| and a decides the sign. A zero b, then an infinite or NaN a, are dealt with first (the math benchmark's `y * 0.0f + x` makes the zero case common).
+- **Fast path: both normal.** From d ≥ 26 the result is a. Otherwise the significands are unpacked with the hidden bit at bit 31 (the low 8 bits empty); b is shifted right by d, the bits shifted out setting bit 0 (sticky). Addition and subtraction are separate branches. A carry out of the addition shifts back in through `RRX`, keeping the sticky bit, and may overflow to infinity. A subtraction normalises by `CLZ`, never below exponent 1, so a subnormal result comes out exactly; a zero difference is +0. Massive cancellation needs d ≤ 1, where no bit has been shifted out of the 32-bit word, so the normalisation is exact; from d ≥ 2 it shifts by one place at most, past the sticky bit only.
+- **General path** (b subnormal, so a may be too). Significands with the hidden bit at bit 30; a subnormal is taken with exponent 1 and no hidden bit, which keeps both on one grid. The same alignment, addition (a carry into bit 31 shifts right once) and subtraction with `CLZ` normalisation.
+- **Pack.** (sign | exponent − 1) · 2^23 plus the significand's top 24 bits takes the hidden bit into the exponent field; the first bit below is the guard bit, added through the carry, and the rest are sticky, cleared bit 0 on an exact tie (ties to even). A carry out of the significand reaches the exponent through the addition, and at the top it becomes exactly infinity's encoding.
 
 ### Multiplication
 
@@ -70,19 +69,20 @@ Significands with the hidden bit at bit 23; a below b doubles a, so a/b lies in 
 - the first gives 8 bits: (a · 2^7)/b, below 2^32;
 - each later step divides the remainder times 2^8 (below 2^32, since the remainder is below b < 2^24), giving 8 bits.
 
-That is 32 quotient bits with the leading one at bit 31, the same layout as the product's high word. A non-zero final remainder is the sticky bit, and the packing (overflow, subnormal shift, rounding) is the multiplication's.
+That is 32 quotient bits with the leading one at bit 31, the same layout as the product's high word. A non-zero final remainder is the sticky bit, and the packing (overflow, subnormal shift, rounding) follows the same steps as the multiplication's, in a copy of its own.
 
 ### Comparisons
 
 - **Unordered.** A NaN on either side gives C set and Z clear.
 - **Zeros.** Two zeros are equal.
 - **Order key.** Otherwise the operands map to unsigned keys whose order is the numbers' order: a non-negative x gives x | 2^31, a negative one gives ¬x. One unsigned `CMP` of the keys then sets Z and C as RTABI requires.
-- **Registers.** The flag-returning forms compute in ip and lr (saved), so r0–r3 survive. The 0/1 forms test the flags.
+- **Registers.** One hidden routine, `__libc_softfloat_compare`, changes only ip and the flags: `cfcmple`/`cfcmpeq` branch to it, `cfrcmple` swaps r0 and r1 around a call, and the 0/1 forms call it and test the flags (`fcmpge`/`fcmpgt` with the operands swapped).
+- **Without keys.** Rather than build keys, the routine compares the bit patterns directly: two non-negative operands as unsigned integers, otherwise with the operands swapped (two negatives order in reverse, and a negative is below a non-negative, which as unsigned is above). It needs the same flags and no spare register.
 
 ### Conversions
 
-- `i2f`/`ui2f`: magnitude, `CLZ`, shift, round to nearest from the bits shifted out.
-- `l2f`/`ul2f`: the 64-bit magnitude narrowed to 32 bits with a sticky bit, then the same rounding.
+- `i2f`/`ui2f`: magnitude, `CLZ`, shift so the leading one is at bit 31, then the addition's packing with exponent 157 − `CLZ`.
+- `l2f`/`ul2f`: a zero high word goes the 32-bit way; otherwise the high word, normalised by `CLZ` with the low word shifted in and the rest of it folded into bit 0 as sticky, then the same packing.
 
 ### `__mulsc3`, `__powisf2`
 

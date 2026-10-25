@@ -29,7 +29,7 @@ fewer; math counts the throughput cases only):
 
 - The size flavour's string kernels are the same Thumb-1 code on both, hence 0.99.
 - The speed flavour adds the Thumb-2 `memcpy`/`memmove`/`memset`/`strcmp`; `strchr` stays C, the DSP version being armv7e-m's.
-- strto, malloc, math and softfloat gain most: hardware divide, `UMULL`/`UMLAL` and libgcc's Thumb-2 soft-float assembly.
+- strto, malloc, math and softfloat gain most: hardware divide, `UMULL`/`UMLAL` and libgcc's Thumb-2 soft-float assembly (replaced by the library's own in D109, below).
 
 ### Size flavour
 
@@ -420,3 +420,268 @@ Throughput, per call (the latency counts are the same under qemu).
 | `mtx/trylock` | 78.0 |
 | `tss_get` | 34.0 |
 
+
+## D109 — `soft-sp`: the library's own float helpers
+
+The float run-time ABI helpers (`fadd fsub frsub fmul fdiv`, the comparisons and
+`i2f ui2f l2f ul2f`) are now the `soft-sp` layer's Thumb-2 assembly instead of
+libgcc's (PLAN D109, `docs/research/softfloat-thumb2.md`). Instructions per
+operation in the `softfloat` program, the same in both flavours, with Arm Optimized
+Routines' `at32` helpers for scale (`bench-runner aor`):
+
+| Operation | libgcc (D108) | `soft-sp` | change | AOR |
+|---|---:|---:|---:|---:|
+| `fadd` | 59.3 | 56.3 | -5 % | 38.1 |
+| `fsub` | 58.2 | 52.1 | -11 % | 37.6 |
+| `fmul` | 39.9 | 39.3 | -2 % | 36.9 |
+| `fdiv` | 156 | 57.7 | -63 % | 58.9 |
+| `fcmp` | 42.9 | 28.9 | -33 % | 21.3 |
+| `i2f` | 29.9 | 20.9 | -30 % | 20.9 |
+| `l2f` | 32.9 | 26.9 | -18 % | 27.3 |
+| `ddiv` | 354 | 245 | -31 % | |
+
+- `ddiv` gains because `soft-dp` computes its reciprocal with a float division.
+- Geometric means against D108: math 0.938 (size flavour) and 0.947 (speed), softfloat 0.883, strto 0.987 and 0.969; `cbrt`/`cbrtf` gain most (0.82–0.83).
+- One case grows: `strtof/exp`, +0.1 % (size) and +0.9 % (speed), inside the 1 % gate. libgcc's `fmul` has a shortcut for a power-of-two operand, which that case multiplies by; `soft-sp`'s does not, as it would cost every other product a test.
+
+### Size flavour
+
+Instructions per operation (qemu 8.2.2, release, size flavour), change against the D108 baseline (5e57f83).
+
+#### stdio
+
+| Case | insns/op |
+|---|---:|
+| `fprintf/mix` | 2326 |
+| `fputs/line` | 362 |
+| `snprintf/%-20s` | 615 |
+| `snprintf/%.17g` | 14944 |
+| `snprintf/%.3f` | 14898 (-1 %) |
+| `snprintf/%08x` | 537 |
+| `snprintf/%a` | 962 |
+| `snprintf/%c` | 267 |
+| `snprintf/%d` | 475 |
+| `snprintf/%e` | 14034 |
+| `snprintf/%f` | 14751 |
+| `snprintf/%g` | 15561 |
+| `snprintf/%lld` | 7643 |
+| `snprintf/%p` | 457 |
+| `snprintf/%s` | 424 |
+| `snprintf/%u-small` | 364 |
+| `snprintf/%x` | 518 |
+| `snprintf/literal` | 512 |
+| `snprintf/mix` | 1960 |
+| `sscanf/%d` | 457 |
+| `sscanf/%lf` | 3039 (-3 %) |
+| `sscanf/%x` | 540 |
+| `sscanf/mix` | 2090 |
+
+#### strto
+
+| Case | insns/op |
+|---|---:|
+| `atoi` | 1081 |
+| `strtod/17-digits` | 5248 |
+| `strtod/exp-large` | 176522 |
+| `strtod/exp-small` | 29424 |
+| `strtod/fixed` | 1725 (-6 %) |
+| `strtod/hex` | 974 |
+| `strtod/integer` | 1348 |
+| `strtod/long` | 8474 |
+| `strtod/micro` | 1577 (-6 %) |
+| `strtod/min-normal` | 104270 |
+| `strtod/short` | 1455 (-7 %) |
+| `strtod/subnormal` | 114004 |
+| `strtof/9-digits` | 4257 (-0 %) |
+| `strtof/exp` | 9198 (+0 %) |
+| `strtof/short` | 1225 (-8 %) |
+| `strtol/hex` | 1195 |
+| `strtol/int` | 1213 |
+| `strtol/short` | 949 |
+| `strtoll/long` | 1496 |
+| `strtoul/hex16` | 1179 |
+| `strtoull/hex` | 1446 |
+
+#### math
+
+Throughput, per call (the latency counts are the same under qemu).
+
+| Function | float | double |
+|---|---:|---:|
+| `acos` | 11832 (-10 %) | 14076 (-4 %) |
+| `acosh` | 10152 (-8 %) | 13773 (-3 %) |
+| `asin` | 11349 (-11 %) | 13481 (-4 %) |
+| `asinh` | 9783 (-9 %) | 15719 (-4 %) |
+| `atan` | 8648 (-11 %) | 8070 (-5 %) |
+| `atan2` | 9033 (-11 %) | 8667 (-5 %) |
+| `atanh` | 7721 (-9 %) | 9757 (-5 %) |
+| `cbrt` | 3545 (-18 %) | 4257 (-17 %) |
+| `cos` | 9093 (-8 %) | 6500 |
+| `cosh` | 7302 (-10 %) | 6166 (-3 %) |
+| `erf` | 66112 (-13 %) | 13408 (-9 %) |
+| `erfc` | 54334 (-14 %) | 40682 (-8 %) |
+| `exp` | 5431 (-9 %) | 3874 |
+| `exp2` | 4511 (-8 %) | 5320 |
+| `expm1` | 6065 (-8 %) | 4128 |
+| `floor` | 75.2 (-11 %) | 102 |
+| `fmod` | 225 (-4 %) | 291 |
+| `hypot` | 3336 (-9 %) | 5956 (-2 %) |
+| `lgamma` | 18357 (-9 %) | 17908 (-3 %) |
+| `log` | 6185 (-8 %) | 6405 (-3 %) |
+| `log10` | 6181 (-8 %) | 7881 (-3 %) |
+| `log1p` | 6386 (-8 %) | 6961 (-3 %) |
+| `log2` | 5322 (-9 %) | 8007 (-3 %) |
+| `pow` | 11060 (-9 %) | 11840 (-2 %) |
+| `round` | 69.2 (-11 %) | 99.5 |
+| `sin` | 9154 (-8 %) | 6524 |
+| `sinh` | 7396 (-10 %) | 6585 (-3 %) |
+| `sqrt` | 468 (-2 %) | 1972 |
+| `tan` | 17903 (-9 %) | 11535 (-2 %) |
+| `tanh` | 7763 (-10 %) | 7444 (-3 %) |
+| `tgamma` | 27683 (-9 %) | 24297 (-4 %) |
+
+#### softfloat
+
+| Case | insns/op |
+|---|---:|
+| `d2f` | 19.4 |
+| `d2i` | 19.9 |
+| `d2l` | 44.9 |
+| `dadd` | 56.2 |
+| `dcmp` | 29.9 |
+| `ddiv` | 244 (-31 %) |
+| `dmul` | 58.0 |
+| `dsub` | 59.1 |
+| `f2d` | 15.9 |
+| `f2i` | 15.9 |
+| `f2l` | 27.4 |
+| `fadd` | 56.3 (-5 %) |
+| `fcmp` | 28.9 (-33 %) |
+| `fdiv` | 57.7 (-63 %) |
+| `fmul` | 39.2 (-2 %) |
+| `fsub` | 52.1 (-11 %) |
+| `i2d` | 21.6 |
+| `i2f` | 20.9 (-30 %) |
+| `l2d` | 30.1 |
+| `l2f` | 26.9 (-18 %) |
+
+### Speed flavour
+
+Instructions per operation (qemu 8.2.2, speed, speed flavour), change against the D108 baseline (5e57f83).
+
+#### stdio
+
+| Case | insns/op |
+|---|---:|
+| `fprintf/mix` | 2151 |
+| `fputs/line` | 255 |
+| `snprintf/%-20s` | 575 |
+| `snprintf/%.17g` | 14846 |
+| `snprintf/%.3f` | 14812 (-1 %) |
+| `snprintf/%08x` | 469 |
+| `snprintf/%a` | 862 |
+| `snprintf/%c` | 261 |
+| `snprintf/%d` | 455 |
+| `snprintf/%e` | 13869 |
+| `snprintf/%f` | 14669 |
+| `snprintf/%g` | 15476 |
+| `snprintf/%lld` | 1353 |
+| `snprintf/%p` | 420 |
+| `snprintf/%s` | 396 |
+| `snprintf/%u-small` | 353 |
+| `snprintf/%x` | 450 |
+| `snprintf/literal` | 308 |
+| `snprintf/mix` | 1837 |
+| `sscanf/%d` | 364 |
+| `sscanf/%lf` | 2024 (-5 %) |
+| `sscanf/%x` | 423 |
+| `sscanf/mix` | 1602 |
+
+#### strto
+
+| Case | insns/op |
+|---|---:|
+| `atoi` | 207 |
+| `strtod/17-digits` | 1241 |
+| `strtod/exp-large` | 1130 |
+| `strtod/exp-small` | 1296 |
+| `strtod/fixed` | 834 (-11 %) |
+| `strtod/hex` | 953 |
+| `strtod/integer` | 499 |
+| `strtod/long` | 2258 |
+| `strtod/micro` | 708 (-13 %) |
+| `strtod/min-normal` | 1287 |
+| `strtod/short` | 630 (-15 %) |
+| `strtod/subnormal` | 1338 |
+| `strtof/9-digits` | 934 (-0 %) |
+| `strtof/exp` | 973 (+1 %) |
+| `strtof/short` | 400 (-22 %) |
+| `strtol/hex` | 322 |
+| `strtol/int` | 305 |
+| `strtol/short` | 135 |
+| `strtoll/long` | 516 |
+| `strtoul/hex16` | 309 |
+| `strtoull/hex` | 508 |
+
+#### math
+
+Throughput, per call (the latency counts are the same under qemu).
+
+| Function | float | double |
+|---|---:|---:|
+| `acos` | 11832 (-10 %) | 14076 (-4 %) |
+| `acosh` | 10152 (-8 %) | 13773 (-3 %) |
+| `asin` | 11349 (-11 %) | 13481 (-4 %) |
+| `asinh` | 9783 (-9 %) | 15719 (-4 %) |
+| `atan` | 8648 (-11 %) | 8070 (-5 %) |
+| `atan2` | 9033 (-11 %) | 8667 (-5 %) |
+| `atanh` | 7721 (-9 %) | 9757 (-5 %) |
+| `cbrt` | 3545 (-18 %) | 4257 (-17 %) |
+| `cos` | 1990 (-6 %) | 6500 |
+| `cosh` | 7302 (-10 %) | 6166 (-3 %) |
+| `erf` | 2079 (-2 %) | 13408 (-9 %) |
+| `erfc` | 2018 (-2 %) | 40682 (-8 %) |
+| `exp` | 280 (-1 %) | 3874 |
+| `exp2` | 235 (-2 %) | 5320 |
+| `expm1` | 6065 (-8 %) | 4128 |
+| `floor` | 75.2 (-11 %) | 102 |
+| `fmod` | 225 (-4 %) | 291 |
+| `hypot` | 3336 (-9 %) | 5956 (-2 %) |
+| `lgamma` | 18357 (-9 %) | 17908 (-3 %) |
+| `log` | 1233 (-6 %) | 6405 (-3 %) |
+| `log10` | 6181 (-8 %) | 7881 (-3 %) |
+| `log1p` | 6386 (-8 %) | 6961 (-3 %) |
+| `log2` | 391 (-2 %) | 8007 (-3 %) |
+| `pow` | 11060 (-9 %) | 11840 (-2 %) |
+| `round` | 69.2 (-11 %) | 99.5 |
+| `sin` | 2499 (-7 %) | 6524 |
+| `sinh` | 7396 (-10 %) | 6585 (-3 %) |
+| `sqrt` | 468 (-2 %) | 1972 |
+| `tan` | 2596 (-5 %) | 11535 (-2 %) |
+| `tanh` | 7763 (-10 %) | 7444 (-3 %) |
+| `tgamma` | 27683 (-9 %) | 24297 (-4 %) |
+
+#### softfloat
+
+| Case | insns/op |
+|---|---:|
+| `d2f` | 19.4 |
+| `d2i` | 19.9 |
+| `d2l` | 44.9 |
+| `dadd` | 56.2 |
+| `dcmp` | 29.9 |
+| `ddiv` | 244 (-31 %) |
+| `dmul` | 58.0 |
+| `dsub` | 59.1 |
+| `f2d` | 15.9 |
+| `f2i` | 15.9 |
+| `f2l` | 27.4 |
+| `fadd` | 56.3 (-5 %) |
+| `fcmp` | 28.9 (-33 %) |
+| `fdiv` | 57.7 (-63 %) |
+| `fmul` | 39.2 (-2 %) |
+| `fsub` | 52.1 (-11 %) |
+| `i2d` | 21.6 |
+| `i2f` | 20.9 (-30 %) |
+| `l2d` | 30.1 |
+| `l2f` | 26.9 (-18 %) |

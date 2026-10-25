@@ -26,7 +26,7 @@ It binds to an RTOS through a single link-time seam
   - drop-in flavour archives: `libc-nofloat.a`, `libc-minimal-printf.a`, `libc-tinymalloc.a`;
   - three allocators: nano, TLSF and tiny.
 
-The work ran in four phases: compliance, then size, then speed, then a comparison with Arm Optimized Routines. [`docs/plan/PLAN.md`](docs/plan/PLAN.md) holds the goals, the architecture and the numbered [decision log](docs/plan/PLAN.md#2-decision-log) (D1–D106). Every Dnn cited below is an entry in that log.
+The work ran in four phases: compliance, then size, then speed, then a comparison with Arm Optimized Routines. [`docs/plan/PLAN.md`](docs/plan/PLAN.md) holds the goals, the architecture and the numbered [decision log](docs/plan/PLAN.md#2-decision-log) (D1–D109). Every Dnn cited below is an entry in that log.
 
 ## How it compares
 
@@ -152,7 +152,7 @@ Each build targets one architecture, named by `ARCH_CROSS`. Without it, `make` b
 |---|---|---|---|
 | `armv6-m` | Armv6-M parts without the OS extension (no `SVC`) | `-mthumb -march=armv6-m -mfloat-abi=soft` | none; soft float, round to nearest only |
 | `armv6s-m` | Cortex-M0, M0+ | `-mthumb -march=armv6s-m -mfloat-abi=soft` | none; soft float, round to nearest only |
-| `armv7-m` | Cortex-M3; a Cortex-M4 or M33 built without its FPU | `-mthumb -march=armv7-m -mfloat-abi=soft` | none; soft float, round to nearest only ([D108](docs/plan/PLAN.md#2-decision-log)) |
+| `armv7-m` | Cortex-M3; a Cortex-M4 or M33 built without its FPU | `-mthumb -march=armv7-m -mfloat-abi=soft` | none; soft float, round to nearest only, with the library's own Thumb-2 float and double helpers ([D108](docs/plan/PLAN.md#2-decision-log), [D109](docs/plan/PLAN.md#2-decision-log)) |
 | `armv7e-m` | Cortex-M4F, and Cortex-M7 with the single-precision FPU | `-mthumb -march=armv7e-m+fp -mfloat-abi=hard` | FPv4-SP; round to nearest only |
 | `armv7e-m-dp` | Cortex-M7 with the double-precision FPU | `-mthumb -march=armv7e-m+fp.dp -mfloat-abi=hard` | FPv5-D16; every rounding direction and exception flag |
 | `armv8-m.main` | Cortex-M33 (and M35P) with FPU and DSP | `-mthumb -march=armv8-m.main+fp+dsp -mfloat-abi=hard` | FPv5-SP; round to nearest only |
@@ -420,7 +420,7 @@ Then it links `<install dir>/armv8-m.main/release/{include,lib}` as shown above,
 | Topic | Where |
 |---|---|
 | Goals, architecture, scope | [`docs/plan/PLAN.md`](docs/plan/PLAN.md) |
-| Decision log (D1–D106) | [PLAN.md §2](docs/plan/PLAN.md#2-decision-log) |
+| Decision log (D1–D109) | [PLAN.md §2](docs/plan/PLAN.md#2-decision-log) |
 | Open questions | [PLAN.md §7](docs/plan/PLAN.md#7-open-questions) |
 | Phase task lists | [phase 1](docs/plan/phase-1.md), [phase 2](docs/plan/phase-2.md), [phase 3](docs/plan/phase-3.md), [phase 4](docs/plan/phase-4.md) |
 | Configuration: archives, flavours, cores, allocators, ports, parent builds | [`docs/configuration.md`](docs/configuration.md) |

@@ -38,7 +38,7 @@ The library builds for Armv6-M (Thumb-1, soft float) and for the Thumb-2 cores t
 |---|---|---|---|
 | C code | Thumb-1 | Thumb-2 | Thumb-2 (`-march=armv7-m`) |
 | `<fenv.h>`, `LIBC_FPU` | soft, `nofp` | soft or full | soft, `nofp` |
-| float helpers | `nofp` layer for `fsub fmul fdiv f2uiz`, libgcc for the rest | hardware | libgcc's Thumb-2 assembly, all of them |
+| float helpers | `nofp` layer for `fsub fmul fdiv f2uiz`, libgcc for the rest | hardware | libgcc's Thumb-2 assembly, all of them (since D109 the `soft-sp` layer, `docs/research/softfloat-thumb2.md`) |
 | double helpers | `nofp` (`dsub d2uiz`), libgcc's per-function C | `soft-dp` layer | `soft-dp`, with a DSP-free `dmul` |
 | integer `sqrtf`, fixed-point speed paths | `nofp`, `nofp/speed` | — | `nofp`, `nofp/speed` |
 | string kernels, size | `thumb1` | `thumb1` | `thumb1` |

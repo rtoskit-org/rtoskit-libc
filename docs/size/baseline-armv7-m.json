@@ -6,17 +6,17 @@
    "main": {
     "depth": 88,
     "notes": [
+     "assembly: __aeabi_fadd",
+     "assembly: __aeabi_fcmpeq",
+     "assembly: __aeabi_fcmpge",
+     "assembly: __aeabi_fcmpgt",
+     "assembly: __aeabi_fcmple",
+     "assembly: __aeabi_fcmplt",
+     "assembly: __aeabi_fmul",
+     "assembly: __aeabi_fsub",
+     "assembly: __aeabi_i2f",
      "libgcc: __aeabi_f2iz",
-     "libgcc: __aeabi_fadd",
-     "libgcc: __aeabi_fcmpeq",
-     "libgcc: __aeabi_fcmpge",
-     "libgcc: __aeabi_fcmpgt",
-     "libgcc: __aeabi_fcmple",
-     "libgcc: __aeabi_fcmplt",
-     "libgcc: __aeabi_fcmpun",
-     "libgcc: __aeabi_fmul",
-     "libgcc: __aeabi_fsub",
-     "libgcc: __aeabi_i2f"
+     "libgcc: __aeabi_fcmpun"
     ],
     "path": [
      "main",
@@ -31,7 +31,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 1378,
+     "text": 2330,
      "unwind": 0
     },
     "libgcc": {
@@ -40,7 +40,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 1256,
+     "text": 120,
      "unwind": 0
     },
     "other": {
@@ -77,7 +77,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 3164,
+    "text": 2980,
     "unwind": 0
    }
   },
@@ -86,13 +86,13 @@
     "depth": 1268,
     "notes": [
      "assembly: __aeabi_dmul",
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
      "assembly: __rtos_linux_syscall",
      "assembly: memmove",
      "assembly: memset",
      "indirect call",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "main",
@@ -111,7 +111,7 @@
      "rodata": 185,
      "tbss": 4,
      "tdata": 0,
-     "text": 7556,
+     "text": 7944,
      "unwind": 0
     },
     "libgcc": {
@@ -120,7 +120,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 1276,
+     "text": 64,
      "unwind": 0
     },
     "other": {
@@ -157,7 +157,7 @@
     "rodata": 198,
     "tbss": 4,
     "tdata": 4,
-    "text": 9652,
+    "text": 8828,
     "unwind": 0
    }
   },
@@ -616,19 +616,19 @@
    "main": {
     "depth": 312,
     "notes": [
+     "assembly: __aeabi_fadd",
+     "assembly: __aeabi_fcmpeq",
+     "assembly: __aeabi_fcmpge",
+     "assembly: __aeabi_fcmpgt",
+     "assembly: __aeabi_fcmple",
+     "assembly: __aeabi_fcmplt",
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_fmul",
+     "assembly: __aeabi_fsub",
+     "assembly: __aeabi_i2f",
+     "assembly: __aeabi_ui2f",
      "libgcc: __aeabi_f2iz",
-     "libgcc: __aeabi_fadd",
-     "libgcc: __aeabi_fcmpeq",
-     "libgcc: __aeabi_fcmpge",
-     "libgcc: __aeabi_fcmpgt",
-     "libgcc: __aeabi_fcmple",
-     "libgcc: __aeabi_fcmplt",
-     "libgcc: __aeabi_fcmpun",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_fmul",
-     "libgcc: __aeabi_fsub",
-     "libgcc: __aeabi_i2f",
-     "libgcc: __aeabi_ui2f"
+     "libgcc: __aeabi_fcmpun"
     ],
     "path": [
      "main",
@@ -645,7 +645,7 @@
      "rodata": 516,
      "tbss": 0,
      "tdata": 0,
-     "text": 5776,
+     "text": 7116,
      "unwind": 0
     },
     "libgcc": {
@@ -654,7 +654,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 1568,
+     "text": 120,
      "unwind": 0
     },
     "other": {
@@ -691,7 +691,7 @@
     "rodata": 516,
     "tbss": 0,
     "tdata": 0,
-    "text": 7784,
+    "text": 7676,
     "unwind": 0
    }
   },
@@ -708,22 +708,22 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
+     "assembly: __aeabi_fadd",
+     "assembly: __aeabi_fcmpeq",
+     "assembly: __aeabi_fcmpge",
+     "assembly: __aeabi_fcmpgt",
+     "assembly: __aeabi_fcmple",
+     "assembly: __aeabi_fcmplt",
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_fmul",
+     "assembly: __aeabi_fsub",
+     "assembly: __aeabi_i2f",
+     "assembly: __aeabi_ui2f",
      "assembly: __aeabi_ul2d",
      "assembly: memset",
      "libgcc: __aeabi_f2iz",
      "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fadd",
-     "libgcc: __aeabi_fcmpeq",
-     "libgcc: __aeabi_fcmpge",
-     "libgcc: __aeabi_fcmpgt",
-     "libgcc: __aeabi_fcmple",
-     "libgcc: __aeabi_fcmplt",
-     "libgcc: __aeabi_fcmpun",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_fmul",
-     "libgcc: __aeabi_fsub",
-     "libgcc: __aeabi_i2f",
-     "libgcc: __aeabi_ui2f"
+     "libgcc: __aeabi_fcmpun"
     ],
     "path": [
      "main",
@@ -741,7 +741,7 @@
      "rodata": 3700,
      "tbss": 0,
      "tdata": 0,
-     "text": 24010,
+     "text": 25350,
      "unwind": 0
     },
     "libgcc": {
@@ -750,7 +750,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 1632,
+     "text": 184,
      "unwind": 0
     },
     "other": {
@@ -759,7 +759,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 38,
+     "text": 34,
      "unwind": 0
     },
     "port": {
@@ -787,13 +787,40 @@
     "rodata": 3700,
     "tbss": 0,
     "tdata": 0,
-    "text": 26404,
+    "text": 26292,
     "unwind": 0
    }
   }
  },
  "libc": {
   "members": {
+   "__aeabi_cfcmpeq.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "__aeabi_cfcmple.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "__aeabi_cfrcmple.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
    "__aeabi_d2f.o": {
     "bss": 0,
     "data": 0,
@@ -956,6 +983,96 @@
     "text": 88,
     "unwind": 0
    },
+   "__aeabi_fadd.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 402,
+    "unwind": 0
+   },
+   "__aeabi_fcmpeq.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 14,
+    "unwind": 0
+   },
+   "__aeabi_fcmpge.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "__aeabi_fcmpgt.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "__aeabi_fcmple.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 14,
+    "unwind": 0
+   },
+   "__aeabi_fcmplt.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 14,
+    "unwind": 0
+   },
+   "__aeabi_fdiv.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 354,
+    "unwind": 0
+   },
+   "__aeabi_fmul.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 354,
+    "unwind": 0
+   },
+   "__aeabi_frsub.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "__aeabi_fsub.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
    "__aeabi_i2d.o": {
     "bss": 0,
     "data": 0,
@@ -963,6 +1080,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 52,
+    "unwind": 0
+   },
+   "__aeabi_i2f.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 44,
     "unwind": 0
    },
    "__aeabi_l2d.o": {
@@ -974,6 +1100,15 @@
     "text": 16,
     "unwind": 0
    },
+   "__aeabi_l2f.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 88,
+    "unwind": 0
+   },
    "__aeabi_ui2d.o": {
     "bss": 0,
     "data": 0,
@@ -983,6 +1118,15 @@
     "text": 36,
     "unwind": 0
    },
+   "__aeabi_ui2f.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 34,
+    "unwind": 0
+   },
    "__aeabi_ul2d.o": {
     "bss": 0,
     "data": 0,
@@ -990,6 +1134,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 6,
+    "unwind": 0
+   },
+   "__aeabi_ul2f.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 76,
     "unwind": 0
    },
    "__atomic_add.o": {
@@ -2126,6 +2279,15 @@
     "text": 192,
     "unwind": 0
    },
+   "__libc_softfloat_compare.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 62,
+    "unwind": 0
+   },
    "__libc_start_main.o": {
     "bss": 0,
     "data": 0,
@@ -2297,6 +2459,15 @@
     "text": 1032,
     "unwind": 0
    },
+   "__mulsc3.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 636,
+    "unwind": 0
+   },
    "__powidf2.o": {
     "bss": 0,
     "data": 0,
@@ -2304,6 +2475,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 116,
+    "unwind": 0
+   },
+   "__powisf2.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 76,
     "unwind": 0
    },
    "_exit.o": {
@@ -8127,7 +8307,7 @@
    "rodata": 9934,
    "tbss": 358,
    "tdata": 8,
-   "text": 162406,
+   "text": 164658,
    "unwind": 0
   }
  },
@@ -8157,9 +8337,9 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "atan2",
@@ -8236,11 +8416,11 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
      "assembly: __aeabi_ul2d",
      "assembly: memset",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "cpow",
@@ -8264,9 +8444,9 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "erfc",
@@ -8308,14 +8488,14 @@
    "expf": {
     "depth": 144,
     "notes": [
+     "assembly: __aeabi_fadd",
+     "assembly: __aeabi_fcmpeq",
+     "assembly: __aeabi_fcmpgt",
+     "assembly: __aeabi_fcmplt",
+     "assembly: __aeabi_fmul",
+     "assembly: __aeabi_fsub",
      "libgcc: __aeabi_f2iz",
-     "libgcc: __aeabi_fadd",
-     "libgcc: __aeabi_fcmpeq",
-     "libgcc: __aeabi_fcmpgt",
-     "libgcc: __aeabi_fcmplt",
-     "libgcc: __aeabi_fcmpun",
-     "libgcc: __aeabi_fmul",
-     "libgcc: __aeabi_fsub"
+     "libgcc: __aeabi_fcmpun"
     ],
     "path": [
      "expf",
@@ -8464,9 +8644,9 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "lgamma",
@@ -8506,9 +8686,9 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "log",
@@ -8568,10 +8748,10 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
      "assembly: __aeabi_ul2d",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "pow",
@@ -8583,18 +8763,18 @@
    "powf": {
     "depth": 208,
     "notes": [
+     "assembly: __aeabi_fadd",
+     "assembly: __aeabi_fcmpeq",
+     "assembly: __aeabi_fcmpge",
+     "assembly: __aeabi_fcmpgt",
+     "assembly: __aeabi_fcmple",
+     "assembly: __aeabi_fcmplt",
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_fmul",
+     "assembly: __aeabi_fsub",
+     "assembly: __aeabi_i2f",
      "libgcc: __aeabi_f2iz",
-     "libgcc: __aeabi_fadd",
-     "libgcc: __aeabi_fcmpeq",
-     "libgcc: __aeabi_fcmpge",
-     "libgcc: __aeabi_fcmpgt",
-     "libgcc: __aeabi_fcmple",
-     "libgcc: __aeabi_fcmplt",
-     "libgcc: __aeabi_fcmpun",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_fmul",
-     "libgcc: __aeabi_fsub",
-     "libgcc: __aeabi_i2f"
+     "libgcc: __aeabi_fcmpun"
     ],
     "path": [
      "powf",
@@ -8684,13 +8864,13 @@
    "sinf": {
     "depth": 272,
     "notes": [
-     "libgcc: __aeabi_fadd",
-     "libgcc: __aeabi_fcmple",
-     "libgcc: __aeabi_fcmplt",
-     "libgcc: __aeabi_fcmpun",
-     "libgcc: __aeabi_fmul",
-     "libgcc: __aeabi_fsub",
-     "libgcc: __aeabi_ui2f"
+     "assembly: __aeabi_fadd",
+     "assembly: __aeabi_fcmple",
+     "assembly: __aeabi_fcmplt",
+     "assembly: __aeabi_fmul",
+     "assembly: __aeabi_fsub",
+     "assembly: __aeabi_ui2f",
+     "libgcc: __aeabi_fcmpun"
     ],
     "path": [
      "sinf",
@@ -8803,11 +8983,11 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
      "assembly: __aeabi_ul2d",
      "assembly: memset",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "tan",
@@ -8828,9 +9008,9 @@
      "assembly: __aeabi_dcmplt",
      "assembly: __aeabi_dmul",
      "assembly: __aeabi_dsub",
-     "libgcc: __aeabi_f2uiz",
-     "libgcc: __aeabi_fdiv",
-     "libgcc: __aeabi_ui2f"
+     "assembly: __aeabi_fdiv",
+     "assembly: __aeabi_ui2f",
+     "libgcc: __aeabi_f2uiz"
     ],
     "path": [
      "tgamma",
@@ -9145,7 +9325,9 @@
    "__libc_u64_to_double.o:__libc_u64_to_double": 8,
    "__libc_udivmod64.o:__libc_udivmod64": 24,
    "__muldc3.o:__muldc3": 104,
+   "__mulsc3.o:__mulsc3": 64,
    "__powidf2.o:__powidf2": 32,
+   "__powisf2.o:__powisf2": 24,
    "_exit.o:_Exit": 8,
    "abort.o:abort": 8,
    "abs.o:abs": 0,
