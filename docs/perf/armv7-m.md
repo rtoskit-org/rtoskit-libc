@@ -685,3 +685,33 @@ Throughput, per call (the latency counts are the same under qemu).
 | `i2f` | 20.9 (-30 %) |
 | `l2d` | 30.1 |
 | `l2f` | 26.9 (-18 %) |
+
+
+## P5.02 — Speed flavour: Thumb-2 `strlen` (D112)
+
+`libc/string/thumb2/strlen.S` replaces the Thumb-1 kernel in the speed flavour:
+two words per `LDRD` with the classic zero-byte test (`docs/research/strlen-thumb2.md`).
+No case is slower; `strlen` of 1024 bytes 1315 → 1187, of 7 bytes 61 → 36, and
+`strcpy`, which calls it, gains too. The size flavour is unchanged.
+
+Instructions per operation (qemu 8.2.2, speed, speed flavour), change against the D111 baseline (3e25343).
+
+### string
+
+Aligned / worst of the misaligned offsets.
+
+| Function | 0 | 1 | 4 | 16 | 64 | 256 | 1024 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `memcpy` | 19.0 / 19.0 | 34.0 / 34.0 | 34.0 / 34.0 | 42.0 / 42.0 | 54.0 / 81.0 | 78.0 / 153 | 174 / 441 |
+| `memmove-down` | 23.0 / 23.0 | 38.0 / 38.0 | 38.0 / 38.0 | 46.0 / 46.0 | 58.0 / 85.0 | 82.0 / 157 | 178 / 445 |
+| `memmove-up` | 23.0 / 23.0 | 38.0 / 38.0 | 38.0 / 38.0 | 44.0 / 44.0 | 54.0 / 77.0 | 78.0 / 143 | 174 / 407 |
+| `memset` | 18.0 / 18.0 | 35.0 / 35.0 | 35.0 / 35.0 | 39.0 / 39.0 | 57.0 / 59.0 | 81.0 / 83.0 | 177 / 179 |
+| `memcmp` | 27.0 / 27.0 | 35.0 / 35.0 | 59.0 / 59.0 | 155 / 155 | 539 / 539 | 2075 / 2075 | 8219 / 8219 |
+| `memchr` | 29.0 / 29.0 | 36.0 / 28.0 | 65.0 / 66.0 | 95.0 / 98.0 | 215 / 218 | 695 / 698 | 2615 / 2618 |
+| `strlen` | 35.0 / 25.0 | 35.0 (-17 %) / 37.0 | 36.0 (-10 %) / 47.0 | 53.0 (-4 %) / 64.0 | 107 (-7 %) / 118 | 323 (-9 %) / 334 | 1187 (-10 %) / 1198 |
+| `strchr` | 52.0 / 38.0 | 48.0 / 35.0 | 69.0 / 75.0 | 102 / 108 | 234 / 240 | 762 / 768 | 2874 / 2880 |
+| `strcmp` | 27.0 / 27.0 | 33.0 / 33.0 | 53.0 / 53.0 | 144 / 133 | 240 / 430 | 624 / 1582 | 2160 / 6190 |
+| `strcpy` | 62.0 / 62.0 | 62.0 (-10 %) / 64.0 | 65.0 (-6 %) / 76.0 | 90.0 (-2 %) / 101 | 156 (-5 %) / 185 | 396 (-7 %) / 470 | 1356 (-9 %) / 1622 |
+| `mix/memcpy` (per call) | 54.1 | | | | | | |
+| `mix/memset` (per call) | 41.7 | | | | | | |
+| `mix/strlen` (per call) | 103 (-9 %) | | | | | | |

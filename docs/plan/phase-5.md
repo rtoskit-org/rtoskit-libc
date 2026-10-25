@@ -22,9 +22,11 @@ least 256 bytes of code (D111).
 - [x] `size-report budget`: a flavour's code allowance is the larger of its percentage and `floor_bytes` (256 for the speed flavour); RAM keeps the percentage; architectures with their own flavour figures (D110) keep no margin.
   *D111. Speed headroom of the small images: `malloc-heavy` 25–37 → 96–144 bytes on every core. `hello-printf-int-nofloat` (about 4.4 KB, whose 10 % already exceeds 256 bytes) is unchanged at 97–101 bytes.*
 
-## P5.02 — Thumb-2 `strlen` in the speed flavour  `[~]`
-- [ ] armv7e-m, armv7e-m-dp, armv8-m.main (and armv7-m if a DSP-free version gains): the double-word `strlen` that P3.02b measured 10 % faster for +56 bytes and dropped for the `malloc-heavy` budget (Q16). Research note, `test/unit/string_kernels` coverage, budget check.
-- [ ] armv7-m: its speed figures are locked exactly (D110); re-lock them only with a decision entry.
+## P5.02 — Thumb-2 `strlen` in the speed flavour  `[x]`
+- [x] armv7e-m, armv7e-m-dp, armv8-m.main (and armv7-m if a DSP-free version gains): the double-word `strlen` that P3.02b measured 10 % faster for +56 bytes and dropped for the `malloc-heavy` budget (Q16). Research note, `test/unit/string_kernels` coverage, budget check.
+  *D112, `docs/research/strlen-thumb2.md`, `libc/string/thumb2/strlen.S` (DSP-free, so every Thumb-2 core). Bytes to a word boundary, one word to 8, then `LDRD` pairs; walking bytes to 8 first made short misaligned strings 4–12 % slower. 1024 bytes 1315 → 1187, 7 bytes 61 → 36, `mix/strlen` 113 → 103; 119 cases faster, none slower. +64 bytes per image that links `strlen`, inside the floor on the FPU cores.*
+- [x] armv7-m: its speed figures are locked exactly (D110); re-lock them only with a decision entry.
+  *Re-locked under D112: `hello-puts` 2051, `malloc-heavy` 2138, `malloc-heavy-tiny` 2078. `make check` passes in all 21 configurations.*
 
 ## P5.03 — Thumb-2 word-at-a-time `memchr`  `[ ]`
 - [ ] Q21: `memchr` is C and takes about twice AOR's instructions from 16 bytes up. A word-at-a-time kernel (`UADD8`/`SEL` on the DSP cores, as `strchr`, D74; a DSP-free version for armv7-m), researched from first principles.
