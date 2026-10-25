@@ -26,7 +26,7 @@
  *   double operation on the widened operands rounded to float, which is
  *   the correctly rounded float result (53 >= 2 * 24 + 2: Figueroa; Roux);
  * - the comparisons against the double comparison, the flag-returning
- *   forms through inline assembly that also checks r0-r3 survive;
+ *   forms in cfcmp.c;
  * - the conversions from 32-bit integers through double (exact there),
  *   from 64-bit integers against an integer model.
  * The operands: random bit patterns, close exponents that carry or cancel,
@@ -97,52 +97,17 @@ static uint32_t ref_div(uint32_t a, uint32_t b)
 	return bits_of((float)(x / y));
 }
 
-/* RTABI's flags for the ordering: Z (bit 30) for equal, C (bit 29) clear for less, C set and Z clear when unordered */
-static uint32_t want_flags(uint32_t a, uint32_t b)
-{
-	volatile double x = from(a);
-	volatile double y = from(b);
-
-	if (x < y)
-		return 0;
-	if (x == y)
-		return 0x60000000u;
-	return 0x20000000u;
-}
-
-#define CALL_FLAGS(helper, a, b, flags, kept)                                                                                                             \
-	do {                                                                                                                                                  \
-		register uint32_t r0 __asm__("r0") = (a);                                                                                                         \
-		register uint32_t r1 __asm__("r1") = (b);                                                                                                         \
-		register uint32_t r2 __asm__("r2") = 0x2c2c2c2cu;                                                                                                 \
-		register uint32_t r3 __asm__("r3") = 0x3d3d3d3du;                                                                                                 \
-		__asm__ volatile("bl " helper "\n\tmrs %[out], apsr" : [out] "=r"(flags), "+r"(r0), "+r"(r1), "+r"(r2), "+r"(r3) : : "ip", "lr", "cc", "memory"); \
-		(kept) = r0 == (a) && r1 == (b) && r2 == 0x2c2c2c2cu && r3 == 0x3d3d3d3du;                                                                        \
-	} while (false)
-
 static void check_compare(uint32_t a, uint32_t b)
 {
 	volatile double x = from(a);
 	volatile double y = from(b);
-	uint32_t want = want_flags(a, b);
-	uint32_t flags;
-	bool kept;
 
 	check("fcmpeq", a, b, (uint32_t)__aeabi_fcmpeq(from(a), from(b)), x == y);
 	check("fcmplt", a, b, (uint32_t)__aeabi_fcmplt(from(a), from(b)), x < y);
 	check("fcmple", a, b, (uint32_t)__aeabi_fcmple(from(a), from(b)), x <= y);
 	check("fcmpge", a, b, (uint32_t)__aeabi_fcmpge(from(a), from(b)), x >= y);
 	check("fcmpgt", a, b, (uint32_t)__aeabi_fcmpgt(from(a), from(b)), x > y);
-
-	CALL_FLAGS("__aeabi_cfcmple", a, b, flags, kept);
-	check("cfcmple", a, b, flags & 0x60000000u, want);
-	check("cfcmple registers", a, b, kept, 1);
-	CALL_FLAGS("__aeabi_cfcmpeq", a, b, flags, kept);
-	check("cfcmpeq", a, b, flags & 0x60000000u, want);
-	check("cfcmpeq registers", a, b, kept, 1);
-	CALL_FLAGS("__aeabi_cfrcmple", a, b, flags, kept);
-	check("cfrcmple", a, b, flags & 0x60000000u, want_flags(b, a));
-	check("cfrcmple registers", a, b, kept, 1);
+	check_flag_compare(a, b);
 }
 
 static void check_pair(uint32_t a, uint32_t b)

@@ -24,7 +24,7 @@ The math benchmark took 0.71 of its instructions with AOR's helpers. `ddiv` is a
   - `__aeabi_cfcmple` sets the flags as for an integer compare: Z for equal, C clear for less; unordered is C set, Z clear;
   - `__aeabi_cfcmpeq` gives the same flags (it differs only in signalling, which these cores do not have);
   - `__aeabi_cfrcmple` swaps the operands;
-  - all three may change only ip, lr and the flags, so the caller's r0–r3 survive.
+  - they preserve every core register except ip, lr and the flags; `cfrcmple` is read by every implementation reviewed as "swap r0 and r1, then `cfcmple`", so its r0 and r1 come back swapped in libgcc, compiler-rt and FreeBSD (<https://cgit.freebsd.org/src/tree/lib/libc/arm/aeabi/aeabi_asm_float.S>). `soft-sp` swaps them back, which satisfies either reading.
 
   Sources: <https://llvm.googlesource.com/llvm-project/+/890c4bece26e005cd9fa5511fe0efa7307794de5/compiler-rt/lib/builtins/arm/aeabi_cfcmp.S> and <https://reviews.llvm.org/D12089>.
 - **The Armv7-M architecture.** `UDIV` (32/32 hardware divide), `UMULL`, `CLZ`, `IT` and the wide shifts are all base Armv7-M; `UMAAL` is not (D108).
@@ -119,4 +119,5 @@ A new `test/unit/softsp` runs on every Arm core, against whatever provides the h
   - `i2f`/`ui2f`: the conversion through double.
   - `l2f`/`ul2f`: an integer model.
   - NaN results only need to be quiet NaNs.
-- **Flags.** The `cfcmp` forms are called from inline assembly that also checks r0–r3 survive and reads Z and C.
+- **Flags.** The `cfcmp` forms are called from inline assembly (`cfcmp.c`) that reads Z and C and checks that r2 and r3 survive, and r0 and r1 too, except that `cfrcmple` may return them swapped.
+- **Armv6-M.** libgcc's Thumb-1 `cfcmp` forms do not give RTABI's flags: they end with `cmp`/`cmn` of `__lesf2`'s result, so C is set for less and clear for equal. GCC never calls them on Thumb-1 (it calls the 0/1 forms), and the library does not define them there, so armv6-m and armv6s-m build `cfcmp-thumb1.c`, which checks nothing.

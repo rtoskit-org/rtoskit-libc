@@ -11,5 +11,9 @@
 #     Author: Stephen Street (stephen@redrocketcomputing.com)
 #
 
-# The helpers exist on the Arm cores only (PLAN D109)
-SRC := ${SOURCE_DIR}/softsp.c ${SOURCE_DIR}/$(if $(filter arm,${ARCH_FAMILY}),operations.c,none.c)
+# The helpers exist on the Arm cores only (PLAN D109); Armv6-M's libgcc flag-returning comparisons do not follow RTABI
+ifeq (${ARCH_FAMILY},arm)
+SRC := ${SOURCE_DIR}/softsp.c ${SOURCE_DIR}/operations.c ${SOURCE_DIR}/$(if $(filter armv6-m armv6s-m,${ARCH_CROSS}),cfcmp-thumb1.c,cfcmp.c)
+else
+SRC := ${SOURCE_DIR}/softsp.c ${SOURCE_DIR}/none.c
+endif

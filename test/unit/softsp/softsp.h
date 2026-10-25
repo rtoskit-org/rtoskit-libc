@@ -27,4 +27,7 @@ float __powisf2(float x, int n);
 /* The single-precision run-time ABI helpers against references (operations.c on Arm, none.c elsewhere) */
 void test_operations(void);
 
+/* The flag-returning comparisons, __aeabi_cfcmple, cfcmpeq and cfrcmple (cfcmp.c; cfcmp-thumb1.c on Armv6-M) */
+void check_flag_compare(uint32_t a, uint32_t b);
+
 #endif /* _SOFTSP_H */
