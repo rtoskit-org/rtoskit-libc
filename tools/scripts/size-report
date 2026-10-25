@@ -24,6 +24,8 @@
 #                                                        docs/size/budget.json (P2.07, PLAN D71);
 #                                                        exit status 1 when one is over
 #   tools/scripts/size-report budget --lock              write docs/size/budget.json from the build
+#   tools/scripts/size-report --build-type speed budget --flavour speed --lock --arch A
+#                                                        lock A's speed-flavour figures (PLAN D110)
 #   tools/scripts/size-report aor [--record | --from-record]
 #                                                        what each Arm Optimized Routines routine costs against
 #                                                        ours, and test/size relinked with AOR ("make aor" first);
@@ -773,7 +775,8 @@ def command_compare(args):
 
 # The size budget (P2.07, PLAN D71): code and RAM per reference program per architecture, locked at the end
 # of phase 2; the size flavour may not exceed it, a speed flavour by at most its margin, or by a program's
-# own margin where the budget file gives one (PLAN D87: the speed flavour's math images)
+# own margin where the budget file gives one (PLAN D87: the speed flavour's math images). An architecture
+# with figures locked from a flavour's own images (flavour_images, PLAN D110) is held to those, no margin.
 BUDGET_MARGINS = {'size': 0, 'speed': 10}
 
 
@@ -786,14 +789,18 @@ def image_figures(image):
 	return {'code': total(sections, ['text', 'rodata', 'unwind']), 'ram': total(sections, ['data', 'bss', 'tdata', 'tbss'])}
 
 
+def lock_figures(arch, args):
+	images = measure(arch, args.build_type, args.build_root)['images']
+	return {program: image_figures(images[program]) for program in PROGRAMS + FLAVOUR_PROGRAMS}
+
+
 def command_budget(args):
 	path = budget_path(args.baseline_dir)
 	arches = [arch for arch in args.arch if arch != 'x86_64']
-	if args.lock:
+	if args.lock and args.flavour == 'size':
 		budget = {'margins_percent': BUDGET_MARGINS, 'images': {}}
 		for arch in arches:
-			images = measure(arch, args.build_type, args.build_root)['images']
-			budget['images'][arch] = {program: image_figures(images[program]) for program in PROGRAMS + FLAVOUR_PROGRAMS}
+			budget['images'][arch] = lock_figures(arch, args)
 		with open(path, 'w') as f:
 			json.dump(budget, f, indent=1, sort_keys=True)
 			f.write('\n')
@@ -801,22 +808,38 @@ def command_budget(args):
 		return 0
 	with open(path) as f:
 		budget = json.load(f)
+	if args.lock:
+		if not args.explicit_arch:
+			print('size-report: --lock with --flavour needs --arch', file=sys.stderr)
+			return 2
+		# A flavour's own figures for the named architectures; everything else in the file is kept
+		flavour_images = budget.setdefault('flavour_images', {}).setdefault(args.flavour, {})
+		for arch in arches:
+			flavour_images[arch] = lock_figures(arch, args)
+		with open(path, 'w') as f:
+			json.dump(budget, f, indent=1, sort_keys=True)
+			f.write('\n')
+		print(f'{path}: {", ".join(arches)} locked from the {args.flavour} flavour')
+		return 0
 	margin = budget['margins_percent'][args.flavour]
 	program_margins = budget.get('program_margins_percent', {}).get(args.flavour, {})
+	flavour_images = budget.get('flavour_images', {}).get(args.flavour, {})
 	over = False
 	for arch in arches:
 		if arch not in budget['images']:
 			continue
+		own = arch in flavour_images
 		images = measure(arch, args.build_type, args.build_root)['images']
-		for program, limits in budget['images'][arch].items():
+		for program, limits in (flavour_images[arch] if own else budget['images'][arch]).items():
 			figures = image_figures(images[program])
-			program_margin = program_margins.get(program, margin)
+			program_margin = 0 if own else program_margins.get(program, margin)
 			for key in ('code', 'ram'):
 				allowed = limits[key] + limits[key] * program_margin // 100
 				if figures[key] > allowed:
 					over = True
 					print(f'{arch} {program} {key}: {figures[key]} > {allowed} ({limits[key]} + {program_margin} %)')
 	exceptions = ''.join(f', {program} +{value} %' for program, value in sorted(program_margins.items()))
+	exceptions += ''.join(f', {arch} its own {args.flavour} figures' for arch in sorted(flavour_images))
 	print('size budget: over' if over else f'size budget: within ({args.flavour} flavour, +{margin} %{exceptions})')
 	return 1 if over else 0
 
@@ -986,7 +1009,8 @@ def main():
 	p.add_argument('--record', action='store_true', help='also write the results to docs/size/aor-<arch>.json')
 	p.add_argument('--from-record', action='store_true', help='print the tables of docs/size/aor-<arch>.json without building')
 	args = parser.parse_args()
-	if getattr(args, 'arch', None) is None:
+	args.explicit_arch = getattr(args, 'arch', None) is not None
+	if not args.explicit_arch:
 		args.arch = ARCHS
 	commands = {'report': command_report, 'diff': command_diff, 'markdown': command_markdown, 'compare': command_compare, 'budget': command_budget, 'aor': command_aor}
 	return commands[args.command](args)

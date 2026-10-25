@@ -130,4 +130,26 @@ twenty new members.
 - `__mulsc3` (64 bytes of stack) and `__powisf2` (24) are libgcc's callers of
   the replaced group, which the layer must define too (D100); no entry point's
   stack depth changes.
-- The size budget holds (`size-report budget`).
+- The size budget holds (`size-report budget`); for the speed flavour see D110 below.
+
+## D110 — the speed flavour's own budget
+
+The speed flavour's images exceed the size flavour's figures by more than the
+margins of D71 and D87 (`math-float` 10536 bytes against 9960), because they
+carry the fixed-point maths paths (`nofp/speed`, D86–D88), which take 0.03–0.27
+of the size flavour's instructions on this core. Since PLAN D110,
+`docs/size/budget.json` holds armv7-m's speed images to their own figures
+(`flavour_images.speed.armv7-m`), with no margin:
+
+| Program | code | RAM |
+|---|---:|---:|
+| hello-puts | 1987 | 348 |
+| hello-printf-int | 7721 | 348 |
+| hello-printf-int-nofloat | 4797 | 348 |
+| hello-printf-int-minimal | 4371 | 348 |
+| hello-printf-float | 9554 | 348 |
+| malloc-heavy | 2074 | 52 |
+| malloc-heavy-tiny | 2014 | 48 |
+| float-exact | 2980 | 20 |
+| math-float | 10536 | 20 |
+| math-mix | 32400 | 20 |

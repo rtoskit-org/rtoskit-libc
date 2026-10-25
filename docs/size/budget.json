@@ -1,4 +1,50 @@
 {
+ "flavour_images": {
+  "speed": {
+   "armv7-m": {
+    "float-exact": {
+     "code": 2980,
+     "ram": 20
+    },
+    "hello-printf-float": {
+     "code": 9554,
+     "ram": 348
+    },
+    "hello-printf-int": {
+     "code": 7721,
+     "ram": 348
+    },
+    "hello-printf-int-minimal": {
+     "code": 4371,
+     "ram": 348
+    },
+    "hello-printf-int-nofloat": {
+     "code": 4797,
+     "ram": 348
+    },
+    "hello-puts": {
+     "code": 1987,
+     "ram": 348
+    },
+    "malloc-heavy": {
+     "code": 2074,
+     "ram": 52
+    },
+    "malloc-heavy-tiny": {
+     "code": 2014,
+     "ram": 48
+    },
+    "math-float": {
+     "code": 10536,
+     "ram": 20
+    },
+    "math-mix": {
+     "code": 32400,
+     "ram": 20
+    }
+   }
+  }
+ },
  "images": {
   "armv6-m": {
    "float-exact": {

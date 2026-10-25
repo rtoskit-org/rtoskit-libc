@@ -26,7 +26,7 @@ It binds to an RTOS through a single link-time seam
   - drop-in flavour archives: `libc-nofloat.a`, `libc-minimal-printf.a`, `libc-tinymalloc.a`;
   - three allocators: nano, TLSF and tiny.
 
-The work ran in four phases: compliance, then size, then speed, then a comparison with Arm Optimized Routines. [`docs/plan/PLAN.md`](docs/plan/PLAN.md) holds the goals, the architecture and the numbered [decision log](docs/plan/PLAN.md#2-decision-log) (D1–D109). Every Dnn cited below is an entry in that log.
+The work ran in four phases: compliance, then size, then speed, then a comparison with Arm Optimized Routines. [`docs/plan/PLAN.md`](docs/plan/PLAN.md) holds the goals, the architecture and the numbered [decision log](docs/plan/PLAN.md#2-decision-log) (D1–D110). Every Dnn cited below is an entry in that log.
 
 ## How it compares
 
@@ -420,7 +420,7 @@ Then it links `<install dir>/armv8-m.main/release/{include,lib}` as shown above,
 | Topic | Where |
 |---|---|
 | Goals, architecture, scope | [`docs/plan/PLAN.md`](docs/plan/PLAN.md) |
-| Decision log (D1–D109) | [PLAN.md §2](docs/plan/PLAN.md#2-decision-log) |
+| Decision log (D1–D110) | [PLAN.md §2](docs/plan/PLAN.md#2-decision-log) |
 | Open questions | [PLAN.md §7](docs/plan/PLAN.md#7-open-questions) |
 | Phase task lists | [phase 1](docs/plan/phase-1.md), [phase 2](docs/plan/phase-2.md), [phase 3](docs/plan/phase-3.md), [phase 4](docs/plan/phase-4.md) |
 | Configuration: archives, flavours, cores, allocators, ports, parent builds | [`docs/configuration.md`](docs/configuration.md) |
