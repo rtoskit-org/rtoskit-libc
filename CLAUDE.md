@@ -5,7 +5,7 @@ systems, bound to an RTOS through a link-time seam. Licence: MPL-2.0.
 
 **Read first, every session:** `docs/plan/PLAN.md` (goals, architecture, the
 decision log D*, open questions Q*), then the active phase file
-(`docs/plan/phase-{1,2,3,4}.md`).
+(`docs/plan/phase-{1,2,3,4,5}.md`).
 
 ## Session workflow
 

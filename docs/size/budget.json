@@ -45,6 +45,10 @@
    }
   }
  },
+ "floor_bytes": {
+  "size": 0,
+  "speed": 256
+ },
  "images": {
   "armv6-m": {
    "float-exact": {

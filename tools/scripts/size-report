@@ -777,7 +777,10 @@ def command_compare(args):
 # of phase 2; the size flavour may not exceed it, a speed flavour by at most its margin, or by a program's
 # own margin where the budget file gives one (PLAN D87: the speed flavour's math images). An architecture
 # with figures locked from a flavour's own images (flavour_images, PLAN D110) is held to those, no margin.
+# A flavour's margin is at least its floor in bytes (floor_bytes, PLAN D111), so a small image can take a
+# shared kernel: the kernel costs the same bytes in every image, and a percentage of a 2 KB image is not one.
 BUDGET_MARGINS = {'size': 0, 'speed': 10}
+BUDGET_FLOORS = {'size': 0, 'speed': 256}
 
 
 def budget_path(directory):
@@ -798,7 +801,7 @@ def command_budget(args):
 	path = budget_path(args.baseline_dir)
 	arches = [arch for arch in args.arch if arch != 'x86_64']
 	if args.lock and args.flavour == 'size':
-		budget = {'margins_percent': BUDGET_MARGINS, 'images': {}}
+		budget = {'margins_percent': BUDGET_MARGINS, 'floor_bytes': BUDGET_FLOORS, 'images': {}}
 		for arch in arches:
 			budget['images'][arch] = lock_figures(arch, args)
 		with open(path, 'w') as f:
@@ -824,6 +827,7 @@ def command_budget(args):
 	margin = budget['margins_percent'][args.flavour]
 	program_margins = budget.get('program_margins_percent', {}).get(args.flavour, {})
 	flavour_images = budget.get('flavour_images', {}).get(args.flavour, {})
+	floor = budget.get('floor_bytes', {}).get(args.flavour, 0)
 	over = False
 	for arch in arches:
 		if arch not in budget['images']:
@@ -833,12 +837,17 @@ def command_budget(args):
 		for program, limits in (flavour_images[arch] if own else budget['images'][arch]).items():
 			figures = image_figures(images[program])
 			program_margin = 0 if own else program_margins.get(program, margin)
+			# The floor is code only; RAM keeps the percentage
 			for key in ('code', 'ram'):
-				allowed = limits[key] + limits[key] * program_margin // 100
+				allowance = limits[key] * program_margin // 100
+				if key == 'code' and not own:
+					allowance = max(allowance, floor)
+				allowed = limits[key] + allowance
 				if figures[key] > allowed:
 					over = True
-					print(f'{arch} {program} {key}: {figures[key]} > {allowed} ({limits[key]} + {program_margin} %)')
-	exceptions = ''.join(f', {program} +{value} %' for program, value in sorted(program_margins.items()))
+					print(f'{arch} {program} {key}: {figures[key]} > {allowed} ({limits[key]} + max({program_margin} %, {floor if not own else 0} bytes))')
+	exceptions = f', at least {floor} bytes of code' if floor else ''
+	exceptions += ''.join(f', {program} +{value} %' for program, value in sorted(program_margins.items()))
 	exceptions += ''.join(f', {arch} its own {args.flavour} figures' for arch in sorted(flavour_images))
 	print('size budget: over' if over else f'size budget: within ({args.flavour} flavour, +{margin} %{exceptions})')
 	return 1 if over else 0
