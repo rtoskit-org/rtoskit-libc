@@ -68,15 +68,14 @@ __aeabi_fmul:
 	bhi .Lrange
 
 .Lpack:
-	/* sign | (e - 1) 2^23 + r1 >> 8, the guard bit as carry in; a tie (bits 6-0 of r1 and ip zero) clears the last bit */
+	/* sign | (e - 1) 2^23 + r1 >> 8, the guard bit as carry in; a tie (r1's low byte 0x80 and ip zero) clears the last bit */
 	and r0, r3, #0x80000000
 	add r0, r0, r2, lsl #23
 	and r2, r1, #0xff
 	lsrs r1, r1, #8
 	adc r0, r0, r1
-	cmp r2, #0x80
-	it eq
-	cmpeq ip, #0
+	eor r2, r2, #0x80
+	orrs r2, r2, ip
 	it eq
 	biceq r0, r0, #1
 	bx lr
