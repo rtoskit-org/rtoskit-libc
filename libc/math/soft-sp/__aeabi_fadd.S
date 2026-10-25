@@ -57,12 +57,14 @@ __aeabi_fadd:
 	mov r2, r3
 	mov r3, ip
 1:
-	/* a infinite or NaN; b zero or subnormal (exponent field 0) */
+	/* b zero; a infinite or NaN; b subnormal (exponent field 0) */
+	cmp r3, #0
+	beq .Lzero_b
 	cmp r2, #0xff000000
 	bhs .Lspecial
 	lsrs r2, r2, #24
 	lsrs r3, r3, #24
-	beq .Lsmall_b
+	beq .Lgeneral
 
 	/* From d = 26, a + b rounds to a */
 	subs r3, r2, r3
@@ -139,11 +141,11 @@ __aeabi_fadd:
 .Lreturn:
 	bx lr
 
-.Lsmall_b:
-	/* x + 0 is x; of two zeros, the sum is -0 only when both are */
-	lsls ip, r1, #1
-	bne .Lgeneral
-	lsls ip, r0, #1
+.Lzero_b:
+	/* x + 0 is x, a NaN quietened; of two zeros, the sum is -0 only when both are */
+	cmp r2, #0xff000000
+	bhi .Lnan
+	cmp r2, #0
 	it eq
 	andeq r0, r0, r1
 	bx lr

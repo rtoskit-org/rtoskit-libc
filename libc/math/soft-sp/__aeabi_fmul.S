@@ -104,19 +104,17 @@ __aeabi_fmul:
 	bx lr
 
 .Lspecial:
-	lsls ip, r0, #1
-	cmp ip, #0xff000000
-	bhi .Lnan_a
+	/* A zero b first (x * 0 is the common special case); then an infinite or NaN operand; then a zero a */
 	lsls ip, r1, #1
+	beq .Lzero_b
 	cmp ip, #0xff000000
-	bhi .Lnan_b
-	beq .Linfinite_b
+	bhs .Lspecial_b
 	lsls ip, r0, #1
 	cmp ip, #0xff000000
-	beq .Linfinite_a
+	bhs .Lspecial_a
 	lsls ip, r0, #1
-	beq .Lsigned_zero
-	lsls ip, r1, #1
+	it ne
+	lslsne ip, r1, #1
 	beq .Lsigned_zero
 
 	/* Normalise: the hidden bit at 31, a subnormal's exponent 1 - CLZ */
@@ -145,22 +143,40 @@ __aeabi_fmul:
 	mov r3, ip
 	b .Lproduct
 
-.Linfinite_a:
-	/* Infinity times a finite b: zero gives the default NaN, otherwise infinity */
+.Lspecial_b:
+	/* b a NaN: the first NaN, quiet. b infinite: a NaN first, then zero times infinity is the default NaN */
+	bhi 6f
+	lsls ip, r0, #1
+	cmp ip, #0xff000000
+	bhi .Lnan_a
+	cmp ip, #0
+	beq .Ldefault_nan
+	b .Lsigned_infinity
+6:
+	lsls ip, r0, #1
+	cmp ip, #0xff000000
+	bhi .Lnan_a
+	b .Lnan_b
+.Lspecial_a:
+	/* a a NaN: quiet. a infinite (b finite): times zero the default NaN, otherwise infinity */
+	bhi .Lnan_a
 	lsls ip, r1, #1
 	beq .Ldefault_nan
 	b .Lsigned_infinity
-.Linfinite_b:
+.Lzero_b:
+	/* a NaN: quiet; infinity times zero: the default NaN; otherwise a signed zero */
 	lsls ip, r0, #1
+	cmp ip, #0xff000000
+	bhi .Lnan_a
 	beq .Ldefault_nan
+.Lsigned_zero:
+	eor r0, r0, r1
+	and r0, r0, #0x80000000
+	bx lr
 .Lsigned_infinity:
 	eor r0, r0, r1
 	and r0, r0, #0x80000000
 	orr r0, r0, #0x7f800000
-	bx lr
-.Lsigned_zero:
-	eor r0, r0, r1
-	and r0, r0, #0x80000000
 	bx lr
 .Lnan_a:
 	orr r0, r0, #0x00400000
