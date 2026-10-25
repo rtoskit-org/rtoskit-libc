@@ -84,6 +84,48 @@
     "ram": 20
    }
   },
+  "armv7-m": {
+   "float-exact": {
+    "code": 3164,
+    "ram": 20
+   },
+   "hello-printf-float": {
+    "code": 9850,
+    "ram": 348
+   },
+   "hello-printf-int": {
+    "code": 7193,
+    "ram": 348
+   },
+   "hello-printf-int-minimal": {
+    "code": 4191,
+    "ram": 348
+   },
+   "hello-printf-int-nofloat": {
+    "code": 4431,
+    "ram": 348
+   },
+   "hello-puts": {
+    "code": 1867,
+    "ram": 348
+   },
+   "malloc-heavy": {
+    "code": 1894,
+    "ram": 52
+   },
+   "malloc-heavy-tiny": {
+    "code": 1834,
+    "ram": 48
+   },
+   "math-float": {
+    "code": 8300,
+    "ram": 20
+   },
+   "math-mix": {
+    "code": 30104,
+    "ram": 20
+   }
+  },
   "armv7e-m": {
    "float-exact": {
     "code": 2048,

@@ -41,6 +41,8 @@ AOR_REVISION = 'f67e7daa5457646fad9f75580263dba654c988aa'
 AOR_ROOT = os.path.join('local', f'aor-{AOR_REVISION}')
 ARCHS = ['x86_64', 'armv6-m', 'armv6s-m', 'armv7-m', 'armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 THUMB1 = ['armv6-m', 'armv6s-m']
+# armv7-m is in neither group: AOR's Thumb-2 string routines use the DSP extension (memchr's UADD8/SEL), which it
+# lacks, so only AOR's math and fp are built for it (PLAN D108)
 THUMB2 = ['armv7e-m', 'armv7e-m-dp', 'armv8-m.main']
 
 # string/arm: the files that run on each core and the standard name of their symbol (D92). memcpy.S
