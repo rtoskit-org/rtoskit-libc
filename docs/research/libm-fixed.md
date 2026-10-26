@@ -302,3 +302,102 @@ unchanged.
 |---|---:|---:|
 | armv6-m, armv6s-m | 12365 | 678 |
 | armv7-m | 6181 | 466 |
+
+## P5.04b: `powf`
+
+Decision: PLAN D115 (Q25). Step: `docs/plan/phase-5.md`.
+
+### Sources reviewed
+
+- C23 7.12.7.5 and F.10.4.5: the special cases, which stay with the
+  float-float `powf` (D59).
+- Arm Optimized Routines' `powf` (via FreeBSD,
+  <https://src.rcs.uwaterloo.ca/xref/freebsd-src/contrib/arm-optimized-routines/math/powf.c>):
+  log2 x by a table of 1/c and log2 c and a polynomial in r = x/c − 1, then
+  exp2 of y·log2 x, all in double, with a relative error of the exp2 argument
+  of about 2^-34. Only the structure is relevant; the arithmetic here is fixed
+  point and no code is used.
+- CORE-MATH (Sibidanov, Zimmermann, <https://members.loria.fr/PZimmermann/talks/core-math-raim2022.pdf>):
+  a fast phase with a rounding test and a slower accurate phase (Ziv), which
+  is this library's structure since D86; binary32 `pow` has hard cases that no
+  fixed precision settles, so the fallback stays.
+
+### Error budget
+
+The D86 exp2 core takes z in units of 2^-37. For a normal result |z| < 2^7,
+and an error δz in z adds about δz · ln 2 · 2^33 units of 2^-32 to F. Keeping
+that near 0.05 units asks |δz| ≤ 2^-37, so log2 |x| must be accurate to about
+2^-44 relative: the D86 log2 core (about 2^-29) is far from enough.
+
+### The wide log2 core
+
+`__libc_log2f_wide` keeps the D86 reduction (23-entry tables, now shared in
+`__libc_log2f_table.c`, r exact in Q62, |r| < 2^-5.4) and evaluates
+log2(1 + r) = r · U(r), U = log(1 + r) / (r ln 2), to the term in r^7 (the
+next is below 2^-46 relative), its coefficients divided by ln 2:
+
+- the terms from r^3 on by Horner's rule in signed Q31 with r in Q36, as in
+  D86 (their error is multiplied by r^3 < 2^-16);
+- the last three steps in Q62: r times a 64-bit value from three 32-bit
+  partial products (the low one dropped, less than 2^-60);
+- r · U from r normalised to 64 bits, so near 1 the result keeps r's relative
+  accuracy; elsewhere |log2 x| ≥ 0.022 and the sum is formed in units of
+  2^-55.
+
+Run on the host over every positive float against `log2l`: the largest
+relative error is 0.040 · 2^-44 (about 2^-48.6).
+
+### `powf`
+
+- **Fast path:** finite non-zero x other than ±1, finite non-zero y, and for
+  a negative x an integer y (an odd one gives the sign). Everything else goes
+  to the float-float `powf` unchanged.
+- **z = y · log2 |x|:** y's 24-bit significand times the 64-bit logarithm
+  (two 32 × 32 products), shifted to units of 2^-37 with rounding. A scale
+  that puts |z| at 2^7 or more declines (overflow or underflow, left to the
+  fallback).
+- **2^z:** the D86 exp2 core; a result exponent outside [−126, 127] or a
+  rounding that reaches infinity declines; otherwise `__libc_fixed_round` with
+  the exp2 bound (6 units).
+
+### Validation (two arguments cannot be run exhaustively)
+
+The host ran the fast path against `powl` on x86-64 over four structured
+sets: x of every binade with y = t / log2 x (t uniform over the normal range),
+x near 1 with the same, small integer y, and random y bits.
+
+| Set | Fast-path results | Largest error of F (units of 2^-32) | Falls back | Wrong |
+|---|---:|---:|---:|---:|
+| x any binade, y = t / log2 x | 249,999,997 | 2.69 | 2.54 % | 0 |
+| x near 1 | 249,999,943 | 2.70 | 2.54 % | 0 |
+| integer y in [−30, 30] | 32,591,372 | 2.67 | 2.22 % | 0 |
+| random y | 125,851,672 | 2.66 | 0.65 % | 0 |
+
+The largest error equals the exp2 core's own (2.68 units, D86): the logarithm
+and the product add almost nothing. Without the rounding test, about one
+result in a thousand would be confidently misrounded; twelve of them, from all
+four sets, are in `test/unit/libm_dense/near2.inc`, and a mutant with the
+bound at 0 fails all twelve. Every one is correctly rounded by the float-float
+path too (armv7e-m release) and by x86-64.
+
+### Measured and not taken
+
+- **One logarithm core for every function:** with `logf`, `log2f` and
+  `log10f` on the wide core, `__libc_log2f_fixed` goes and `math-float`
+  shrinks by 516 bytes, but `log2f` is 73 % and `log10f` 62 % slower (the
+  wide core's 64-bit steps), against the 1 % benchmark gate. The two cores
+  stay.
+- **1/ln 2 as a separate product:** folding it into the coefficients removed
+  one 64-bit product: `powf` 1322 → 1222 instructions on armv6-m, and the
+  error fell from 0.053 to 0.040 · 2^-44.
+
+### Results (speed flavour, instructions per call, throughput)
+
+| Core | Before | After |
+|---|---:|---:|
+| armv6-m, armv6s-m | 22158 | 1222 |
+| armv7-m | 11060 | 865 |
+
+`math-float` and `math-mix` grow by about 1.1 KB on armv6-m and armv6s-m and
+1.0 KB on armv7-m (`powf` 978 bytes, the wide core 788, the table moved, not
+added); D116 settles the budget.

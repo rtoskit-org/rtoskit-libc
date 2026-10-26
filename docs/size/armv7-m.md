@@ -169,3 +169,10 @@ through line-buffered writes) grow by 66 bytes, and armv7-m's speed figures are
 re-locked with them (PLAN D113): `hello-puts` 2119, `hello-printf-int` 7785,
 `hello-printf-int-nofloat` 4865, `hello-printf-int-minimal` 4439,
 `hello-printf-float` 9618. The size flavour is unchanged.
+
+## D115, D116 — fixed-point `powf`
+
+The speed flavour's fixed-point `powf` (PLAN D115) adds about 1.0 KB to
+`math-float` and `math-mix`; armv7-m's speed figures are re-locked with it
+under D116: `math-float` 11580, `math-mix` 33440. The size flavour is
+unchanged.

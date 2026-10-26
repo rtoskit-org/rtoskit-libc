@@ -710,3 +710,26 @@ libgcc's `subdf3.o` (its own `__aeabi_dadd`, about 1.4 KB) in place of D85's. No
 
 `__libc_start_main` runs only `.init_array` (24 bytes smaller); the port's start-up code walks `.preinit_array`. Every
 reference image changes by −4 bytes. The baseline also records the D102 members (the soft-int and nofp conversions, `docs/size/armv6s-m.md` D102), which that step did not write.
+
+## D116 — the speed flavour's own budget
+
+The speed flavour's fixed-point `powf` (PLAN D115) adds about 1.1 KB to the
+images that link it, beyond the size figures plus D87's 20 % margin. Since
+PLAN D116 (the maintainer's decision), `docs/size/budget.json` holds this
+core's speed images to their own figures (`flavour_images.speed`), with no
+margin, as armv7-m's since D110. Speed-flavour code bytes:
+
+| Program | code |
+|---|---:|
+| hello-puts | 2239 |
+| hello-printf-int | 8197 |
+| hello-printf-int-nofloat | 5303 |
+| hello-printf-int-minimal | 4831 |
+| hello-printf-float | 10802 |
+| malloc-heavy | 2326 |
+| malloc-heavy-tiny | 2246 |
+| float-exact | 3740 |
+| math-float | 12536 |
+| math-mix | 37136 |
+
+The size flavour is unchanged.
