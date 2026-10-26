@@ -345,10 +345,10 @@
     "insns": 11839.75
    },
    "powf/latency": {
-    "insns": 11056.44
+    "insns": 861.56
    },
    "powf/throughput": {
-    "insns": 11060.31
+    "insns": 865.44
    },
    "round/latency": {
     "insns": 91.56
