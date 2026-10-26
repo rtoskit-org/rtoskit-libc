@@ -35,8 +35,13 @@
 #define __LIBC_FIXED_TAN_ERROR 4u
 #define __LIBC_FIXED_ERF_ERROR 8u
 
+/* The log2 reduction tables shared by the logarithm cores (__libc_log2f_table.c) */
+extern const uint32_t __libc_log2f_inverse[23];
+extern const int64_t __libc_log2f_logarithm[23];
+
 uint32_t __libc_exp2f_fixed(int64_t z, int *exponent);
 uint64_t __libc_log2f_fixed(uint32_t bits, int *exponent, bool *negative);
+uint64_t __libc_log2f_wide(uint32_t bits, int *exponent, bool *negative);
 uint64_t __libc_sinf_fixed(int k, float high, float low, int *exponent, bool *negative);
 uint64_t __libc_erff_fixed(uint32_t bits, bool complement, int *exponent);
 

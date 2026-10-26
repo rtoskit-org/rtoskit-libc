@@ -40,7 +40,7 @@ least 256 bytes of code (D111).
 - [x] Record its growth against `math-float`/`math-mix` (armv6-m: 112 bytes of `math-float` speed budget; armv7-m locked, D110).
   *488 bytes against 324, but no reference image links `log10f`: every image and both budgets are unchanged. `make check` passes in all 21 configurations.*
 
-## P5.04b — Fixed-point `powf` on the cores without an FPU  `[ ]`
+## P5.04b — Fixed-point `powf` on the cores without an FPU  `[~]`
 - [ ] Q25: `powf` (about 22,000 instructions on armv6-m, 11,000 on armv7-m) has no fixed-point path. y log2 |x| from a more precise logarithm core, then the D86 exp2 core, with the same rounding test and float-float fallback; an error analysis (two arguments cannot be run exhaustively), host runs over large random and structured sets, and hard cases in `test/unit/libm_dense`.
 
 ## P5.04c — The math images' speed budget  `[ ]`
