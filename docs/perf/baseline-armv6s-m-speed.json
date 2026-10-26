@@ -303,10 +303,10 @@
     "insns": 21066.38
    },
    "log10f/latency": {
-    "insns": 12366.44
+    "insns": 679.81
    },
    "log10f/throughput": {
-    "insns": 12365.06
+    "insns": 678.44
    },
    "log1p/latency": {
     "insns": 18070.44
