@@ -126,12 +126,13 @@ See:
 
 ## Building
 
-### Compiler requirements
+### Build requirements
 
 The library is written in C23 and its headers use C23. Everything that compiles against it needs a C23 compiler.
 
-| What | Compiler | Notes |
+| What | Tool | Notes |
 |---|---|---|
+| Running the build | GNU make 4.4 or newer | The makefiles use `.NOTINTERMEDIATE` ([D117](docs/plan/PLAN.md#2-decision-log)); an older make stops with a message. Ubuntu 26.04 has 4.4; on Ubuntu 24.04 (make 4.3) build it from <https://ftp.gnu.org/gnu/make/> (`./configure --prefix=/usr/local && make && sudo make install`). |
 | Building the library for x86-64 | Host GCC 14 or newer | Uses plain `gcc` when it is new enough, otherwise the newest `gcc-NN` found; set `HOST_CC` to choose one ([D107](docs/plan/PLAN.md#2-decision-log)). Ubuntu 24.04's `gcc` is 13, so install `gcc-14` there. |
 | Building the library for Arm | arm-none-eabi GCC 14 or newer | By default the first build downloads GCC 16.2 into `local/`. Pass `CROSS_COMPILE=<prefix>` to use your own instead; it is checked for version 14 or newer ([D105](docs/plan/PLAN.md#2-decision-log)). |
 | Compiling programs that use the library | GCC 14 or newer, in C23 mode | The installed headers need `-std=c23` or `-std=gnu23`; in C11/C17 mode they do not compile. GCC 15 and newer default to `gnu23`. GCC 14 defaults to `gnu17`, so pass the flag (the [spec file](#a-gcc-spec-file) adds `-std=gnu23` when no `-std` is given). |

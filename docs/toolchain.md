@@ -6,11 +6,12 @@ Recorded in P1.01 (2026-10-18), Ubuntu 24.04 cloud container; the Arm toolchain 
 |---|---|---|---|
 | GCC | 14.2.0 (`gcc-14`) | apt `gcc-14` | x86_64 libc and tests (`-std=c23`; GCC 13 rejects it, see PLAN D9). Any GCC 14 or newer works: `tools/scripts/host-cc` picks plain `gcc` when it is new enough, else the newest `gcc-NN`, and `HOST_CC` overrides (D107). |
 | binutils | 2.42 | apt (default) | x86_64 `as`, `ld`, `ar` |
+| GNU make | 4.4.1 | built from <https://ftp.gnu.org/gnu/make/make-4.4.1.tar.gz> into `/usr/local` (Ubuntu 24.04's make is 4.3) | the build, which needs `.NOTINTERMEDIATE` (PLAN D117) |
 | qemu-user | 8.2.2 | apt `qemu-user` | runs ARM test binaries from P1.06 |
 | clang-format | 18.1.3 | apt `clang-format` | formatting with `tools/clang-format` |
 | arm-none-eabi GCC | 16.2.0 (crosstool-NG 1.29.0, binutils with it) | `make setup` downloads red-rocket-computing/cross-dev release v0.3.0 into `local/` (`tools/makefiles/setup.mk`); the first `make` does it through the `libc port: setup-tools` dependency | the six Arm architectures (D9, D36, D37, D108). Multilibs used: `thumb/v6-m/nofp` (armv6-m and armv6s-m), `thumb/v7-m/nofp` (armv7-m), `thumb/v7e-m+fp/hard`, `thumb/v7e-m+dp/hard`, `thumb/v8-m.main+fp/hard`. The apt `gcc-arm-none-eabi` (13.2) is too old for `-std=c23`. |
 
-Cloud sessions install the apt packages through `.claude/hooks/session-start.sh`; the Arm toolchain comes from `make setup` (about 180 MB, unpacked into `local/`, which `make realclean` removes).
+Cloud sessions install the apt packages, and build make 4.4.1 when the installed make is older, through `.claude/hooks/session-start.sh`; the Arm toolchain comes from `make setup` (about 180 MB, unpacked into `local/`, which `make realclean` removes).
 
 ## Notes
 

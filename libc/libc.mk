@@ -59,9 +59,9 @@ all: ${INSTALL_ROOT}/lib/libc-nofloat.a ${INSTALL_ROOT}/lib/libc-minimal-printf.
 
 # Flavour archives (PLAN D13, D53): libc.a with members replaced by the objects of a variant
 # module of the same name, chosen by linking the archive instead of libc.a
-LIBC_NOFLOAT_OBJ := $(call module_objects,${BUILD_ROOT}/libc/stdio/nofloat)
-LIBC_MINIMAL_OBJ := ${LIBC_NOFLOAT_OBJ} $(call module_objects,${BUILD_ROOT}/libc/stdio/minimal)
-LIBC_TINYMALLOC_OBJ := $(call module_objects,${BUILD_ROOT}/libc/malloc/tiny)
+LIBC_NOFLOAT_OBJ := $(wildcard ${BUILD_ROOT}/libc/stdio/nofloat/*.o)
+LIBC_MINIMAL_OBJ := ${LIBC_NOFLOAT_OBJ} $(wildcard ${BUILD_ROOT}/libc/stdio/minimal/*.o)
+LIBC_TINYMALLOC_OBJ := $(wildcard ${BUILD_ROOT}/libc/malloc/tiny/*.o)
 libc_flavour = $(filter-out $(addprefix %/,$(notdir ${1})),${TARGET_OBJ}) ${1}
 
 ${CURDIR}/libc-nofloat.a: ${TARGET_OBJ} ${LIBC_NOFLOAT_OBJ} ${EXTRA_DEPS}

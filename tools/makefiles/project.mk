@@ -24,12 +24,7 @@ endif
 
 OBJ := $(patsubst %.c,%.o,$(filter %.c,${SRC})) $(patsubst %.cpp,%.o,$(filter %.cpp,${SRC})) $(patsubst %.s,%.o,$(filter %.s,${SRC})) $(patsubst %.S,%.o,$(filter %.S,${SRC}))
 OBJ := $(subst ${PROJECT_ROOT},${BUILD_ROOT},${OBJ})
-# Each module records the objects its current SRC builds (PLAN D117), and a parent archives or links those,
-# not every *.o left in a child's build directory: an object whose source a variant now shadows would stay.
-# A child without the record (a tree built before it existed) falls back to its *.o files.
-$(file >${CURDIR}/.objects,${OBJ})
-module_objects = $(strip $(if $(wildcard $(1)/.objects),$(file <$(1)/.objects),$(wildcard $(1)/*.o)))
-TARGET_OBJ := $(foreach dir, $(addprefix ${BUILD_ROOT}/, ${TARGET_OBJ_LIBS}), $(call module_objects,$(dir))) $(addprefix ${BUILD_ROOT}/, ${TARGET_OBJS}) ${EXTRA_OBJS}
+TARGET_OBJ := $(foreach dir, $(addprefix ${BUILD_ROOT}/, ${TARGET_OBJ_LIBS}), $(wildcard $(dir)/*.o)) $(addprefix ${BUILD_ROOT}/, ${TARGET_OBJS}) ${EXTRA_OBJS}
 
 #$(info SUBDIRS=${SUBDIRS})
 #$(info SOURCE_DIR=${SOURCE_DIR})
@@ -50,6 +45,9 @@ TARGET_OBJ := $(foreach dir, $(addprefix ${BUILD_ROOT}/, ${TARGET_OBJ_LIBS}), $(
 
 LISTING_STYLE ?= -adhlns
 
+# No target is intermediate (PLAN D117, make 4.4): nothing built is deleted, and a missing archive or object is rebuilt
+# even when what was built from it is newer. The blanket .SECONDARY this replaces made every target intermediate.
+.NOTINTERMEDIATE:
 
 all: ${EXTRA_TARGETS} ${OBJ}
 

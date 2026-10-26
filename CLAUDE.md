@@ -100,10 +100,11 @@ make library                           # headers, libc*.a and the port archives 
   (`test/unit/fpv5`).
 - **Archives:** a parent module lists its children in `TARGET_OBJ_LIBS` and adds
   `all: ${CURDIR}/libX.a` (`libc/libc.mk`, `port/linux/linux.mk`). Register
-  every new libc module or variant in `libc/libc.mk`. Each module records the
-  objects of its current `SRC` in `.objects` in its build directory, and parents
-  take a child's objects with `$(call module_objects,<build dir>)`, never a
-  `*.o` wildcard, so a shadowed variant's old object cannot stay in an archive (D117).
+  every new libc module or variant in `libc/libc.mk`. An archive takes every `*.o`
+  in its children's build directories: after adding a file that shadows another
+  (a string kernel, a `speed/` or later-layer libm file) or removing one, delete
+  the shadowed object or `make clean` that architecture, or the stale object stays
+  in `libc.a` (D117).
 - **Executables:** list what they link in `TARGET_OBJ_LIBS`, e.g.
   `port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY}`, set
   `EXTRA_ELF_DEPS := ${BUILD_ROOT}/libc/libc.a` so the executable relinks when
@@ -111,7 +112,7 @@ make library                           # headers, libc*.a and the port archives 
 - **Module order:** set in the top-level `Makefile` (`example test: libc port`).
 - **Extending the build system:** add architecture and port files under
   `tools/makefiles/`. Do not restructure the existing tools makefiles.
-- **Toolchain floor:** GCC ≥ 14 / Clang ≥ 19 (D9). The x86_64 build takes the host GCC from
+- **Toolchain floor:** GCC ≥ 14 / Clang ≥ 19 (D9), GNU make ≥ 4.4 (`.NOTINTERMEDIATE`, D117; the top-level `Makefile` refuses older ones). The x86_64 build takes the host GCC from
   `tools/scripts/host-cc` (plain `gcc` when new enough, else the newest `gcc-NN`; `HOST_CC` overrides, D107);
   never name a compiler version in a makefile or script. On Ubuntu 24.04 (whose `gcc` is 13):
   `apt-get install -y gcc-14 qemu-user`; arm-none-eabi GCC 16.2 from `make setup`.

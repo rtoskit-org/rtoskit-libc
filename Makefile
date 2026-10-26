@@ -20,6 +20,12 @@ endif
 
 MAKEFLAGS += ${SILENT}
 
+# GNU make 4.4 or newer (PLAN D117): tools/makefiles/project.mk relies on .NOTINTERMEDIATE, which an older make
+# ignores without a word, and then a deleted archive is not rebuilt while what was built from it is newer
+ifeq ($(filter notintermediate,${.FEATURES}),)
+$(error GNU make 4.4 or newer is required (this is ${MAKE_VERSION}); see "Build requirements" in README.md)
+endif
+
 # An ARCH_CROSS without a toolchain file (one a parent build exported, say) stops here, not deep in a compile
 ifneq ($(filter-out all,${ARCH_CROSS}),)
 ifeq ($(wildcard ${TOOLS_ROOT}/makefiles/${ARCH_CROSS}.mk),)

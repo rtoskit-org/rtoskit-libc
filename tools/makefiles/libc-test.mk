@@ -27,7 +27,7 @@ LIBC_TEST_OBJ := $(addprefix ${CURDIR}/,$(addsuffix .o,${LIBC_TEST_NAMES}))
 LIBC_TEST_EXTRA_OBJ := $(addprefix ${CURDIR}/,$(addsuffix .o,${LIBC_TEST_EXTRA})) $(addprefix ${CURDIR}/,$(addsuffix .o,${LIBC_TEST_COMMON}))
 LIBC_TEST_ELF := $(LIBC_TEST_OBJ:.o=.elf)
 LIBC_TEST_SHIM_OBJ := $(patsubst ${PROJECT_ROOT}/%.c,${BUILD_ROOT}/%.o,$(wildcard ${PROJECT_ROOT}/test/libc-test/shim/*.c))
-LIBC_TEST_PORT_OBJ := $(foreach dir,port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY},$(call module_objects,${BUILD_ROOT}/${dir}))
+LIBC_TEST_PORT_OBJ := $(foreach dir,port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY},$(wildcard ${BUILD_ROOT}/${dir}/*.o))
 
 # libc-test's own warning set (config.mak.def), without -Werror for the test code; the api tests add theirs
 # M_PI is an XSI extension functional/snprintf takes from <math.h> under _XOPEN_SOURCE; ISO C's <math.h> has no such name
