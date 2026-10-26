@@ -1130,3 +1130,15 @@ The floating-point operations that become run-time library calls without an FPU 
 | `stdio/sscanf/%lf` | 5107 (4076) | 5028 (3997) | −1.5 % (−1.9 %) |
 
 Only `d2l` and `f2l` measure the library. The other changes are the benchmarks' own conversions: `run_strtod` folds each result into its checksum through `__aeabi_d2lz` (634 instructions fewer per operation), the double `math` loops do the same (39.6 fewer), and `run_sscanf_f` through `__aeabi_d2uiz` (79 fewer). `strtod`, `sscanf` and the libm functions are unchanged; `floor` and `round` show −16 to −19 % only because they are short.
+
+
+## P5.04a — Speed flavour: fixed-point `log10f` (D114)
+
+`libc/math/nofp/speed/log10f.c`: the D86 `log2f` core times log10 2, with the
+float-float `log10f` as fallback (`docs/research/libm-fixed.md`, P5.04a). Only
+the `log10f` cases change; change against the P5.03 baseline (956fdb6).
+Throughput, instructions per call.
+
+| Function | float | double |
+|---|---:|---:|
+| `log10` | 678 (-95 %) | 21066 |

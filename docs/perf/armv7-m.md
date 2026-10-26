@@ -746,3 +746,15 @@ Aligned / worst of the misaligned offsets.
 | `mix/memcpy` (per call) | 54.1 | | | | | | |
 | `mix/memset` (per call) | 41.7 | | | | | | |
 | `mix/strlen` (per call) | 103 | | | | | | |
+
+
+## P5.04a — Speed flavour: fixed-point `log10f` (D114)
+
+`libc/math/nofp/speed/log10f.c`: the D86 `log2f` core times log10 2, with the
+float-float `log10f` as fallback (`docs/research/libm-fixed.md`, P5.04a). Only
+the `log10f` cases change; change against the P5.03 baseline (956fdb6).
+Throughput, instructions per call.
+
+| Function | float | double |
+|---|---:|---:|
+| `log10` | 466 (-92 %) | 7881 |

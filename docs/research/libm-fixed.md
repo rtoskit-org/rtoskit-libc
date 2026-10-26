@@ -295,3 +295,10 @@ every binade.
 `log10f` in the speed flavour is 488 bytes against the float-float version's
 324 (armv6-m). No reference image links `log10f`, so the speed budget is
 unchanged.
+
+### Results (speed flavour, instructions per call, throughput)
+
+| Core | Before | After |
+|---|---:|---:|
+| armv6-m, armv6s-m | 12365 | 678 |
+| armv7-m | 6181 | 466 |

@@ -34,9 +34,11 @@ least 256 bytes of code (D111).
 - [x] printf links `memchr`, and `hello-printf-int-nofloat` has 97–101 bytes of speed budget: measure the kernel's growth against that first; if it does not fit, record the trade-off and ask for a budget decision rather than shrinking the test.
   *An `LDRD` version (188 bytes, +100) did not fit (`hello-puts` and `hello-printf-int-nofloat` 3–12 bytes over); the two-`LDR` kernel (154 bytes, +66) fits on the FPU cores. armv7-m's speed figures are re-locked under D113. `make check` passes in all 21 configurations.*
 
-## P5.04a — Fixed-point `log10f` on the cores without an FPU  `[~]`
-- [ ] Q25: armv6-m, armv6s-m and armv7-m. `log10f` has no fixed-point path in the speed flavour (it takes 4–4.5 times AOR's instructions): the D86 `log2f` core times log10 2 to 64 bits, as `logf` does with ln 2. Research note section with the error bound measured on the host over every positive float, as D86 did.
-- [ ] Record its growth against `math-float`/`math-mix` (armv6-m: 112 bytes of `math-float` speed budget; armv7-m locked, D110).
+## P5.04a — Fixed-point `log10f` on the cores without an FPU  `[x]`
+- [x] Q25: armv6-m, armv6s-m and armv7-m. `log10f` has no fixed-point path in the speed flavour (it takes 4–4.5 times AOR's instructions): the D86 `log2f` core times log10 2 to 64 bits, as `logf` does with ln 2. Research note section with the error bound measured on the host over every positive float, as D86 did.
+  *D114, `libc/math/nofp/speed/log10f.c`, `docs/research/libm-fixed.md` (P5.04a). Every positive float on the host: largest error 5.38 units (bound 8), 3.32 % fall back, none wrong. Twelve confidently-misrounded-without-the-test arguments in `libm_dense` (a zero-bound mutant fails all twelve), plus sweeps. armv6-m 12,365 → 678 instructions, armv7-m 6,181 → 466.*
+- [x] Record its growth against `math-float`/`math-mix` (armv6-m: 112 bytes of `math-float` speed budget; armv7-m locked, D110).
+  *488 bytes against 324, but no reference image links `log10f`: every image and both budgets are unchanged. `make check` passes in all 21 configurations.*
 
 ## P5.04b — Fixed-point `powf` on the cores without an FPU  `[ ]`
 - [ ] Q25: `powf` (about 22,000 instructions on armv6-m, 11,000 on armv7-m) has no fixed-point path. y log2 |x| from a more precise logarithm core, then the D86 exp2 core, with the same rounding test and float-float fallback; an error analysis (two arguments cannot be run exhaustively), host runs over large random and structured sets, and hard cases in `test/unit/libm_dense`.
