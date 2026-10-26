@@ -28,9 +28,11 @@ least 256 bytes of code (D111).
 - [x] armv7-m: its speed figures are locked exactly (D110); re-lock them only with a decision entry.
   *Re-locked under D112: `hello-puts` 2051, `malloc-heavy` 2138, `malloc-heavy-tiny` 2078. `make check` passes in all 21 configurations.*
 
-## P5.03 — Thumb-2 word-at-a-time `memchr`  `[~]`
-- [ ] Q21: `memchr` is C and takes about twice AOR's instructions from 16 bytes up. A word-at-a-time kernel (`UADD8`/`SEL` on the DSP cores, as `strchr`, D74; a DSP-free version for armv7-m), researched from first principles.
-- [ ] printf links `memchr`, and `hello-printf-int-nofloat` has 97–101 bytes of speed budget: measure the kernel's growth against that first; if it does not fit, record the trade-off and ask for a budget decision rather than shrinking the test.
+## P5.03 — Thumb-2 word-at-a-time `memchr`  `[x]`
+- [x] Q21: `memchr` is C and takes about twice AOR's instructions from 16 bytes up. A word-at-a-time kernel (`UADD8`/`SEL` on the DSP cores, as `strchr`, D74; a DSP-free version for armv7-m), researched from first principles.
+  *D113, `docs/research/memchr-thumb2.md`, `libc/string/thumb2/memchr.S`. One condition per word, so the classic test is as short as `UADD8`/`SEL` and needs no DSP: one file for every Thumb-2 core. Two aligned words per iteration, nothing pushed. 1024 bytes 2615 → 1821, 16 bytes 95 → 57; 49 cases faster, none slower. `string_kernels` gains `memchr` coverage.*
+- [x] printf links `memchr`, and `hello-printf-int-nofloat` has 97–101 bytes of speed budget: measure the kernel's growth against that first; if it does not fit, record the trade-off and ask for a budget decision rather than shrinking the test.
+  *An `LDRD` version (188 bytes, +100) did not fit (`hello-puts` and `hello-printf-int-nofloat` 3–12 bytes over); the two-`LDR` kernel (154 bytes, +66) fits on the FPU cores. armv7-m's speed figures are re-locked under D113. `make check` passes in all 21 configurations.*
 
 ## P5.04 — Fixed-point `powf` and `log10f` on the cores without an FPU  `[ ]`
 - [ ] Q25: armv6-m, armv6s-m and armv7-m. `powf` (about 22,000 instructions on armv6-m, 11,000 on armv7-m) and `log10f` have no fixed-point path in the speed flavour, and take 4–4.5 times AOR's instructions. Extend `nofp/speed` (D86–D88) with the same rounding test and float-float fallback; research note with the error bounds and hard cases.

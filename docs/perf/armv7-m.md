@@ -715,3 +715,34 @@ Aligned / worst of the misaligned offsets.
 | `mix/memcpy` (per call) | 54.1 | | | | | | |
 | `mix/memset` (per call) | 41.7 | | | | | | |
 | `mix/strlen` (per call) | 103 (-9 %) | | | | | | |
+
+
+## P5.03 — Speed flavour: Thumb-2 `memchr` (D113)
+
+`libc/string/thumb2/memchr.S` replaces the generic C `memchr` in the speed
+flavour: two aligned words per iteration with the classic zero-byte test on the
+word XOR the replicated character (`docs/research/memchr-thumb2.md`). 0.57–0.75
+of the C's instructions from 4 bytes up (1024 bytes 2615 → 1821), no case
+slower. The size flavour is unchanged.
+
+Instructions per operation (qemu 8.2.2, speed, speed flavour), change against the P5.02 baseline (a08b3c0).
+
+### string
+
+Aligned / worst of the misaligned offsets.
+
+| Function | 0 | 1 | 4 | 16 | 64 | 256 | 1024 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `memcpy` | 19.0 / 19.0 | 34.0 / 34.0 | 34.0 / 34.0 | 42.0 / 42.0 | 54.0 / 81.0 | 78.0 / 153 | 174 / 441 |
+| `memmove-down` | 23.0 / 23.0 | 38.0 / 38.0 | 38.0 / 38.0 | 46.0 / 46.0 | 58.0 / 85.0 | 82.0 / 157 | 178 / 445 |
+| `memmove-up` | 23.0 / 23.0 | 38.0 / 38.0 | 38.0 / 38.0 | 44.0 / 44.0 | 54.0 / 77.0 | 78.0 / 143 | 174 / 407 |
+| `memset` | 18.0 / 18.0 | 35.0 / 35.0 | 35.0 / 35.0 | 39.0 / 39.0 | 57.0 / 59.0 | 81.0 / 83.0 | 177 / 179 |
+| `memcmp` | 27.0 / 27.0 | 35.0 / 35.0 | 59.0 / 59.0 | 155 / 155 | 539 / 539 | 2075 / 2075 | 8219 / 8219 |
+| `memchr` | 24.0 (-17 %) / 24.0 | 35.0 (-3 %) / 28.0 | 40.0 (-38 %) / 65.0 | 57.0 (-40 %) / 86.0 | 141 (-34 %) / 170 | 477 (-31 %) / 506 | 1821 (-30 %) / 1850 |
+| `strlen` | 35.0 / 25.0 | 35.0 / 37.0 | 36.0 / 47.0 | 53.0 / 64.0 | 107 / 118 | 323 / 334 | 1187 / 1198 |
+| `strchr` | 52.0 / 38.0 | 48.0 / 35.0 | 69.0 / 75.0 | 102 / 108 | 234 / 240 | 762 / 768 | 2874 / 2880 |
+| `strcmp` | 27.0 / 27.0 | 33.0 / 33.0 | 53.0 / 53.0 | 144 / 133 | 240 / 430 | 624 / 1582 | 2160 / 6190 |
+| `strcpy` | 62.0 / 62.0 | 62.0 / 64.0 | 65.0 / 76.0 | 90.0 / 101 | 156 / 185 | 396 / 470 | 1356 / 1622 |
+| `mix/memcpy` (per call) | 54.1 | | | | | | |
+| `mix/memset` (per call) | 41.7 | | | | | | |
+| `mix/strlen` (per call) | 103 | | | | | | |
