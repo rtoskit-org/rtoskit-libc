@@ -18,7 +18,7 @@
 
 /*
  * Dense sweeps where the speed flavour's fixed-point float functions on
- * Armv6-M (PLAN D86, D87, D88, D114) have their largest error: the logarithms around
+ * Armv6-M (PLAN D86, D87, D88, D114, D115) have their largest error: the logarithms around
  * 1, where the result is the series alone and the neighbouring table
  * entries cancel against it, and the exponentials, the trigonometric and
  * the error functions over their whole fast range.
@@ -82,6 +82,33 @@ static const struct {
 #include "near.inc"
 };
 
+/* The same for the two-argument functions */
+static const struct {
+	float x;
+	float y;
+	float want;
+} near2[] = {
+#include "near2.inc"
+};
+
+static void check_near2(void)
+{
+	int wrong = 0;
+
+	for (unsigned int i = 0; i < sizeof(near2) / sizeof(near2[0]); ++i) {
+		float result = powf(near2[i].x, near2[i].y);
+
+		if (bits_of(result) != bits_of(near2[i].want)) {
+			printf("near2 %u: powf(%a, %a) = %a, want %a\n", i, (double)near2[i].x, (double)near2[i].y, (double)result, (double)near2[i].want);
+			++wrong;
+		}
+	}
+
+	printf("near2: %d of %u not correctly rounded\n", wrong, (unsigned int)(sizeof(near2) / sizeof(near2[0])));
+	if (wrong != 0)
+		++failures;
+}
+
 static void check_near(void)
 {
 	int wrong = 0;
@@ -131,6 +158,7 @@ int main(void)
 	sweep("erfcf", erfcf, erfc, 0x1p1f, 0x1.28p3f, 4093, false);
 
 	check_near();
+	check_near2();
 
 	if (failures == 0)
 		puts("pass: libm_dense");
