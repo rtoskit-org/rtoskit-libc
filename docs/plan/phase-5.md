@@ -40,8 +40,10 @@ least 256 bytes of code (D111).
 - [x] Record its growth against `math-float`/`math-mix` (armv6-m: 112 bytes of `math-float` speed budget; armv7-m locked, D110).
   *488 bytes against 324, but no reference image links `log10f`: every image and both budgets are unchanged. `make check` passes in all 21 configurations.*
 
-## P5.04b — Fixed-point `powf` on the cores without an FPU  `[~]`
-- [ ] Q25: `powf` (about 22,000 instructions on armv6-m, 11,000 on armv7-m) has no fixed-point path. y log2 |x| from a more precise logarithm core, then the D86 exp2 core, with the same rounding test and float-float fallback; an error analysis (two arguments cannot be run exhaustively), host runs over large random and structured sets, and hard cases in `test/unit/libm_dense`.
+## P5.04b — Fixed-point `powf` on the cores without an FPU  `[x]`
+- [x] Q25: `powf` (about 22,000 instructions on armv6-m, 11,000 on armv7-m) has no fixed-point path. y log2 |x| from a more precise logarithm core, then the D86 exp2 core, with the same rounding test and float-float fallback; an error analysis (two arguments cannot be run exhaustively), host runs over large random and structured sets, and hard cases in `test/unit/libm_dense`.
+  *D115, `libc/math/nofp/speed/powf.c`, `__libc_log2f_wide.c` (relative error 0.040 · 2^-44 over every positive float), `docs/research/libm-fixed.md` (P5.04b). 658 million fast-path results on the host: largest error 2.70 units (bound 6), none wrong. Twelve confidently-misrounded-without-the-test pairs in `libm_dense`'s new `near2` table (a zero-bound mutant fails all twelve). armv6-m 22,158 → 1,222 instructions, armv7-m 11,060 → 865. One shared logarithm core was measured and not taken (`log2f` +73 %).*
 
-## P5.04c — The math images' speed budget  `[ ]`
-- [ ] With P5.04a and P5.04b measured: a decision entry for the new budget of `math-float`/`math-mix` on armv6-m, armv6s-m and armv7-m (a larger margin as D87, or locked speed figures as D110), then `make check`, `make bench` and both budgets on every architecture.
+## P5.04c — The math images' speed budget  `[x]`
+- [x] With P5.04a and P5.04b measured: a decision entry for the new budget of `math-float`/`math-mix` on armv6-m, armv6s-m and armv7-m (a larger margin as D87, or locked speed figures as D110), then `make check`, `make bench` and both budgets on every architecture.
+  *D116 (the maintainer's choice): the speed images of armv6-m, armv6s-m and armv7-m are locked from their speed builds (`math-float` 12,536 / 11,580 bytes). `make check` passes in all 21 configurations, `make bench` recorded, both budgets pass.*

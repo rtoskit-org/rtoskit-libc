@@ -1142,3 +1142,15 @@ Throughput, instructions per call.
 | Function | float | double |
 |---|---:|---:|
 | `log10` | 678 (-95 %) | 21066 |
+
+
+## P5.04b — Speed flavour: fixed-point `powf` (D115)
+
+`libc/math/nofp/speed/powf.c`: y log2 |x| from the wide log2 core, then the
+D86 exp2 core, with the float-float `powf` as fallback
+(`docs/research/libm-fixed.md`, P5.04b). Only the `powf` cases change;
+change against the P5.04a baseline (c4abaa0). Throughput, instructions per call.
+
+| Function | float | double |
+|---|---:|---:|
+| `pow` | 1222 (-94 %) | 31523 |
