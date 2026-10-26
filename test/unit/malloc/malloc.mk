@@ -30,14 +30,14 @@ CPPFLAGS += -I${PROJECT_ROOT}/libc
 
 # One executable per allocator variant: its objects come first, so libc.a's allocator is never pulled in (PLAN D32)
 MALLOC_VARIANTS := nano tlsf tiny
-MALLOC_COMMON_OBJ := $(wildcard ${BUILD_ROOT}/libc/malloc/*.o)
+MALLOC_COMMON_OBJ := $(call module_objects,${BUILD_ROOT}/libc/malloc)
 
 all: $(foreach variant,${MALLOC_VARIANTS},${CURDIR}/malloc-${variant}.elf)
 
 define malloc_variant
-${CURDIR}/malloc-$(1).elf: ${OBJ} ${TARGET_OBJ} $(wildcard ${BUILD_ROOT}/libc/malloc/$(1)/*.o) ${MALLOC_COMMON_OBJ} ${EXTRA_ELF_DEPS}
+${CURDIR}/malloc-$(1).elf: ${OBJ} ${TARGET_OBJ} $(call module_objects,${BUILD_ROOT}/libc/malloc/$(1)) ${MALLOC_COMMON_OBJ} ${EXTRA_ELF_DEPS}
 	@echo "LINKING $$@"
-	$$(LD) $${LDFLAGS} -Wl,-Map,"$$(basename $$@).map" $${LOADLIBES} -o $$@ $${OBJ} $(wildcard ${BUILD_ROOT}/libc/malloc/$(1)/*.o) $${MALLOC_COMMON_OBJ} $${TARGET_OBJ} $${LDLIBS}
+	$$(LD) $${LDFLAGS} -Wl,-Map,"$$(basename $$@).map" $${LOADLIBES} -o $$@ $${OBJ} $(call module_objects,${BUILD_ROOT}/libc/malloc/$(1)) $${MALLOC_COMMON_OBJ} $${TARGET_OBJ} $${LDLIBS}
 endef
 $(foreach variant,${MALLOC_VARIANTS},$(eval $(call malloc_variant,${variant})))
 

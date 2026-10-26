@@ -100,7 +100,10 @@ make library                           # headers, libc*.a and the port archives 
   (`test/unit/fpv5`).
 - **Archives:** a parent module lists its children in `TARGET_OBJ_LIBS` and adds
   `all: ${CURDIR}/libX.a` (`libc/libc.mk`, `port/linux/linux.mk`). Register
-  every new libc module or variant in `libc/libc.mk`.
+  every new libc module or variant in `libc/libc.mk`. Each module records the
+  objects of its current `SRC` in `.objects` in its build directory, and parents
+  take a child's objects with `$(call module_objects,<build dir>)`, never a
+  `*.o` wildcard, so a shadowed variant's old object cannot stay in an archive (D117).
 - **Executables:** list what they link in `TARGET_OBJ_LIBS`, e.g.
   `port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY}`, set
   `EXTRA_ELF_DEPS := ${BUILD_ROOT}/libc/libc.a` so the executable relinks when
