@@ -160,3 +160,12 @@ The speed flavour's `strlen` is the Thumb-2 kernel (108 bytes, against the
 Thumb-1 kernel's 44). The images that link it grow by 64 bytes, and armv7-m's
 speed figures are re-locked with them (PLAN D112): `hello-puts` 2051,
 `malloc-heavy` 2138, `malloc-heavy-tiny` 2078. The size flavour is unchanged.
+
+## D113 — Thumb-2 `memchr` in the speed flavour
+
+The speed flavour's `memchr` is the Thumb-2 kernel (154 bytes, against the C
+version's 88). The images that link it (everything that prints or calls `puts`,
+through line-buffered writes) grow by 66 bytes, and armv7-m's speed figures are
+re-locked with them (PLAN D113): `hello-puts` 2119, `hello-printf-int` 7785,
+`hello-printf-int-nofloat` 4865, `hello-printf-int-minimal` 4439,
+`hello-printf-float` 9618. The size flavour is unchanged.

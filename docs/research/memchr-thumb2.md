@@ -43,26 +43,37 @@ speed budget (97–101 bytes left on the FPU cores) limits the kernel's growth.
   `EOR`, `SUB`, `BIC`, `ANDS` and the branch take 5 instructions either way,
   and the classic form needs no DSP, so the kernel goes in `libc/string/thumb2`
   and armv7-m takes it as well.
-- **`LDRD` pairs.** Two words per load and one count update per pair: 13
-  instructions per 8 bytes, 6.5 a word, against the C loop's 10. Two data
-  words, the pattern, the test and the count need more registers than r0–r3
-  and r12, so the word path pushes r4 and r5 (the byte paths push nothing).
-- **Reads.** Only words wholly inside the n bytes are read, and they are
-  aligned (a word, or an 8-byte pair at an 8-byte boundary), so every read lies
-  in one 32-byte granule. When the match comes before the end of the object a
-  read may extend past the match, but never past the granule holding it.
-- **Short sizes.** Fewer than 4 bytes after alignment go straight to the byte
-  loop, before the push; the byte loop to the first word boundary is at most
-  3 bytes, then one word reaches the 8-byte boundary, as in D112.
+- **Two `LDR`s per iteration, not `LDRD`.** An `LDRD` version (two words per
+  load, 6.5 instructions a word) needed 8-byte alignment first, a separate
+  word step to reach it, and r4/r5 pushed for the second data word: 188 bytes,
+  100 more than the C, which put `hello-puts` and `hello-printf-int-nofloat`
+  3–12 bytes over the speed budget on the FPU cores (printf and `puts` both
+  link `memchr`). Two word loads per iteration (7 instructions a word) reuse
+  one data register, need only word alignment and push nothing: 154 bytes.
+  The pattern lives in r1, and the byte loops compare against its top byte
+  (`CMP r3, r1, LSR #24`), so they stay at 3 instructions a byte.
+- **Reads.** Only words wholly inside the n bytes are read, and they are word
+  aligned, so every read lies in one 32-byte granule. When the match comes
+  before the end of the object a read may extend past the match, but never
+  past the granule holding it.
+- **Short sizes.** The byte loop to the first word boundary is at most 3
+  bytes; fewer than 8 bytes after it skip the loop for at most one word and
+  the byte tail.
 
 ## Chosen approach
 
-`libc/string/thumb2/memchr.S`: c to unsigned char; bytes until the pointer is
-word aligned (or n is 0); if 4 or more bytes remain, push r4/r5, replicate c,
-one word if the pointer is not 8-byte aligned, `LDRD` pairs while 8 or more
-remain, one more word if 4 remain; then the byte loop for the last 0–3. At a
-flagged word, `RBIT`/`CLZ` give the byte index, and the address is the word's
-plus the index.
+`libc/string/thumb2/memchr.S`: c to unsigned char, replicated into r1; bytes
+until the pointer is word aligned (or n is 0); two aligned words per iteration
+while 8 or more bytes remain, one more word if 4 remain; then the byte loop for
+the last 0–3. At a flagged word, `RBIT`/`CLZ` give the byte index, and the
+address is the word's plus the index. 154 bytes against the C version's 88.
+
+Measured on every Thumb-2 core (instructions per call, C → kernel): 1024 bytes
+2615 → 1821, 256 bytes 695 → 477, 16 bytes 95 → 57, 8 bytes 75 → 43, 0 bytes
+29 → 24; 0.57–0.75 from 4 bytes up, 49 cases faster, none slower (two 3-byte
+cases within noise, ±1 instruction). AOR's kernel takes 0.51 of the C at 1 KiB
+(P4.03), so part of the gap remains: the price of the 66-byte growth that the
+budget allows.
 
 ## Edge cases
 

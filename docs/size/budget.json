@@ -7,23 +7,23 @@
      "ram": 20
     },
     "hello-printf-float": {
-     "code": 9554,
+     "code": 9618,
      "ram": 348
     },
     "hello-printf-int": {
-     "code": 7721,
+     "code": 7785,
      "ram": 348
     },
     "hello-printf-int-minimal": {
-     "code": 4371,
+     "code": 4439,
      "ram": 348
     },
     "hello-printf-int-nofloat": {
-     "code": 4797,
+     "code": 4865,
      "ram": 348
     },
     "hello-puts": {
-     "code": 2051,
+     "code": 2119,
      "ram": 348
     },
     "malloc-heavy": {

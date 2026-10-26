@@ -596,19 +596,19 @@
   },
   "string": {
    "memchr/0/0": {
-    "insns": 29.0
+    "insns": 24.0
    },
    "memchr/0/1": {
-    "insns": 29.0
+    "insns": 24.0
    },
    "memchr/0/2": {
-    "insns": 29.0
+    "insns": 24.0
    },
    "memchr/0/3": {
-    "insns": 29.0
+    "insns": 24.0
    },
    "memchr/1/0": {
-    "insns": 36.0
+    "insns": 35.0
    },
    "memchr/1/1": {
     "insns": 28.0
@@ -620,52 +620,52 @@
     "insns": 28.0
    },
    "memchr/1024/0": {
-    "insns": 2615.0
+    "insns": 1821.0
    },
    "memchr/1024/1": {
-    "insns": 2618.0
+    "insns": 1850.0
    },
    "memchr/1024/2": {
-    "insns": 2615.0
+    "insns": 1848.0
    },
    "memchr/1024/3": {
-    "insns": 2612.0
+    "insns": 1846.0
    },
    "memchr/128/0": {
-    "insns": 375.0
+    "insns": 253.0
    },
    "memchr/128/1": {
-    "insns": 378.0
+    "insns": 282.0
    },
    "memchr/128/2": {
-    "insns": 375.0
+    "insns": 280.0
    },
    "memchr/128/3": {
-    "insns": 372.0
+    "insns": 278.0
    },
    "memchr/15/0": {
-    "insns": 82.0
+    "insns": 72.0
    },
    "memchr/15/1": {
-    "insns": 115.0
+    "insns": 84.0
    },
    "memchr/15/2": {
-    "insns": 88.0
+    "insns": 76.0
    },
    "memchr/15/3": {
-    "insns": 85.0
+    "insns": 74.0
    },
    "memchr/16/0": {
-    "insns": 95.0
+    "insns": 57.0
    },
    "memchr/16/1": {
-    "insns": 98.0
+    "insns": 86.0
    },
    "memchr/16/2": {
-    "insns": 95.0
+    "insns": 84.0
    },
    "memchr/16/3": {
-    "insns": 92.0
+    "insns": 82.0
    },
    "memchr/2/0": {
     "insns": 43.0
@@ -677,103 +677,103 @@
     "insns": 38.0
    },
    "memchr/2/3": {
-    "insns": 46.0
+    "insns": 45.0
    },
    "memchr/256/0": {
-    "insns": 695.0
+    "insns": 477.0
    },
    "memchr/256/1": {
-    "insns": 698.0
+    "insns": 506.0
    },
    "memchr/256/2": {
-    "insns": 695.0
+    "insns": 504.0
    },
    "memchr/256/3": {
-    "insns": 692.0
+    "insns": 502.0
    },
    "memchr/3/0": {
-    "insns": 50.0
+    "insns": 51.0
    },
    "memchr/3/1": {
     "insns": 48.0
    },
    "memchr/3/2": {
-    "insns": 56.0
+    "insns": 55.0
    },
    "memchr/3/3": {
     "insns": 53.0
    },
    "memchr/31/0": {
-    "insns": 122.0
+    "insns": 100.0
    },
    "memchr/31/1": {
-    "insns": 155.0
+    "insns": 112.0
    },
    "memchr/31/2": {
-    "insns": 128.0
+    "insns": 104.0
    },
    "memchr/31/3": {
-    "insns": 125.0
+    "insns": 102.0
    },
    "memchr/32/0": {
-    "insns": 135.0
+    "insns": 85.0
    },
    "memchr/32/1": {
-    "insns": 138.0
+    "insns": 114.0
    },
    "memchr/32/2": {
-    "insns": 135.0
+    "insns": 112.0
    },
    "memchr/32/3": {
-    "insns": 132.0
+    "insns": 110.0
    },
    "memchr/4/0": {
-    "insns": 65.0
+    "insns": 40.0
    },
    "memchr/4/1": {
-    "insns": 66.0
+    "insns": 65.0
    },
    "memchr/4/2": {
     "insns": 63.0
    },
    "memchr/4/3": {
-    "insns": 60.0
+    "insns": 61.0
    },
    "memchr/64/0": {
-    "insns": 215.0
+    "insns": 141.0
    },
    "memchr/64/1": {
-    "insns": 218.0
+    "insns": 170.0
    },
    "memchr/64/2": {
-    "insns": 215.0
+    "insns": 168.0
    },
    "memchr/64/3": {
-    "insns": 212.0
+    "insns": 166.0
    },
    "memchr/7/0": {
-    "insns": 62.0
+    "insns": 58.0
    },
    "memchr/7/1": {
-    "insns": 95.0
+    "insns": 70.0
    },
    "memchr/7/2": {
-    "insns": 68.0
+    "insns": 62.0
    },
    "memchr/7/3": {
-    "insns": 65.0
+    "insns": 60.0
    },
    "memchr/8/0": {
-    "insns": 75.0
+    "insns": 43.0
    },
    "memchr/8/1": {
-    "insns": 78.0
+    "insns": 72.0
    },
    "memchr/8/2": {
-    "insns": 75.0
+    "insns": 70.0
    },
    "memchr/8/3": {
-    "insns": 72.0
+    "insns": 68.0
    },
    "memcmp/0/0:0": {
     "insns": 27.0
