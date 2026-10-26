@@ -135,23 +135,26 @@ above 1 took more instructions.
 
 | Cortex-M4F (`armv7e-m`) | rtoskit size build | rtoskit speed build | rtoskit + AOR | picolibc | newlib-nano |
 |---|---:|---:|---:|---:|---:|
-| string (603 cases) | 1.44 | 1.00 | 0.98 | 1.40 | 1.12 |
-| stdio (23) | 1.22 | 1.00 | 1.00 | 1.15 | 0.92 |
-| `strto*` (21) | 5.61 | 1.00 | 0.97 | 0.85 | 1.52 |
+| string (603 cases) | 1.51 | 1.00 | 1.03 | 1.48 | 1.18 |
+| stdio (23) | 1.22 | 1.00 | 1.00 | 1.16 | 0.94 |
+| `strto*` (21) | 6.17 | 1.00 | 0.97 | 1.00 | 1.77 |
 | malloc (9) | 1.07 | 1.00 | 1.00 | 7.21 | 0.68 |
-| maths, throughput | 1.00 | 1.00 | 0.95 | 0.36 | 0.38 |
+| maths, throughput | 1.00 | 1.00 | 0.95 | 0.39 | 0.42 |
 
-The picolibc and newlib-nano columns come from the phase 3 comparison
-([`docs/perf/phase-3.md`](docs/perf/phase-3.md)), the AOR column from the
-phase 4 records ([`docs/perf/phase-4.md`](docs/perf/phase-4.md)). AOR only
-replaces `memchr`, `memset`, `strlen`, 15 maths functions and the
-soft-double helpers, so every other case counts as 1.00; over the maths
-cases it does replace, it takes 0.81 of our instructions, and its double
-`exp`, `log` and `pow` take 0.16–0.45.
+The figures were measured on the current tree with `bench-runner compare`
+(picolibc and newlib-nano) and `bench-runner aor`; the original comparisons
+and their method are in [`docs/perf/phase-3.md`](docs/perf/phase-3.md) and
+[`docs/perf/phase-4.md`](docs/perf/phase-4.md). AOR only replaces `memchr`,
+`memset`, `strlen`, 15 maths functions and the soft-double helpers, so every
+other case counts as 1.00. Over the string cases it does change, it takes
+1.08 of our instructions: it is still ahead on long `strlen` and `memchr`
+(0.87 and 0.73 at 1 KiB), we are ahead on short strings and on `memset`.
+Over the maths cases it changes it takes 0.93 of ours, and its double `exp`,
+`exp2`, `log`, `log2` and `pow` take 0.18–0.31.
 
 Our speed build is the fastest of the three at bulk `memcpy` and `memset`,
-at decimal conversions and at `realloc` (against picolibc), and its
-introsort `qsort` saves the others' 35–49 % extra. On single-precision and
+at `strtod` and integer `printf`, and at `realloc` (against picolibc), and its
+introsort `qsort` saves the others' 38–49 % extra. On single-precision and
 soft-float cores AOR's float maths takes 4–7 times our instructions. We are
 slower where we chose exactness: our maths functions take 2–3 times
 picolibc's instructions because they are correctly rounded, and `%f` and
