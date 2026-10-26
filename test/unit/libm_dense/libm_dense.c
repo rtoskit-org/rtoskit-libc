@@ -18,7 +18,7 @@
 
 /*
  * Dense sweeps where the speed flavour's fixed-point float functions on
- * Armv6-M (PLAN D86, D87, D88) have their largest error: the logarithms around
+ * Armv6-M (PLAN D86, D87, D88, D114) have their largest error: the logarithms around
  * 1, where the result is the series alone and the neighbouring table
  * entries cancel against it, and the exponentials, the trigonometric and
  * the error functions over their whole fast range.
@@ -107,6 +107,9 @@ int main(void)
 	sweep("log2f", log2f, log2, 0x1.d0p-1f, 0x1.18p0f, 127, false);
 	sweep("logf", logf, log, 0x1.64p0f, 0x1.70p0f, 31, false);
 	sweep("log2f", log2f, log2, 0x1.64p0f, 0x1.70p0f, 31, false);
+	sweep("log10f", log10f, log10, 0x1.d0p-1f, 0x1.18p0f, 127, false);
+	sweep("log10f", log10f, log10, 0x1.64p0f, 0x1.70p0f, 31, false);
+	sweep("log10f", log10f, log10, 0x1p-149f, 0x1.fffffep127f, 1u << 17, false);
 
 	/* The exponentials over one binade of arguments of either sign, and arguments of every binade */
 	sweep("expf", expf, exp, 0x1p4f, 0x1p5f, 1021, true);

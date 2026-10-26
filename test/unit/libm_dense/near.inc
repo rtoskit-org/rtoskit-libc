@@ -12,13 +12,14 @@
  */
 
 /*
- * Arguments whose sin, cos, tan, erf or erfc lies so near the point
+ * Arguments whose sin, cos, tan, erf, erfc or log10 lies so near the point
  * halfway between two floats that the Armv6-M fixed-point fast path
- * (PLAN D87, D88) rounds it the wrong way without its error test (found over every binade on the host),
+ * (PLAN D87, D88, D114) rounds it the wrong way without its error test (found over every binade on the host),
  * with the correctly rounded result (mpmath, 200 bits). Two tanf arguments
  * found (0x1.3240bcp-3, 0x1.b79bf6p+18) are left out: the float-float
  * quotient (D60) that every float-float board uses misses them as well, within the
- * allowance of D57.
+ * allowance of D57; so does the float-float log10f (D58) for one log10f argument
+ * found (0x1.c6c5cep+127).
  */
 	{ sinf, 0x1.d3113p+24f, -0x1.6dcd46p-3f },
 	{ cosf, 0x1.42bf9cp+10f, -0x1.f5b972p-1f },
@@ -98,3 +99,15 @@
 	{ erfcf, 0x1.69958p+1f, 0x1.0f5fdcp-14f },
 	{ erfcf, 0x1.89120cp+2f, 0x1.15b71ep-58f },
 	{ erfcf, 0x1.496cdcp+1f, 0x1.1e3fdcp-12f },
+	{ log10f, 0x1.04e6dp-129f, -0x1.3698dap+5f },
+	{ log10f, 0x1.78c6a2p-23f, -0x1.b05fccp+2f },
+	{ log10f, 0x1.14db8cp-4f, -0x1.2b8be8p+0f },
+	{ log10f, 0x1.2c46cep-1f, -0x1.da9ef6p-3f },
+	{ log10f, 0x1.c80cc4p-1f, -0x1.9bb5e4p-5f },
+	{ log10f, 0x1.ed2c76p-1f, -0x1.0a91a4p-6f },
+	{ log10f, 0x1.fbe1a6p-1f, -0x1.cbc02ep-9f },
+	{ log10f, 0x1.01715ep+0f, 0x1.3fed74p-9f },
+	{ log10f, 0x1.13ae68p+0f, 0x1.0783bap-5f },
+	{ log10f, 0x1.c50308p+0f, 0x1.fba30ep-3f },
+	{ log10f, 0x1.b650b4p+4f, 0x1.700aecp+0f },
+	{ log10f, 0x1.b7ed5ap+19f, 0x1.7d19fcp+2f },

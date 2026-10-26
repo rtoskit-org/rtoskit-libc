@@ -253,3 +253,45 @@ The first versions measured 11.5 and 33.3 units, with 110 and 191,682 wrong resu
   - 32 more arguments that the fast path rounds the wrong way without its error test.
   - These were chosen with F at least one unit from the halfway point: at exactly 0x100 the test falls back even with a bound of 0, so such a vector cannot catch the mutant.
   - The bounds-at-0 mutant now misses all 78 vectors; the real library rounds all 78 correctly on every board and flavour.
+
+## P5.04a: `log10f`
+
+Decision: PLAN D114 (Q25). Step: `docs/plan/phase-5.md`.
+
+### Approach
+
+`libc/math/nofp/speed/log10f.c` is `logf`'s fixed-point path with a different
+constant: the D86 `log2f` core's normalised result times log10 2 to 64 bits.
+
+- **The constant:** log10 2 = 0.30103... lies in [1/4, 1/2), so it fills 64
+  bits as 0x9a209a84fbcff799 · 2^-65 (mpmath, 200 bits, rounded to nearest),
+  one place lower than `logf`'s ln 2 · 2^-64; the exponent drops by one more.
+- **The product:** the top 64 bits of v · c from three of the four 32-bit
+  partial products, as for `logf`; it lies in [2^62, 2^64) and is normalised
+  to bit 63.
+- **The rounding test and fallback:** `__libc_fixed_round` with the logarithm
+  bound (8 units of 2^-32); otherwise the float-float `log10f` (D58).
+
+### Error bound, verified over every argument
+
+The host ran the core and the product over every positive finite float
+(x = 1 returns 0 exactly before), against `log10l` on x86-64:
+
+| Function | Arguments | Largest error of F (units of 2^-32) | Bound used | Falls back | Not correctly rounded on the fast path |
+|---|---:|---:|---:|---:|---:|
+| `log10f` | 2,139,095,038 | 5.38 (at 0x1.f7e0bap-1) | 8 | 3.32 % | 0 |
+
+Without the test, 3,334 arguments would be rounded the wrong way with the fast
+path confident (F not at the exact halfway point, which falls back even with a
+bound of 0). Twelve of them, spread over the range, are in
+`test/unit/libm_dense/near.inc`; a mutant with the bound at 0 fails all twelve.
+A thirteenth (0x1.c6c5cep+127) was left out: the float-float `log10f` that the
+size flavour uses on every float-float board misses it too, within D57's
+allowance. `libm_dense` also sweeps `log10f` around 1, across sqrt(2) and over
+every binade.
+
+### Size
+
+`log10f` in the speed flavour is 488 bytes against the float-float version's
+324 (armv6-m). No reference image links `log10f`, so the speed budget is
+unchanged.
