@@ -28,7 +28,7 @@ least 256 bytes of code (D111).
 - [x] armv7-m: its speed figures are locked exactly (D110); re-lock them only with a decision entry.
   *Re-locked under D112: `hello-puts` 2051, `malloc-heavy` 2138, `malloc-heavy-tiny` 2078. `make check` passes in all 21 configurations.*
 
-## P5.03 — Thumb-2 word-at-a-time `memchr`  `[ ]`
+## P5.03 — Thumb-2 word-at-a-time `memchr`  `[~]`
 - [ ] Q21: `memchr` is C and takes about twice AOR's instructions from 16 bytes up. A word-at-a-time kernel (`UADD8`/`SEL` on the DSP cores, as `strchr`, D74; a DSP-free version for armv7-m), researched from first principles.
 - [ ] printf links `memchr`, and `hello-printf-int-nofloat` has 97–101 bytes of speed budget: measure the kernel's growth against that first; if it does not fit, record the trade-off and ask for a budget decision rather than shrinking the test.
 

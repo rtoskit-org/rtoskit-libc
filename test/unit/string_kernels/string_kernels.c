@@ -24,8 +24,9 @@
  * zero-byte test (0x01, 0x80, 0xff) around the terminator and the
  * difference, compared as unsigned char (C23 7.26.4p1); strchr at every
  * offset, length and position, for characters that alias those bytes, the
- * terminator and int values beyond a byte. The references are plain byte
- * loops.
+ * terminator and int values beyond a byte; memchr likewise, with the
+ * character at every position, absent, and n beyond the object when it is
+ * found (7.26.5.2p2). The references are plain byte loops.
  */
 
 #define SIZE 320
@@ -218,6 +219,44 @@ static void check_strchr(size_t d, size_t n)
 		fail("strchr (before)", d, 0, n);
 }
 
+static const unsigned char *reference_memchr(const unsigned char *s, unsigned char c, size_t n)
+{
+	for (size_t i = 0; i < n; ++i)
+		if (s[i] == c)
+			return s + i;
+	return nullptr;
+}
+
+/* memchr at every offset and length: the character at every position, absent (with it just past n), aliasing a careless zero test, and given as an int beyond a byte (C23 7.26.5.2p2) */
+static void check_memchr(size_t d, size_t n)
+{
+	static const int characters[] = { 0x00, 0x01, 0x80, 0xff, 0x7f, 0x141, -1, 0x55 };
+	const unsigned char *area = target + 16 + d;
+
+	for (unsigned seed = 0; seed < 7; ++seed) {
+		make_string(target, d, n, seed);
+		target[16 + d + n] = 0x55;
+		for (size_t i = 0; i < sizeof(characters) / sizeof(characters[0]); ++i)
+			if (memchr(area, characters[i], n) != reference_memchr(area, (unsigned char)characters[i], n))
+				fail("memchr", d, (size_t)characters[i] & 0x1ff, n);
+		for (size_t at = 0; at < n; ++at) {
+			unsigned char saved = target[16 + d + at];
+
+			target[16 + d + at] = 0x55;
+			if (memchr(area, 0x155, n) != area + at)
+				fail("memchr (position)", d, at, n);
+			target[16 + d + at] = saved;
+		}
+	}
+
+	/* The character just before the area must not count */
+	make_string(target, d, n, 3);
+	for (size_t k = 1; k <= 16; ++k)
+		target[16 + d - k] = 0x55;
+	if (memchr(area, 0x55, n) != reference_memchr(area, 0x55, n))
+		fail("memchr (before)", d, 0, n);
+}
+
 /*
  * Strings that start up to 31 bytes before a page boundary and run across
  * it: kernels that read ahead in blocks must neither miss the terminator
@@ -242,6 +281,8 @@ static void check_page_end(void)
 			second[n] = '\0';
 			if (strlen((const char *)first) != n)
 				fail("strlen (page end)", a, 0, n);
+			if (memchr(first, 0, SIZE_MAX) != first + n || memchr(first, 0, n + 1) != first + n || memchr(first, 0, n) != nullptr)
+				fail("memchr (page end)", a, 0, n);
 			if (n > 0 && (const unsigned char *)strchr((const char *)first, first[n - 1]) != reference_strchr(first, first[n - 1]))
 				fail("strchr (page end)", a, 0, n);
 			if (strcmp((const char *)first, (const char *)second) != 0)
@@ -285,6 +326,12 @@ int main(void)
 	for (size_t d = 0; d < OFFSETS; ++d)
 		for (size_t n = 0; n <= LIMIT; ++n)
 			check_strlen(d, n);
+	for (size_t d = 0; d < OFFSETS; ++d) {
+		for (size_t n = 0; n <= LIMIT; ++n)
+			check_memchr(d, n);
+		for (size_t i = 0; i < sizeof(long_lengths) / sizeof(long_lengths[0]) && long_lengths[i] < SIZE - 40; ++i)
+			check_memchr(d, long_lengths[i]);
+	}
 	for (size_t a = 0; a < OFFSETS; ++a)
 		for (size_t b = 0; b < OFFSETS; ++b)
 			for (size_t n = 0; n <= 40; ++n)
