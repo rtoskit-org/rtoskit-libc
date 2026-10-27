@@ -1,0 +1,76 @@
+#
+# Copyright (C) 2026 Red Rocket Computing, LLC
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# ci.yml
+#
+# Created on: Oct 27, 2026
+#     Author: Stephen Street (stephen@redrocketcomputing.com)
+#
+
+# The pull request gate (PLAN D119): on every architecture, make check (unit tests, libc-test against
+# test/libc-test/expected/<arch>.txt, libgcc-check) in all three build types; on the Arm architectures
+# also the size gates (size-report diff and both flavours' budgets, PLAN D51, D71, D111). Runs in an
+# Ubuntu 26.04 container, whose make is 4.4.1 (D117), gcc 15 (the x86_64 build, D107) and qemu-user 10.2
+# (TARGET_RUNNER on Arm, D36); the arm-none-eabi GCC 16.2 is the one make setup downloads.
+name: ci
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check (${{ matrix.arch }})
+    runs-on: ubuntu-latest
+    container: ubuntu:26.04
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [x86_64, armv6-m, armv6s-m, armv7-m, armv7e-m, armv7e-m-dp, armv8-m.main]
+    steps:
+      - name: Install packages
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update -q
+          apt-get install -y -q --no-install-recommends ca-certificates git make gcc libc6-dev python3 qemu-user wget xz-utils
+
+      - name: Check out
+        uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"
+
+      - name: Tools
+        run: |
+          make --version | head -1
+          gcc --version | head -1
+          qemu-arm --version | head -1
+          python3 --version
+
+      - name: make check
+        run: make -j"$(nproc)" ARCH_CROSS=${{ matrix.arch }} check
+
+      # The size baselines are recorded with the downloaded arm-none-eabi GCC 16.2; the x86_64 figures
+      # depend on the host GCC, so only the Arm architectures are gated
+      - name: Size
+        if: matrix.arch != 'x86_64'
+        run: |
+          tools/scripts/size-report diff --arch ${{ matrix.arch }}
+          tools/scripts/size-report budget --arch ${{ matrix.arch }}
+          tools/scripts/size-report --build-type speed budget --flavour speed --arch ${{ matrix.arch }}

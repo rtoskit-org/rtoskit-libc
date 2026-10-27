@@ -238,6 +238,8 @@ Any exception needs a PLAN.md decision entry.
   (not gated). It fails when a case grew by more than 1 %; record a step's
   improvements with `make bench BENCH_UPDATE=1` and the tables in
   `docs/perf/<arch>.md` (`bench-runner markdown --previous <rev>`).
+- **CI (D119):** `.github/workflows/ci.yml` runs `make check` per architecture, plus the Arm size
+  gates, in an `ubuntu:26.04` container on every pull request (opened, reopened, ready or updated).
 - Never skip, disable or weaken a test to get green. Fix the code, or record a
   justified `skip:` that refers to the scope in PLAN.md §1.
 
