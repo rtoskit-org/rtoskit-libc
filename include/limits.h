@@ -31,7 +31,15 @@
 #define ULONG_WIDTH __LONG_WIDTH__
 #define LLONG_WIDTH __LONG_LONG_WIDTH__
 #define ULLONG_WIDTH __LONG_LONG_WIDTH__
+/*
+ * C23 5.2.4.2.1 requires _BitInt, with BITINT_MAXWIDTH at least ULLONG_WIDTH.
+ * A compiler without it (GCC 14 and 15 on 32-bit Arm) predefines no
+ * __BITINT_MAXWIDTH__: leave BITINT_MAXWIDTH undefined there rather than
+ * expand to an undeclared name (PLAN D127)
+ */
+#ifdef __BITINT_MAXWIDTH__
 #define BITINT_MAXWIDTH __BITINT_MAXWIDTH__
+#endif
 
 /* Only the "C" locale is supported, whose multibyte characters are single bytes */
 #define MB_LEN_MAX 1

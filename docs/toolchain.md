@@ -29,8 +29,12 @@ Cloud sessions install the apt packages, and build make 4.4.1 when the installed
 - On the Arm architectures, `tools/makefiles/port-linux-arm.mk` runs the tests with
   `qemu-arm -cpu max` (D36) and links them with `port/linux/arm/headers.ld` so the ELF
   headers are loaded (D106).
-- GCC 15.2 did not implement `_BitInt` for 32-bit Arm; GCC 16.2 does
-  (`__BITINT_MAXWIDTH__` is 65535), which is one reason for the 16.2 toolchain (D37).
+- GCC 14 and 15 (14.4, 15.2, 15.3) do not implement `_BitInt` for 32-bit Arm; GCC 16.2 does
+  (`__BITINT_MAXWIDTH__` is 65535), which is one reason for the 16.2 toolchain (D37). With
+  GCC 14 or 15 as `CROSS_COMPILE`, `make library`, `make` and `make check` still work:
+  `test/unit/bitint` probes the compiler for `__BITINT_MAXWIDTH__` and is reported as skipped
+  without it, and `<limits.h>` leaves `BITINT_MAXWIDTH` undefined (D127). With GCC 16 the
+  test is built and must pass.
 - The arm-none-eabi objects have no `.note.GNU-stack`; the link passes
   `-z noexecstack` instead of letting ld warn about an executable stack.
 - `__builtin_flt_rounds` does not exist in GCC 14, so `FLT_ROUNDS` calls the

@@ -133,8 +133,12 @@
 #if !(ULLONG_WIDTH == ULLONG_WIDTH)
 #error ULLONG_WIDTH unusable in #if
 #endif
-#if !(BITINT_MAXWIDTH == BITINT_MAXWIDTH)
-#error BITINT_MAXWIDTH unusable in #if
+/* Only where the compiler has _BitInt (PLAN D127); then it is at least ULLONG_WIDTH (C23 5.2.4.2.1) */
+#if defined(__BITINT_MAXWIDTH__) && !(BITINT_MAXWIDTH >= ULLONG_WIDTH)
+#error BITINT_MAXWIDTH unusable in #if, or below ULLONG_WIDTH
+#endif
+#if !defined(__BITINT_MAXWIDTH__) && defined(BITINT_MAXWIDTH)
+#error BITINT_MAXWIDTH defined without _BitInt
 #endif
 #if !(INT8_MIN == INT8_MIN)
 #error INT8_MIN unusable in #if

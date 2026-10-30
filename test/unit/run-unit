@@ -54,5 +54,14 @@ for elf in $(find "${build_dir}" -name '*.elf' | sort); do
 	fi
 done
 
-echo "unit tests: ${passed} passed, ${failed} failed"
+# A test the build could not make for this compiler leaves <name>.skip with the reason (PLAN D127)
+skipped=0
+for skip in $(find "${build_dir}" -name '*.skip' | sort); do
+	# A test built since (a newer compiler in the same tree) ran above
+	[[ -f ${skip%.skip}.elf ]] && continue
+	echo "skip $(dirname "${skip#${build_dir}/}")/$(basename "${skip}" .skip): $(< "${skip}")"
+	skipped=$((skipped + 1))
+done
+
+echo "unit tests: ${passed} passed, ${failed} failed$([[ ${skipped} -gt 0 ]] && echo ", ${skipped} skipped")"
 [[ ${failed} -eq 0 && ${passed} -gt 0 ]]
