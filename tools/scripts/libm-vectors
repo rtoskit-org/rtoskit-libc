@@ -1,0 +1,28 @@
+#!/bin/sh
+#
+# Copyright (C) 2026 Red Rocket Computing, LLC
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# libm-vectors
+#
+# Created on: Oct 30, 2026
+#     Author: Stephen Street (stephen@redrocketcomputing.com)
+#
+# Regenerates test/unit/libm_vectors/vectors-double.inc and vectors-float.inc from tools/libm-vectors/libm-vectors.c
+# with MPFR as the correctly rounded oracle (issue #95, docs/research/libm-vectors.md). Needs a host C compiler and
+# the MPFR and GMP development files (Ubuntu: apt-get install libmpfr-dev). Run from the project root; the output is
+# deterministic, so a rerun with the same MPFR reproduces the committed files.
+set -eu
+
+root=$(pwd)
+work="${root}/tmp/libm-vectors"
+cc=$("${root}/tools/scripts/host-cc")
+
+mkdir -p "${work}"
+"${cc}" -std=gnu2x -O2 -Wall -Wextra -Werror -o "${work}/libm-vectors" "${root}/tools/libm-vectors/libm-vectors.c" -lmpfr -lgmp -lm
+for type in double float; do
+	"${work}/libm-vectors" "${type}" > "${root}/test/unit/libm_vectors/vectors-${type}.inc"
+done
