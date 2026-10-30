@@ -705,3 +705,7 @@ New members: `__cxa_atexit` (code and the first static block of 32 registrations
 ## D124 — `(float)` of a NaN keeps its sign (issue #95)
 
 The libm vectors found that `__libc_softdouble_d2f` set a NaN's sign from the double's exponent bits, so every narrowed NaN came out negative. Masking the payload adds 4 bytes to `__libc_softdouble_d2f.o`; no reference image changes.
+
+## D125 — the libm vectors' accuracy fixes (Q36)
+
+Correctness fixes, so the growth is accepted: `cbrt.o` +572, `tgamma.o` +520 and `pow.o` +168 bytes. `cbrt` gains a double-double residual correction (on cores without fma, Dekker's split products are most of it), `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` grows by 168 bytes from `pow`; the size budget holds.

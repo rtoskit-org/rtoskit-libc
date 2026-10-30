@@ -618,7 +618,7 @@
      "rodata": 2760,
      "tbss": 0,
      "tdata": 0,
-     "text": 6200,
+     "text": 6296,
      "unwind": 0
     },
     "libgcc": {
@@ -664,7 +664,7 @@
     "rodata": 2760,
     "tbss": 0,
     "tdata": 0,
-    "text": 6670,
+    "text": 6766,
     "unwind": 0
    }
   },
@@ -689,7 +689,7 @@
      "rodata": 3288,
      "tbss": 0,
      "tdata": 0,
-     "text": 8016,
+     "text": 8112,
      "unwind": 0
     },
     "libgcc": {
@@ -735,7 +735,7 @@
     "rodata": 3288,
     "tbss": 0,
     "tdata": 0,
-    "text": 8734,
+    "text": 8830,
     "unwind": 0
    }
   }
@@ -2575,7 +2575,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 272,
+    "text": 416,
     "unwind": 0
    },
    "cbrtf.o": {
@@ -4969,7 +4969,7 @@
     "rodata": 72,
     "tbss": 0,
     "tdata": 0,
-    "text": 236,
+    "text": 228,
     "unwind": 0
    },
    "log1pl.o": {
@@ -5545,7 +5545,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 844,
+    "text": 940,
     "unwind": 0
    },
    "powf.o": {
@@ -7237,7 +7237,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 436,
+    "text": 588,
     "unwind": 0
    },
    "tgammaf.o": {
@@ -7670,7 +7670,7 @@
    "rodata": 8802,
    "tbss": 362,
    "tdata": 8,
-   "text": 76646,
+   "text": 77030,
    "unwind": 0
   }
  },
@@ -8007,7 +8007,7 @@
     ]
    },
    "pow": {
-    "depth": 184,
+    "depth": 208,
     "notes": [],
     "path": [
      "pow",
@@ -8017,7 +8017,7 @@
     ]
    },
    "powf": {
-    "depth": 192,
+    "depth": 216,
     "notes": [],
     "path": [
      "powf",
@@ -8212,7 +8212,7 @@
     ]
    },
    "tgamma": {
-    "depth": 792,
+    "depth": 800,
     "notes": [],
     "path": [
      "tgamma",
@@ -8547,7 +8547,7 @@
    "catanhf.o:catanhf": 8,
    "catanhl.o:catanhl": 0,
    "catanl.o:catanl": 0,
-   "cbrt.o:cbrt": 40,
+   "cbrt.o:cbrt": 48,
    "cbrtf.o:cbrtf": 8,
    "cbrtl.o:cbrtl": 0,
    "ccos.o:ccos": 0,
@@ -8911,7 +8911,7 @@
    "port/__rtos_tmpname.o:__rtos_tmpname": 104,
    "port/__rtos_tmpname.o:port/linux/__rtos_tmpname.c:append_number": 48,
    "port/__rtos_write.o:__rtos_write": 24,
-   "pow.o:pow": 96,
+   "pow.o:pow": 120,
    "powf.o:powf": 8,
    "powl.o:powl": 0,
    "pown.o:pown": 40,
@@ -9113,7 +9113,7 @@
    "tanpi.o:tanpi": 144,
    "tanpif.o:tanpif": 8,
    "tanpil.o:tanpil": 0,
-   "tgamma.o:tgamma": 56,
+   "tgamma.o:tgamma": 64,
    "tgammaf.o:tgammaf": 16,
    "tgammal.o:tgammal": 0,
    "thrd_create.o:thrd_create": 24,

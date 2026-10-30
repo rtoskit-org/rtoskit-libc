@@ -578,3 +578,7 @@ reference image changes by −4 bytes.
 ## D121 — the C++ ABI hooks (issue #98)
 
 New members: `__cxa_atexit` (code and the first static block of 32 registrations), `__cxa_finalize`, `__cxa_thread_atexit`, `__libc_cxa_thread_run` and `__dso_handle`. `__libc_atexit_run` and `thrd_exit` each gain one weak call (12–16 bytes) that runs the C++ `thread_local` destructors when they are linked. A C program links none of the new members, and every reference image is unchanged.
+
+## D125 — the libm vectors' accuracy fixes (Q36)
+
+Correctness fixes, so the growth is accepted: `cbrt.o` +144, `tgamma.o` +152 and `pow.o` +96 bytes (`log1pf.o` −8). `cbrt` gains a double-double residual correction (on cores without fma, Dekker's split products are most of it), `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` and `math-float` grow by 96 bytes, both from `pow` (`powf` is `pow` rounded on this core). `math-float`'s size budget is re-locked at 9526 bytes (from 9494).

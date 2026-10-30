@@ -697,7 +697,7 @@
      "rodata": 3700,
      "tbss": 0,
      "tdata": 0,
-     "text": 22188,
+     "text": 22356,
      "unwind": 0
     },
     "libgcc": {
@@ -743,7 +743,7 @@
     "rodata": 3700,
     "tbss": 0,
     "tdata": 0,
-    "text": 23020,
+    "text": 23188,
     "unwind": 0
    }
   }
@@ -3033,7 +3033,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 404,
+    "text": 976,
     "unwind": 0
    },
    "cbrtf.o": {
@@ -6003,7 +6003,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 1408,
+    "text": 1576,
     "unwind": 0
    },
    "powf.o": {
@@ -7695,7 +7695,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 588,
+    "text": 1108,
     "unwind": 0
    },
    "tgammaf.o": {
@@ -8128,7 +8128,7 @@
    "rodata": 9986,
    "tbss": 362,
    "tdata": 8,
-   "text": 146368,
+   "text": 147628,
    "unwind": 0
   }
  },
@@ -8761,7 +8761,7 @@
     ]
    },
    "tgamma": {
-    "depth": 1056,
+    "depth": 1112,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -9189,7 +9189,8 @@
    "catanhf.o:libc/complex/sp-nearest/catanhf.c:__libc_ff_product": 16,
    "catanhl.o:catanhl": 0,
    "catanl.o:catanl": 0,
-   "cbrt.o:cbrt": 56,
+   "cbrt.o:cbrt": 120,
+   "cbrt.o:libc/math/cbrt.c:__libc_dd_product": 88,
    "cbrtf.o:cbrtf": 24,
    "cbrtl.o:cbrtl": 0,
    "ccos.o:ccos": 0,
@@ -9775,7 +9776,7 @@
    "tanpi.o:tanpi": 176,
    "tanpif.o:tanpif": 40,
    "tanpil.o:tanpil": 0,
-   "tgamma.o:tgamma": 72,
+   "tgamma.o:tgamma": 128,
    "tgammaf.o:tgammaf": 40,
    "tgammal.o:tgammal": 0,
    "thrd_create.o:thrd_create": 24,

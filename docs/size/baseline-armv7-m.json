@@ -741,7 +741,7 @@
      "rodata": 3700,
      "tbss": 0,
      "tdata": 0,
-     "text": 25350,
+     "text": 25430,
      "unwind": 0
     },
     "libgcc": {
@@ -787,7 +787,7 @@
     "rodata": 3700,
     "tbss": 0,
     "tdata": 0,
-    "text": 26292,
+    "text": 26372,
     "unwind": 0
    }
   }
@@ -3257,7 +3257,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 392,
+    "text": 976,
     "unwind": 0
    },
    "cbrtf.o": {
@@ -6227,7 +6227,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 1288,
+    "text": 1368,
     "unwind": 0
    },
    "powf.o": {
@@ -7919,7 +7919,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 532,
+    "text": 1036,
     "unwind": 0
    },
    "tgammaf.o": {
@@ -8352,7 +8352,7 @@
    "rodata": 9938,
    "tbss": 362,
    "tdata": 8,
-   "text": 165190,
+   "text": 166358,
    "unwind": 0
   }
  },
@@ -8782,7 +8782,7 @@
     ]
    },
    "pow": {
-    "depth": 356,
+    "depth": 364,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -9042,7 +9042,7 @@
     ]
    },
    "tgamma": {
-    "depth": 772,
+    "depth": 820,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -9488,7 +9488,8 @@
    "catanhf.o:libc/complex/sp-nearest/catanhf.c:__libc_ff_product": 32,
    "catanhl.o:catanhl": 32,
    "catanl.o:catanl": 32,
-   "cbrt.o:cbrt": 56,
+   "cbrt.o:cbrt": 112,
+   "cbrt.o:libc/math/cbrt.c:__libc_dd_product": 48,
    "cbrtf.o:cbrtf": 64,
    "cbrtf.o:libc/math/sp-nearest/cbrtf.c:__libc_ff_product": 32,
    "cbrtl.o:cbrtl": 0,
@@ -9871,7 +9872,7 @@
    "port/__rtos_tmpname.o:__rtos_tmpname": 104,
    "port/__rtos_tmpname.o:port/linux/__rtos_tmpname.c:append_number": 48,
    "port/__rtos_write.o:__rtos_write": 24,
-   "pow.o:pow": 144,
+   "pow.o:pow": 152,
    "powf.o:powf": 64,
    "powl.o:powl": 0,
    "pown.o:pown": 64,
@@ -10081,7 +10082,7 @@
    "tanpif.o:libc/math/sp-nearest/tanpif.c:__libc_ff_product": 32,
    "tanpif.o:tanpif": 56,
    "tanpil.o:tanpil": 0,
-   "tgamma.o:tgamma": 80,
+   "tgamma.o:tgamma": 128,
    "tgammaf.o:tgammaf": 48,
    "tgammal.o:tgammal": 0,
    "thrd_create.o:thrd_create": 24,
