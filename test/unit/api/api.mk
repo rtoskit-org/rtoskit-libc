@@ -27,13 +27,15 @@ CFLAGS += -fno-builtin
 
 # Every public header compiles alone in strict C23 (issue #93): -pedantic-errors rejects any extension a header relies
 # on without the __extension__ or reserved spelling that marks it. One stamp per header, rebuilt when the header changes.
+# -Wno-attributes: a compiler that does not implement a C23 standard attribute ([[unsequenced]] before GCC 15) may
+# ignore it, which is the compiler's limit, not the header's.
 API_HEADERS := $(wildcard ${PROJECT_ROOT}/include/*.h) ${PROJECT_ROOT}/include/rtos/rtos-port.h
 API_STAMPS := $(patsubst ${PROJECT_ROOT}/include/%.h,${CURDIR}/standalone/%.ok,${API_HEADERS})
 
 ${CURDIR}/standalone/%.ok: ${PROJECT_ROOT}/include/%.h
 	@echo "CHECKING $<"
 	@mkdir -p $(dir $@)
-	echo 'typedef int api_unit; /* a translation unit may not be empty (C23 6.9) */' | $(CC) ${CPPFLAGS} ${CFLAGS} -pedantic-errors -Werror -fsyntax-only -x c -include $< -
+	echo 'typedef int api_unit; /* a translation unit may not be empty (C23 6.9) */' | $(CC) ${CPPFLAGS} ${CFLAGS} -pedantic-errors -Werror -Wno-attributes -fsyntax-only -x c -include $< -
 	@touch $@
 
 all: ${CURDIR}/api.elf ${API_STAMPS}
