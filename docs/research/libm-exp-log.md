@@ -120,10 +120,10 @@ second rounding from double to float is then correct except within
 - **`cbrt`**: x = y · 2^(3q) with y in [1, 8). Five Newton steps from a
   linear guess give about 2^-30, rounded to 20 bits so t² is exact. One
   Halley step t + t(s - t)/(2t + s) with s = y/t² then leaves at most
-  0.62 ulp. Since D125, a last correction by the residual
-  (y − t³)/(3t²), with t³ as a double-double and the sign applied before the
-  final rounding, makes it correct to about 2^-100
-  (`docs/research/libm-vectors.md`).
+  0.62 ulp. Since D125 the estimate keeps 26 bits, so that the residual
+  y − t³ is exact (t² = a + b, t³ = a·t + b·t), and a Halley step on that
+  residual, with the sign applied before the final rounding, leaves below
+  0.5 + 2^-25 ulp (`docs/research/libm-vectors.md`).
 - **`hypot`** scales by 2^∓600 when an operand is beyond 2^±500. It adds
   the exact squares as double-doubles, takes the square root, and corrects
   it by the residual (S - h²)/(2h) (Borges). When the exponents differ by

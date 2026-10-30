@@ -17,29 +17,29 @@
 #include "internal/math.h"
 
 /*
- * C23 7.12.7.1: x = y * 2^(3q) with y in [1, 8). In round to nearest, Newton
- * steps from a linear guess give cbrt(y) to 2^-30, rounded to 20 bits so t^2
- * is exact, and one Halley step t + t(s - t)/(2t + s) with s = y/t^2 leaves
- * about 0.6 ulp. The residual y - t^3, in double-double, then corrects t by
- * (y - t^3)/(3t^2) to about 2^-100 relative, as hi + lo. The sign goes on
- * before the one rounding of hi + lo in the caller's direction, so upward
- * and downward stay apart for a negative x (docs/research/libm-vectors.md).
- * cbrt(y) is never a halfway point, and its scaling is exact: the result
- * lies in [2^-358, 2^342].
+ * C23 7.12.7.1: x = y * 2^(3q) with y in [1, 8). Newton steps from a linear
+ * guess give cbrt(y) to about 2^-40; t keeps its top 26 bits, so t^2 is
+ * exact, and t^2 = a + b with a holding 27 bits makes t^3 = a t + b t
+ * exactly. The residual r = y - t^3 is then exact to about 2^-80 (y - a t
+ * by Sterbenz), and one Halley step t + t r / (2t^3 + y) leaves about 2^-78
+ * relative error: below 0.5 + 2^-25 ulp. None of it needs round to
+ * nearest. The sign goes on before the one rounding of t + d, so the
+ * caller's direction applies to the signed result (docs/research/libm-vectors.md);
+ * the scaling is exact, as the result lies in [2^-358, 2^342].
  */
 double cbrt(double x)
 {
 	uint64_t bits = __libc_double_bits(x);
 	int exponent = __libc_double_exponent(bits);
 	int scale = 0;
-	int mode;
 	int q;
 	double y;
 	double t;
-	double s;
+	double square;
+	double a;
+	double b;
 	double residual;
-	struct __libc_dd cube;
-	struct __libc_dd root;
+	double d;
 
 	if (exponent == 0x7ff || x == 0)
 		return x + x;
@@ -53,21 +53,19 @@ double cbrt(double x)
 	q = exponent >= 0 ? exponent / 3 : -((-exponent + 2) / 3);
 	y = __libc_double_from((bits & __LIBC_DOUBLE_FRACTION) | ((uint64_t)(__LIBC_DOUBLE_BIAS + exponent - 3 * q) << 52));
 
-	mode = __libc_math_nearest();
 	t = 1.0 + (y - 1.0) / 7.0;
 	for (int i = 0; i < 5; ++i)
 		t -= (t * t * t - y) / (3.0 * t * t);
-	t = __libc_double_from(__libc_double_bits(t) & ~((1ULL << 33) - 1));
-	s = y / (t * t);
-	t += t * (s - t) / (t + t + s);
+	t = __libc_double_from(__libc_double_bits(t) & ~((1ULL << 27) - 1));
+	square = t * t;
+	a = __libc_double_from(__libc_double_bits(square) & ~((1ULL << 26) - 1));
+	b = square - a;
+	residual = (y - a * t) - b * t;
+	d = t * residual / (2.0 * square * t + y);
+	if (signbit(x)) {
+		t = -t;
+		d = -d;
+	}
 
-	/* y - t^3: y - cube.hi is exact (the two agree to about 52 bits) */
-	cube = __libc_dd_multiply(__libc_dd_product(t, t), (struct __libc_dd){ .hi = t, .lo = 0.0 });
-	residual = ((y - cube.hi) - cube.lo) / (3.0 * t * t);
-	root = __libc_dd_fast_sum(t, residual);
-	if (signbit(x))
-		root = __libc_dd_negate(root);
-	__libc_math_restore(mode);
-
-	return scalbn(root.hi + root.lo, q + scale);
+	return scalbn(t + d, q + scale);
 }

@@ -141,16 +141,22 @@ case for it.
 
 ### The fixes
 
-- **`cbrt`** keeps its 0.6-ulp estimate t, computed in round to nearest,
-  and then corrects it by the residual: (y − t³)/(3t²), with t³ as a
-  double-double. This is one Newton step on an exactly computed residual,
-  the usual last correction of an iterative root (Brent and Zimmermann,
-  *Modern Computer Arithmetic*, chapter 4,
-  <https://members.loria.fr/PZimmermann/mca/mca-cup-0.5.9.pdf>). It leaves
-  about 2^-100 relative error as hi + lo. The sign goes on before
-  the one rounding of hi + lo in the caller's direction. A cube root of a
-  double is never a halfway point, so that rounding is correct except within
-  2^-100 of one.
+- **`cbrt`** truncates its Newton estimate (good to about 2^-40) to 26
+  bits, so that t² is exact. Splitting t² = a + b, with a holding 27 bits,
+  makes t³ = a·t + b·t exactly as two doubles, so the residual
+  r = y − t³ comes out exact; y − a·t is exact by Sterbenz's lemma. One
+  Halley step, t + t·r/(2t³ + y), then leaves about 2^-78 relative error,
+  below 0.5 + 2^-25 ulp. Halley's method is cubically convergent, and
+  computing on an exactly computed residual is the usual last correction of
+  an iterative root (Brent and Zimmermann, *Modern Computer Arithmetic*,
+  chapter 4, <https://members.loria.fr/PZimmermann/mca/mca-cup-0.5.9.pdf>).
+  No step needs round to nearest. The sign goes on before the one rounding
+  of t + d, so the caller's direction applies to the signed result. A first
+  version used a double-double product and switched to round to nearest; it
+  was 75 % slower on x86_64 and added about 580 bytes on the cores without
+  fma. A Python model of the algorithm, in double arithmetic with the
+  error measured against a 60-digit reference, saw at most 0.499997 ulp
+  over 200,000 random y in [1, 8), with no misrounding.
 - **`__libc_math_tinyf`** compares `!signbit(x) != !signbit(direction)`.
 - **`tgamma`**, for 2^-1024 < |x| < 2^-54, takes 1/x as a double-double in
   round to nearest. It divides by x · 2^64, so the divisor is normal and
