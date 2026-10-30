@@ -147,10 +147,10 @@
     "insns": 15868.44
    },
    "cbrt/latency": {
-    "insns": 14546.25
+    "insns": 14742.0
    },
    "cbrt/throughput": {
-    "insns": 14505.81
+    "insns": 14702.12
    },
    "cbrtf/latency": {
     "insns": 8586.56
@@ -339,10 +339,10 @@
     "insns": 12366.56
    },
    "pow/latency": {
-    "insns": 31559.75
+    "insns": 31628.75
    },
    "pow/throughput": {
-    "insns": 31522.56
+    "insns": 31591.56
    },
    "powf/latency": {
     "insns": 22159.12
@@ -423,10 +423,10 @@
     "insns": 15977.44
    },
    "tgamma/latency": {
-    "insns": 64787.12
+    "insns": 64788.12
    },
    "tgamma/throughput": {
-    "insns": 64745.88
+    "insns": 64746.88
    },
    "tgammaf/latency": {
     "insns": 55324.62

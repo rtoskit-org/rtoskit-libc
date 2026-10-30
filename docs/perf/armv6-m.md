@@ -1154,3 +1154,7 @@ change against the P5.04a baseline (c4abaa0). Throughput, instructions per call.
 | Function | float | double |
 |---|---:|---:|
 | `pow` | 1222 (-94 %) | 31523 |
+
+## D125 — the libm vectors' accuracy fixes (Q36)
+
+Correctness fixes, so the slowdowns are accepted and the baselines re-recorded (both flavours): `cbrt` 1.4 % slower (the residual's extra soft-double products); `pow` within 1 %. Every other case is within 1 %.

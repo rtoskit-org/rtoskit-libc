@@ -875,3 +875,7 @@ Aligned / worst of the misaligned offsets.
 | `mix/memcpy` (per call) | 54.1 | | | | | | |
 | `mix/memset` (per call) | 41.7 | | | | | | |
 | `mix/strlen` (per call) | 103 | | | | | | |
+
+## D125 — the libm vectors' accuracy fixes (Q36)
+
+Correctness fixes, so the slowdowns are accepted and the baselines re-recorded (both flavours): `cbrt` and `cbrtf` 1.5 % faster; `pow` and `powf` 2.3 % slower (9 instructions for the tiny-exponent check). Every other case is within 1 %.
