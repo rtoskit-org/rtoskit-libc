@@ -76,3 +76,50 @@ replaces that gate: `api.mk` compiles every public header on its own, with
 `-std=c23 -pedantic-errors -Werror`, on every architecture in `ARCHS`. A
 header that relies on an extension without its reserved spelling then fails
 the build.
+
+## Replacing libc-test's `functional/*` and `regression/*` tests (issue #94, D123)
+
+The existing `test/unit` modules already covered most of what these 31 tests
+checked. The gaps went into `test/unit/conformance`. Its regression cases
+are named after the bug class each guards, so that protection does not
+vanish with the harness.
+
+The inputs and expected values are our own. The `strtod`/`strtof` rounding
+boundaries were computed with Python's `decimal` module at 2,000 digits,
+truncated to 60 significant digits on each side of the midpoint. The
+division results are checked through the identity q·y + r = x. The rest come
+from the standard text.
+
+| libc-test test | Already covered by | Added to `test/unit/conformance` |
+|---|---|---|
+| `functional/qsort` | `stdlib` (`test_qsort`, `test_qsort_paths`) | odd prime length, 64-bit keys with duplicates, strings, all 120 permutations of five bytes |
+| `functional/snprintf` | `printf`, `printf_float` (flags, precision 0, `%#o`, `%a`, `%.1022f`, `EOVERFLOW`, the return value with a short buffer) | — |
+| `functional/sscanf` | `scanf` | scansets, `%5c` at the end of input, field widths with `%*d`, `%i` prefixes |
+| `functional/strftime` | `time` (`check_strftime`: POSIX flags and widths, negative years) | five-digit and zero years, `%r` at midnight and noon |
+| `functional/string_memcpy`, `string_memset`, `string_strchr` | `string_kernels` (every alignment and length, guard bytes, every flavour) | — |
+| `functional/string_strcspn`, `string_strstr` | `string` (`test_spans`, `test_strstr`) | — |
+| `functional/strtod`, `strtod_long`, `strtod_simple`, `strtold`, `strtof` | `strtod` (exhaustive formats, directed overflow) | the subnormal, normal and overflow midpoints in double and float, 40,000-digit input, `%.300f` round trips, hexadecimal ties to even |
+| `functional/strtol` | `stdlib` (`test_strtol`) | `LONG_MAX + 1` and `LONG_MIN - 1` at the core's width, `strtoul` negation |
+| `functional/tgmath` | `api` (result types) | the float path through `lrint`, `sqrt` and `pow` values |
+| `functional/time` | `time` (`check_gmtime`, `check_mktime`) | 400 random times through `gmtime_r` and `timegm` |
+| `functional/udiv` | `div64` | 256 pseudo-random 64-bit `/` and `%`, signed and unsigned, through q·y + r = x |
+| `functional/ungetc` | `stdio` | the position indicator through `ungetc`, scansets, `fread` and `fseek` |
+| `regression/fpclassify-invalid-ld80` | (vacuous: `long double` is binary64, D7) | `regression_long_double_classes` |
+| `regression/malloc-0` | `malloc` | `regression_malloc_zero` |
+| `regression/malloc-oom` | `malloc` (`test_exhaustion`) | `regression_malloc_out_of_memory` |
+| `regression/printf-1e9-oob` | `printf_float` | `regression_printf_carry` |
+| `regression/printf-fmt-g-round` | `printf_float` | `regression_printf_g_round` |
+| `regression/printf-fmt-g-zeros` | `printf_float` | `regression_printf_g_zeros` |
+| `regression/printf-fmt-n` | `printf` | `regression_printf_n` (every length modifier) |
+| `regression/scanf-bytes-consumed` | `scanf` | `regression_scanf_count_after_string` |
+| `regression/scanf-match-literal-eof` | `scanf` | `regression_scanf_literal_at_eof` |
+| `regression/scanf-nullbyte-char` | `scanf` | `regression_scanf_char_no_null` |
+| `regression/setvbuf-unget` | `stdio` | `regression_setvbuf_ungetc` |
+| `regression/sscanf-eof` | `scanf` | `regression_sscanf_float_at_end` |
+
+Two expectations follow the library's documented behaviour rather than a
+reading of plain C23:
+- plain `%Y` behaves as POSIX `%+4Y`, so the year 10009 prints `+10009`
+  (`libc/time/strftime.c`);
+- after a `%5c` meets the end of input, what it stored is unspecified, so
+  only the count is checked.
