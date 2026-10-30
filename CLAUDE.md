@@ -155,7 +155,8 @@ make library                           # headers, libc*.a and the port archives 
 Allowed `#if`/`#ifdef` uses, and nothing else:
 
 1. Include guards.
-   (Plus the D19 exception: `CHAR_MIN`/`CHAR_MAX` in `<limits.h>`.)
+   (Plus the D19 exception: `CHAR_MIN`/`CHAR_MAX` in `<limits.h>`, and D127's
+   `BITINT_MAXWIDTH`, defined only where the compiler has `_BitInt`.)
 2. C++ in public headers (D120): `__LIBC_BEGIN_DECLS`/`__LIBC_END_DECLS` and `__LIBC_NULL`
    from `include/__cdefs.h`, and `#ifndef __cplusplus` only for what C++ lacks or the
    C++ standard leaves out of a header (D120 lists them). Spell `restrict` and `typeof`

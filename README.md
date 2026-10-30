@@ -188,7 +188,10 @@ and its limits, and `docs/perf/<arch>.md` (for example
   `apt-get install -y gcc-14`.
 - **arm-none-eabi GCC 14 or newer** for the Arm builds. You don't have to
   install one: the first build downloads GCC 16.2 into `local/`. To use your
-  own, pass `CROSS_COMPILE=<prefix>`.
+  own, pass `CROSS_COMPILE=<prefix>`. `make library`, `make` and `make check`
+  all work with GCC 14 and 15. Those versions have no `_BitInt` on 32-bit
+  Arm, so `make check` reports the `_BitInt` test as skipped and
+  `<limits.h>` leaves `BITINT_MAXWIDTH` undefined; GCC 16 runs every test.
 - **qemu-user** to run the Arm tests (`apt-get install -y qemu-user`). It is
   not needed just to build the library.
 

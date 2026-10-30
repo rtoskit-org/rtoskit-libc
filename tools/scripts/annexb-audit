@@ -106,6 +106,9 @@ for s in sections:
 PLACEHOLDER = re.compile(r'type\d|real-floating|generic_|QChar|QVoid|_Decimal|\bA\b|\bC\b|\bM\b|\btype\b|\bT\b|_s\(|[a-z]+-[a-z]+')
 # Object types that may be incomplete (C23 6.2.5p1: FILE need only be an object type)
 INCOMPLETE = {'FILE'}
+# Identifiers that need a compiler feature some supported compilers lack (PLAN D127): checked only where the
+# compiler predefines the macro that shows the feature (GCC 14 and 15 have no _BitInt on 32-bit Arm)
+COMPILER_FEATURE = {'BITINT_MAXWIDTH': '__BITINT_MAXWIDTH__'}
 MACRO_ONLY = {'assert', 'setjmp', 'va_start', 'va_arg', 'va_end', 'va_copy', 'offsetof', 'unreachable', 'kill_dependency', 'ATOMIC_VAR_INIT', 'CMPLX', 'CMPLXF', 'CMPLXL'}
 lines = [HEADER]
 lines.append('/*\n * Generated from the C23 Annex B (N3220, docs/standard/annex-b.pdf) by\n * tools/scripts/annexb-audit (PLAN D50); regenerate rather than edit. The\n * test passes when it compiles: every identifier of the in-scope headers\n * exists, every function has the Annex B type.\n */\n\n')
@@ -125,6 +128,8 @@ for h, i in idents:
         lines.append(f'static_assert(sizeof({i}) > 0, "<{h}> {i}");\n')
     elif i in INCOMPLETE:
         lines.append(f'static_assert(sizeof({i} *) > 0, "<{h}> {i}");\n')
+    elif i in COMPILER_FEATURE:
+        lines.append(f'#if !defined({i}) && defined({COMPILER_FEATURE[i]})\nstatic_assert(sizeof({i}) > 0, "<{h}> {i}");\n#endif\n')
     else:
         lines.append(f'#ifndef {i}\nstatic_assert(sizeof({i}) > 0, "<{h}> {i}");\n#endif\n')
 count_p = 0
