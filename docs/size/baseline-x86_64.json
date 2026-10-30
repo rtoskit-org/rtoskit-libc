@@ -822,6 +822,42 @@
     "text": 574,
     "unwind": 0
    },
+   "__cxa_atexit.o": {
+    "bss": 1040,
+    "data": 8,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 446,
+    "unwind": 0
+   },
+   "__cxa_finalize.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 142,
+    "unwind": 0
+   },
+   "__cxa_thread_atexit.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 8,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 68,
+    "unwind": 0
+   },
+   "__dso_handle.o": {
+    "bss": 0,
+    "data": 8,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
+    "unwind": 0
+   },
    "__flt_rounds.o": {
     "bss": 0,
     "data": 0,
@@ -864,7 +900,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 14,
+    "text": 36,
     "unwind": 0
    },
    "__libc_cond_wait.o": {
@@ -892,6 +928,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 285,
+    "unwind": 0
+   },
+   "__libc_cxa_thread_run.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 8,
+    "tdata": 0,
+    "text": 50,
     "unwind": 0
    },
    "__libc_decimal_round.o": {
@@ -7200,7 +7245,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 54,
+    "text": 60,
     "unwind": 0
    },
    "thrd_join.o": {
@@ -7565,12 +7610,12 @@
    }
   },
   "totals": {
-   "bss": 1848,
-   "data": 188,
-   "rodata": 17598,
-   "tbss": 618,
+   "bss": 2888,
+   "data": 204,
+   "rodata": 17606,
+   "tbss": 626,
    "tdata": 8,
-   "text": 100266,
+   "text": 101000,
    "unwind": 0
   }
  },
@@ -8159,6 +8204,10 @@
    "__atomic_xor.o:__atomic_xor_fetch_4": 48,
    "__atomic_xor.o:__atomic_xor_fetch_8": 32,
    "__atomic_xor.o:libc/atomic/__atomic_xor.c:__libc_atomic_cas_small": 80,
+   "__cxa_atexit.o:__cxa_atexit": 64,
+   "__cxa_atexit.o:libc/stdlib/__cxa_atexit.c:__libc_cxa_run": 32,
+   "__cxa_finalize.o:__cxa_finalize": 32,
+   "__cxa_thread_atexit.o:__cxa_thread_atexit": 32,
    "__flt_rounds.o:__flt_rounds": 8,
    "__libc_asctime.o:__libc_asctime": 16,
    "__libc_asctime.o:libc/time/__libc_asctime.c:put": 8,
@@ -8170,10 +8219,11 @@
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:__libc_dd_product": 8,
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:__libc_dd_sum": 8,
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:atan_unit": 8,
-   "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 8,
+   "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 16,
    "__libc_cond_wait.o:__libc_cond_wait": 48,
    "__libc_cos_core.o:__libc_cos_core": 8,
    "__libc_cosh_core.o:__libc_cosh_core": 8,
+   "__libc_cxa_thread_run.o:libc/stdlib/__libc_cxa_thread_run.c:__libc_cxa_thread_run": 16,
    "__libc_decimal_round.o:__libc_decimal_round": 8,
    "__libc_decimal_set.o:__libc_decimal_set": 80,
    "__libc_decimal_shift_left.o:__libc_decimal_shift_left": 32,
@@ -8994,7 +9044,7 @@
    "thrd_current.o:thrd_current": 8,
    "thrd_detach.o:thrd_detach": 16,
    "thrd_equal.o:thrd_equal": 8,
-   "thrd_exit.o:thrd_exit": 32,
+   "thrd_exit.o:thrd_exit": 16,
    "thrd_join.o:thrd_join": 32,
    "thrd_sleep.o:thrd_sleep": 16,
    "thrd_yield.o:thrd_yield": 8,

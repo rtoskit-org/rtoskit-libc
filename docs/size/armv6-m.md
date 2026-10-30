@@ -733,3 +733,7 @@ margin, as armv7-m's since D110. Speed-flavour code bytes:
 | math-mix | 37136 |
 
 The size flavour is unchanged.
+
+## D121 — the C++ ABI hooks (issue #98)
+
+New members: `__cxa_atexit` (code and the first static block of 32 registrations), `__cxa_finalize`, `__cxa_thread_atexit`, `__libc_cxa_thread_run` and `__dso_handle`. `__libc_atexit_run` and `thrd_exit` each gain one weak call (12–16 bytes) that runs the C++ `thread_local` destructors when they are linked. A C program links none of the new members, and every reference image is unchanged.

@@ -1056,6 +1056,33 @@
     "text": 376,
     "unwind": 0
    },
+   "__cxa_atexit.o": {
+    "bss": 520,
+    "data": 4,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 308,
+    "unwind": 0
+   },
+   "__cxa_finalize.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 112,
+    "unwind": 0
+   },
+   "__cxa_thread_atexit.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 4,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 48,
+    "unwind": 0
+   },
    "__divdc3.o": {
     "bss": 0,
     "data": 0,
@@ -1072,6 +1099,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 876,
+    "unwind": 0
+   },
+   "__dso_handle.o": {
+    "bss": 0,
+    "data": 4,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
     "unwind": 0
    },
    "__flt_rounds.o": {
@@ -1134,7 +1170,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 12,
+    "text": 28,
     "unwind": 0
    },
    "__libc_clogf_modulus.o": {
@@ -1180,6 +1216,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 702,
+    "unwind": 0
+   },
+   "__libc_cxa_thread_run.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 4,
+    "tdata": 0,
+    "text": 36,
     "unwind": 0
    },
    "__libc_decimal_round.o": {
@@ -7713,7 +7758,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 48,
+    "text": 60,
     "unwind": 0
    },
    "thrd_join.o": {
@@ -8078,12 +8123,12 @@
    }
   },
   "totals": {
-   "bss": 1184,
-   "data": 108,
-   "rodata": 9982,
-   "tbss": 358,
+   "bss": 1704,
+   "data": 116,
+   "rodata": 9986,
+   "tbss": 362,
    "tdata": 8,
-   "text": 145832,
+   "text": 146364,
    "unwind": 0
   }
  },
@@ -8840,6 +8885,10 @@
    "__atomic_xor.o:__atomic_xor_fetch_4": 24,
    "__atomic_xor.o:__atomic_xor_fetch_8": 32,
    "__atomic_xor.o:libc/atomic/__atomic_xor.c:__libc_atomic_cas_small": 32,
+   "__cxa_atexit.o:__cxa_atexit": 32,
+   "__cxa_atexit.o:libc/stdlib/__cxa_atexit.c:__libc_cxa_run": 24,
+   "__cxa_finalize.o:__cxa_finalize": 32,
+   "__cxa_thread_atexit.o:__cxa_thread_atexit": 16,
    "__divdc3.o:__divdc3": 88,
    "__divdc3.o:libc/math/soft-dp/__divdc3.c:moderate": 8,
    "__divsc3.o:__divsc3": 88,
@@ -8861,7 +8910,7 @@
    "__libc_atan2f_core.o:libc/math/sp-nearest/__libc_atan2f_core.c:__libc_ff_divide": 48,
    "__libc_atan2f_core.o:libc/math/sp-nearest/__libc_atan2f_core.c:__libc_ff_product": 16,
    "__libc_atan2f_core.o:libc/math/sp-nearest/__libc_atan2f_core.c:atan_unit": 88,
-   "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 0,
+   "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 8,
    "__libc_clogf_modulus.o:__libc_clogf_modulus": 56,
    "__libc_cond_wait.o:__libc_cond_wait": 24,
    "__libc_cos_core.o:__libc_cos_core": 128,
@@ -8869,6 +8918,7 @@
    "__libc_csqrtf_core.o:__libc_csqrtf_core": 104,
    "__libc_csqrtf_core.o:libc/complex/sp-nearest/__libc_csqrtf_core.c:__libc_ff_product": 16,
    "__libc_csqrtf_core.o:libc/complex/sp-nearest/__libc_csqrtf_core.c:__libc_ff_sqrt": 48,
+   "__libc_cxa_thread_run.o:libc/stdlib/__libc_cxa_thread_run.c:__libc_cxa_thread_run": 16,
    "__libc_decimal_round.o:__libc_decimal_round": 20,
    "__libc_decimal_set.o:__libc_decimal_set": 48,
    "__libc_decimal_shift_left.o:__libc_decimal_shift_left": 24,
