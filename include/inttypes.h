@@ -14,6 +14,10 @@
 #ifndef _INTTYPES_H
 #define _INTTYPES_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 #include <stdint.h>
 
 /* C23 7.8 */
@@ -31,7 +35,9 @@ typedef struct {
  * (PLAN D15, D33). intptr_t and ptrdiff_t are the same type on every
  * supported target, so the PTR macros use t.
  */
+#ifndef __cplusplus
 static_assert(_Generic((intptr_t)0, typeof((__PTRDIFF_TYPE__)0): 1, default: 0), "PRIdPTR uses the ptrdiff_t length modifier");
+#endif
 
 #define PRId8 "w8d"
 #define PRId16 "w16d"
@@ -246,7 +252,9 @@ static_assert(_Generic((intptr_t)0, typeof((__PTRDIFF_TYPE__)0): 1, default: 0),
 
 intmax_t imaxabs(intmax_t j);
 imaxdiv_t imaxdiv(intmax_t numer, intmax_t denom);
-intmax_t strtoimax(const char *restrict nptr, char **restrict endptr, int base);
-uintmax_t strtoumax(const char *restrict nptr, char **restrict endptr, int base);
+intmax_t strtoimax(const char *__restrict nptr, char **__restrict endptr, int base);
+uintmax_t strtoumax(const char *__restrict nptr, char **__restrict endptr, int base);
+
+__LIBC_END_DECLS
 
 #endif /* _INTTYPES_H */

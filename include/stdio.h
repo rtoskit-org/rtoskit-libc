@@ -14,6 +14,10 @@
 #ifndef _STDIO_H
 #define _STDIO_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.23 */
 #define __STDC_VERSION_STDIO_H__ 202311L
 
@@ -26,7 +30,7 @@ typedef struct {
 	long long __offset;
 } fpos_t;
 
-#define NULL ((void *)0)
+#define NULL __LIBC_NULL
 
 /* setvbuf modes (7.23.5.6) */
 #define _IOFBF 0
@@ -60,39 +64,39 @@ extern FILE __libc_stderr;
 
 /* Operations on files (7.23.4) */
 int remove(const char *filename);
-int rename(const char *old, const char *new);
+int rename(const char *old_name, const char *new_name);
 FILE *tmpfile(void);
 char *tmpnam(char *s);
 
 /* File access functions (7.23.5) */
 int fclose(FILE *stream);
 int fflush(FILE *stream);
-FILE *fopen(const char *restrict filename, const char *restrict mode);
-FILE *freopen(const char *restrict filename, const char *restrict mode, FILE *restrict stream);
-void setbuf(FILE *restrict stream, char *restrict buf);
-int setvbuf(FILE *restrict stream, char *restrict buf, int mode, size_t size);
+FILE *fopen(const char *__restrict filename, const char *__restrict mode);
+FILE *freopen(const char *__restrict filename, const char *__restrict mode, FILE *__restrict stream);
+void setbuf(FILE *__restrict stream, char *__restrict buf);
+int setvbuf(FILE *__restrict stream, char *__restrict buf, int mode, size_t size);
 
 /* Formatted input/output functions (7.23.6) */
-int fprintf(FILE *restrict stream, const char *restrict format, ...);
-int fscanf(FILE *restrict stream, const char *restrict format, ...);
-int printf(const char *restrict format, ...);
-int scanf(const char *restrict format, ...);
-int snprintf(char *restrict s, size_t n, const char *restrict format, ...);
-int sprintf(char *restrict s, const char *restrict format, ...);
-int sscanf(const char *restrict s, const char *restrict format, ...);
-int vfprintf(FILE *restrict stream, const char *restrict format, __builtin_va_list arg);
-int vfscanf(FILE *restrict stream, const char *restrict format, __builtin_va_list arg);
-int vprintf(const char *restrict format, __builtin_va_list arg);
-int vscanf(const char *restrict format, __builtin_va_list arg);
-int vsnprintf(char *restrict s, size_t n, const char *restrict format, __builtin_va_list arg);
-int vsprintf(char *restrict s, const char *restrict format, __builtin_va_list arg);
-int vsscanf(const char *restrict s, const char *restrict format, __builtin_va_list arg);
+int fprintf(FILE *__restrict stream, const char *__restrict format, ...);
+int fscanf(FILE *__restrict stream, const char *__restrict format, ...);
+int printf(const char *__restrict format, ...);
+int scanf(const char *__restrict format, ...);
+int snprintf(char *__restrict s, size_t n, const char *__restrict format, ...);
+int sprintf(char *__restrict s, const char *__restrict format, ...);
+int sscanf(const char *__restrict s, const char *__restrict format, ...);
+int vfprintf(FILE *__restrict stream, const char *__restrict format, __builtin_va_list arg);
+int vfscanf(FILE *__restrict stream, const char *__restrict format, __builtin_va_list arg);
+int vprintf(const char *__restrict format, __builtin_va_list arg);
+int vscanf(const char *__restrict format, __builtin_va_list arg);
+int vsnprintf(char *__restrict s, size_t n, const char *__restrict format, __builtin_va_list arg);
+int vsprintf(char *__restrict s, const char *__restrict format, __builtin_va_list arg);
+int vsscanf(const char *__restrict s, const char *__restrict format, __builtin_va_list arg);
 
 /* Character input/output functions (7.23.7) */
 int fgetc(FILE *stream);
-char *fgets(char *restrict s, int n, FILE *restrict stream);
+char *fgets(char *__restrict s, int n, FILE *__restrict stream);
 int fputc(int c, FILE *stream);
-int fputs(const char *restrict s, FILE *restrict stream);
+int fputs(const char *__restrict s, FILE *__restrict stream);
 int getc(FILE *stream);
 int getchar(void);
 int putc(int c, FILE *stream);
@@ -101,11 +105,11 @@ int puts(const char *s);
 int ungetc(int c, FILE *stream);
 
 /* Direct input/output functions (7.23.8) */
-size_t fread(void *restrict ptr, size_t size, size_t nmemb, FILE *restrict stream);
-size_t fwrite(const void *restrict ptr, size_t size, size_t nmemb, FILE *restrict stream);
+size_t fread(void *__restrict ptr, size_t size, size_t nmemb, FILE *__restrict stream);
+size_t fwrite(const void *__restrict ptr, size_t size, size_t nmemb, FILE *__restrict stream);
 
 /* File positioning functions (7.23.9) */
-int fgetpos(FILE *restrict stream, fpos_t *restrict pos);
+int fgetpos(FILE *__restrict stream, fpos_t *__restrict pos);
 int fseek(FILE *stream, long int offset, int whence);
 int fsetpos(FILE *stream, const fpos_t *pos);
 long int ftell(FILE *stream);
@@ -116,5 +120,7 @@ void clearerr(FILE *stream);
 int feof(FILE *stream);
 int ferror(FILE *stream);
 void perror(const char *s);
+
+__LIBC_END_DECLS
 
 #endif /* _STDIO_H */

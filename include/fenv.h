@@ -14,6 +14,10 @@
 #ifndef _FENV_H
 #define _FENV_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /*
  * C23 7.6 (docs/research/fenv-libm.md, PLAN D44). The values are the same
  * for every target: the exception flags and rounding directions use the Arm
@@ -76,5 +80,7 @@ int fegetenv(fenv_t *envp);
 int feholdexcept(fenv_t *envp);
 int fesetenv(const fenv_t *envp);
 int feupdateenv(const fenv_t *envp);
+
+__LIBC_END_DECLS
 
 #endif /* _FENV_H */

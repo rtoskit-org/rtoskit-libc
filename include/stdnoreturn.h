@@ -14,7 +14,11 @@
 #ifndef _STDNORETURN_H
 #define _STDNORETURN_H
 
+/* C++ has [[noreturn]] and no noreturn macro */
+#ifndef __cplusplus
 /* C23 7.25: obsolescent, prefer the [[noreturn]] attribute */
 #define noreturn _Noreturn
+
+#endif /* __cplusplus */
 
 #endif /* _STDNORETURN_H */

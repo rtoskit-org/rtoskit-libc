@@ -14,6 +14,10 @@
 #ifndef _SETJMP_H
 #define _SETJMP_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.13 */
 #define __STDC_VERSION_SETJMP_H__ 202311L
 
@@ -32,5 +36,7 @@ typedef struct {
 
 /* C23 7.13.1.1p2: setjmp may be a macro */
 #define setjmp setjmp
+
+__LIBC_END_DECLS
 
 #endif /* _SETJMP_H */

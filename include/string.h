@@ -14,32 +14,36 @@
 #ifndef _STRING_H
 #define _STRING_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.26 */
 #define __STDC_VERSION_STRING_H__ 202311L
 
 typedef __SIZE_TYPE__ size_t;
 
-#define NULL ((void *)0)
+#define NULL __LIBC_NULL
 
 /* Copying functions (C23 7.26.2) */
-void *memcpy(void *restrict s1, const void *restrict s2, size_t n);
-void *memccpy(void *restrict s1, const void *restrict s2, int c, size_t n);
+void *memcpy(void *__restrict s1, const void *__restrict s2, size_t n);
+void *memccpy(void *__restrict s1, const void *__restrict s2, int c, size_t n);
 void *memmove(void *s1, const void *s2, size_t n);
-char *strcpy(char *restrict s1, const char *restrict s2);
+char *strcpy(char *__restrict s1, const char *__restrict s2);
 char *strdup(const char *s);
-char *strncpy(char *restrict s1, const char *restrict s2, size_t n);
+char *strncpy(char *__restrict s1, const char *__restrict s2, size_t n);
 char *strndup(const char *s, size_t size);
 
 /* Concatenation functions (C23 7.26.3) */
-char *strcat(char *restrict s1, const char *restrict s2);
-char *strncat(char *restrict s1, const char *restrict s2, size_t n);
+char *strcat(char *__restrict s1, const char *__restrict s2);
+char *strncat(char *__restrict s1, const char *__restrict s2, size_t n);
 
 /* Comparison functions (C23 7.26.4) */
 int memcmp(const void *s1, const void *s2, size_t n);
 int strcmp(const char *s1, const char *s2);
 int strcoll(const char *s1, const char *s2);
 int strncmp(const char *s1, const char *s2, size_t n);
-size_t strxfrm(char *restrict s1, const char *restrict s2, size_t n);
+size_t strxfrm(char *__restrict s1, const char *__restrict s2, size_t n);
 
 /* Search functions (C23 7.26.5) */
 void *memchr(const void *s, int c, size_t n);
@@ -49,7 +53,7 @@ char *strpbrk(const char *s1, const char *s2);
 char *strrchr(const char *s, int c);
 size_t strspn(const char *s1, const char *s2);
 char *strstr(const char *s1, const char *s2);
-char *strtok(char *restrict s1, const char *restrict s2);
+char *strtok(char *__restrict s1, const char *__restrict s2);
 
 /* Miscellaneous functions (C23 7.26.6) */
 void *memset(void *s, int c, size_t n);
@@ -63,6 +67,7 @@ size_t strlen(const char *s);
  * with void * yields void * carrying the pointed-to qualifiers, which
  * _Generic then selects on; the controlling expression is not evaluated.
  */
+#ifndef __cplusplus
 #define __LIBC_CONST_GENERIC(p, type, call) _Generic(0 ? (p) : (void *)1, const void *: (const type *)(call), default: (call))
 
 #define memchr(s, c, n) __LIBC_CONST_GENERIC(s, void, memchr(s, c, n))
@@ -70,5 +75,8 @@ size_t strlen(const char *s);
 #define strpbrk(s1, s2) __LIBC_CONST_GENERIC(s1, char, strpbrk(s1, s2))
 #define strrchr(s, c) __LIBC_CONST_GENERIC(s, char, strrchr(s, c))
 #define strstr(s1, s2) __LIBC_CONST_GENERIC(s1, char, strstr(s1, s2))
+#endif
+
+__LIBC_END_DECLS
 
 #endif /* _STRING_H */

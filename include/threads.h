@@ -14,6 +14,10 @@
 #ifndef _THREADS_H
 #define _THREADS_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 #include <time.h>
 
 /* once_flag, ONCE_FLAG_INIT and call_once */
@@ -68,13 +72,13 @@ int cnd_broadcast(cnd_t *cond);
 void cnd_destroy(cnd_t *cond);
 int cnd_init(cnd_t *cond);
 int cnd_signal(cnd_t *cond);
-int cnd_timedwait(cnd_t *restrict cond, mtx_t *restrict mtx, const struct timespec *restrict ts);
+int cnd_timedwait(cnd_t *__restrict cond, mtx_t *__restrict mtx, const struct timespec *__restrict ts);
 int cnd_wait(cnd_t *cond, mtx_t *mtx);
 
 void mtx_destroy(mtx_t *mtx);
 int mtx_init(mtx_t *mtx, int type);
 int mtx_lock(mtx_t *mtx);
-int mtx_timedlock(mtx_t *restrict mtx, const struct timespec *restrict ts);
+int mtx_timedlock(mtx_t *__restrict mtx, const struct timespec *__restrict ts);
 int mtx_trylock(mtx_t *mtx);
 int mtx_unlock(mtx_t *mtx);
 
@@ -91,5 +95,7 @@ int tss_create(tss_t *key, tss_dtor_t dtor);
 void tss_delete(tss_t key);
 void *tss_get(tss_t key);
 int tss_set(tss_t key, void *val);
+
+__LIBC_END_DECLS
 
 #endif /* _THREADS_H */

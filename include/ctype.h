@@ -14,6 +14,10 @@
 #ifndef _CTYPE_H
 #define _CTYPE_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.4; the "C" locale only until P1.11 */
 int isalnum(int c);
 int isalpha(int c);
@@ -29,5 +33,7 @@ int isupper(int c);
 int isxdigit(int c);
 int tolower(int c);
 int toupper(int c);
+
+__LIBC_END_DECLS
 
 #endif /* _CTYPE_H */

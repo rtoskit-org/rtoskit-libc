@@ -154,7 +154,10 @@ Allowed `#if`/`#ifdef` uses, and nothing else:
 
 1. Include guards.
    (Plus the D19 exception: `CHAR_MIN`/`CHAR_MAX` in `<limits.h>`.)
-2. `__cplusplus` `extern "C"` wrappers in public headers.
+2. C++ in public headers (D120): `__LIBC_BEGIN_DECLS`/`__LIBC_END_DECLS` and `__LIBC_NULL`
+   from `include/__cdefs.h`, and `#ifndef __cplusplus` only for what C++ lacks or the
+   C++ standard leaves out of a header (D120 lists them). Spell `restrict` and `typeof`
+   as `__restrict` and `__typeof__` in public headers.
 3. Macros the standard requires to be conditional (`NDEBUG` in `<assert.h>`,
    `__STDC_WANT_*`, and feature macros the standard says are defined only
    when supported).

@@ -14,6 +14,10 @@
 #ifndef _SIGNAL_H
 #define _SIGNAL_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.14: software signals only (raise), no asynchronous OS signals */
 typedef int sig_atomic_t;
 
@@ -32,5 +36,7 @@ typedef int sig_atomic_t;
 
 void (*signal(int sig, void (*func)(int)))(int);
 int raise(int sig);
+
+__LIBC_END_DECLS
 
 #endif /* _SIGNAL_H */

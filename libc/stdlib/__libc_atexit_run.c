@@ -11,6 +11,7 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include "internal/cxa.h"
 #include "internal/stdlib.h"
 
 /*
@@ -20,7 +21,15 @@
  */
 struct __libc_exit_handlers __libc_atexit_handlers;
 
+/*
+ * The exiting thread's thread_local destructors run first, before any static
+ * destructor or atexit handler (C++ [basic.start.term]p1; linked only with
+ * __cxa_thread_atexit, PLAN D121).
+ */
 void __libc_atexit_run(void)
 {
+	if (__libc_cxa_thread_run != nullptr)
+		__libc_cxa_thread_run();
+
 	__libc_exit_run(&__libc_atexit_handlers);
 }

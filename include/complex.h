@@ -14,6 +14,10 @@
 #ifndef _COMPLEX_H
 #define _COMPLEX_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /*
  * C23 7.3 (docs/research/libm-complex.md). Imaginary types are not
  * supported (no imaginary or _Imaginary_I), and __STDC_IEC_60559_COMPLEX__ is
@@ -22,6 +26,8 @@
 
 #define __STDC_VERSION_COMPLEX_H__ 202311L
 
+/* C only: C++ has <complex> and no I or CMPLX (__builtin_complex is C), so the declarations spell _Complex */
+#ifndef __cplusplus
 #define complex _Complex
 #define _Complex_I (__builtin_complex(0.0f, 1.0f))
 #define I _Complex_I
@@ -30,82 +36,77 @@
 #define CMPLX(x, y) __builtin_complex((double)(x), (double)(y))
 #define CMPLXF(x, y) __builtin_complex((float)(x), (float)(y))
 #define CMPLXL(x, y) __builtin_complex((long double)(x), (long double)(y))
-
-#ifdef __cplusplus
-extern "C" {
 #endif
 
-double complex cacos(double complex z);
-double complex casin(double complex z);
-double complex catan(double complex z);
-double complex ccos(double complex z);
-double complex csin(double complex z);
-double complex ctan(double complex z);
-double complex cacosh(double complex z);
-double complex casinh(double complex z);
-double complex catanh(double complex z);
-double complex ccosh(double complex z);
-double complex csinh(double complex z);
-double complex ctanh(double complex z);
-double complex cexp(double complex z);
-double complex clog(double complex z);
-double cabs(double complex z);
-double complex cpow(double complex z, double complex w);
-double complex csqrt(double complex z);
-double carg(double complex z);
-double cimag(double complex z);
-double complex conj(double complex z);
-double complex cproj(double complex z);
-double creal(double complex z);
+double _Complex cacos(double _Complex z);
+double _Complex casin(double _Complex z);
+double _Complex catan(double _Complex z);
+double _Complex ccos(double _Complex z);
+double _Complex csin(double _Complex z);
+double _Complex ctan(double _Complex z);
+double _Complex cacosh(double _Complex z);
+double _Complex casinh(double _Complex z);
+double _Complex catanh(double _Complex z);
+double _Complex ccosh(double _Complex z);
+double _Complex csinh(double _Complex z);
+double _Complex ctanh(double _Complex z);
+double _Complex cexp(double _Complex z);
+double _Complex clog(double _Complex z);
+double cabs(double _Complex z);
+double _Complex cpow(double _Complex z, double _Complex w);
+double _Complex csqrt(double _Complex z);
+double carg(double _Complex z);
+double cimag(double _Complex z);
+double _Complex conj(double _Complex z);
+double _Complex cproj(double _Complex z);
+double creal(double _Complex z);
 
-float complex cacosf(float complex z);
-float complex casinf(float complex z);
-float complex catanf(float complex z);
-float complex ccosf(float complex z);
-float complex csinf(float complex z);
-float complex ctanf(float complex z);
-float complex cacoshf(float complex z);
-float complex casinhf(float complex z);
-float complex catanhf(float complex z);
-float complex ccoshf(float complex z);
-float complex csinhf(float complex z);
-float complex ctanhf(float complex z);
-float complex cexpf(float complex z);
-float complex clogf(float complex z);
-float cabsf(float complex z);
-float complex cpowf(float complex z, float complex w);
-float complex csqrtf(float complex z);
-float cargf(float complex z);
-float cimagf(float complex z);
-float complex conjf(float complex z);
-float complex cprojf(float complex z);
-float crealf(float complex z);
+float _Complex cacosf(float _Complex z);
+float _Complex casinf(float _Complex z);
+float _Complex catanf(float _Complex z);
+float _Complex ccosf(float _Complex z);
+float _Complex csinf(float _Complex z);
+float _Complex ctanf(float _Complex z);
+float _Complex cacoshf(float _Complex z);
+float _Complex casinhf(float _Complex z);
+float _Complex catanhf(float _Complex z);
+float _Complex ccoshf(float _Complex z);
+float _Complex csinhf(float _Complex z);
+float _Complex ctanhf(float _Complex z);
+float _Complex cexpf(float _Complex z);
+float _Complex clogf(float _Complex z);
+float cabsf(float _Complex z);
+float _Complex cpowf(float _Complex z, float _Complex w);
+float _Complex csqrtf(float _Complex z);
+float cargf(float _Complex z);
+float cimagf(float _Complex z);
+float _Complex conjf(float _Complex z);
+float _Complex cprojf(float _Complex z);
+float crealf(float _Complex z);
 
-long double complex cacosl(long double complex z);
-long double complex casinl(long double complex z);
-long double complex catanl(long double complex z);
-long double complex ccosl(long double complex z);
-long double complex csinl(long double complex z);
-long double complex ctanl(long double complex z);
-long double complex cacoshl(long double complex z);
-long double complex casinhl(long double complex z);
-long double complex catanhl(long double complex z);
-long double complex ccoshl(long double complex z);
-long double complex csinhl(long double complex z);
-long double complex ctanhl(long double complex z);
-long double complex cexpl(long double complex z);
-long double complex clogl(long double complex z);
-long double cabsl(long double complex z);
-long double complex cpowl(long double complex z, long double complex w);
-long double complex csqrtl(long double complex z);
-long double cargl(long double complex z);
-long double cimagl(long double complex z);
-long double complex conjl(long double complex z);
-long double complex cprojl(long double complex z);
-long double creall(long double complex z);
+long double _Complex cacosl(long double _Complex z);
+long double _Complex casinl(long double _Complex z);
+long double _Complex catanl(long double _Complex z);
+long double _Complex ccosl(long double _Complex z);
+long double _Complex csinl(long double _Complex z);
+long double _Complex ctanl(long double _Complex z);
+long double _Complex cacoshl(long double _Complex z);
+long double _Complex casinhl(long double _Complex z);
+long double _Complex catanhl(long double _Complex z);
+long double _Complex ccoshl(long double _Complex z);
+long double _Complex csinhl(long double _Complex z);
+long double _Complex ctanhl(long double _Complex z);
+long double _Complex cexpl(long double _Complex z);
+long double _Complex clogl(long double _Complex z);
+long double cabsl(long double _Complex z);
+long double _Complex cpowl(long double _Complex z, long double _Complex w);
+long double _Complex csqrtl(long double _Complex z);
+long double cargl(long double _Complex z);
+long double cimagl(long double _Complex z);
+long double _Complex conjl(long double _Complex z);
+long double _Complex cprojl(long double _Complex z);
+long double creall(long double _Complex z);
 
-#ifdef __cplusplus
-}
-#endif
+__LIBC_END_DECLS
 
 #endif /* _COMPLEX_H */

@@ -14,6 +14,8 @@
 #ifndef _TGMATH_H
 #define _TGMATH_H
 
+/* C++ takes the type-generic forms from <cmath> and <complex> (libstdc++'s <tgmath.h>) */
+#ifndef __cplusplus
 /*
  * C23 7.27 through _Generic (docs/research/libm-complex.md). An argument's
  * type selects the function: integers count as double (7.27p7), several
@@ -139,5 +141,7 @@
 #define dfma(__x, __y, __z) dfmal(__x, __y, __z)
 #define fsqrt(__x) _Generic(__TG_TYPE(__x), long double: fsqrtl, default: fsqrt)(__x)
 #define dsqrt(__x) dsqrtl(__x)
+
+#endif /* __cplusplus */
 
 #endif /* _TGMATH_H */

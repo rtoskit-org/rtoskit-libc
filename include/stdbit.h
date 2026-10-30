@@ -14,6 +14,10 @@
 #ifndef _STDBIT_H
 #define _STDBIT_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.18 */
 #define __STDC_VERSION_STDBIT_H__ 202311L
 
@@ -142,8 +146,10 @@ unsigned long long int stdc_bit_ceil_ull(unsigned long long int value) [[unseque
 /*
  * The type-generic functions (C23 7.18.1p5 lets them be macros). GCC's
  * __builtin_stdc_* accept every unsigned integer type except bool, including
- * bit-precise ones, and fold to constants for constant arguments.
+ * bit-precise ones, and fold to constants for constant arguments. They exist
+ * in C only: C++ code calls the typed functions above, or C++20 <bit>.
  */
+#ifndef __cplusplus
 #define stdc_leading_zeros(value) __builtin_stdc_leading_zeros(value)
 #define stdc_leading_ones(value) __builtin_stdc_leading_ones(value)
 #define stdc_trailing_zeros(value) __builtin_stdc_trailing_zeros(value)
@@ -158,5 +164,8 @@ unsigned long long int stdc_bit_ceil_ull(unsigned long long int value) [[unseque
 #define stdc_bit_width(value) __builtin_stdc_bit_width(value)
 #define stdc_bit_floor(value) __builtin_stdc_bit_floor(value)
 #define stdc_bit_ceil(value) __builtin_stdc_bit_ceil(value)
+#endif
+
+__LIBC_END_DECLS
 
 #endif /* _STDBIT_H */

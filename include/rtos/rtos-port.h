@@ -14,6 +14,10 @@
 #ifndef _RTOS_RTOS_PORT_H
 #define _RTOS_RTOS_PORT_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /*
  * The RTOS seam (PLAN D4; process and I/O from P1.01, heap and locks from P1.04,
  * environment from P1.05, files and the stream locks from P1.09, clocks from
@@ -243,5 +247,7 @@ void *__libc_tls_init(void *block, const struct __libc_tls_image *image);
 
 extern void (*const __preinit_array_start[])(void);
 extern void (*const __preinit_array_end[])(void);
+
+__LIBC_END_DECLS
 
 #endif /* _RTOS_RTOS_PORT_H */

@@ -14,13 +14,20 @@
 #ifndef _STDLIB_H
 #define _STDLIB_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.24 */
 #define __STDC_VERSION_STDLIB_H__ 202311L
 
 typedef __SIZE_TYPE__ size_t;
+/* wchar_t is a keyword in C++ */
+#ifndef __cplusplus
 typedef __WCHAR_TYPE__ wchar_t;
+#endif
 
-#define NULL ((void *)0)
+#define NULL __LIBC_NULL
 
 #define EXIT_FAILURE 1
 #define EXIT_SUCCESS 0
@@ -54,16 +61,16 @@ double atof(const char *nptr);
 int atoi(const char *nptr);
 long int atol(const char *nptr);
 long long int atoll(const char *nptr);
-double strtod(const char *restrict nptr, char **restrict endptr);
-float strtof(const char *restrict nptr, char **restrict endptr);
-long double strtold(const char *restrict nptr, char **restrict endptr);
-int strfromd(char *restrict s, size_t n, const char *restrict format, double fp);
-int strfromf(char *restrict s, size_t n, const char *restrict format, float fp);
-int strfroml(char *restrict s, size_t n, const char *restrict format, long double fp);
-long int strtol(const char *restrict nptr, char **restrict endptr, int base);
-long long int strtoll(const char *restrict nptr, char **restrict endptr, int base);
-unsigned long int strtoul(const char *restrict nptr, char **restrict endptr, int base);
-unsigned long long int strtoull(const char *restrict nptr, char **restrict endptr, int base);
+double strtod(const char *__restrict nptr, char **__restrict endptr);
+float strtof(const char *__restrict nptr, char **__restrict endptr);
+long double strtold(const char *__restrict nptr, char **__restrict endptr);
+int strfromd(char *__restrict s, size_t n, const char *__restrict format, double fp);
+int strfromf(char *__restrict s, size_t n, const char *__restrict format, float fp);
+int strfroml(char *__restrict s, size_t n, const char *__restrict format, long double fp);
+long int strtol(const char *__restrict nptr, char **__restrict endptr, int base);
+long long int strtoll(const char *__restrict nptr, char **__restrict endptr, int base);
+unsigned long int strtoul(const char *__restrict nptr, char **__restrict endptr, int base);
+unsigned long long int strtoull(const char *__restrict nptr, char **__restrict endptr, int base);
 
 /* Pseudo-random sequence generation functions (C23 7.24.2) */
 int rand(void);
@@ -93,10 +100,10 @@ lldiv_t lldiv(long long int numer, long long int denom);
 
 /* Multibyte/wide character conversion functions (C23 7.24.7, 7.24.8), "C" locale */
 int mblen(const char *s, size_t n);
-int mbtowc(wchar_t *restrict pwc, const char *restrict s, size_t n);
+int mbtowc(wchar_t *__restrict pwc, const char *__restrict s, size_t n);
 int wctomb(char *s, wchar_t wc);
-size_t mbstowcs(wchar_t *restrict pwcs, const char *restrict s, size_t n);
-size_t wcstombs(char *restrict s, const wchar_t *restrict pwcs, size_t n);
+size_t mbstowcs(wchar_t *__restrict pwcs, const char *__restrict s, size_t n);
+size_t wcstombs(char *__restrict s, const wchar_t *__restrict pwcs, size_t n);
 
 /* Memory management functions (C23 7.24.3) */
 void *aligned_alloc(size_t alignment, size_t size);
@@ -111,7 +118,11 @@ void *realloc(void *ptr, size_t size);
 size_t memalignment(const void *p);
 
 /* C23 7.24.5.1p4: bsearch returns a pointer to const when base points to const (as in <string.h>) */
+#ifndef __cplusplus
 #define __LIBC_CONST_GENERIC(p, type, call) _Generic(0 ? (p) : (void *)1, const void *: (const type *)(call), default: (call))
 #define bsearch(key, base, nmemb, size, compar) __LIBC_CONST_GENERIC(base, void, bsearch(key, base, nmemb, size, compar))
+#endif
+
+__LIBC_END_DECLS
 
 #endif /* _STDLIB_H */

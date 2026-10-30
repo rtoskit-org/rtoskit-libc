@@ -14,9 +14,13 @@
 #ifndef _LOCALE_H
 #define _LOCALE_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.11: only the "C" locale (PLAN §1) */
 
-#define NULL ((void *)0)
+#define NULL __LIBC_NULL
 
 #define LC_ALL 0
 #define LC_COLLATE 1
@@ -54,5 +58,7 @@ struct lconv {
 
 char *setlocale(int category, const char *locale);
 struct lconv *localeconv(void);
+
+__LIBC_END_DECLS
 
 #endif /* _LOCALE_H */

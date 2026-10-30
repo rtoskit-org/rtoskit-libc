@@ -14,6 +14,10 @@
 #ifndef _ASSERT_H
 #define _ASSERT_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.2 */
 #define __STDC_VERSION_ASSERT_H__ 202311L
 
@@ -24,6 +28,8 @@ static inline bool __libc_assert_scalar(bool value)
 {
 	return value;
 }
+
+__LIBC_END_DECLS
 
 #endif /* _ASSERT_H */
 

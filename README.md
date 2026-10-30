@@ -416,6 +416,26 @@ port (`--port=linux` plus that port's `headers.ld`): a threaded `printf` and
 `sinf` program ran under `qemu-arm`, with `libc.a` and with
 `--libc=minimal-printf`.
 
+### Using it from C++
+
+The headers compile as C++ (C++17 and later), with C linkage, and `libc.a`
+provides the C++ ABI hooks that static and `thread_local` destructors need:
+`__cxa_atexit`, `__cxa_finalize`, `__dso_handle` and `__cxa_thread_atexit`.
+Static destructors and `atexit` handlers run in one reverse order, as C++
+requires, and there is no limit on how many a program registers. The C++
+runtime itself (libsupc++, libstdc++ and the unwinder) comes from your
+toolchain; link `libc.a` before it, inside the same group:
+
+```sh
+arm-none-eabi-g++ ... -nostdlib main.o -Wl,--start-group libc.a libsupc++.a libstdc++.a libgcc.a -Wl,--end-group
+```
+
+Wide characters are out of scope, so libstdc++ has to be configured with
+`--disable-wchar_t`. Building `g++` and a hosted libstdc++ against
+rtoskit-libc is the toolchain's job (issue #98, PLAN Q8). See
+[`docs/research/cxx-runtime.md`](docs/research/cxx-runtime.md) for the
+details, and `test/unit/cxx` for what is tested.
+
 ### Porting to your RTOS
 
 To run on your RTOS, copy `port/none`, implement the `__rtos_*` functions

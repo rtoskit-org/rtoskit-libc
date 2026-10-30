@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <threads.h>
 
+#include "internal/cxa.h"
 #include "internal/threads.h"
 
 /* The initial thread is live from the start */
@@ -22,10 +23,14 @@ unsigned int __libc_thread_count = 1;
 
 /*
  * C23 7.28.5.5: the tss destructors, then the end of the thread; the last
- * thread to end ends the program as exit(EXIT_SUCCESS) would.
+ * thread to end ends the program as exit(EXIT_SUCCESS) would. The C++
+ * thread_local destructors run before the tss ones, when linked (PLAN D121).
  */
 [[noreturn]] void thrd_exit(int res)
 {
+	if (__libc_cxa_thread_run != nullptr)
+		__libc_cxa_thread_run();
+
 	if (__libc_tss_run_destructors != nullptr)
 		__libc_tss_run_destructors();
 

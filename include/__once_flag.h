@@ -14,6 +14,10 @@
 #ifndef ___ONCE_FLAG_H
 #define ___ONCE_FLAG_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /*
  * once_flag and call_once, declared by both <threads.h> (C23 7.28.1) and
  * <stdlib.h> (7.24); this piece keeps the type defined once. The state is
@@ -30,5 +34,7 @@ typedef struct {
 	}
 
 void call_once(once_flag *flag, void (*func)(void));
+
+__LIBC_END_DECLS
 
 #endif /* ___ONCE_FLAG_H */

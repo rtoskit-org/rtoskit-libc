@@ -14,13 +14,18 @@
 #ifndef _STDDEF_H
 #define _STDDEF_H
 
+#include <__cdefs.h>
+
 /* C23 7.21 */
 #define __STDC_VERSION_STDDEF_H__ 202311L
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 typedef __SIZE_TYPE__ size_t;
+/* wchar_t is a keyword in C++ */
+#ifndef __cplusplus
 typedef __WCHAR_TYPE__ wchar_t;
-typedef typeof_unqual(nullptr) nullptr_t;
+#endif
+typedef __typeof__(nullptr) nullptr_t;
 
 /* The greatest fundamental alignment is that of the widest scalar types */
 typedef struct {
@@ -28,7 +33,7 @@ typedef struct {
 	alignas(long double) long double __ld;
 } max_align_t;
 
-#define NULL ((void *)0)
+#define NULL __LIBC_NULL
 
 #define unreachable() __builtin_unreachable()
 

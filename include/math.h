@@ -14,6 +14,10 @@
 #ifndef _MATH_H
 #define _MATH_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /*
  * C23 7.12 (docs/research/fenv-libm.md, PLAN D44, D45). long double has the
  * format of double on every target (D7). FLT_EVAL_METHOD is 0, so float_t
@@ -91,7 +95,10 @@ int __libc_iseqsigf(float x, float y);
 int __libc_iseqsig(double x, double y);
 int __libc_iseqsigl(long double x, long double y);
 
+/* C only: C++ has no iseqsig */
+#ifndef __cplusplus
 #define iseqsig(x, y) _Generic((x) + (y), float: __libc_iseqsigf, double: __libc_iseqsig, long double: __libc_iseqsigl)((x), (y))
+#endif
 
 double acos(double x);
 float acosf(float x);
@@ -406,5 +413,7 @@ int setpayloadsig(double *res, double pl);
 int setpayloadsigf(float *res, float pl);
 int setpayloadsigl(long double *res, long double pl);
 #endif
+
+__LIBC_END_DECLS
 
 #endif /* _MATH_H */

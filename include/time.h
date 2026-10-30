@@ -14,12 +14,16 @@
 #ifndef _TIME_H
 #define _TIME_H
 
+#include <__cdefs.h>
+
+__LIBC_BEGIN_DECLS
+
 /* C23 7.29 */
 #define __STDC_VERSION_TIME_H__ 202311L
 
 typedef __SIZE_TYPE__ size_t;
 
-#define NULL ((void *)0)
+#define NULL __LIBC_NULL
 
 /* Processor time in microseconds (docs/research/time-locale.md) */
 #define CLOCKS_PER_SEC ((clock_t)1000000)
@@ -68,6 +72,8 @@ struct tm *gmtime(const time_t *timer);
 struct tm *gmtime_r(const time_t *timer, struct tm *buf);
 struct tm *localtime(const time_t *timer);
 struct tm *localtime_r(const time_t *timer, struct tm *buf);
-size_t strftime(char *restrict s, size_t maxsize, const char *restrict format, const struct tm *restrict timeptr);
+size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict format, const struct tm *__restrict timeptr);
+
+__LIBC_END_DECLS
 
 #endif /* _TIME_H */

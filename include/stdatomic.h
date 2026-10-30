@@ -14,6 +14,8 @@
 #ifndef _STDATOMIC_H
 #define _STDATOMIC_H
 
+/* C++ has <atomic>; libstdc++'s C++23 <stdatomic.h> precedes this one on a C++ include path */
+#ifndef __cplusplus
 /*
  * C23 7.17, built on the compiler's __atomic builtins (PLAN D8). Operations
  * the compiler cannot inline (every read-modify-write on armv6-m, 8-byte
@@ -154,5 +156,7 @@ void atomic_flag_clear_explicit(volatile atomic_flag *object, memory_order order
 #define atomic_flag_test_and_set(object) atomic_flag_test_and_set_explicit(object, memory_order_seq_cst)
 #define atomic_flag_clear_explicit(object, order) __atomic_clear(&(object)->__value, (order))
 #define atomic_flag_clear(object) atomic_flag_clear_explicit(object, memory_order_seq_cst)
+
+#endif /* __cplusplus */
 
 #endif /* _STDATOMIC_H */
