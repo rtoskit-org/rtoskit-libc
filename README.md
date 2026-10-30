@@ -432,7 +432,9 @@ arm-none-eabi-g++ ... -nostdlib main.o -Wl,--start-group libc.a libsupc++.a libs
 
 Wide characters are out of scope, so libstdc++ has to be configured with
 `--disable-wchar_t`. Building `g++` and a hosted libstdc++ against
-rtoskit-libc is the toolchain's job (issue #98, PLAN Q8). See
+rtoskit-libc is the toolchain's job
+([rtoskit-gcc#7](https://github.com/sgstreet/rtoskit-gcc/issues/7); the thread
+model is [rtoskit-gcc#2](https://github.com/sgstreet/rtoskit-gcc/issues/2)). See
 [`docs/research/cxx-runtime.md`](docs/research/cxx-runtime.md) for the
 details, and `test/unit/cxx` for what is tested.
 

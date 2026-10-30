@@ -145,8 +145,23 @@ ways:
 
 The test toolchain uses `--enable-threads=no` (the single gthreads model).
 Static local initialisation guards and `std::mutex` do no locking. A
-`gthr-rtoskit.h` over `<threads.h>` belongs to the rtoskit-gcc toolchain (Q8
-part 2), not to this library.
+`gthr-rtoskit.h` over `<threads.h>` belongs to the toolchain
+([sgstreet/rtoskit-gcc#2](https://github.com/sgstreet/rtoskit-gcc/issues/2)),
+not to this library.
+
+## What the toolchain still has to do
+
+Building `g++` and libstdc++ against rtoskit-libc is
+[sgstreet/rtoskit-gcc#7](https://github.com/sgstreet/rtoskit-gcc/issues/7):
+
+- drop `--disable-__cxa_atexit`;
+- build libstdc++ narrow (`--disable-wchar_t`) for every multilib;
+- teach the spec files C++;
+- run libstdc++'s `configure` against these headers. A function it finds
+  missing comes back to this library as a decision.
+
+The unwinder's `__exidx_start`/`__exidx_end` come from the default linker
+script today; a `port/none` linker script must provide them too.
 
 ## Edge cases
 
