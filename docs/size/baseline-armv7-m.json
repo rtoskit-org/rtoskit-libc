@@ -2303,7 +2303,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 256,
+    "text": 260,
     "unwind": 0
    },
    "__libc_softdouble_from_u64.o": {
@@ -8352,7 +8352,7 @@
    "rodata": 9938,
    "tbss": 362,
    "tdata": 8,
-   "text": 165186,
+   "text": 165190,
    "unwind": 0
   }
  },

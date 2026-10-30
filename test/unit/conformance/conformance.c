@@ -207,6 +207,21 @@ static void regression_long_double_classes(void)
 	CHECK_FORMAT("-inf", "%La", -(long double)INFINITY);
 }
 
+/* Soft-double cores: (float) of a NaN set the sign from the double's exponent bits (issue #95's vectors found it) */
+static void regression_nan_conversion_sign(void)
+{
+	volatile double positive = NAN;
+	volatile double negative = -(double)NAN;
+	float narrowed;
+
+	narrowed = (float)positive;
+	CHECK(isnan(narrowed) && !signbit(narrowed));
+	CHECK(copysignf(1.0f, narrowed) == 1.0f);
+	narrowed = (float)negative;
+	CHECK(isnan(narrowed) && signbit(narrowed));
+	CHECK(!signbit((float)(volatile double){ __builtin_nan("0x123456789") }));
+}
+
 /* functional/strtod, strtod_long, strtod_simple, strtold: exact rounding at the boundaries, very long input, round trips */
 static void functional_strtod(void)
 {
@@ -528,6 +543,7 @@ int main(void)
 	regression_setvbuf_ungetc();
 	regression_sscanf_float_at_end();
 	regression_long_double_classes();
+	regression_nan_conversion_sign();
 
 	functional_strtod();
 	functional_strtol();

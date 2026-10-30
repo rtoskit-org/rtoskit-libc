@@ -120,6 +120,12 @@ Measured on x86_64 (all four directions):
   tiny-argument shortcut returns x unchanged, and the conversion to float then
   rounds that exact value. The README's "float, directed rounding: correctly
   rounded" does not hold there.
+- **A bug, fixed:** on the soft-double cores (armv7-m, armv7e-m,
+  armv8-m.main), `(float)` of a NaN came out negative whatever the double's
+  sign. `__libc_softdouble_d2f` put the double's bits from 29 upwards into
+  the payload unmasked, so an exponent bit landed on the sign. The
+  `copysignf(x, NaN)` vectors caught it, and
+  `test/unit/conformance` now has `regression_nan_conversion_sign`.
 - **Undeserved underflow:** `pow(2, tiny)` and `log1p(DBL_MAX)` raise one,
   which F.10 allows.
 

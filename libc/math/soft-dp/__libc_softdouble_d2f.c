@@ -52,7 +52,8 @@ __LIBC_AEABI float __libc_softdouble_d2f(double a)
 	if (field == 0x7ff) {
 		if (((high & 0x000fffffu) | low) == 0)
 			return __libc_softdouble_float_from(sign | 0x7f800000u);
-		return __libc_softdouble_float_from(sign | 0x7fc00000u | (uint32_t)(bits >> 29));
+		/* The top 23 bits of the fraction only: above them lie the exponent's ones, which would set the sign */
+		return __libc_softdouble_float_from(sign | 0x7fc00000u | ((uint32_t)(bits >> 29) & 0x007fffffu));
 	}
 	if (field > 1023)
 		return __libc_softdouble_float_from(sign | 0x7f800000u);
