@@ -2575,7 +2575,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 416,
+    "text": 296,
     "unwind": 0
    },
    "cbrtf.o": {
@@ -7670,7 +7670,7 @@
    "rodata": 8802,
    "tbss": 362,
    "tdata": 8,
-   "text": 77030,
+   "text": 76910,
    "unwind": 0
   }
  },
@@ -8547,7 +8547,7 @@
    "catanhf.o:catanhf": 8,
    "catanhl.o:catanhl": 0,
    "catanl.o:catanl": 0,
-   "cbrt.o:cbrt": 48,
+   "cbrt.o:cbrt": 24,
    "cbrtf.o:cbrtf": 8,
    "cbrtl.o:cbrtl": 0,
    "ccos.o:ccos": 0,

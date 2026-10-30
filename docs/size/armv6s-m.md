@@ -740,4 +740,4 @@ New members: `__cxa_atexit` (code and the first static block of 32 registrations
 
 ## D125 — the libm vectors' accuracy fixes (Q36)
 
-Correctness fixes, so the growth is accepted: `cbrt.o` +584, `tgamma.o` +500 and `pow.o` +84 bytes. `cbrt` gains a double-double residual correction (on cores without fma, Dekker's split products are most of it), `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` grows by 84 bytes from `pow`. The size budget holds; the speed flavour's `math-mix` figure is re-locked at 37220 bytes (from 37136).
+Correctness fixes, so the growth is accepted: `cbrt.o` +88, `tgamma.o` +500 and `pow.o` +84 bytes. `cbrt` gains an exact-residual Halley step, `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` grows by 84 bytes from `pow`. The size budget holds; the speed flavour's `math-mix` figure is re-locked at 37220 bytes (from 37136).

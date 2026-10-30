@@ -708,4 +708,4 @@ The libm vectors found that `__libc_softdouble_d2f` set a NaN's sign from the do
 
 ## D125 — the libm vectors' accuracy fixes (Q36)
 
-Correctness fixes, so the growth is accepted: `cbrt.o` +572, `tgamma.o` +520 and `pow.o` +168 bytes. `cbrt` gains a double-double residual correction (on cores without fma, Dekker's split products are most of it), `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` grows by 168 bytes from `pow`; the size budget holds.
+Correctness fixes, so the growth is accepted: `cbrt.o` +84, `tgamma.o` +520 and `pow.o` +168 bytes. `cbrt` gains an exact-residual Halley step, `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` grows by 168 bytes from `pow`; the size budget holds.

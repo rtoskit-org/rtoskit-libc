@@ -3033,7 +3033,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 976,
+    "text": 488,
     "unwind": 0
    },
    "cbrtf.o": {
@@ -8128,7 +8128,7 @@
    "rodata": 9986,
    "tbss": 362,
    "tdata": 8,
-   "text": 147628,
+   "text": 147140,
    "unwind": 0
   }
  },
@@ -9189,8 +9189,7 @@
    "catanhf.o:libc/complex/sp-nearest/catanhf.c:__libc_ff_product": 16,
    "catanhl.o:catanhl": 0,
    "catanl.o:catanl": 0,
-   "cbrt.o:cbrt": 120,
-   "cbrt.o:libc/math/cbrt.c:__libc_dd_product": 88,
+   "cbrt.o:cbrt": 72,
    "cbrtf.o:cbrtf": 24,
    "cbrtl.o:cbrtl": 0,
    "ccos.o:ccos": 0,
