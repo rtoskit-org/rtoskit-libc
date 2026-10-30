@@ -25,6 +25,11 @@ include ${PROJECT_ROOT}/tools/makefiles/project.mk
 # Exercise the library, not the compiler's built-in versions of the functions
 CFLAGS += -fno-builtin
 
-all: ${CURDIR}/bitint.elf
+all: $(if ${SRC},${CURDIR}/bitint.elf,${CURDIR}/bitint.skip)
+
+# Read by test/unit/run-unit, which reports the test as skipped (PLAN D127)
+${CURDIR}/bitint.skip: ${SOURCE_DIR}/subdir.mk
+	@rm -f $(@:.skip=.elf)
+	@echo "${CC} has no _BitInt for ${ARCH_CROSS}" > $@
 
 endif

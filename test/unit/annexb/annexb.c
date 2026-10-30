@@ -894,7 +894,7 @@ static_assert(sizeof(ULONG_WIDTH) > 0, "<limits.h> ULONG_WIDTH");
 #ifndef USHRT_MAX
 static_assert(sizeof(USHRT_MAX) > 0, "<limits.h> USHRT_MAX");
 #endif
-#ifndef BITINT_MAXWIDTH
+#if !defined(BITINT_MAXWIDTH) && defined(__BITINT_MAXWIDTH__)
 static_assert(sizeof(BITINT_MAXWIDTH) > 0, "<limits.h> BITINT_MAXWIDTH");
 #endif
 #ifndef LLONG_WIDTH
