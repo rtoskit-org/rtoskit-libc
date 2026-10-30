@@ -10,6 +10,6 @@ LDFLAGS += -Os -g3
 export LIBC_FLAVOUR := speed
 LIBC_SPEED_CFLAGS := -O2
 
-ifeq (${ARCH_CROSS},host)
+# Optimised code: gas cannot interleave source (-h) once the compiler reorders lines
+# ("unable to rebuffer file", issue #97), so every architecture lists without it; debug keeps -adhlns
 LISTING_STYLE := -adlns
-endif

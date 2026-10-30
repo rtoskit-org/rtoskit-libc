@@ -77,6 +77,3 @@ LDSCRIPTS :=
 LDFLAGS := ${CROSS_FLAGS} -static -no-pie -nostdlib -Wl,--gc-sections
 LOADLIBES :=
 LDLIBS := -Wl,--start-group ${BUILD_ROOT}/libc/libc.a $(shell ${CC} ${CROSS_FLAGS} -print-libgcc-file-name) -Wl,--end-group
-
-# As for host builds in release.mk: the native assembler cannot interleave source (-h) in listings of optimised code
-LISTING_STYLE := -adlns
