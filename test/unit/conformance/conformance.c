@@ -23,6 +23,7 @@
 
 #include <complex.h>
 #include <errno.h>
+#include <fenv.h>
 #include <float.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -220,6 +221,31 @@ static void regression_nan_conversion_sign(void)
 	narrowed = (float)negative;
 	CHECK(isnan(narrowed) && signbit(narrowed));
 	CHECK(!signbit((float)(volatile double){ __builtin_nan("0x123456789") }));
+}
+
+/*
+ * The libm vectors' directed-rounding findings (Q36): cbrt put the sign on
+ * after rounding, so upward and downward swapped for a negative x, and its
+ * 0.6 ulp to nearest; the float helper for tiny arguments compared signbit of
+ * a float with signbit of a double; tgamma dropped -gamma beside 1/x; pow
+ * formed y log|x| in the caller's direction
+ */
+static void regression_directed_rounding(void)
+{
+	CHECK(cbrt(0x1.666336999764ep+6) == 0x1.1e618cb93c594p+2);
+#ifdef FE_DOWNWARD
+	CHECK(fesetround(FE_UPWARD) == 0);
+	CHECK(cbrt(-0x1.1b84085b38e0dp+6) == -0x1.08dc938bd55e2p+2);
+	CHECK(pow(2.0, 0x1p-1074) == 0x1.0000000000001p+0);
+	CHECK(fesetround(FE_DOWNWARD) == 0);
+	CHECK(cbrt(-0x1.1b84085b38e0dp+6) == -0x1.08dc938bd55e3p+2);
+	CHECK(asinf(-0x1p-126f) == -0x1.000002p-126f);
+	CHECK(log1pf(-0x1p-126f) == -0x1.000002p-126f);
+	CHECK(tgammaf(0x1p-126f) == 0x1.fffffep+125f);
+	CHECK(tgamma(0x1p-126) == 0x1.fffffffffffffp+125);
+	CHECK(pow(2.0, 0x1p-1074) == 1.0);
+	CHECK(fesetround(FE_TONEAREST) == 0);
+#endif
 }
 
 /* functional/strtod, strtod_long, strtod_simple, strtold: exact rounding at the boundaries, very long input, round trips */
@@ -544,6 +570,7 @@ int main(void)
 	regression_sscanf_float_at_end();
 	regression_long_double_classes();
 	regression_nan_conversion_sign();
+	regression_directed_rounding();
 
 	functional_strtod();
 	functional_strtol();

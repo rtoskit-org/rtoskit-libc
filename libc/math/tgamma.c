@@ -46,8 +46,26 @@ double tgamma(double x)
 			product *= k;
 		return product;
 	}
-	if (fabs(x) < 0x1p-54)
-		return 1.0 / x;
+	if (fabs(x) < 0x1p-54) {
+		/*
+		 * 1/x - gamma (Euler's constant): gamma is below half an ulp of 1/x,
+		 * so it decides only the directed roundings, and it is lost if 1/x is
+		 * rounded first. So 1/x is taken as a double-double, in round to
+		 * nearest, on x scaled by 2^64 (normal, and Dekker's split of the
+		 * quotient stays finite), and the whole is rounded once in the
+		 * caller's direction. At or below 2^-1024 the result overflows,
+		 * which 1/x does in the same way.
+		 */
+		struct __libc_dd reciprocal;
+
+		if (fabs(x) <= 0x1p-1024)
+			return 1.0 / x;
+		mode = __libc_math_nearest();
+		reciprocal = __libc_dd_divide((struct __libc_dd){ .hi = 1.0, .lo = 0.0 }, (struct __libc_dd){ .hi = x * 0x1p64, .lo = 0.0 });
+		reciprocal.lo -= 0x1.2788cfc6fb619p-1 * 0x1p-64;
+		__libc_math_restore(mode);
+		return reciprocal.hi * 0x1p64 + reciprocal.lo * 0x1p64;
+	}
 
 	mode = __libc_math_nearest();
 	value = __libc_lgamma_core(x, &sign);

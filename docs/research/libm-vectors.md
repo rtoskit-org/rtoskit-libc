@@ -91,13 +91,13 @@ the following.
 
 | What | Bound |
 |---|---|
-| Double and long double, to nearest | below 1 ulp of the exact value (D47, D48) |
+| Double and long double, to nearest | below 0.53 ulp of the exact value (the README's claim; D47 and D48 promise 1 ulp, D125) |
 | Float, to nearest, on cores where `<fenv.h>` is complete | correctly rounded (D98) |
 | Float, to nearest, on the other cores | below 1 ulp (D57) |
 | Exact or IEEE-correctly-rounded functions (`ceil` … `trunc`, `rint`, `nearbyint`, `fabs`, `fmod`, `remainder`, `remquo`, `copysign`, `fmax`, `fmin`, `fdim`, `sqrt`, `fma`, `logb`, the scaling functions, `nextafter`, `nexttoward`, `frexp`, `modf`) | exact, in every direction |
 | `lrint`, `llrint`, `lround`, `llround` | exact in range; out of range (with the core's own `long`), invalid |
 | `ilogb` | exact; `FP_ILOGB0`, `FP_ILOGBNAN`, `INT_MAX` |
-| Float, directed | within 1 ulp of the correctly rounded result |
+| Float, directed | correctly rounded (D125; the cores with directed modes are those whose float functions are correctly rounded) |
 | Double, directed | within 3 ulp (libc-test's bound) |
 | Exceptions (cores with `<fenv.h>` exceptions) | invalid, divide-by-zero and overflow exactly; a deserved underflow raised to nearest |
 
@@ -109,28 +109,62 @@ in a directed mode. The measured accuracy therefore stays visible in the
 
 ## What the vectors found
 
-Measured on x86_64 (all four directions):
+Measured on x86_64 (all four directions) and the Arm cores. Each finding is
+fixed (D125, resolving Q36), and `test/unit/conformance` keeps a regression
+case for it.
 
-- **`cbrt`:** 0.602 ulp to nearest, which is D47's "0.61 seen", and 2 ulp in
-  the directed modes. The README's "below 0.53 ulp" for the double functions
-  does not hold for `cbrt`.
-- **Float functions in the directed modes:** `asinf`, `tanf`, `atanhf`,
-  `sinhf` and `log1pf` at −FLT_MIN, and `tgammaf` at ±FLT_MIN, are 1 ulp from
-  the correctly rounded result. On the double path, the double function's
-  tiny-argument shortcut returns x unchanged, and the conversion to float then
-  rounds that exact value. The README's "float, directed rounding: correctly
-  rounded" does not hold there.
-- **A bug, fixed:** on the soft-double cores (armv7-m, armv7e-m,
-  armv8-m.main), `(float)` of a NaN came out negative whatever the double's
-  sign. `__libc_softdouble_d2f` put the double's bits from 29 upwards into
-  the payload unmasked, so an exponent bit landed on the sign. The
-  `copysignf(x, NaN)` vectors caught it, and
-  `test/unit/conformance` now has `regression_nan_conversion_sign`.
-- **Undeserved underflow:** `pow(2, tiny)` and `log1p(DBL_MAX)` raise one,
-  which F.10 allows.
+- **`cbrt`:** 0.602 ulp to nearest (D47's "0.61 seen"), against the README's
+  "below 0.53 ulp", and 2 ulp in the directed modes. The directed error had
+  its own cause: `cbrt` computed |cbrt(x)| in the caller's direction and
+  then applied the sign, so upward and downward were swapped for a negative
+  x.
+- **Float functions at −FLT_MIN, rounding downward:** `asinf`, `tanf`,
+  `atanhf`, `sinhf` and `log1pf` returned −FLT_MIN instead of its neighbour
+  away from zero. Their tiny-argument helper, `__libc_math_tinyf`, asked
+  whether the nudge pointed toward zero with
+  `signbit(x) != signbit(direction)`. `signbit` is only zero or nonzero
+  (C23 7.12.3.6), and ours gives 0x80000000 for a float and 1 for a double,
+  so every negative x looked nudged toward zero.
+- **`tgamma` of a tiny argument:** for |x| < 2^-54 it returned 1/x. That
+  drops −γ (Euler's constant), which is below half an ulp of 1/x and so
+  matters only in the directed modes. It was 1 ulp off there, and
+  `tgammaf(±FLT_MIN)` inherited the error.
+- **`pow(2, 2^-1074)`, rounding downward:** gave 1 − 2^-53. `pow` formed
+  y·log|x| in the caller's direction, and the product of two subnormal-scale
+  values rounded away from its sign.
+- **`(float)` of a NaN** on the soft-double cores (armv7-m, armv7e-m,
+  armv8-m.main) came out negative whatever the double's sign:
+  `__libc_softdouble_d2f` put the double's bits from 29 upwards into the
+  payload unmasked, so an exponent bit landed on the sign. The
+  `copysignf(x, NaN)` vectors caught it.
+- **Undeserved underflow:** `log1p(DBL_MAX)` raises one, which F.10 allows.
 
-Q36 records the two accuracy findings. The harness bounds are the documented
-contracts, so it passes; the notes keep the numbers in view.
+### The fixes
+
+- **`cbrt`** keeps its 0.6-ulp estimate t, computed in round to nearest,
+  and then corrects it by the residual: (y − t³)/(3t²), with t³ as a
+  double-double. This is one Newton step on an exactly computed residual,
+  the usual last correction of an iterative root (Brent and Zimmermann,
+  *Modern Computer Arithmetic*, chapter 4,
+  <https://members.loria.fr/PZimmermann/mca/mca-cup-0.5.9.pdf>). It leaves
+  about 2^-100 relative error as hi + lo. The sign goes on before
+  the one rounding of hi + lo in the caller's direction. A cube root of a
+  double is never a halfway point, so that rounding is correct except within
+  2^-100 of one.
+- **`__libc_math_tinyf`** compares `!signbit(x) != !signbit(direction)`.
+- **`tgamma`**, for 2^-1024 < |x| < 2^-54, takes 1/x as a double-double in
+  round to nearest. It divides by x · 2^64, so the divisor is normal and
+  Dekker's split of the quotient stays finite. It then adds −γ to the low
+  part and rounds once in the caller's direction. At or below 2^-1024 the
+  result overflows, and 1/x already does that correctly.
+- **`pow`** forms y·log|x| in round to nearest, as its cores do. When
+  |y·log|x|| < 2^-60 (the product may even have underflowed to zero), the
+  result is 1 ± 2^-60, with the sign taken from y and log|x|, rounded in the
+  caller's direction.
+
+With these, the harness's bounds rise to the README's claims: double below
+0.53 ulp to nearest, and float correctly rounded in every direction where
+the core has directed modes.
 
 ## Edge cases
 

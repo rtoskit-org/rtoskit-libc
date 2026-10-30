@@ -426,9 +426,10 @@ static inline float __libc_math_tinyf(float x, double direction)
 	 * At +-FLT_MIN a nudge toward zero is tiny before rounding (Arm's rule)
 	 * even when it rounds back to FLT_MIN: return x with inexact only, unless
 	 * the direction (FLT_ROUNDS: 0 toward zero, 1 nearest, 2 up, 3 down)
-	 * takes the result below FLT_MIN.
+	 * takes the result below FLT_MIN. signbit is only zero or nonzero (C23
+	 * 7.12.3.6), and its nonzero values differ between float and double.
 	 */
-	if (fabsf(x) == FLT_MIN && signbit(x) != signbit(direction) && (FLT_ROUNDS == 1 || FLT_ROUNDS == (x > 0 ? 2 : 3))) {
+	if (fabsf(x) == FLT_MIN && !signbit(x) != !signbit(direction) && (FLT_ROUNDS == 1 || FLT_ROUNDS == (x > 0 ? 2 : 3))) {
 		__libc_math_raise_inexact();
 		return x;
 	}

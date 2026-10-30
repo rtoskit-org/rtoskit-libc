@@ -83,6 +83,13 @@ double pow(double x, double y)
 
 	z = __libc_dd_product(y, log.hi);
 	z = __libc_dd_sum(z.hi, z.lo + y * log.lo);
+	/*
+	 * exp(z) = 1 + z with |z| below 2^-60. z may have underflowed, even to
+	 * zero, and rounded in the caller's direction: its sign, from y and
+	 * log|x|, decides the directed roundings (PLAN D125)
+	 */
+	if (fabs(z.hi) < 0x1p-60)
+		return 1.0 + ((y > 0) == (fabs(x) > 1.0) ? 0x1p-60 : -0x1p-60);
 	value = __libc_exp_core(z.hi, z.lo, &exponent);
 	return __libc_exp_scale(negative ? __libc_dd_negate(value) : value, exponent);
 }
