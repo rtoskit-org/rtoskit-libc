@@ -26,8 +26,8 @@
  * The input of the scanf engine (docs/research/scanf.md): a string, or a
  * stream whose lock the caller holds. One character can be pushed back. For
  * a stream it goes back into the read window it came from, so the stream's
- * own pushback slot stays free for the caller's ungetc (libc-test
- * functional/ungetc); only a character that came from that slot returns there.
+ * own pushback slot stays free for the caller's ungetc (test/unit/conformance);
+ * only a character that came from that slot returns there.
  */
 struct __libc_scan_input {
 	FILE *stream;

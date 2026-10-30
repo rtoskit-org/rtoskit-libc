@@ -15,7 +15,7 @@
 
 #include "fenv-arch.h"
 
-/* C23 7.6.4.1; bits that name no supported exception are ignored (libc-test expects success) */
+/* C23 7.6.4.1; bits that name no supported exception are ignored and the call succeeds */
 int feclearexcept(int excepts)
 {
 	unsigned int state;

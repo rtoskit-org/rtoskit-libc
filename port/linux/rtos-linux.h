@@ -21,7 +21,7 @@
 /* The executable's TLS image, needed again for every new thread */
 extern struct __libc_tls_image __rtos_linux_tls_image;
 
-/* The environment passed by the kernel, kept for __rtos_getenv; the libc-test shim's setenv replaces it */
+/* The environment passed by the kernel, kept for __rtos_getenv */
 extern char **__rtos_linux_environ;
 
 void __rtos_linux_set_tp(void *tp);

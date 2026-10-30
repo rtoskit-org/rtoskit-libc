@@ -144,12 +144,10 @@ endif
 library: libc port
 .PHONY: library
 
-# Build, then run every unit test (a test directory may provide <name>.run to drive its binary)
-# and the libc-test tests against test/libc-test/expected/<arch>.txt; LIBC_TEST_UPDATE=1 records improvements.
+# Build, then run every unit test (a test directory may provide <name>.run to drive its binary).
 # Last, no program may link a libgcc object that defines one of the library's own symbols (PLAN D102)
 check: target
 	${PROJECT_ROOT}/test/unit/run-unit ${BUILD_ROOT}/test/unit
-	${PROJECT_ROOT}/test/libc-test/run $(if ${LIBC_TEST_UPDATE},--update) ${BUILD_ROOT}/test/libc-test ${PROJECT_ROOT}/test/libc-test/expected/${ARCH_CROSS}.txt
 	${PROJECT_ROOT}/tools/scripts/libgcc-check --nm ${NM} --libgcc $(shell ${CC} ${CROSS_FLAGS} -print-libgcc-file-name) ${BUILD_ROOT}
 .PHONY: check
 
@@ -227,7 +225,6 @@ help:
 	@echo "  OUTPUT_ROOT=<path>     Where the build trees go (default build/)"
 	@echo "  PREFIX=<path>          Where the installs go (default images/)"
 	@echo "  V=1                    Verbose output (show full compiler commands)"
-	@echo "  LIBC_TEST_UPDATE=1     With check: record libc-test improvements in the architecture's baseline"
 	@echo "  BENCH_UPDATE=1         With bench: record the results as the architecture's benchmark baseline"
 	@echo "  PROJECT_ROOT=<path>    Override project root (required in worktrees)"
 .PHONY: help

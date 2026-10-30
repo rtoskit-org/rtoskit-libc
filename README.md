@@ -62,10 +62,18 @@ caveats.
 
 ### Conformance
 
-All 219 applicable tests of musl's libc-test pass on all seven
-architectures. The other 207 are out of scope: they test POSIX, wide
-characters or `fork` ([`manifest.txt`](test/libc-test/manifest.txt)). On top
-of that, an audit of the headers against Annex B checks 689 identifiers, 642
+The conformance tests are the project's own, written from the C23 text. They
+took over every in-scope check of musl's libc-test, which the project used
+until all 219 applicable tests passed on all seven architectures:
+- the header APIs, with every public header compiled alone under
+  `-pedantic-errors`;
+- the functional and regression cases, each regression named after the bug
+  class it guards;
+- every maths function in float, double and long double, in all four
+  rounding directions, with the exception flags, against vectors computed
+  with MPFR.
+
+On top of that, an audit of the headers against Annex B checks 689 identifiers, 642
 exact prototypes and 73 generic names across 28 headers, and a freestanding
 check confirms that the freestanding headers' functions link without any
 port. `<threads.h>` is implemented over the OS interface; picolibc and
@@ -73,9 +81,9 @@ newlib-nano have none. The implementation-defined behaviour is documented
 clause by clause against Annex J in
 [`docs/implementation-defined.md`](docs/implementation-defined.md).
 
-All of this runs as part of `make check`. libc-test was run only against
-this library, not against the others. See
-[`docs/research/conformance.md`](docs/research/conformance.md).
+All of this runs as part of `make check`. See
+[`docs/research/conformance.md`](docs/research/conformance.md) and
+[`docs/research/libm-vectors.md`](docs/research/libm-vectors.md).
 
 ### Accuracy
 
@@ -181,9 +189,8 @@ and its limits, and `docs/perf/<arch>.md` (for example
 - **arm-none-eabi GCC 14 or newer** for the Arm builds. You don't have to
   install one: the first build downloads GCC 16.2 into `local/`. To use your
   own, pass `CROSS_COMPILE=<prefix>`.
-- **qemu-user** to run the Arm tests (`apt-get install -y qemu-user`), and
-  the libc-test submodule (`git submodule update --init`). Neither is needed
-  just to build the library.
+- **qemu-user** to run the Arm tests (`apt-get install -y qemu-user`). It is
+  not needed just to build the library.
 
 Programs that use the library need a compiler in C23 mode: the installed
 headers do not compile as C11 or C17. GCC 15 and newer default to `gnu23`;
@@ -198,7 +205,7 @@ Clang 19 or newer is untested. The exact versions we test with are listed in
 ```sh
 make -j$(nproc)                       # every architecture, every build type, with tests
 make -j$(nproc) ARCH_CROSS=armv7e-m   # just the Cortex-M4F builds
-make check                            # build, then run the unit tests and libc-test
+make check                            # build, then run the tests
 ```
 
 Always run `make` from the top of the tree. The results land in
@@ -252,7 +259,7 @@ GCC's own code does, so use the size build if your system sets
 |---|---|
 | `all` (the default) | Builds and installs the library, the ports, the tests, the examples, and the size and benchmark programs |
 | `library` | Builds and installs only what a program links against: the headers, the `libc*.a` archives and the port archives |
-| `check` | Builds, then runs the unit tests, libc-test against its recorded results, and a check that nothing links libgcc's copy of our functions |
+| `check` | Builds, then runs the unit and conformance tests, and a check that nothing links libgcc's copy of our functions |
 | `bench` | Builds the size and speed builds and runs the benchmarks against the records in [`docs/perf`](docs/perf/) (run `make setup-bench` once first) |
 | `aor` | Fetches and builds Arm Optimized Routines for comparison, and runs its smoke test |
 | `setup`, `setup-bench` | Downloads the Arm toolchain into `local/` (the first build does this anyway); builds the instruction-counting qemu |
@@ -264,8 +271,7 @@ GCC's own code does, so use the size build if your system sets
 
 `make all` always builds the tests, since `make check` needs them. If you
 only want the library, use `make library`: it builds the headers and
-archives and nothing else, works on a fresh tree, and does not need the
-libc-test submodule.
+archives and nothing else, and works on a fresh tree.
 
 ### Build options
 
@@ -283,7 +289,6 @@ Set these on the `make` command line.
 | `OUTPUT_ROOT` | `build` | Where the build trees go |
 | `PREFIX` | `images` | Where the installs go |
 | `V=1` | off | Shows the full commands |
-| `LIBC_TEST_UPDATE=1` | off | With `check`, records libc-test improvements in the architecture's expected results. It refuses while anything has regressed. |
 | `BENCH_UPDATE=1` | off | With `bench`, records the results as the new benchmark baseline |
 
 Parallel builds (`make -j`) are supported. The less common variables,
@@ -307,9 +312,8 @@ make -j$(nproc) LIBC_MALLOC=tlsf
 # Your own compilers
 make -j$(nproc) HOST_CC=gcc-15 CROSS_COMPILE=/opt/arm/bin/arm-none-eabi-
 
-# Test one configuration, then record any libc-test improvements
+# Test one configuration
 make -j$(nproc) ARCH_CROSS=x86_64 BUILD_TYPE=debug check
-make ARCH_CROSS=x86_64 BUILD_TYPE=debug check LIBC_TEST_UPDATE=1
 
 # After a full build, rebuild one module or one unit test
 make ARCH_CROSS=armv7e-m BUILD_TYPE=release V=1 libc/string

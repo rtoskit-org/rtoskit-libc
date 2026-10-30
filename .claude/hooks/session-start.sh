@@ -40,6 +40,3 @@ if ! make -p -f /dev/null 2> /dev/null | grep -q '^\.FEATURES.*notintermediate';
 	(cd "${work}/make-4.4.1" && ./configure --prefix=/usr/local --quiet && make -s -j"$(nproc)" && make -s install)
 	rm -rf "${work}"
 fi
-
-cd "${CLAUDE_PROJECT_DIR:-$(dirname "$0")/../..}"
-git submodule update --init third-party/libc-test

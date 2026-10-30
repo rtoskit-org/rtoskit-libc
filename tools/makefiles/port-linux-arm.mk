@@ -12,7 +12,7 @@
 #
 
 # The Linux test port on the Arm cores (PLAN D106): the programs the build links (unit tests,
-# libc-test, examples, size and benchmark programs) are Linux processes run under qemu-user
+# examples, size and benchmark programs) are Linux processes run under qemu-user
 
 # qemu-arm runs the M-profile code on its A-profile "max" CPU; see docs/research/arm-bring-up.md
 export TARGET_RUNNER := qemu-arm -cpu max

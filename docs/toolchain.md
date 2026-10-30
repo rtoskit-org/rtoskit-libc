@@ -44,5 +44,5 @@ Cloud sessions install the apt packages, and build make 4.4.1 when the installed
 ## Formatting check
 
 ```sh
-clang-format --style=file:tools/clang-format --dry-run $(find libc port include test/unit test/libc-test/shim example -name '*.[ch]')
+clang-format --style=file:tools/clang-format --dry-run $(find libc port include test/unit example -name '*.[ch]')
 ```

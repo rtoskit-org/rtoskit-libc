@@ -24,13 +24,15 @@ decision log D*, open questions Q*), then the active phase file
    `pdftotext -layout`) and your own research notes.
 5. Implement, then build and validate on **every enabled arch** (see the phase
    architecture): `make` and `make check`.
-6. Update `test/libc-test/manifest.txt` and `test/libc-test/expected/<arch>.txt`
-   (improvements only; a PASS→FAIL is never accepted into the baseline).
+6. Add the step's conformance cases to `test/unit` (D126): the standard's
+   requirements, a `regression_*` case for every bug fixed, and libm vectors
+   (`tools/scripts/libm-vectors`, D124) for a new maths function. A test that
+   passed is never weakened to pass again.
 7. Tick the checkboxes, append any new decisions to the PLAN.md decision log
    (never rewrite old entries; supersede them), and record open questions as Q*.
 8. Commit with a message prefixed by the step ID, e.g. `P1.03: string.h word-at-a-time functions`.
 
-Never mark a step `[x]` with failing builds, libc-test regressions or missing
+Never mark a step `[x]` with failing builds, failing tests or missing
 research notes. If blocked, leave it `[~]`, write the blocker in the step, and
 tell the user.
 
@@ -49,7 +51,7 @@ make ARCH_CROSS=x86_64 BUILD_TYPE=debug test/unit/smoke
 make ARCH_CROSS=x86_64 BUILD_TYPE=debug info
 make help | clean | distclean
 V=1 make ...                           # verbose
-make check                             # build, then run the unit tests (+ libc-test from P1.02) for every architecture and build type
+make check                             # build, then run the unit tests for every architecture and build type
 make bench                             # build, then run the benchmarks (release and speed, every architecture) against docs/perf
 make aor                               # Phase 4: fetch and build Arm Optimized Routines into build/<arch>/aor/ (measurement only, D92, D93)
 make ARCH_CROSS=x86_64 BUILD_TYPE=debug check
@@ -203,32 +205,30 @@ Any exception needs a PLAN.md decision entry.
 
 ## Testing
 
-- **libc-test** (`third-party/libc-test`, a submodule) is the conformance gate
-  at every step of every phase (PLAN §5). Run it natively on `x86_64`
-  through `port/linux`, and under `qemu-arm -cpu max` (`TARGET_RUNNER`) for the
-  six Arm architectures (D36, D37, D108).
+- **The conformance gate is in-tree** (D126, PLAN §5): `test/unit` at every step
+  of every phase, run natively on `x86_64` through `port/linux`, and under
+  `qemu-arm -cpu max` (`TARGET_RUNNER`) on the Arm architectures (D36, D108).
+  It took over musl's libc-test, which the project no longer carries:
+  `test/unit/api` (header APIs and a standalone `-pedantic-errors` compile of
+  every header, D122), `test/unit/conformance` (functional and `regression_*`
+  cases, D123) and `test/unit/libm_vectors` (every libm function in every
+  rounding direction, from MPFR vectors, D124). `docs/research/conformance.md`
+  and `docs/research/libm-vectors.md` map each libc-test test to its
+  replacement.
 - `make check` builds, then runs every unit test through `test/unit/run-unit`. A
   test passes when it exits with 0, unless an executable `<name>.run` next to
   its source decides instead (see `test/unit/smoke/smoke.run`). `TARGET_RUNNER`
   (e.g. qemu-arm) prefixes each execution.
-- `test/libc-test/manifest.txt` gives every libc-test file a status: `run`,
-  `skip:<reason>` (out of scope: POSIX, wide chars, fork) or `pending:<step>`.
-  Flipping a test to `run` is all it takes to build it: the suite modules
-  `test/libc-test/{api,functional,math,regression}` build one ELF per `run`
-  test through `tools/makefiles/libc-test.mk` (D27).
-- `make check` compares the libc-test results with
-  `test/libc-test/expected/<arch>.txt` and fails on PASS→FAIL and on failures
-  missing from the baseline. Record improvements with
-  `make check LIBC_TEST_UPDATE=1` (it refuses while anything regressed).
+- `tools/scripts/libm-vectors` regenerates the libm vectors with the host's
+  MPFR (`libmpfr-dev`); `make check` needs no MPFR, since the vectors are
+  committed.
 - `make check` ends with `tools/scripts/libgcc-check`: it fails when any link map includes a libgcc member that
   defines one of `libc*.a`'s symbols (D102). `tools/scripts/softdp-diff` is the long, manual comparison of the
   double helpers (`test/unit/softdp` with 100 million cases).
-- `test/libc-test/shim/` is test-only replacement code for libc-test's POSIX
-  helpers. It is never part of `libc.a`.
-- `test/unit/` holds our own tests for everything libc-test misses (the C23
-  additions, `<threads.h>`, thread-local state, the seam, `port/none`).
-  Unit-test modules add `CFLAGS += -fno-builtin` after `project.mk` so the
-  library, not the compiler's built-in folding, is what runs.
+- `test/unit/` also holds the tests for the C23 additions, `<threads.h>`,
+  thread-local state, the seam and `port/none`. Unit-test modules add
+  `CFLAGS += -fno-builtin` after `project.mk` so the library, not the
+  compiler's built-in folding, is what runs.
 - **Size (phase 2, D51):** `test/size/` holds the reference programs (built, not
   run). After a release build, `tools/scripts/size-report diff` compares the
   members, images and stack depths with `docs/size/baseline-<arch>.json` and
@@ -244,13 +244,12 @@ Any exception needs a PLAN.md decision entry.
 - **CI (D119):** `.github/workflows/ci.yml` runs `make check` per architecture, plus the Arm size
   gates, in an `ubuntu:26.04` container on every pull request (opened, reopened, ready or updated).
 - Never skip, disable or weaken a test to get green. Fix the code, or record a
-  justified `skip:` that refers to the scope in PLAN.md §1.
+  justified scope exclusion that refers to PLAN.md §1.
 
 ## Environment notes
 
-- Fetch libc-test with `git submodule update --init` (`repo.or.cz` must be
-  reachable). If the network blocks it, report the blocker. Never substitute
-  made-up results.
+- Never substitute made-up test results; if something blocks a run, report
+  the blocker.
 - `docs/standard/*.pdf` is the standard text used for clean-room work.
 
 ## Layout
@@ -262,12 +261,11 @@ libc/<area>/<arch>/ ARCH_CROSS variant subdirectory (SUBDIRS := ${ARCH_CROSS})
 libc/<area>/<family>/ ARCH_FAMILY variant shared by a triple's cores (libc/tls/arm/)
 libc/internal/     private headers (no .mk)
 port/<port>/       linux (test port), none (bare metal), rtoskit (future); port/<port>/<family>/ variants
-test/              unit tests (test/unit/<name>/), libc-test glue, size, bench
+test/              unit tests (test/unit/<name>/), size, bench
 example/           examples
 toolchain/         issue #65 (enhancement): crosstool-NG libc backend, multilib configs
 tools/             build system (makefiles, templates, scripts)
 docs/standard/     C23 standard text (N3220 clause 7, Annex B)
 docs/plan/         PLAN.md + phase task lists
 docs/research/     per-algorithm research notes
-third-party/       libc-test submodule
 ```

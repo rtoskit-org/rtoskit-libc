@@ -31,9 +31,9 @@ Status legend used in all phase files: `[ ]` todo, `[~]` in progress, `[x]` done
 4. Minimal conditional compilation. Variation (arch, port, feature flavours) is
    chosen by the **build system selecting files** and by **link-time
    binding**, not by `#if`.
-5. libc-test validates every step of every phase. No step is done until libc-test
-   has no regressions against the recorded baseline on every enabled
-   architecture.
+5. The in-tree conformance tests (`test/unit`, D126) validate every step of
+   every phase. No step is done until they pass on every enabled
+   architecture. (Until D126, musl's libc-test was this gate.)
 6. Built only with the build system in `tools/`.
 
 ### Phases
@@ -220,6 +220,7 @@ supersedes it; do not edit history.
 | D123 | **In-tree conformance cases for libc-test's `functional/*` and `regression/*`** (issue #94, part of #96; `docs/research/conformance.md`, "Replacing libc-test's `functional/*` and `regression/*` tests"). For each of the 31 running tests, the research note names the existing `test/unit` module that already covers it, and `test/unit/conformance` adds what none did. **Functional gaps:** the `strtod`/`strtof` subnormal, normal and overflow midpoints, worked out with Python's `decimal` at 2,000 digits; a 40,000-digit input; `%.300f` round trips; hexadecimal ties to even; `strtol` one past the limits at the core's own width; `sscanf` scansets, widths and `%i` prefixes; `qsort` on every permutation of five bytes; `ungetc` and the position indicator; the `<tgmath.h>` float path; 400 `gmtime_r`/`timegm` round trips; 64-bit division checked through q·y + r = x; and five-digit `strftime` years. **Regressions:** each of libc-test's 12 running `regression/*` tests becomes a `regression_<bug class>` case, so the protection outlives the harness. Inputs and expected values are our own, from the standard and from independent arithmetic, never libc-test's tables. Two expectations follow documented library behaviour rather than plain C23: plain `%Y` prints the year 10009 as POSIX `%+4Y` would (`+10009`), and after `%5c` meets the end of input only the count is checked, since what it stored is unspecified. The `functional/*` and `regression/*` lines stay `run` in `test/libc-test/manifest.txt` until #96 removes the harness. | Same as D122: the regression knowledge belongs to the project, so libc-test can go without losing it. |
 | D124 | **libm conformance vectors from a correctly rounded oracle** (issue #95, part of #96; `docs/research/libm-vectors.md`). `tools/libm-vectors/libm-vectors.c`, a host program built by `tools/scripts/libm-vectors` against MPFR and GMP (never part of the build or of `make check`), writes `test/unit/libm_vectors/vectors-{double,float}.inc`. Each vector holds the correctly rounded result in all four rounding directions, the offset of the exact value from the to-nearest result, the second outputs (`frexp`, `modf`, `remquo`'s sign and low three bits) and the expected exceptions. Results are computed in MPFR at the target precision and exponent range with `mpfr_check_range` and `mpfr_subnormalize`. IEEE underflow is derived from tininess before and after rounding, and marked "either" where they differ or F.10 leaves it open. The arguments are 30 special values, 96 deterministic pseudo-random ones and, for two-argument functions, 100 special and 128 random pairs. The vectors and the MPFR version that made them are committed, so the test needs no MPFR. `test/unit/libm_vectors` runs every function libc-test's 174 `math/*` tests covered, in float, double and long double (binary64, D7, sharing the double vectors), in every rounding direction the core has. The bounds are the documented contracts: below 1 ulp for double to nearest (D47, D48); correctly rounded float to nearest where `<fenv.h>` is complete (D98), else below 1 ulp (D57); exact for the exact functions in every direction; within 1 ulp (float) and 3 ulp (double) directed; invalid, divide-by-zero and overflow exactly, and a deserved underflow to nearest. None is looser than libc-test's (1.5 ulp to nearest, 3 ulp directed). The harness prints the worst error of every function above half an ulp, so the measured accuracy stays in the `make check` log. The vectors found one bug, now fixed: `__libc_softdouble_d2f` set a narrowed NaN's sign from the double's exponent bits (`regression_nan_conversion_sign`). The `math/*` lines stay `run` in `test/libc-test/manifest.txt` until #96 removes the harness. | Vectors from an oracle the project runs itself cover every function in every direction with the flags, and keep the libm gate after libc-test's tables go. |
 | D125 | **The libm vectors' accuracy findings are fixed, and the harness enforces the README's claims** (resolves Q36; `docs/research/libm-vectors.md`, "What the vectors found"). `cbrt` truncates its Newton estimate t to 26 bits so that t² is exact. It splits t² = a + b, which makes t³ = a·t + b·t and the residual y − t³ exact, and takes one Halley step on that residual. That leaves below 0.5 + 2^-25 ulp with no change of rounding mode. The sign goes on before the single rounding, so upward and downward are no longer swapped for a negative x. `__libc_math_tinyf` compares `!signbit(x) != !signbit(direction)`, because `signbit` is only zero or nonzero (C23 7.12.3.6) and differs between float and double; that fixes `asinf`, `tanf`, `atanhf`, `sinhf` and `log1pf` at −FLT_MIN rounding downward. For 2^-1024 < \|x\| < 2^-54, `tgamma` returns 1/x − γ: the reciprocal is a double-double in round to nearest (on x · 2^64), rounded once in the caller's direction, which also fixes `tgammaf(±FLT_MIN)`. `pow` forms y·log\|x\| in round to nearest like its cores, and below 2^-60 returns 1 ± 2^-60 with the product's sign. `test/unit/libm_vectors` now holds double and long double below 0.53 ulp to nearest (D47 and D48 promise 1 ulp; the README claims 0.53) and float correctly rounded in every direction on the cores with directed modes (those are D98's correctly rounded cores). `test/unit/conformance` has `regression_directed_rounding`. The fixes add about 500 bytes to `tgamma` on the cores without fma (its double-double reciprocal) and 80 to 170 bytes to `pow`. `make bench`: `cbrt` is 2.4 % faster on x86_64 and up to 3 % slower on the soft-double cores, and `pow` is 1.6 to 2.3 % slower where double is in hardware (`docs/perf/<arch>.md`); the baselines are re-recorded. Four budget entries are re-locked to the new figures (`docs/size/<arch>.md`): the size flavour's `math-float` on armv7e-m-dp, and the speed flavour's `math-mix` on armv7-m, armv6-m and armv6s-m. | The vectors measured the README's claims; the cheapest way to keep the claims true is to fix the code and let the gate enforce them. |
+| D126 | **libc-test is removed; the in-tree conformance tests are the gate** (issue #96; supersedes D3's and D27's libc-test parts, and restates §1 goal 5, §5 and the phase DoDs). With D122 (`test/unit/api`), D123 (`test/unit/conformance`) and D124 (`test/unit/libm_vectors`) covering every check of the 219 libc-test tests that passed on every architecture, the project drops the `third-party/libc-test` submodule and `.gitmodules`, `test/libc-test/` (manifest, expected results, POSIX shim, runner and the four suite modules), `tools/makefiles/libc-test.mk`, the libc-test step of `make check` and `LIBC_TEST_UPDATE`, the CI checkout's `submodules: true` and the session hook's submodule fetch. `make check` is now the unit tests followed by `libgcc-check`, and a fresh clone needs no submodule and no access to `repo.or.cz`. `port/linux` stays the test port (D3's port half stands). Wherever a phase file's DoD says "libc-test passes" or "no libc-test regressions", read "the in-tree conformance tests pass"; a new function brings its own cases (the standard's requirements, a `regression_*` case per bug fixed, and MPFR vectors for a maths function). Completed phase files and old decision entries keep their wording as history. The research notes `docs/research/conformance.md` and `docs/research/libm-vectors.md` keep the mapping from each libc-test test to its replacement. | A clean-room library is better served by tests it owns and can extend, written from the standard, than by a third-party suite's tables with a POSIX shim; removing the submodule also removes the only network fetch `make check` needed. |
 
 ---
 
@@ -241,11 +242,9 @@ libc/<area>/<family>/     ARCH_FAMILY variant subdirectory shared by a triple's 
 libc/internal/            private headers (never installed, no .mk)
 port/linux/               RTOS seam over Linux syscalls (test port) + port/linux/<family>/ variants (x86_64, arm)
 port/none/                single-thread, bare-metal default port (no-op locks, one static TLS block)
-test/libc-test/           build glue, shim, runner, manifests, expected results per arch
-test/unit/                our own tests for gaps in libc-test (C23 additions, threads.h, seam)
+test/unit/                the unit and conformance tests (D126): api, conformance, libm_vectors, C23 additions, threads.h, seam
 test/bench/               Phase 3 benchmarks
 toolchain/crosstool-ng/   issue #65: crosstool-NG libc backend, sample configs, patches
-third-party/libc-test     git submodule (test suite only, never linked into libc)
 docs/standard/            C23 standard text (N3220 clause 7, Annex B)
 docs/plan/                this plan and the phase task lists
 docs/research/            per-algorithm research notes (D2)
@@ -282,21 +281,22 @@ user-replaceable byte sink. That way a bare-metal image works with no RTOS at al
 
 ## 5. Test strategy
 
-- **libc-test** (`third-party/libc-test`, pinned at commit
-  `7b95dfa5f5d5ca4d949221e0228ccc290bacc14e`). It is the main gate.
-  - `test/libc-test/manifest.txt` lists every libc-test source with a status of
-    `run`, `skip:<reason>` (POSIX-only, wide characters, fork, ...) or
-    `pending:<step>` (not implemented yet).
-  - `test/libc-test/shim/` replaces libc-test's POSIX-dependent `src/common`
-    pieces (for example `t_printf` built on `write`, and `runtest` built on
-    fork/exec) with ISO/port equivalents. This is test-only code.
-  - The runner `test/libc-test/run` runs each test binary with a timeout (under
-    `qemu-arm -cpu max` for ARM, D36) and writes `build/<board>/<type>/test/libc-test/results.txt`.
-  - `test/libc-test/expected/<board>.txt` holds the committed baseline. The libc-test runner
-    fails on any PASS→FAIL regression and reports FAIL→PASS improvements. A
-    step updates the baseline only to record improvements.
-  - `src/api` tests (compile-only declaration checks) are curated to their ISO subset.
-- **test/unit**: our own tests for things libc-test misses: C23 additions
+- **In-tree conformance tests** (D126) are the main gate, in `test/unit`, run
+  by `make check` on every architecture and build type (under
+  `qemu-arm -cpu max` on Arm, D36):
+  - `test/unit/api` (D122): the header APIs from N3220 clause 7, and every
+    public header compiled alone with `-std=c23 -pedantic-errors -Werror`;
+  - `test/unit/conformance` (D123): functional cases and one
+    `regression_<bug class>` case per bug;
+  - `test/unit/libm_vectors` (D124): every libm function in float, double and
+    long double, in every rounding direction the core has, with the exception
+    flags, against vectors that `tools/scripts/libm-vectors` computes with MPFR.
+  - Until D126, musl's libc-test (pinned at `7b95dfa5`, through a manifest, a
+    POSIX shim and per-architecture expected results, D27) was this gate; all
+    219 applicable tests passed on every architecture when it was removed.
+    `docs/research/conformance.md` and `docs/research/libm-vectors.md` map
+    each of its tests to the replacement.
+- **test/unit** also holds the tests for the C23 additions
   (`<stdbit.h>`, `<stdckdint.h>`, `memset_explicit`, `strfromd`, `timegm`,
   `free_sized`, ...), `<threads.h>`, per-thread `errno` and state, the seam
   contract, and `port/none`.

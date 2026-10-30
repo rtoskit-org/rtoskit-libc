@@ -16,7 +16,7 @@ architecture the step adds:
   `<fenv.h>` variant (D44), `LIBC_MATH_LAYERS` and `libc-fpu.h` (D46, D82) and
   string kernel lists for both flavours (D69, D73).
 - `make` and `make check` pass in all three build types on every architecture,
-  the new one included. `test/libc-test/expected/<arch>.txt` is recorded, and
+  the new one included, with the in-tree conformance tests (D126), and
   `tools/scripts/libgcc-check` is clean (D102).
 - Size: `docs/size/baseline-<arch>.json`, a `docs/size/budget.json` entry and
   `docs/size/<arch>.md`. Speed: `docs/perf/baseline-<arch>[-speed].json` and
@@ -62,17 +62,17 @@ architecture the step adds:
 - [ ] `aarch64-none-elf` GCC 16.2 in `make setup`, `tools/makefiles/aarch64-none-elf.mk`, `ARCH_FAMILY := aarch64`; `port/linux/aarch64` (Linux AArch64 system calls), `port/none/aarch64`, `libc/tls/aarch64` (TPIDR_EL0, variant I).
 - [ ] `setjmp`/`longjmp` (x19-x30, sp, d8-d15) and Q32's `jmp_buf` expression; `<fenv.h>` on FPCR/FPSR.
 - [ ] `qemu-aarch64` as `TARGET_RUNNER`; `make setup-bench` builds it with plugins.
-- [ ] Every libc-test that needs binary128 `long double` is `pending:P6.08b` until then.
+- [ ] The `long double` cases of `test/unit/libm_vectors`, `printf_float` and `strtod`, which assume binary64 (D7), are selected per architecture until P6.08b.
 
 ## P6.08b — AArch64 binary128 `long double`: conversions and limits  `[ ]`
 - [ ] Q30: `<float.h>` and `<math.h>` limits; exact `printf` `%La`/`%Le`/`%Lf`/`%Lg`, `strtold` and `scanf` `%Lf` on binary128 (extending D38/D39's decimal code to 113-bit significands).
 - [ ] The soft-quad arithmetic helpers: libgcc's or ours (Q30), with `libgcc-check` clean.
 
 ## P6.08c — AArch64 binary128 `long double`: libm  `[ ]`
-- [ ] The `*l` functions and their `<tgmath.h>` forms at Q30's accuracy goal; libc-test's `long double` tables pass.
+- [ ] The `*l` functions and their `<tgmath.h>` forms at Q30's accuracy goal; `test/unit/libm_vectors` gains binary128 vectors (`tools/scripts/libm-vectors` at 113 bits) and they pass.
 
 ## P6.08d — AArch64 baselines and later levels  `[ ]`
-- [ ] libc-test, size and speed baselines for `armv8-a`; the later levels (`armv8.2-a`, `armv8.5-a`, `armv9-a`) and Cortex-R82 that P6.01 found worth a variant.
+- [ ] Conformance, size and speed baselines for `armv8-a`; the later levels (`armv8.2-a`, `armv8.5-a`, `armv9-a`) and Cortex-R82 that P6.01 found worth a variant.
 - [ ] Q34 for AArch64 (BTI, PAC).
 
 ## P6.09 — NEON string kernels (A and R profile AArch32)  `[ ]`

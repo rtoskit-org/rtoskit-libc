@@ -11,8 +11,8 @@
 #     Author: Stephen Street (stephen@redrocketcomputing.com)
 #
 
-# The pull request gate (PLAN D119): on every architecture, make check (unit tests, libc-test against
-# test/libc-test/expected/<arch>.txt, libgcc-check) in all three build types; on the Arm architectures
+# The pull request gate (PLAN D119): on every architecture, make check (unit tests and
+# libc-test's in-tree replacements, D126, then libgcc-check) in all three build types; on the Arm architectures
 # also the size gates (size-report diff and both flavours' budgets, PLAN D51, D71, D111). Runs in an
 # Ubuntu 26.04 container, whose make is 4.4.1 (D117), gcc 15 (the x86_64 build, D107) and qemu-user 10.2
 # (TARGET_RUNNER on Arm, D36); the arm-none-eabi GCC 16.2 is the one make setup downloads.
@@ -50,8 +50,6 @@ jobs:
 
       - name: Check out
         uses: actions/checkout@v5
-        with:
-          submodules: true
 
       - name: Trust the workspace
         run: git config --global --add safe.directory "${GITHUB_WORKSPACE}"

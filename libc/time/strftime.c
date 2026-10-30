@@ -22,7 +22,7 @@
  * and minimum width before the conversion: for %C, %F, %G and %Y the '+'
  * flag adds a sign to a non-negative year with more digits than the usual
  * four (two for %C) or a wider field. Plain %Y, %G and %F behave as %+4Y
- * (POSIX), plain %C as %02C. libc-test checks these.
+ * (POSIX), plain %C as %02C (test/unit/time, test/unit/conformance).
  */
 
 struct output {

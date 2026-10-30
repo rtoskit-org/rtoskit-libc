@@ -1,3 +1,0 @@
-[submodule "third-party/libc-test"]
-	path = third-party/libc-test
-	url = https://repo.or.cz/libc-test.git
