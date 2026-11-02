@@ -41,6 +41,13 @@
 #include <string.h>
 #include <tgmath.h>
 
+/* The POSIX subset (PLAN D128) */
+#include <fcntl.h>
+#include <sched.h>
+#include <strings.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "api.h"
 
 #define SAME_TYPE(expr, type) _Generic((expr), type: true, default: false)
@@ -254,6 +261,25 @@ static_assert(SAME_TYPE(carg((float _Complex)1), float) && SAME_TYPE(cimag((doub
 /* 7.27p5: the narrowing macros round to float (f*) or double (d*) whatever the argument types */
 static_assert(SAME_TYPE(fadd(1.0, 1.0), float) && SAME_TYPE(fsub(1.0L, 1.0), float) && SAME_TYPE(fmul(1, 1.0), float) && SAME_TYPE(fdiv(1.0, 1.0), float) && SAME_TYPE(ffma(1.0, 1.0, 1.0), float) && SAME_TYPE(fsqrt(1.0L), float), "f narrowing");
 static_assert(SAME_TYPE(dadd(1.0L, 1.0L), double) && SAME_TYPE(dsub(1.0, 1.0), double) && SAME_TYPE(dmul(1.0L, 1.0), double) && SAME_TYPE(ddiv(1.0L, 1.0L), double) && SAME_TYPE(dfma(1.0L, 1.0L, 1.0L), double) && SAME_TYPE(dsqrt(1.0L), double), "d narrowing");
+
+/*
+ * The POSIX subset (PLAN D128, D129): ssize_t is the signed size_t, off_t is
+ * 64 bits like __rtos_seek's offsets, and each header repeats the same types.
+ * The descriptors are the seam's standard handles; the access modes are
+ * distinct values under O_ACCMODE, and the other flags are distinct bits
+ * outside it; the whence values match <stdio.h>'s.
+ */
+static_assert(sizeof(ssize_t) == sizeof(size_t) && (ssize_t)-1 < 0 && sizeof(off_t) == 8 && (off_t)-1 < 0, "<sys/types.h>");
+static_assert(SAME_TYPE((mode_t)0, unsigned int) && SAME_TYPE((pid_t)0, int) && SAME_TYPE((clockid_t)0, int), "<sys/types.h>");
+static_assert(STDIN_FILENO == 0 && STDOUT_FILENO == 1 && STDERR_FILENO == 2, "<unistd.h>");
+static_assert(O_RDONLY != O_WRONLY && O_RDONLY != O_RDWR && O_WRONLY != O_RDWR && ((O_RDONLY | O_WRONLY | O_RDWR) & ~O_ACCMODE) == 0, "<fcntl.h> access modes");
+static_assert((O_CREAT & O_ACCMODE) == 0 && (O_EXCL & O_ACCMODE) == 0 && (O_TRUNC & O_ACCMODE) == 0 && (O_APPEND & O_ACCMODE) == 0 && (O_NONBLOCK & O_ACCMODE) == 0, "<fcntl.h> flags");
+static_assert(__builtin_popcount(O_CREAT | O_EXCL | O_TRUNC | O_APPEND | O_NONBLOCK) == 5, "<fcntl.h> distinct flags");
+static_assert(SEEK_SET == 0 && SEEK_CUR == 1 && SEEK_END == 2, "<unistd.h> whence");
+static_assert(SCHED_OTHER != SCHED_FIFO && SCHED_OTHER != SCHED_RR && SCHED_FIFO != SCHED_RR && SAME_TYPE(((struct sched_param){ 0 }).sched_priority, int), "<sched.h>");
+static_assert(SAME_TYPE(strcasecmp, int (*)(const char *, const char *)) && SAME_TYPE(strncasecmp, int (*)(const char *, const char *, size_t)), "<strings.h>");
+static_assert(SAME_TYPE(read, ssize_t (*)(int, void *, size_t)) && SAME_TYPE(write, ssize_t (*)(int, const void *, size_t)) && SAME_TYPE(lseek, off_t (*)(int, off_t, int)) && SAME_TYPE(close, int (*)(int)), "<unistd.h> functions");
+static_assert(SAME_TYPE(open, int (*)(const char *, int, ...)) && SAME_TYPE(sched_yield, int (*)(void)), "<fcntl.h>, <sched.h> functions");
 
 static int failures;
 

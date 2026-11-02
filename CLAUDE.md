@@ -159,7 +159,11 @@ Allowed `#if`/`#ifdef` uses, and nothing else:
 2. C++ in public headers (D120): `__LIBC_BEGIN_DECLS`/`__LIBC_END_DECLS` and `__LIBC_NULL`
    from `include/__cdefs.h`, and `#ifndef __cplusplus` only for what C++ lacks or the
    C++ standard leaves out of a header (D120 lists them). Spell `restrict` and `typeof`
-   as `__restrict` and `__typeof__` in public headers.
+   as `__restrict` and `__typeof__` in public headers, and, in the headers a C++98
+   program reaches, `thread_local`, `alignas` and attributes as `__thread`,
+   `__attribute__((__aligned__(n)))` and `__attribute__((__noreturn__))` and so on
+   (D131: they must parse as `gnu++98`). D131's one version test, `__cplusplus >= 201103L`
+   for `nullptr_t` in `<stddef.h>`, is the only other C++ conditional.
 3. Macros the standard requires to be conditional (`NDEBUG` in `<assert.h>`,
    `__STDC_WANT_*`, and feature macros the standard says are defined only
    when supported).

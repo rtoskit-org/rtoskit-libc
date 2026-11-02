@@ -27,6 +27,8 @@ include ${PROJECT_ROOT}/tools/makefiles/project.mk
 # first (PLAN D121). The test includes only rtoskit-libc's headers, so -nostdinc stays.
 CXXFLAGS += ${CROSS_FLAGS} -std=c++23 -pipe -ffunction-sections -fdata-sections -Wall -Wextra -Werror -fno-builtin
 ${CURDIR}/headers17.o: CXXFLAGS += -std=c++17
+# libstdc++ builds part of itself as gnu++98 (PLAN D131)
+${CURDIR}/headers98.o: CXXFLAGS += -std=gnu++98
 LDLIBS := -Wl,--start-group ${BUILD_ROOT}/libc/libc.a $(shell ${CXX} ${CROSS_FLAGS} -print-file-name=libsupc++.a) $(shell ${CXX} ${CROSS_FLAGS} -print-file-name=libstdc++.a) $(shell ${CC} ${CROSS_FLAGS} -print-libgcc-file-name) -Wl,--end-group
 
 all: $(if ${SRC},${CURDIR}/cxx.elf)

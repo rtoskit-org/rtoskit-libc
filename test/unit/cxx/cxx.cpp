@@ -234,6 +234,7 @@ int main(void)
 
 	check(strcmp(trace, "AB") == 0, "static constructors in order");
 	check(headers17() == 0, "the headers as C++17");
+	check(headers98() == 0, "the headers as C++98");
 
 	test_exceptions();
 	test_dynamic();

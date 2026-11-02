@@ -17,14 +17,17 @@
 /*
  * What the public headers need to compile as C++ as well as C (PLAN D120,
  * issue #98): C linkage for every declaration, and a null pointer constant
- * C++ accepts. The headers spell restrict and typeof as __restrict and
- * __typeof__, which GCC and Clang take in both languages, so these are the
- * only conditionals the language needs.
+ * C++ accepts. The headers spell restrict, typeof, thread_local, alignas and
+ * the attributes the GNU way (__restrict, __typeof__, __thread,
+ * __attribute__), which GCC and Clang take in both languages and in every
+ * C++ mode, C++98 included (D131), so these are the only conditionals the
+ * language needs. __null is the compilers' null pointer constant for C++,
+ * which C++98 accepts as well as later modes.
  */
 #ifdef __cplusplus
 #define __LIBC_BEGIN_DECLS extern "C" {
 #define __LIBC_END_DECLS }
-#define __LIBC_NULL nullptr
+#define __LIBC_NULL __null
 #else
 #define __LIBC_BEGIN_DECLS
 #define __LIBC_END_DECLS
