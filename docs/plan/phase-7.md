@@ -26,22 +26,22 @@ seam.
 - [x] Answer Q37 (the seam handle as the descriptor; 0, 1 and 2 for the standard streams) and Q38 (whether the library defines `open`, `close`, `read` and `write` weakly, or only declares them): D129, D130.
 - [x] Re-run the pi-pico scan against `origin/main` (`a4055c6`: unchanged), and read libstdc++'s configure and I/O backend (GCC 16 branch) to confirm the D128 list. A real configure run needs the toolchain patch of Q39 and moves to P7.05.
 
-## P7.02 — Headers  `[~]`
-- [ ] `<sys/types.h>`: `off_t`, `ssize_t`, `mode_t`, `pid_t`, with ABI-identical types on every core of a triple (D15).
-- [ ] `<unistd.h>`:
+## P7.02 — Headers  `[x]`
+- [x] `<sys/types.h>`: `off_t`, `ssize_t`, `mode_t`, `pid_t` and `clockid_t`, with ABI-identical types on every core of a triple (D15, D131).
+- [x] `<unistd.h>`:
   - `STDIN_FILENO`, `STDOUT_FILENO`, `STDERR_FILENO` and the `SEEK_*` constants;
-  - declarations of `read`, `write`, `close`, `lseek` and the optional functions.
-- [ ] `<fcntl.h>`: the D128 `O_*` flags, `open`, `fcntl` declared.
-- [ ] `<strings.h>`, `<sched.h>` (the `SCHED_*` policies, `sched_yield`).
-- [ ] The extra `errno` codes (`EBADFD`, `EFTYPE`, `EHOSTDOWN`, `ENOTUNIQ`, `ESHUTDOWN`, `ESOCKTNOSUPPORT`).
-- [ ] Each header in `test/unit/api`'s standalone `-pedantic-errors` compile, and as C++ in `test/unit/cxx` (D120).
-- [ ] Fix #106 item 1: `errno` must parse in C++98.
+  - declarations of `read`, `write`, `close` and `lseek`. The optional functions are declared in their own headers (`<time.h>`, `<sched.h>`) when P7.03 implements them.
+- [x] `<fcntl.h>`: the D128 `O_*` flags (Linux values) and `open`. `fcntl` comes with its `F_*` commands in P7.04.
+- [x] `<strings.h>` (`strcasecmp`, `strncasecmp`), `<sched.h>` (`struct sched_param`, the `SCHED_*` policies, `sched_yield`).
+- [x] The extra `errno` codes (`EBADFD`, `EFTYPE`, `EHOSTDOWN`, `ENOTUNIQ`, `ESHUTDOWN`, `ESOCKTNOSUPPORT`), with `strerror` messages (+181 bytes, `docs/size/<arch>.md`).
+- [x] Each header in `test/unit/api`'s standalone `-pedantic-errors` compile, its types and values checked there, and as C++17 and `gnu++98` in `test/unit/cxx` (D120, D131).
+- [x] Fix #106 item 1: `errno`, and every header a C++98 program reaches, parses as `gnu++98` (D131).
 
 ## P7.03 — Library functions  `[ ]`
 - [ ] `fileno`, `fdopen` and `lseek` over the seam handle (D129).
-- [ ] `strnlen`, `strcasecmp`, `reallocarray`, `sincos`, `sincosf`.
+- [ ] `strnlen`, `strcasecmp`, `strncasecmp`, `reallocarray`, `sincos`, `sincosf`.
 - [ ] The optional functions over the existing seam:
-  - `clock_gettime` (`__rtos_clock_gettime`);
+  - `clock_gettime` (`__rtos_clock_gettime`), with `CLOCK_REALTIME` and `CLOCK_MONOTONIC` in `<time.h>` (pi-pico uses `CLOCK_MONOTONIC`);
   - `nanosleep` (`__rtos_thread_sleep`);
   - `sched_yield` (`__rtos_thread_yield`);
   - `getentropy` only if a port supplies an entropy source (libstdc++'s `random_device`); `isatty` is deferred until a consumer needs it (P7.01 found none).
