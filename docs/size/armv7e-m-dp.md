@@ -582,3 +582,7 @@ New members: `__cxa_atexit` (code and the first static block of 32 registrations
 ## D125 — the libm vectors' accuracy fixes (Q36)
 
 Correctness fixes, so the growth is accepted: `cbrt.o` +24, `tgamma.o` +152 and `pow.o` +96 bytes (`log1pf.o` −8). `cbrt` gains an exact-residual Halley step, `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` and `math-float` grow by 96 bytes, both from `pow` (`powf` is `pow` rounded on this core). `math-float`'s size budget is re-locked at 9526 bytes (from 9494).
+
+## D131 — the POSIX subset's `errno` codes (P7.02)
+
+`strerror.o` grows by 181 bytes of message text for `ENOTUNIQ`, `EBADFD`, `ESOCKTNOSUPPORT`, `ESHUTDOWN`, `EHOSTDOWN` and `EFTYPE`. No reference image links `strerror`, so every image and both budgets are unchanged.
