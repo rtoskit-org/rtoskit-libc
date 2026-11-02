@@ -112,7 +112,7 @@ void __libc_file_before_input(FILE *stream);
  */
 bool __libc_file_mode(const char *mode, unsigned int *open_flags, unsigned short *stream_flags);
 
-/* Make a FILE for an open handle and link it; returns null (handle closed) on failure */
+/* Make a FILE for an open handle and link it; returns null (handle left open) on failure */
 FILE *__libc_file_new(int handle, unsigned short flags);
 
 void __libc_file_link(FILE *stream);

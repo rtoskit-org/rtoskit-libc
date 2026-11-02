@@ -29,22 +29,23 @@
 		fclose(__libc_files);
 }
 
-/* An opened file is fully buffered: it is not taken to be an interactive device (C23 7.23.5.3p8) */
+/*
+ * An opened file is fully buffered: it is not taken to be an interactive device
+ * (C23 7.23.5.3p8). On failure the handle stays open: fopen and tmpfile close
+ * it, while fdopen leaves it to its caller (POSIX.1-2024).
+ */
 FILE *__libc_file_new(int handle, unsigned short flags)
 {
 	FILE *stream = calloc(1, sizeof(*stream));
 	int status;
 
-	if (stream == nullptr) {
-		__rtos_close(handle);
+	if (stream == nullptr)
 		return nullptr;
-	}
 
 	status = __rtos_lock_create(&stream->lock);
 	if (status < 0) {
 		errno = -status;
 		free(stream);
-		__rtos_close(handle);
 		return nullptr;
 	}
 

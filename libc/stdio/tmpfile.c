@@ -45,8 +45,14 @@ FILE *tmpfile(void)
 
 		int handle = __rtos_open(name, __RTOS_OPEN_READ | __RTOS_OPEN_WRITE | __RTOS_OPEN_CREATE | __RTOS_OPEN_EXCLUSIVE | __RTOS_OPEN_TEMPORARY);
 
-		if (handle >= 0)
-			return __libc_file_new(handle, __LIBC_FILE_READ | __LIBC_FILE_WRITE);
+		if (handle >= 0) {
+			FILE *stream = __libc_file_new(handle, __LIBC_FILE_READ | __LIBC_FILE_WRITE);
+
+			/* Closing the handle removes the temporary file */
+			if (stream == nullptr)
+				__rtos_close(handle);
+			return stream;
+		}
 		if (handle != -EEXIST) {
 			errno = -handle;
 			return nullptr;

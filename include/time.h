@@ -74,6 +74,24 @@ struct tm *localtime(const time_t *timer);
 struct tm *localtime_r(const time_t *timer, struct tm *buf);
 size_t strftime(char *__restrict s, size_t maxsize, const char *__restrict format, const struct tm *__restrict timeptr);
 
+/*
+ * POSIX.1-2024 clocks (PLAN D128, D132): a clockid_t is a seam time base, so
+ * CLOCK_REALTIME is TIME_UTC and CLOCK_MONOTONIC is TIME_MONOTONIC, as the
+ * ISO bases already mean
+ */
+#if __LIBC_POSIX_VISIBLE
+typedef int clockid_t;
+
+#define CLOCK_REALTIME 1
+#define CLOCK_MONOTONIC 2
+#define CLOCK_PROCESS_CPUTIME_ID 3
+#define CLOCK_THREAD_CPUTIME_ID 4
+
+int clock_gettime(clockid_t clock_id, struct timespec *tp);
+int clock_getres(clockid_t clock_id, struct timespec *res);
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp);
+#endif
+
 __LIBC_END_DECLS
 
 #endif /* _TIME_H */

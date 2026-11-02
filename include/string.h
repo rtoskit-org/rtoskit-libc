@@ -77,6 +77,11 @@ size_t strlen(const char *s);
 #define strstr(s1, s2) __LIBC_CONST_GENERIC(s1, char, strstr(s1, s2))
 #endif
 
+/* POSIX.1-2024 (PLAN D128, D132) */
+#if __LIBC_POSIX_VISIBLE
+size_t strnlen(const char *s, size_t maxlen);
+#endif
+
 __LIBC_END_DECLS
 
 #endif /* _STRING_H */

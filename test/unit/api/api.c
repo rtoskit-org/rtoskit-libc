@@ -271,6 +271,13 @@ static_assert(SAME_TYPE(dadd(1.0L, 1.0L), double) && SAME_TYPE(dsub(1.0, 1.0), d
  */
 static_assert(sizeof(ssize_t) == sizeof(size_t) && (ssize_t)-1 < 0 && sizeof(off_t) == 8 && (off_t)-1 < 0, "<sys/types.h>");
 static_assert(SAME_TYPE((mode_t)0, unsigned int) && SAME_TYPE((pid_t)0, int) && SAME_TYPE((clockid_t)0, int), "<sys/types.h>");
+/*
+ * Strict C23 (no feature test macro) leaves the POSIX subset's names in the
+ * ISO headers to the program (C23 7.1.3, PLAN D132): each is free for an
+ * object of the program's own here
+ */
+[[maybe_unused]] static int fileno, fdopen, strnlen, reallocarray, sincos, sincosf, clock_gettime, clock_getres, nanosleep, CLOCK_REALTIME, CLOCK_MONOTONIC;
+
 static_assert(STDIN_FILENO == 0 && STDOUT_FILENO == 1 && STDERR_FILENO == 2, "<unistd.h>");
 static_assert(O_RDONLY != O_WRONLY && O_RDONLY != O_RDWR && O_WRONLY != O_RDWR && ((O_RDONLY | O_WRONLY | O_RDWR) & ~O_ACCMODE) == 0, "<fcntl.h> access modes");
 static_assert((O_CREAT & O_ACCMODE) == 0 && (O_EXCL & O_ACCMODE) == 0 && (O_TRUNC & O_ACCMODE) == 0 && (O_APPEND & O_ACCMODE) == 0 && (O_NONBLOCK & O_ACCMODE) == 0, "<fcntl.h> flags");
@@ -385,6 +392,7 @@ int main(void)
 	check(assert_count == 1, "assert evaluates its argument without NDEBUG");
 	ndebug_assert();
 	check(assert_count == 1, "assert does not evaluate its argument under NDEBUG");
+	check(posix_visible(), "the POSIX subset under _POSIX_C_SOURCE");
 
 	/* C23 7.3: I squared is -1 */
 	check(creal(I * I) == -1.0f && cimag(I * I) == 0.0f, "I is the imaginary unit");

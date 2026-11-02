@@ -25,6 +25,7 @@ TARGET_OBJ_LIBS += $(addprefix libc/complex/,$(filter sp-nearest,${LIBC_MATH_LAY
 TARGET_OBJ_LIBS += libc/ctype
 TARGET_OBJ_LIBS += libc/decimal
 TARGET_OBJ_LIBS += libc/errno
+TARGET_OBJ_LIBS += libc/fcntl
 TARGET_OBJ_LIBS += libc/fenv
 TARGET_OBJ_LIBS += libc/fenv/${LIBC_FENV}
 TARGET_OBJ_LIBS += libc/inttypes
@@ -33,6 +34,7 @@ TARGET_OBJ_LIBS += libc/malloc
 TARGET_OBJ_LIBS += libc/malloc/${LIBC_MALLOC}
 TARGET_OBJ_LIBS += libc/math
 TARGET_OBJ_LIBS += $(addprefix libc/math/,${LIBC_MATH_LAYERS})
+TARGET_OBJ_LIBS += libc/sched
 TARGET_OBJ_LIBS += libc/setjmp/${ARCH_CROSS}
 TARGET_OBJ_LIBS += libc/signal
 TARGET_OBJ_LIBS += libc/startup
@@ -44,9 +46,11 @@ TARGET_OBJ_LIBS += $(if $(filter speed,${LIBC_FLAVOUR}),libc/stdio/speed libc/st
 TARGET_OBJ_LIBS += $(if $(filter speed,${LIBC_FLAVOUR}),$(foreach layer,${LIBC_MATH_LAYERS},$(if $(wildcard ${PROJECT_ROOT}/libc/math/${layer}/speed/speed.mk),libc/math/${layer}/speed)))
 TARGET_OBJ_LIBS += libc/string
 TARGET_OBJ_LIBS += $(addprefix libc/string/,${LIBC_STRING_KERNELS})
+TARGET_OBJ_LIBS += libc/strings
 TARGET_OBJ_LIBS += libc/threads
 TARGET_OBJ_LIBS += libc/time
 TARGET_OBJ_LIBS += libc/tls/${ARCH_FAMILY}
+TARGET_OBJ_LIBS += libc/unistd
 
 EXTRA_DEPS := ${SOURCE_DIR}/libc.mk
 
