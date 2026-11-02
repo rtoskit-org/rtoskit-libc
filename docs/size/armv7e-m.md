@@ -709,3 +709,7 @@ The libm vectors found that `__libc_softdouble_d2f` set a NaN's sign from the do
 ## D125 — the libm vectors' accuracy fixes (Q36)
 
 Correctness fixes, so the growth is accepted: `cbrt.o` +84, `tgamma.o` +520 and `pow.o` +168 bytes. `cbrt` gains an exact-residual Halley step, `tgamma` a double-double reciprocal for tiny arguments, and `pow` the tiny-exponent branch. `math-mix` grows by 168 bytes from `pow`; the size budget holds.
+
+## D131 — the POSIX subset's `errno` codes (P7.02)
+
+`strerror.o` grows by 181 bytes of message text for `ENOTUNIQ`, `EBADFD`, `ESOCKTNOSUPPORT`, `ESHUTDOWN`, `EHOSTDOWN` and `EFTYPE`. No reference image links `strerror`, so every image and both budgets are unchanged.

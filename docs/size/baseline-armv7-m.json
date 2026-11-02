@@ -7601,7 +7601,7 @@
    "strerror.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 1924,
+    "rodata": 2105,
     "tbss": 0,
     "tdata": 0,
     "text": 44,
@@ -8349,7 +8349,7 @@
   "totals": {
    "bss": 1704,
    "data": 116,
-   "rodata": 9938,
+   "rodata": 10119,
    "tbss": 362,
    "tdata": 8,
    "text": 165858,
