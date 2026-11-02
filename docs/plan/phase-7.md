@@ -26,7 +26,7 @@ seam.
 - [x] Answer Q37 (the seam handle as the descriptor; 0, 1 and 2 for the standard streams) and Q38 (whether the library defines `open`, `close`, `read` and `write` weakly, or only declares them): D129, D130.
 - [x] Re-run the pi-pico scan against `origin/main` (`a4055c6`: unchanged), and read libstdc++'s configure and I/O backend (GCC 16 branch) to confirm the D128 list. A real configure run needs the toolchain patch of Q39 and moves to P7.05.
 
-## P7.02 — Headers  `[ ]`
+## P7.02 — Headers  `[~]`
 - [ ] `<sys/types.h>`: `off_t`, `ssize_t`, `mode_t`, `pid_t`, with ABI-identical types on every core of a triple (D15).
 - [ ] `<unistd.h>`:
   - `STDIN_FILENO`, `STDOUT_FILENO`, `STDERR_FILENO` and the `SEEK_*` constants;

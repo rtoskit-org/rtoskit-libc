@@ -21,5 +21,6 @@ void __cxa_finalize(void *dso);
 }
 
 int headers17(void);
+int headers98(void);
 
 #endif /* _CXX_H */

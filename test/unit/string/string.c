@@ -411,6 +411,13 @@ static void test_misc(void)
 		{ ECANCELED, "Operation canceled" },
 		{ EOWNERDEAD, "Owner died" },
 		{ ENOTRECOVERABLE, "State not recoverable" },
+		/* Beyond POSIX (PLAN D128) */
+		{ ENOTUNIQ, "Name not unique on network" },
+		{ EBADFD, "File descriptor in bad state" },
+		{ ESOCKTNOSUPPORT, "Socket type not supported" },
+		{ ESHUTDOWN, "Cannot send after transport endpoint shutdown" },
+		{ EHOSTDOWN, "Host is down" },
+		{ EFTYPE, "Inappropriate file type or format" },
 	};
 
 	for (size_t i = 0; i < sizeof(messages) / sizeof(messages[0]); ++i)

@@ -422,7 +422,7 @@ port (`--port=linux` plus that port's `headers.ld`): a threaded `printf` and
 
 ### Using it from C++
 
-The headers compile as C++ (C++17 and later), with C linkage, and `libc.a`
+The headers compile as C++ (C++17 and later; the ones a C++98 program can include also parse as `gnu++98`, which libstdc++ needs to build), with C linkage, and `libc.a`
 provides the C++ ABI hooks that static and `thread_local` destructors need:
 `__cxa_atexit`, `__cxa_finalize`, `__dso_handle` and `__cxa_thread_atexit`.
 Static destructors and `atexit` handlers run in one reverse order, as C++

@@ -124,6 +124,10 @@ static const char messages[] =
 	"Bad message\0" /* EBADMSG */
 	"\114"
 	"Value too large for defined data type\0" /* EOVERFLOW */
+	"\115"
+	"Name not unique on network\0" /* ENOTUNIQ */
+	"\116"
+	"File descriptor in bad state\0" /* EBADFD */
 	"\125"
 	"Invalid or incomplete multibyte or wide character\0" /* EILSEQ */
 	"\131"
@@ -138,6 +142,8 @@ static const char messages[] =
 	"Protocol not available\0" /* ENOPROTOOPT */
 	"\136"
 	"Protocol not supported\0" /* EPROTONOSUPPORT */
+	"\137"
+	"Socket type not supported\0" /* ESOCKTNOSUPPORT */
 	"\140"
 	"Operation not supported\0" /* EOPNOTSUPP */
 	"\142"
@@ -162,10 +168,14 @@ static const char messages[] =
 	"Transport endpoint is already connected\0" /* EISCONN */
 	"\154"
 	"Transport endpoint is not connected\0" /* ENOTCONN */
+	"\155"
+	"Cannot send after transport endpoint shutdown\0" /* ESHUTDOWN */
 	"\157"
 	"Connection timed out\0" /* ETIMEDOUT */
 	"\160"
 	"Connection refused\0" /* ECONNREFUSED */
+	"\161"
+	"Host is down\0" /* EHOSTDOWN */
 	"\162"
 	"No route to host\0" /* EHOSTUNREACH */
 	"\163"
@@ -181,7 +191,9 @@ static const char messages[] =
 	"\203"
 	"Owner died\0" /* EOWNERDEAD */
 	"\204"
-	"State not recoverable\0" /* ENOTRECOVERABLE */;
+	"State not recoverable\0" /* ENOTRECOVERABLE */
+	"\311"
+	"Inappropriate file type or format\0" /* EFTYPE */;
 
 char *strerror(int errnum)
 {

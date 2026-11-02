@@ -46,6 +46,13 @@
 #include <time.h>
 #include <rtos/rtos-port.h>
 
+/* The POSIX subset (PLAN D128) */
+#include <fcntl.h>
+#include <sched.h>
+#include <strings.h>
+#include <sys/types.h>
+#include <unistd.h>
+
 #include "cxx.h"
 
 int headers17(void)

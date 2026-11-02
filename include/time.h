@@ -66,8 +66,8 @@ int timespec_get(struct timespec *ts, int base);
 int timespec_getres(struct timespec *ts, int base);
 
 /* Time conversion functions (7.29.3) */
-[[deprecated]] char *asctime(const struct tm *timeptr);
-[[deprecated]] char *ctime(const time_t *timer);
+__attribute__((__deprecated__)) char *asctime(const struct tm *timeptr);
+__attribute__((__deprecated__)) char *ctime(const time_t *timer);
 struct tm *gmtime(const time_t *timer);
 struct tm *gmtime_r(const time_t *timer, struct tm *buf);
 struct tm *localtime(const time_t *timer);

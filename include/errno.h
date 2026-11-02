@@ -100,12 +100,28 @@
 #define EOWNERDEAD 130
 #define ENOTRECOVERABLE 131
 
+/*
+ * Beyond POSIX: the BSD and Linux codes a consumer of the POSIX subset uses
+ * (PLAN D128), with Linux values. EFTYPE (BSD) has no Linux number; 200 lies
+ * above every Linux value (133 is the last) and fits strerror's table.
+ */
+#define ENOTUNIQ 76
+#define EBADFD 77
+#define ESOCKTNOSUPPORT 94
+#define ESHUTDOWN 108
+#define EHOSTDOWN 112
+#define EFTYPE 200
+
 /* Aliases POSIX allows to share a value */
 #define ENOTSUP EOPNOTSUPP
 #define EWOULDBLOCK EAGAIN
 
-/* C23 7.5p2: a modifiable lvalue of type int with thread storage duration */
-extern thread_local int errno;
+/*
+ * C23 7.5p2: a modifiable lvalue of type int with thread storage duration.
+ * Spelt __thread, which GCC and Clang take in every C and C++ mode, C++98
+ * included (PLAN D131): libstdc++ compiles part of itself as C++98.
+ */
+extern __thread int errno;
 #define errno errno
 
 #endif /* _ERRNO_H */
