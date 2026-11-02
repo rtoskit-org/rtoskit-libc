@@ -706,3 +706,7 @@ Correctness fixes, so the growth is accepted: `cbrt.o` +84, `tgamma.o` +520 and 
 ## D131 — the POSIX subset's `errno` codes (P7.02)
 
 `strerror.o` grows by 181 bytes of message text for `ENOTUNIQ`, `EBADFD`, `ESOCKTNOSUPPORT`, `ESHUTDOWN`, `EHOSTDOWN` and `EFTYPE`. No reference image links `strerror`, so every image and both budgets are unchanged.
+
+## D132 — the POSIX subset's functions (P7.03)
+
+The new members (`open`, `read`, `write`, `close`, `lseek`, `fileno`, `fdopen`, `strnlen`, `strcasecmp`, `strncasecmp`, `reallocarray`, `sincos`, `sincosf`, `clock_gettime`, `clock_getres`, `nanosleep`, `sched_yield`) are linked only by programs that call them. `__libc_file_new` no longer closes the handle when it fails, so that a failed `fdopen` leaves the descriptor to its caller: `__libc_file_new.o` shrinks by 12 bytes, and its callers close the handle themselves, `fopen.o` +12 and `tmpfile.o` +24 bytes. `fopen`'s stack depth grows by 8 bytes. No reference image links any of them, so every image and both budgets are unchanged.
