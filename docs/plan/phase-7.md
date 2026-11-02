@@ -18,13 +18,13 @@ seam.
 
 ---
 
-## P7.01 — Research and the descriptor model  `[ ]`
-- [ ] `docs/research/posix-subset.md`:
+## P7.01 — Research and the descriptor model  `[x]`
+- [x] `docs/research/posix-subset.md`:
   - POSIX.1-2024 for each header and function in D128;
   - how newlib and picolibc provide them (issue #106's survey);
   - what pi-pico's VFS (`posix/posix-io.c`) and libstdc++'s `basic_file_stdio.cc` expect.
-- [ ] Answer Q37 (the seam handle as the descriptor; 0, 1 and 2 for the standard streams) and Q38 (whether the library defines `open`, `close`, `read` and `write` weakly, or only declares them).
-- [ ] Re-run the pi-pico scan against `origin/main`, and configure a hosted libstdc++ against the headers, to confirm the D128 list.
+- [x] Answer Q37 (the seam handle as the descriptor; 0, 1 and 2 for the standard streams) and Q38 (whether the library defines `open`, `close`, `read` and `write` weakly, or only declares them): D129, D130.
+- [x] Re-run the pi-pico scan against `origin/main` (`a4055c6`: unchanged), and read libstdc++'s configure and I/O backend (GCC 16 branch) to confirm the D128 list. A real configure run needs the toolchain patch of Q39 and moves to P7.05.
 
 ## P7.02 — Headers  `[ ]`
 - [ ] `<sys/types.h>`: `off_t`, `ssize_t`, `mode_t`, `pid_t`, with ABI-identical types on every core of a triple (D15).
@@ -38,14 +38,14 @@ seam.
 - [ ] Fix #106 item 1: `errno` must parse in C++98.
 
 ## P7.03 — Library functions  `[ ]`
-- [ ] `fileno`, `fdopen` and `lseek` over the seam handle (D128, Q37).
+- [ ] `fileno`, `fdopen` and `lseek` over the seam handle (D129).
 - [ ] `strnlen`, `strcasecmp`, `reallocarray`, `sincos`, `sincosf`.
 - [ ] The optional functions over the existing seam:
   - `clock_gettime` (`__rtos_clock_gettime`);
   - `nanosleep` (`__rtos_thread_sleep`);
   - `sched_yield` (`__rtos_thread_yield`);
-  - `isatty` and `getentropy`, with a seam addition only if Q37 or P7.01 shows one is needed.
-- [ ] `open`, `close`, `read` and `write` as Q38 decides (`ioctl` and `poll` stay the port's own).
+  - `getentropy` only if a port supplies an entropy source (libstdc++'s `random_device`); `isatty` is deferred until a consumer needs it (P7.01 found none).
+- [ ] `open`, `close`, `read` and `write` over the seam, one per file, replaceable by a port through archive order (D130); `ioctl` and `poll` stay the port's own.
 
 ## P7.04 — `std::stacktrace`, capture only  `[ ]`
 Frames are captured as addresses on the target, then symbolized on the host
@@ -69,5 +69,5 @@ the ELF on the target (D128).
 
 ## P7.05 — Consumers  `[ ]`
 - [ ] **pi-pico:** a build against the library, with its stdio glue rewritten onto the seam (in pi-pico, not here). Record any name the build still lacks as a Q entry.
-- [ ] **Hosted libstdc++:** configure and build it against the library (the toolchain side is sgstreet/rtoskit-gcc#7), and record which optional features configure turned on.
+- [ ] **Hosted libstdc++:** configure and build it against the library with the `stdio` backend and Q39's configure route (the toolchain side is sgstreet/rtoskit-gcc#7), and record which optional features configure turned on.
 - [ ] Close issue #106.
