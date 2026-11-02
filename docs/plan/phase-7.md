@@ -1,7 +1,7 @@
 # Phase 7 — The minimal POSIX subset
 
-Prerequisite: PLAN D128 (the subset and its reasons), issue #106 (what a hosted
-libstdc++ needs), Q37 and Q38.
+Prerequisite: PLAN D128 (the subset and its reasons, including capture-only
+`std::stacktrace`), issue #106 (what a hosted libstdc++ needs), Q37 and Q38.
 Targets: every architecture in `ARCHS`.
 
 **Goal:** give pi-pico and a hosted libstdc++ the POSIX names they need, and
@@ -47,7 +47,27 @@ seam.
   - `isatty` and `getentropy`, with a seam addition only if Q37 or P7.01 shows one is needed.
 - [ ] `open`, `close`, `read` and `write` as Q38 decides (`ioctl` and `poll` stay the port's own).
 
-## P7.04 — Consumers  `[ ]`
+## P7.04 — `std::stacktrace`, capture only  `[ ]`
+Frames are captured as addresses on the target, then symbolized on the host
+with `addr2line` against the ELF, as pi-pico's `sys/backtrace` output is
+today. libstdc++'s libbacktrace is built against the library, but never opens
+the ELF on the target (D128).
+- [ ] Research section in `docs/research/posix-subset.md`:
+  - how libstdc++ builds `<stacktrace>` (`--enable-libstdcxx-backtrace`, libbacktrace in `libstdc++exp.a`, `_Unwind_Backtrace`);
+  - which libc names libbacktrace needs to compile and link;
+  - what happens when it finds no executable to read (no `/proc/self/exe`, no `getexecname`).
+- [ ] `<sys/stat.h>`: `struct stat` (at least `st_mode` and `st_size`), `mode_t`, the `S_IS*` macros and `S_I*` bits, and `fstat` declared. `fstat` reports the size from `__rtos_seek` to the end, or fails with `ENOSYS` if Q37 leaves no handle for it. `<fcntl.h>` gains `O_CLOEXEC`, `F_GETFD`, `F_SETFD` and `FD_CLOEXEC`, which libbacktrace's open path uses.
+- [ ] An optional unwind-tables build of the library: a build variable (e.g. `LIBC_UNWIND_TABLES=1`, not `#if`) that adds `-funwind-tables` to `LIBC_CFLAGS`, so traces can pass through library frames (`qsort` callbacks, `abort`, `__assert_fail`). The default build, and with it both size budgets and the baselines, stays without unwind tables. The docs say what the option costs.
+- [ ] `__exidx_start` and `__exidx_end`: come from the default linker script for the Linux test port; the `port/none` linker script gains them (D121's note).
+- [ ] `test/unit/cxx` (Arm), built with unwind tables and linked with `-lstdc++exp` when the toolchain provides it:
+  - `std::stacktrace::current()` returns at least the test's own frames;
+  - the frames include one inside the library (a `qsort` comparison callback);
+  - `to_string()` runs without symbol information.
+
+  Without `libstdc++exp`, the test is reported as skipped, the same way as `bitint` (D127).
+- [ ] The toolchain side, `--enable-libstdcxx-backtrace` in sgstreet/rtoskit-gcc#7: record the configure result.
+
+## P7.05 — Consumers  `[ ]`
 - [ ] **pi-pico:** a build against the library, with its stdio glue rewritten onto the seam (in pi-pico, not here). Record any name the build still lacks as a Q entry.
 - [ ] **Hosted libstdc++:** configure and build it against the library (the toolchain side is sgstreet/rtoskit-gcc#7), and record which optional features configure turned on.
 - [ ] Close issue #106.
