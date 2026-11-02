@@ -1512,7 +1512,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 104,
+    "text": 92,
     "unwind": 0
    },
    "__libc_file_position.o": {
@@ -3207,6 +3207,24 @@
     "text": 76,
     "unwind": 0
    },
+   "clock_getres.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 36,
+    "unwind": 0
+   },
+   "clock_gettime.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 36,
+    "unwind": 0
+   },
    "clog.o": {
     "bss": 0,
     "data": 0,
@@ -3232,6 +3250,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 4,
+    "unwind": 0
+   },
+   "close.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 36,
     "unwind": 0
    },
    "cnd_broadcast.o": {
@@ -4080,6 +4107,15 @@
     "text": 4,
     "unwind": 0
    },
+   "fdopen.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 56,
+    "unwind": 0
+   },
    "feclearexcept.o": {
     "bss": 0,
     "data": 0,
@@ -4285,6 +4321,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 106,
+    "unwind": 0
+   },
+   "fileno.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 22,
     "unwind": 0
    },
    "floor.o": {
@@ -4662,7 +4707,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 64,
+    "text": 76,
     "unwind": 0
    },
    "fprintf.o": {
@@ -5628,6 +5673,15 @@
     "text": 4,
     "unwind": 0
    },
+   "lseek.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 44,
+    "unwind": 0
+   },
    "malloc.o": {
     "bss": 0,
     "data": 0,
@@ -5853,6 +5907,15 @@
     "text": 4,
     "unwind": 0
    },
+   "nanosleep.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 36,
+    "unwind": 0
+   },
    "nearbyint.o": {
     "bss": 0,
     "data": 0,
@@ -5986,6 +6049,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 4,
+    "unwind": 0
+   },
+   "open.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 100,
     "unwind": 0
    },
    "perror.o": {
@@ -6150,6 +6222,15 @@
     "text": 92,
     "unwind": 0
    },
+   "read.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 32,
+    "unwind": 0
+   },
    "realloc.o": {
     "bss": 0,
     "data": 0,
@@ -6157,6 +6238,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 180,
+    "unwind": 0
+   },
+   "reallocarray.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 36,
     "unwind": 0
    },
    "remainder.o": {
@@ -6438,6 +6528,15 @@
     "text": 32,
     "unwind": 0
    },
+   "sched_yield.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 10,
+    "unwind": 0
+   },
    "setbuf.o": {
     "bss": 0,
     "data": 0,
@@ -6544,6 +6643,24 @@
     "tbss": 0,
     "tdata": 0,
     "text": 380,
+    "unwind": 0
+   },
+   "sincos.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 48,
+    "unwind": 0
+   },
+   "sincosf.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 40,
     "unwind": 0
    },
    "sinf.o": {
@@ -7311,6 +7428,15 @@
     "text": 16,
     "unwind": 0
    },
+   "strcasecmp.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 60,
+    "unwind": 0
+   },
    "strcat.o": {
     "bss": 0,
     "data": 0,
@@ -7428,6 +7554,15 @@
     "text": 44,
     "unwind": 0
    },
+   "strncasecmp.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 66,
+    "unwind": 0
+   },
    "strncat.o": {
     "bss": 0,
     "data": 0,
@@ -7462,6 +7597,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 44,
+    "unwind": 0
+   },
+   "strnlen.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 22,
     "unwind": 0
    },
    "strpbrk.o": {
@@ -7830,7 +7974,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 116,
+    "text": 140,
     "unwind": 0
    },
    "tmpnam.o": {
@@ -8120,6 +8264,15 @@
     "tdata": 0,
     "text": 36,
     "unwind": 0
+   },
+   "write.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 32,
+    "unwind": 0
    }
   },
   "totals": {
@@ -8128,7 +8281,7 @@
    "rodata": 10167,
    "tbss": 362,
    "tdata": 8,
-   "text": 148154,
+   "text": 148890,
    "unwind": 0
   }
  },
@@ -8345,7 +8498,7 @@
     ]
    },
    "fopen": {
-    "depth": 120,
+    "depth": 128,
     "notes": [
      "assembly: __rtos_linux_syscall",
      "assembly: memset"
@@ -9209,12 +9362,15 @@
    "cimagl.o:cimagl": 0,
    "clearerr.o:clearerr": 8,
    "clock.o:clock": 24,
+   "clock_getres.o:clock_getres": 8,
+   "clock_gettime.o:clock_gettime": 8,
    "clog.o:clog": 152,
    "clog.o:libc/complex/clog.c:__libc_dd_product": 88,
    "clogf.o:clogf": 88,
    "clogf.o:libc/complex/sp-nearest/clogf.c:__libc_ff_product": 16,
    "clogf.o:libc/complex/sp-nearest/clogf.c:__libc_ff_sum": 16,
    "clogl.o:clogl": 0,
+   "close.o:close": 8,
    "cnd_broadcast.o:cnd_broadcast": 8,
    "cnd_destroy.o:cnd_destroy": 0,
    "cnd_init.o:cnd_init": 0,
@@ -9320,6 +9476,7 @@
    "fdiml.o:fdiml": 0,
    "fdiv.o:fdiv": 72,
    "fdivl.o:fdivl": 0,
+   "fdopen.o:fdopen": 16,
    "feclearexcept.o:feclearexcept": 0,
    "fegetenv.o:fegetenv": 0,
    "fegetexceptflag.o:fegetexceptflag": 0,
@@ -9343,6 +9500,7 @@
    "fgetc.o:fgetc": 16,
    "fgetpos.o:fgetpos": 24,
    "fgets.o:fgets": 24,
+   "fileno.o:fileno": 16,
    "floor.o:floor": 24,
    "floorf.o:floorf": 0,
    "floorl.o:floorl": 0,
@@ -9384,7 +9542,7 @@
    "fmodl.o:fmodl": 0,
    "fmul.o:fmul": 96,
    "fmull.o:fmull": 0,
-   "fopen.o:fopen": 16,
+   "fopen.o:fopen": 24,
    "fprintf.o:fprintf": 12,
    "fputc.o:fputc": 24,
    "fputs.o:fputs": 16,
@@ -9492,6 +9650,7 @@
    "lround.o:lround": 24,
    "lroundf.o:lroundf": 16,
    "lroundl.o:lroundl": 0,
+   "lseek.o:lseek": 16,
    "malloc.o:malloc": 8,
    "mblen.o:mblen": 0,
    "mbstowcs.o:mbstowcs": 8,
@@ -9514,6 +9673,7 @@
    "nan.o:nan": 0,
    "nanf.o:nanf": 0,
    "nanl.o:nanl": 0,
+   "nanosleep.o:nanosleep": 8,
    "nearbyint.o:nearbyint": 32,
    "nearbyintf.o:nearbyintf": 24,
    "nearbyintl.o:nearbyintl": 0,
@@ -9529,6 +9689,7 @@
    "nextup.o:nextup": 16,
    "nextupf.o:nextupf": 0,
    "nextupl.o:nextupl": 0,
+   "open.o:open": 4,
    "perror.o:perror": 16,
    "port/__rtos_abort.o:__rtos_abort": 24,
    "port/__rtos_atomic_cas.o:__rtos_atomic_cas": 8,
@@ -9586,7 +9747,9 @@
    "quick_exit.o:quick_exit": 8,
    "raise.o:raise": 8,
    "rand.o:rand": 20,
+   "read.o:read": 8,
    "realloc.o:realloc": 16,
+   "reallocarray.o:reallocarray": 4,
    "remainder.o:remainder": 0,
    "remainderf.o:remainderf": 0,
    "remainderl.o:remainderl": 0,
@@ -9618,6 +9781,7 @@
    "scalbnf.o:scalbnf": 0,
    "scalbnl.o:scalbnl": 0,
    "scanf.o:scanf": 16,
+   "sched_yield.o:sched_yield": 8,
    "setbuf.o:setbuf": 0,
    "setlocale.o:setlocale": 8,
    "setpayload.o:setpayload": 24,
@@ -9629,6 +9793,8 @@
    "setvbuf.o:setvbuf": 24,
    "signal.o:signal": 4,
    "sin.o:sin": 88,
+   "sincos.o:sincos": 24,
+   "sincosf.o:sincosf": 24,
    "sinf.o:sinf": 32,
    "sinh.o:sinh": 128,
    "sinhf.o:sinhf": 40,
@@ -9716,6 +9882,7 @@
    "stdc_trailing_zeros_ul.o:stdc_trailing_zeros_ul": 0,
    "stdc_trailing_zeros_ull.o:stdc_trailing_zeros_ull": 8,
    "stdc_trailing_zeros_us.o:stdc_trailing_zeros_us": 0,
+   "strcasecmp.o:strcasecmp": 12,
    "strcat.o:strcat": 16,
    "strchr.o:strchr": 8,
    "strcoll.o:strcoll": 0,
@@ -9738,10 +9905,12 @@
    "strftime.o:libc/time/strftime.c:render": 24,
    "strftime.o:libc/time/strftime.c:zone": 16,
    "strftime.o:strftime": 128,
+   "strncasecmp.o:strncasecmp": 16,
    "strncat.o:strncat": 24,
    "strncmp.o:strncmp": 8,
    "strncpy.o:strncpy": 24,
    "strndup.o:strndup": 16,
+   "strnlen.o:strnlen": 16,
    "strpbrk.o:strpbrk": 8,
    "strrchr.o:strrchr": 8,
    "strspn.o:strspn": 48,
@@ -9823,7 +9992,8 @@
    "vsprintf.o:vsprintf": 0,
    "vsscanf.o:vsscanf": 24,
    "wcstombs.o:wcstombs": 8,
-   "wctomb.o:wctomb": 4
+   "wctomb.o:wctomb": 4,
+   "write.o:write": 8
   }
  }
 }
