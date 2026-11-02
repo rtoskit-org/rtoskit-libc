@@ -37,7 +37,7 @@ seam.
 - [x] Each header in `test/unit/api`'s standalone `-pedantic-errors` compile, its types and values checked there, and as C++17 and `gnu++98` in `test/unit/cxx` (D120, D131).
 - [x] Fix #106 item 1: `errno`, and every header a C++98 program reaches, parses as `gnu++98` (D131).
 
-## P7.03 — Library functions  `[ ]`
+## P7.03 — Library functions  `[~]`
 - [ ] `fileno`, `fdopen` and `lseek` over the seam handle (D129).
 - [ ] `strnlen`, `strcasecmp`, `strncasecmp`, `reallocarray`, `sincos`, `sincosf`.
 - [ ] The optional functions over the existing seam:
