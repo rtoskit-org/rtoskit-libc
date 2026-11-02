@@ -34,4 +34,20 @@
 #define __LIBC_NULL ((void *)0)
 #endif
 
+/*
+ * The POSIX subset's names in the ISO C headers (PLAN D128, D132): fileno and
+ * fdopen in <stdio.h>, strnlen in <string.h>, reallocarray in <stdlib.h>,
+ * sincos and sincosf in <math.h>, and clock_gettime, clock_getres, nanosleep
+ * and the CLOCK_* clocks in <time.h>. A strictly conforming program may use
+ * these names itself (C23 7.1.3), so they are hidden in the strict modes
+ * (-std=c23, which defines __STRICT_ANSI__) unless the program asks for them
+ * with a POSIX or GNU feature test macro, as the POSIX headers expect. The GNU
+ * modes and C++ (g++ defines _GNU_SOURCE) see them.
+ */
+#if !defined(__STRICT_ANSI__) || defined(_POSIX_C_SOURCE) || defined(_XOPEN_SOURCE) || defined(_GNU_SOURCE) || defined(_DEFAULT_SOURCE)
+#define __LIBC_POSIX_VISIBLE 1
+#else
+#define __LIBC_POSIX_VISIBLE 0
+#endif
+
 #endif /* ___CDEFS_H */

@@ -37,15 +37,17 @@ seam.
 - [x] Each header in `test/unit/api`'s standalone `-pedantic-errors` compile, its types and values checked there, and as C++17 and `gnu++98` in `test/unit/cxx` (D120, D131).
 - [x] Fix #106 item 1: `errno`, and every header a C++98 program reaches, parses as `gnu++98` (D131).
 
-## P7.03 — Library functions  `[~]`
-- [ ] `fileno`, `fdopen` and `lseek` over the seam handle (D129).
-- [ ] `strnlen`, `strcasecmp`, `strncasecmp`, `reallocarray`, `sincos`, `sincosf`.
-- [ ] The optional functions over the existing seam:
-  - `clock_gettime` (`__rtos_clock_gettime`), with `CLOCK_REALTIME` and `CLOCK_MONOTONIC` in `<time.h>` (pi-pico uses `CLOCK_MONOTONIC`);
+## P7.03 — Library functions  `[x]`
+- [x] `fileno`, `fdopen` and `lseek` over the seam handle (D129). `__libc_file_new` no longer closes the handle when it fails, so a failed `fdopen` leaves the descriptor to its caller.
+- [x] `strnlen`, `strcasecmp`, `strncasecmp` (new `libc/strings`), `reallocarray` (`libc/malloc`, beside `calloc`), `sincos`, `sincosf` (over `sin` and `cos`).
+- [x] The optional functions over the existing seam:
+  - `clock_gettime` and `clock_getres` (`__rtos_clock_gettime`, `__rtos_clock_getres`), with `clockid_t` and the `CLOCK_*` clocks in `<time.h>` (pi-pico uses `CLOCK_MONOTONIC`);
   - `nanosleep` (`__rtos_thread_sleep`);
-  - `sched_yield` (`__rtos_thread_yield`);
-  - `getentropy` only if a port supplies an entropy source (libstdc++'s `random_device`); `isatty` is deferred until a consumer needs it (P7.01 found none).
-- [ ] `open`, `close`, `read` and `write` over the seam, one per file, replaceable by a port through archive order (D130); `ioctl` and `poll` stay the port's own.
+  - `sched_yield` (`__rtos_thread_yield`, new `libc/sched`);
+  - `getentropy` is not provided: no port has an entropy source, and the seam would need a new call; `isatty` is deferred until a consumer needs it (P7.01 found none).
+- [x] `open`, `close`, `read` and `write` over the seam, one per file (new `libc/fcntl` and `libc/unistd`), replaceable by a port through archive order (D130); `ioctl` and `poll` stay the port's own.
+- [x] The ISO headers declare the non-ISO names only outside strict C23, or when a feature test macro asks (D132).
+- [x] Tests: `test/unit/posix` (new), `test/unit/none`, `test/unit/api` (`posix.c`, and the strict-mode namespace check).
 
 ## P7.04 — `std::stacktrace`, capture only  `[ ]`
 Frames are captured as addresses on the target, then symbolized on the host

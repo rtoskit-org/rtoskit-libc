@@ -19,4 +19,7 @@ extern int assert_count;
 bool counted(void);
 void ndebug_assert(void);
 
+/* posix.c: the POSIX subset's declarations under _POSIX_C_SOURCE */
+bool posix_visible(void);
+
 #endif /* _API_H */

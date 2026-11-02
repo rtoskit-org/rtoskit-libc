@@ -2,8 +2,9 @@
 
 Issue #106. Plan: PLAN D128 (the subset), phase 7. Decisions from this note:
 D129 (descriptors are seam handles; answers Q37), D130 (the library defines
-`open`, `close`, `read` and `write`; answers Q38). Open: Q39 (how a hosted
-libstdc++ is configured for this library).
+`open`, `close`, `read` and `write`; answers Q38), D132 (where the ISO
+headers show the subset's names; P7.03). Open: Q39 (how a hosted libstdc++
+is configured for this library).
 
 ## Sources reviewed
 
@@ -191,3 +192,110 @@ to sgstreet/rtoskit-gcc#7 (Q39). The library side is unaffected.
   - `read(0, …)` returns 0 (end of file), because its `__rtos_read` has no
     input;
   - `lseek(1, 0, SEEK_CUR)` returns -1 with `ESPIPE`.
+
+## P7.03: the library functions
+
+### Sources reviewed
+
+- POSIX.1-2024, `functions/open.html`, `read.html`, `write.html`,
+  `close.html`, `lseek.html`, `fileno.html`, `fdopen.html`, `strnlen.html`,
+  `strcasecmp.html`, `reallocarray.html`, `clock_getres.html` (which also
+  covers `clock_gettime`), `nanosleep.html`, `sched_yield.html`, `getentropy.html`,
+  and `basedefs/V1_chap02.html` §2.2 (the feature test macro
+  `_POSIX_C_SOURCE` and the namespace it opens).
+- glibc's `<features.h>` (<https://sourceware.org/git/?p=glibc.git;a=blob;f=include/features.h>),
+  newlib's `<sys/features.h>` and picolibc's copy of it, read for how each
+  decides which non-ISO names an ISO header shows: all three show them by
+  default, and hide them under `__STRICT_ANSI__` (GCC's `-std=c23`) unless a
+  feature test macro asks. g++ always defines `_GNU_SOURCE`, so C++ sees them.
+- musl (<https://git.musl-libc.org/cgit/musl/tree/src/string/strnlen.c>,
+  `src/string/strcasecmp.c`), FreeBSD (`lib/libc/string/strcasecmp.c`) and
+  OpenBSD (`lib/libc/stdlib/reallocarray.c`, where the function started),
+  read for structure only: `strnlen` over `memchr`; `strcasecmp` folding both
+  bytes to lower case as `unsigned char`; `reallocarray` as an overflow
+  check before `realloc`.
+- glibc's `sincos` (`sysdeps/ieee754/dbl-64/s_sincos.c`): a shared
+  argument reduction, which saves one reduction per call at the cost of a
+  third trigonometric kernel.
+
+### Choices
+
+- **Visibility (D132).** fileno, fdopen, strnlen, reallocarray, sincos,
+  sincosf, clock_gettime, clock_getres, nanosleep, `clockid_t` and the
+  `CLOCK_*` clocks are not ISO names, so a strictly conforming program may
+  define them (C23 7.1.3). `<__cdefs.h>` defines `__LIBC_POSIX_VISIBLE` as 1
+  unless `__STRICT_ANSI__` is defined without `_POSIX_C_SOURCE`,
+  `_XOPEN_SOURCE`, `_GNU_SOURCE` or `_DEFAULT_SOURCE`, and the ISO headers
+  declare the names under `#if __LIBC_POSIX_VISIBLE`. The POSIX-only headers
+  (`<unistd.h>`, `<fcntl.h>`, `<strings.h>`, `<sched.h>`) need no guard.
+  The library's own files define `_POSIX_C_SOURCE` (or `_GNU_SOURCE` for
+  sincos) before their includes.
+- **open.** `O_ACCMODE` selects `__RTOS_OPEN_READ`, `WRITE` or both, and the
+  value 3 fails with `EINVAL`. `O_APPEND`, `O_CREAT`, `O_TRUNC` and `O_EXCL`
+  map one to one. The seam has no file modes, so the variadic mode is never
+  read. `O_NONBLOCK` has no effect on the files the seam opens, and unknown
+  bits are ignored, as Linux does.
+- **read, write, close, lseek.** One seam call each; a negative return
+  becomes `errno` and -1.
+- **fileno** returns the handle under the stream's lock. **fdopen** parses
+  the mode with `__libc_file_mode` (so `"w"` and `"x"` add nothing to an
+  open file, as POSIX says) and calls `__libc_file_new`. A negative
+  descriptor fails with `EBADF`. On failure POSIX leaves the descriptor with
+  the caller, but `__libc_file_new` closed the handle when it failed; now it
+  leaves the handle open, and fopen and tmpfile close it themselves.
+- **strnlen** is `memchr` for the terminator within `maxlen`, so it reads
+  no byte past `maxlen` and inherits the string kernels' `memchr`.
+- **strcasecmp, strncasecmp** fold `'A'`–`'Z'` with `__libc_isupper` (the
+  only locale is "C") and compare as `unsigned char`, in a new
+  `libc/strings` module.
+- **reallocarray** lives beside `calloc` in `libc/malloc`, the same
+  `ckd_mul` check, then `realloc`. On overflow the old block is kept.
+- **sincos, sincosf** call `sin` and `cos` (or `sinf` and `cosf`). Each
+  result is exactly the single function's, on every libm layer of every
+  architecture, and the files add no kernel. A shared reduction would save
+  time on large arguments only, and would need one more kernel per layer;
+  it can come later as a speed-flavour file (D77) if a benchmark asks.
+- **clock_gettime, clock_getres** pass the clock to the seam as a time base:
+  `CLOCK_REALTIME` is `TIME_UTC` (1), `CLOCK_MONOTONIC` is `TIME_MONOTONIC`
+  (2), and `CLOCK_PROCESS_CPUTIME_ID` and `CLOCK_THREAD_CPUTIME_ID` are
+  `TIME_ACTIVE` and `TIME_THREAD_ACTIVE`. An unknown clock is the port's
+  `EINVAL`.
+- **nanosleep** is `__rtos_thread_sleep`: `EINVAL` for `tv_nsec` outside
+  [0, 10⁹), and `EINTR` with the time left in `rmtp`.
+- **sched_yield** calls `__rtos_thread_yield` and returns 0.
+- **getentropy** is not provided: no port has an entropy source, and the
+  seam would need a new call. libstdc++'s `random_device` then has no
+  default source, which configure detects. **isatty** stays deferred.
+
+### Edge cases and tests (`test/unit/posix`, `test/unit/none`, `test/unit/api`)
+
+- open/write/lseek/read/close round trip; `lseek` past the end and
+  `SEEK_END`; `lseek(fd, -1, SEEK_SET)` gives `EINVAL`; I/O on a closed
+  descriptor gives `EBADF`; `O_EXCL` on an existing file gives `EEXIST`, a
+  missing file `ENOENT`, `O_ACCMODE` `EINVAL`; `O_APPEND` writes at the end;
+  a write to an `O_RDONLY` descriptor fails; `O_TRUNC` empties the file.
+- `fileno` of the standard streams is 0, 1, 2; two streams on one
+  descriptor (`fopen` then `fdopen(fileno(…))`) see each other's writes after
+  `fflush`; closing the `fdopen` stream closes the descriptor; `fdopen`'s
+  `"w"` does not truncate; `fdopen(-1, …)` gives `EBADF`;
+  `regression_fdopen_failure_keeps_descriptor`: after a bad mode the
+  descriptor still writes.
+- `strnlen` with `maxlen` 0, below, at and above the length, `SIZE_MAX`, and
+  an unterminated array; `strcasecmp` and `strncasecmp` on case pairs,
+  prefixes, the characters between `'Z'` and `'a'` (`'['` sorts below
+  `'a'` because both sides fold to lower case), bytes above 127, and `n`
+  of 0 and `SIZE_MAX`.
+- `reallocarray`: grow keeps the contents; both operand orders of a
+  wrapping product fail with `ENOMEM` and keep the block.
+- `sincos`, `sincosf`: bit-identical to `sin`/`cos` at ±0, the smallest
+  subnormal, 0.5, ±1, π, 10²², the largest power of two, ±∞ and NaN.
+- Clocks: `CLOCK_REALTIME` agrees with `timespec_get(TIME_UTC)`;
+  resolutions are positive; unknown clocks give `EINVAL`; a 2 ms
+  `nanosleep` lasts at least 2 ms on `CLOCK_MONOTONIC`; `tv_nsec` of 10⁹ and
+  -1 give `EINVAL`; `sched_yield` returns 0.
+- `port/none`: `open` gives `ENOSYS`, `write(0, …)` `EBADF`, `read(0, …)` 0,
+  `lseek(1, …)` `ESPIPE`, `close(5)` `EBADF`; the clocks and `nanosleep`
+  give `ENOSYS`; `nanosleep` with a bad `tv_nsec` still gives `EINVAL`.
+- `test/unit/api`: strict C23 leaves every one of the names free (the test
+  defines objects with them), and under `_POSIX_C_SOURCE` each has the
+  POSIX type.

@@ -123,6 +123,11 @@ size_t memalignment(const void *p);
 #define bsearch(key, base, nmemb, size, compar) __LIBC_CONST_GENERIC(base, void, bsearch(key, base, nmemb, size, compar))
 #endif
 
+/* POSIX.1-2024 (PLAN D128, D132) */
+#if __LIBC_POSIX_VISIBLE
+void *reallocarray(void *ptr, size_t nelem, size_t elsize);
+#endif
+
 __LIBC_END_DECLS
 
 #endif /* _STDLIB_H */

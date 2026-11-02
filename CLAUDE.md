@@ -167,7 +167,9 @@ Allowed `#if`/`#ifdef` uses, and nothing else:
    for `nullptr_t` in `<stddef.h>`, is the only other C++ conditional.
 3. Macros the standard requires to be conditional (`NDEBUG` in `<assert.h>`,
    `__STDC_WANT_*`, and feature macros the standard says are defined only
-   when supported).
+   when supported). The POSIX subset's names in the ISO headers sit
+   under `#if __LIBC_POSIX_VISIBLE` (`<__cdefs.h>`, D132); a library file that
+   needs them defines `_POSIX_C_SOURCE` before its includes.
 
 Instead of `#if`:
 
