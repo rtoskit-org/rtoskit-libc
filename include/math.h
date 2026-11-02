@@ -414,6 +414,12 @@ int setpayloadsigf(float *res, float pl);
 int setpayloadsigl(long double *res, long double pl);
 #endif
 
+/* GNU: sine and cosine together, which libstdc++ uses (PLAN D128, D132) */
+#if __LIBC_POSIX_VISIBLE
+void sincos(double x, double *sinp, double *cosp);
+void sincosf(float x, float *sinp, float *cosp);
+#endif
+
 __LIBC_END_DECLS
 
 #endif /* _MATH_H */

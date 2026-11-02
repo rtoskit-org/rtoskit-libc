@@ -11,8 +11,13 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+/* The POSIX subset's names in the ISO headers (PLAN D132) */
+#define _POSIX_C_SOURCE 202405L
+
 #include <errno.h>
+#include <fcntl.h>
 #include <rtos/rtos-port.h>
+#include <sched.h>
 #include <stdatomic.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -20,6 +25,7 @@
 #include <string.h>
 #include <threads.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "none-test.h"
 #include "rtos-none.h"
@@ -192,6 +198,21 @@ int main(int argc, char **argv)
 	errno = 0;
 	CHECK(fopen("file", "r") == nullptr && errno == ENOSYS);
 	CHECK(getenv("PATH") == nullptr);
+
+	/* The POSIX subset over the same seam (P7.03): only the standard streams, and no input */
+	char input[4];
+
+	CHECK(open("file", O_RDONLY) == -1 && errno == ENOSYS);
+	CHECK(write(1, "", 0) == 0 && write(0, "x", 1) == -1 && errno == EBADF);
+	CHECK(read(0, input, sizeof(input)) == 0);
+	CHECK(lseek(1, 0, SEEK_CUR) == -1 && errno == ESPIPE);
+	CHECK(close(2) == 0 && close(5) == -1 && errno == EBADF);
+	CHECK(fileno(stdin) == 0 && fileno(stdout) == 1 && fileno(stderr) == 2);
+	CHECK(clock_gettime(CLOCK_MONOTONIC, &ts) == -1 && errno == ENOSYS);
+	CHECK(clock_getres(CLOCK_REALTIME, &ts) == -1 && errno == ENOSYS);
+	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000 }, nullptr) == -1 && errno == ENOSYS);
+	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000000000 }, nullptr) == -1 && errno == EINVAL);
+	CHECK(sched_yield() == 0);
 
 	/* The last thread's thrd_exit ends the program as exit(EXIT_SUCCESS), after the tss destructor */
 	CHECK(atexit(report) == 0);

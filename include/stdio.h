@@ -121,6 +121,12 @@ int feof(FILE *stream);
 int ferror(FILE *stream);
 void perror(const char *s);
 
+/* POSIX.1-2024: a stream's descriptor is its seam handle (PLAN D128, D129, D132) */
+#if __LIBC_POSIX_VISIBLE
+int fileno(FILE *stream);
+FILE *fdopen(int fildes, const char *mode);
+#endif
+
 __LIBC_END_DECLS
 
 #endif /* _STDIO_H */

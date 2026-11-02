@@ -33,5 +33,10 @@ FILE *fopen(const char *restrict filename, const char *restrict mode)
 		return nullptr;
 	}
 
-	return __libc_file_new(handle, stream_flags);
+	FILE *stream = __libc_file_new(handle, stream_flags);
+
+	if (stream == nullptr)
+		__rtos_close(handle);
+
+	return stream;
 }
