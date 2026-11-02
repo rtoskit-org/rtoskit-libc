@@ -29,7 +29,7 @@ CFLAGS += -fno-builtin
 # on without the __extension__ or reserved spelling that marks it. One stamp per header, rebuilt when the header changes.
 # -Wno-attributes: a compiler that does not implement a C23 standard attribute ([[unsequenced]] before GCC 15) may
 # ignore it, which is the compiler's limit, not the header's.
-API_HEADERS := $(wildcard ${PROJECT_ROOT}/include/*.h) ${PROJECT_ROOT}/include/rtos/rtos-port.h
+API_HEADERS := $(wildcard ${PROJECT_ROOT}/include/*.h ${PROJECT_ROOT}/include/sys/*.h) ${PROJECT_ROOT}/include/rtos/rtos-port.h
 API_STAMPS := $(patsubst ${PROJECT_ROOT}/include/%.h,${CURDIR}/standalone/%.ok,${API_HEADERS})
 
 ${CURDIR}/standalone/%.ok: ${PROJECT_ROOT}/include/%.h

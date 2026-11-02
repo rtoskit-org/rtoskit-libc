@@ -28,11 +28,11 @@ __LIBC_BEGIN_DECLS
  * every target (PLAN D15, D33).
  */
 typedef struct {
-	alignas(8) unsigned char __state[10 * sizeof(void *) + 64];
+	unsigned char __state[10 * sizeof(void *) + 64] __attribute__((__aligned__(8)));
 } jmp_buf[1];
 
-[[gnu::returns_twice]] int setjmp(jmp_buf env);
-[[noreturn]] void longjmp(jmp_buf env, int val);
+__attribute__((__returns_twice__)) int setjmp(jmp_buf env);
+__attribute__((__noreturn__)) void longjmp(jmp_buf env, int val);
 
 /* C23 7.13.1.1p2: setjmp may be a macro */
 #define setjmp setjmp

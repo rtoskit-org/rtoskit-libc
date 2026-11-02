@@ -86,7 +86,7 @@ int thrd_create(thrd_t *thr, thrd_start_t func, void *arg);
 thrd_t thrd_current(void);
 int thrd_detach(thrd_t thr);
 int thrd_equal(thrd_t thr0, thrd_t thr1);
-[[noreturn]] void thrd_exit(int res);
+__attribute__((__noreturn__)) void thrd_exit(int res);
 int thrd_join(thrd_t thr, int *res);
 int thrd_sleep(const struct timespec *duration, struct timespec *remaining);
 void thrd_yield(void);

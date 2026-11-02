@@ -77,13 +77,13 @@ int rand(void);
 void srand(unsigned int seed);
 
 /* Communication with the environment (C23 7.24.4) */
-[[noreturn]] void abort(void);
+__attribute__((__noreturn__)) void abort(void);
 int atexit(void (*func)(void));
 int at_quick_exit(void (*func)(void));
-[[noreturn]] void exit(int status);
-[[noreturn]] void _Exit(int status);
+__attribute__((__noreturn__)) void exit(int status);
+__attribute__((__noreturn__)) void _Exit(int status);
 char *getenv(const char *name);
-[[noreturn]] void quick_exit(int status);
+__attribute__((__noreturn__)) void quick_exit(int status);
 int system(const char *string);
 
 /* Searching and sorting utilities (C23 7.24.5) */

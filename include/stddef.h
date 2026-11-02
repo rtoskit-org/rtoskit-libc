@@ -21,16 +21,21 @@
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 typedef __SIZE_TYPE__ size_t;
-/* wchar_t is a keyword in C++ */
+/*
+ * wchar_t is a keyword in C++. nullptr arrived in C++11, so C++98 has no
+ * nullptr_t (PLAN D131)
+ */
 #ifndef __cplusplus
 typedef __WCHAR_TYPE__ wchar_t;
-#endif
 typedef __typeof__(nullptr) nullptr_t;
+#elif __cplusplus >= 201103L
+typedef decltype(nullptr) nullptr_t;
+#endif
 
 /* The greatest fundamental alignment is that of the widest scalar types */
 typedef struct {
-	alignas(long long) long long __ll;
-	alignas(long double) long double __ld;
+	long long __ll __attribute__((__aligned__(__alignof__(long long))));
+	long double __ld __attribute__((__aligned__(__alignof__(long double))));
 } max_align_t;
 
 #define NULL __LIBC_NULL

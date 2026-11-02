@@ -21,7 +21,7 @@ __LIBC_BEGIN_DECLS
 /* C23 7.2 */
 #define __STDC_VERSION_ASSERT_H__ 202311L
 
-[[noreturn]] void __libc_assert_fail(const char *expression, const char *file, int line, const char *function);
+__attribute__((__noreturn__)) void __libc_assert_fail(const char *expression, const char *file, int line, const char *function);
 
 /* Takes exactly one scalar, so assert() and assert(1, 1) are diagnosed (C23 7.2.1p3) */
 static inline bool __libc_assert_scalar(bool value)
