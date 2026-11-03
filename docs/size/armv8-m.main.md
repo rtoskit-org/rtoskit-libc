@@ -726,3 +726,7 @@ Speed flavour only: `__libc_trig_fixed.o`, `__libc_trig_dd.o` and `__libc_trig_f
 ## P9.03 — `tan` through the D136 kernel (speed flavour, D142)
 
 The speed flavour's `tan` adds `__libc_tan_fixed.o` and `__libc_tan_dd.o` (tan.c's double-double path, now its fallback). The speed budget holds within its margin, and the size flavour is unchanged.
+
+## D144 — `stat`, `isatty` and `dup` (issue #113)
+
+Three new members (`stat`, `isatty`, `dup`), linked only by programs that call them; `jmp_buf`'s named struct and `unreachable()` in C only change no object. No other member, no image and neither budget changes.
