@@ -30,7 +30,7 @@ struct __libc_trig_fixed {
 	bool negative;
 };
 
-#define __LIBC_TRIG_FIXED_ERROR 32u
+#define __LIBC_TRIG_FIXED_ERROR 18u
 
 /* What __libc_trig_fixed computes */
 #define __LIBC_TRIG_FIXED_SIN 1u

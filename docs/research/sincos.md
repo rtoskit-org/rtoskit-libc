@@ -213,3 +213,46 @@ The shared reduction is implemented as designed above, one file per path. Measur
 The soft-double cores gain less than the estimate of 1.6–1.75 × `sin`: `sincos` is 1.68 × `sin` on armv6-m and 1.64 × on armv7e-m, because the double-double cores, not the Cody–Waite reduction, dominate there. That is what P8.03's fixed-point cores address. Where the arithmetic is hardware (armv7e-m-dp, x86_64) `sincos` costs 1.4 × `sin`.
 
 **A subtlety found by the test.** `sin` negates the double-double result and then sums it in the caller's rounding mode. Summing first and negating the sum gives a different result in the directed modes (−(a + b) is not (−a) + (−b) when rounding up or down). The identity test catches it in every quadrant that negates.
+
+## P8.03a: the fixed-point kernel
+
+`libc/math/dp-fixed/speed/__libc_trig_fixed.c` (with `__libc_trig_fixed_round.c` and `trig-fixed.h`). It is written from the design above and does not use a table: the polynomial is the shorter code for `sin` or `cos` alone, and the table variant remains an option for `sincos` if P8.03c's measurements ask for it.
+
+### Algorithm
+
+- **Domain.** 2⁻²⁷ ≤ |x| < 2²⁰. Below that, `sin` and `cos` already answer from their entry tests. Above it is Payne–Hanek's range, which declines to the double-double path.
+- **Reduction.**
+  - Below π/4: r = |x|, exact.
+  - Otherwise: |x| = m 2ᵉ, with m a 53-bit integer. The product m T, with T = ⌊2/π 2¹⁹²⌋ (six words), is 12 32 × 32 products. The integer point lies at bit 192 − e (between 225 and 245 for this range).
+  - Two bits above the point give q mod 4, and 128 bits below it give the fraction. T's truncation is below 2⁻¹⁵⁰ there.
+  - A fraction of ½ or more gives q + 1 and 1 − fraction, negative. The fraction is normalised to 64 bits; a fraction below 2⁻⁶⁴ (never seen) declines.
+  - r = f π/2: one 64 × 64 high product with π/2 in units of 2⁻⁶³. r is then R 2^(e_r − 63), with R's bit 63 set and e_r ≤ −1.
+- **Polynomials.**
+  - z = r² in units of 2⁻⁶⁴.
+  - sin r = r (1 − z (1/3! − z (1/5! − …))): nine Taylor coefficients, 1/3! … 1/19!, with Horner's rule on positive values only (each term is less than a twentieth of the last). The bracket is in units of 2⁻⁶³, then multiplied by R. This keeps relative accuracy for any small r.
+  - cos r = 1 − z (1/2! − z (1/4! − …)): coefficients 1/2! … 1/18!.
+  - The truncated terms are below 2⁻⁷² (sin r / r) and 2⁻⁶⁸ (cos r).
+  - Only the polynomials the quadrant needs are evaluated: one for `sin` or `cos`, both for `sincos`.
+- **Multiplies.** Every product goes through `__libc_fixed_wide` (32 × 32 → 64). That is four 16-bit products on Armv6-M (D86) and `UMULL` on the Thumb-2 cores. A 64 × 64 high product is four of them, done exactly.
+- **Rounding.** A 64-bit significand v, with bit 63 set, is rounded to 53 bits when its 11 lower bits are more than E = 18 units from 0x400. Otherwise the call falls back to the double-double path. The soft-double cores round to nearest only (D44), so only that direction is tested. The double is assembled from the bits, with no soft-double operation.
+
+### Error budget (units of v's last bit)
+
+| Source | sin | cos |
+|---|---|---|
+| r: fraction truncated to 64 bits, π/2 rounded, the product floored | < 2.6 × 2⁻⁶³ relative | the same |
+| z = r²: twice r's, plus one floor and the shift | < 7.2 × 2⁻⁶³ relative | the same |
+| Horner: nine floors, damped by z ≤ 0.62 | < 3 × 2⁻⁶³ on the bracket (≥ 0.9) | < 3.7 × 2⁻⁶³ on cos r (≥ 0.707) |
+| The product with R, floored, then normalised by up to 2 bits | < 8.3 × 2⁻⁶³ relative → **16.6 units** | normalised by 1 bit → **7.4 units** |
+
+E = 18 covers the larger estimate.
+
+### Measured (`tools/scripts/trig-fixed-check`, x86-64 host, MPFR at 256 bits)
+
+- **Arguments:**
+  - 10⁸ random arguments, half log-uniform over [2⁻²⁷, 2²⁰) and half uniform over [−10, 10];
+  - the doubles nearest n π/2 for n < 4096, and every 97th n up to 667,544 (that is, to 2²⁰), with two neighbours each side and both signs (about 9 × 10⁵ arguments).
+- **Largest error, with a provisional bound of 32:** sin 7.03 units (at −0x1.35ecc7d819a91p+4), cos 7.08 units (at 0x1.036673e4d7ebep+3). No argument declined, and no fast result was rounded incorrectly. The fallback rate was 3.2 %.
+- **With the bound at 18** (the script's default run): 100,437,400 arguments per function. The largest errors are unchanged. No fast result was rounded incorrectly. The fallback rate is 1.81 % for sin and 1.86 % for cos.
+
+The measured error is under half the analytic bound. So a call takes the fast path about 98 % of the time, and the rest pay for the double-double path once more. A tighter analysis, or a wider r (96 bits), would lower the fallback rate if P8.03c's measurements show it matters.
