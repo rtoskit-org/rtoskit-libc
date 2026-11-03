@@ -369,16 +369,16 @@
     "insns": 17669.31
    },
    "sincos/latency": {
-    "insns": 35373.19
+    "insns": 29687.38
    },
    "sincos/throughput": {
-    "insns": 35340.12
+    "insns": 29654.31
    },
    "sincosf/latency": {
-    "insns": 8468.31
+    "insns": 5495.62
    },
    "sincosf/throughput": {
-    "insns": 8477.44
+    "insns": 5504.75
    },
    "sinf/latency": {
     "insns": 4725.94

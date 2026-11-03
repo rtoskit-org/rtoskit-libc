@@ -197,3 +197,19 @@ Measured with qemu instruction counting (`make bench BENCH_UPDATE=1`, throughput
 | x86_64 | 308 | 313 | 635 | 337 | 328 | 679 |
 
 `sincos` costs the sum of `sin` and `cos` plus the wrapper's few instructions everywhere, as P7.03's implementation implies. These are the rows P8.02 and P8.03 improve against. (D133's 6,876 for armv7e-m was an older figure; the current one is 6,435.)
+
+## P8.02: results
+
+The shared reduction is implemented as designed above, one file per path. Measured (instructions per call, throughput rows):
+
+| Arch | `sincos` before → after | `sincosf` before → after |
+|---|---|---|
+| armv6-m, armv6s-m | 35,340 → 29,654 (−16 %) | 36,637 → 33,644 (−8 %); speed 8,477 → 5,504 (−35 %) |
+| armv7-m | 13,034 → 10,702 (−18 %) | 18,256 → 16,796 (−8 %); speed 4,498 → 3,055 (−32 %) |
+| armv7e-m, armv8-m.main | 12,863 → 10,527 (−18 %) | 1,154 → 786 (−32 %) |
+| armv7e-m-dp | 344 → 230 (−33 %) | 379 → 270 (−29 %) |
+| x86_64 | 635 → 445 (−30 %) | 679 → 492 (−27 %) |
+
+The soft-double cores gain less than the estimate of 1.6–1.75 × `sin`: `sincos` is 1.68 × `sin` on armv6-m and 1.64 × on armv7e-m, because the double-double cores, not the Cody–Waite reduction, dominate there. That is what P8.03's fixed-point cores address. Where the arithmetic is hardware (armv7e-m-dp, x86_64) `sincos` costs 1.4 × `sin`.
+
+**A subtlety found by the test.** `sin` negates the double-double result and then sums it in the caller's rounding mode. Summing first and negating the sum gives a different result in the directed modes (−(a + b) is not (−a) + (−b) when rounding up or down). The identity test catches it in every quadrant that negates.
