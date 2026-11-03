@@ -29,6 +29,9 @@ CFLAGS += ${LIBC_CFLAGS} -fno-math-errno
 NOFP_WIDE := $(if $(filter armv6-m armv6s-m,${ARCH_CROSS}),muls,umull)
 CPPFLAGS += -I${SOURCE_DIR}/${NOFP_WIDE}
 
+# sinf, cosf and sincosf call the D136 kernel (P9.02, Q41): its header, and its multiply for this core
+CPPFLAGS += -I${SOURCE_DIR}/../../dp-fixed/speed -I${SOURCE_DIR}/../../dp-fixed/speed/${NOFP_WIDE}
+
 # As the sp-nearest layer whose fallback paths these files keep (PLAN D56)
 CFLAGS += -Wdouble-promotion
 
