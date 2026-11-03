@@ -718,3 +718,7 @@ Three new members (`fstat`, `fcntl`, `getpid`), linked only by programs that cal
 ## P8.02 — One reduction for `sincos` and `sincosf`
 
 `sincos.o` grows to about 520–545 bytes and `sincosf.o` (the `sp-nearest` file) to 184–200 bytes: each now holds the entry tests, one reduction and both cores' calls instead of two calls. `sincos.o` is still smaller than `sin.o` + `cos.o`, so a program that calls only `sincos` shrinks; one that also calls `sin` and `cos` grows by the difference. No reference image links them; every image and both budgets are unchanged.
+
+## P8.03 — Fixed-point double `sin`, `cos` and `sincos` (speed flavour, D136)
+
+Speed flavour only: `__libc_trig_fixed.o`, `__libc_trig_dd.o` and `__libc_trig_fixed_round.o` (1,368 + 560 + 96 bytes) are new, and the speed `sin.o`, `cos.o` and `sincos.o` shrink by 110–165 bytes each (their double-double code moves to `__libc_trig_dd.o`). A program that calls `sin` or `cos` links the kernel and keeps the double-double cores for the fallback, about 2 KB more; the speed budgets hold (`size-report budget --flavour speed`). The size flavour and its baselines are unchanged.

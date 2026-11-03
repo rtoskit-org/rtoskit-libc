@@ -68,8 +68,18 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
     - with the bound halved to 9, none fail, because the measured largest error is 7.08 units;
     - the D124 vectors pass every mutant, since their 0.53-ulp bound cannot see a misrounded tie.
 
-## P8.03c — Bench, size, notes  `[~]`
-- [ ] Bench (target: about 10× on armv7e-m, more on armv6-m), the speed budget, and the notes.
+## P8.03c — Bench, size, notes  `[x]`
+- [x] Bench, speed flavour (instructions per call). No other case changed, and the size flavour, armv7e-m-dp and x86_64 are unchanged.
+
+  | Arch | `sin` | `cos` | `sincos` |
+  |---|---|---|---|
+  | armv6-m, armv6s-m | 17,669 → 2,877 (6.1×) | 17,660 → 3,710 (4.8×) | 29,654 → 5,239 (5.7×) |
+  | armv7-m | 6,524 → 812 (8.0×) | 6,500 → 1,117 (5.8×) | 10,702 → 1,476 (7.3×) |
+  | armv7e-m | 6,435 → 803 (8.0×) | 6,413 → 1,107 (5.8×) | 10,528 → 1,457 (7.2×) |
+  | armv8-m.main | 6,435 → 795 (8.1×) | 6,413 → 1,102 (5.8×) | 10,528 → 1,456 (7.2×) |
+
+  The target of "about 10× on armv7e-m" is not reached for `cos` and `sincos`, because one of the bench's 16 arguments falls back. Without it, `cos` costs about 720 on armv7e-m (8.9×). Armv6-M reaches 6×, not "more than armv7e-m": each 64-bit product there is 16 `MULS`. A table-driven variant and a narrower fallback are left to P8.04 to weigh.
+- [x] The speed budgets hold on every core. The new members (about 2 KB) are recorded in `docs/size/<arch>.md`, and the size flavour is unchanged.
 
 ## P8.04 — Wrap-up  `[ ]`
 - [ ] `docs/perf/<arch>.md` summary, PLAN decisions, and the speed budgets re-locked where a decision allows it.
