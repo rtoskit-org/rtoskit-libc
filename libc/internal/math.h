@@ -119,6 +119,12 @@ struct __libc_float_case {
  */
 float __libc_float_case(double y, float x, const struct __libc_float_case *cases, size_t count);
 
+/* sinf's and cosf's hard cases on the double path, shared with sincosf (P8.02) */
+#define __LIBC_SINF_CASES 2
+#define __LIBC_COSF_CASES 4
+extern const struct __libc_float_case __libc_sinf_cases[__LIBC_SINF_CASES];
+extern const struct __libc_float_case __libc_cosf_cases[__LIBC_COSF_CASES];
+
 /*
  * The double result y of f(x) rounded to float, also for f's hard cases.
  * Only a y within 2^8 double ulps of a float halfway point (its 29 bits below
