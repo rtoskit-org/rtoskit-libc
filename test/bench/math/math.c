@@ -11,6 +11,9 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+/* sincos and sincosf (PLAN D132) */
+#define _GNU_SOURCE
+
 #include <math.h>
 #include <stdio.h>
 
@@ -57,6 +60,25 @@ struct math_case {
 		#name, nullptr, nullptr, name##f, name, lo, hi, lo2, hi2 \
 	}
 
+/* sincos and sincosf as unary cases: the sum of the two results (P8.01) */
+static double sincos_sum(double x)
+{
+	double s;
+	double c;
+
+	sincos(x, &s, &c);
+	return s + c;
+}
+
+static float sincosf_sum(float x)
+{
+	float s;
+	float c;
+
+	sincosf(x, &s, &c);
+	return s + c;
+}
+
 static const struct math_function functions[] = {
 	UNARY(sqrt, 0, 1e4),
 	UNARY(cbrt, -1e3, 1e3),
@@ -71,6 +93,7 @@ static const struct math_function functions[] = {
 	BINARY(pow, 0.5, 4, -8, 8),
 	UNARY(sin, -10, 10),
 	UNARY(cos, -10, 10),
+	{ "sincos", sincosf_sum, sincos_sum, nullptr, nullptr, -10, 10, 0, 0 },
 	UNARY(tan, -1.5, 1.5),
 	UNARY(asin, -1, 1),
 	UNARY(acos, -1, 1),
