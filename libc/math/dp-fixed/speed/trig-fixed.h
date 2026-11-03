@@ -78,4 +78,33 @@ static inline uint64_t __libc_trig_fixed_abs_bits(double x)
 	return bits & 0x7fffffffffffffffULL;
 }
 
+/*
+ * The float nearest a fixed-point result, or false when the result lies
+ * within the error bound of a float halfway point, or would be subnormal
+ * (P9.02, Q41): the 40 bits below the float significand decide
+ */
+bool __libc_trig_fixed_roundf(const struct __libc_trig_fixed *value, float *result);
+
+/*
+ * A float argument for the kernel: true, with x as a double, when |x| is in
+ * the kernel's domain, [2^-27, 2^20); built from the bits, so Armv6-M calls
+ * no soft-float conversion
+ */
+static inline bool __libc_trig_fixed_from_float(float x, double *d)
+{
+	uint32_t bits;
+	uint32_t magnitude;
+	uint64_t wide;
+
+	__builtin_memcpy(&bits, &x, sizeof(bits));
+	magnitude = bits & 0x7fffffffu;
+	if (magnitude < 0x32000000u || magnitude >= 0x49800000u)
+		return false;
+
+	/* A normal float: rebias the exponent (127 -> 1023) and widen the significand */
+	wide = ((uint64_t)(bits >> 31) << 63) | ((uint64_t)((magnitude >> 23) + 1023 - 127) << 52) | ((uint64_t)(magnitude & 0x007fffffu) << 29);
+	__builtin_memcpy(d, &wide, sizeof(*d));
+	return true;
+}
+
 #endif /* _TRIG_FIXED_H */
