@@ -49,7 +49,7 @@ seam.
 - [x] The ISO headers declare the non-ISO names only outside strict C23, or when a feature test macro asks (D132).
 - [x] Tests: `test/unit/posix` (new), `test/unit/none`, `test/unit/api` (`posix.c`, and the strict-mode namespace check).
 
-## P7.04 — `std::stacktrace`, capture only  `[ ]`
+## P7.04 — `std::stacktrace`, capture only  `[~]`
 Frames are captured as addresses on the target, then symbolized on the host
 with `addr2line` against the ELF, as pi-pico's `sys/backtrace` output is
 today. libstdc++'s libbacktrace is built against the library, but never opens
