@@ -25,9 +25,10 @@ __LIBC_BEGIN_DECLS
  * Room for the callee-saved state of every supported architecture: 10
  * pointer-sized registers (x86_64 uses 8; Arm saves r4-r11, sp and lr) plus
  * 64 bytes (Arm's d8-d15). One expression, so the header is the same for
- * every target (PLAN D15, D33).
+ * every target (PLAN D15, D33). The struct is named (reserved name) so a
+ * C++ module can export setjmp and longjmp (issue #113, D144).
  */
-typedef struct {
+typedef struct __jmp_buf_tag {
 	unsigned char __state[10 * sizeof(void *) + 64] __attribute__((__aligned__(8)));
 } jmp_buf[1];
 

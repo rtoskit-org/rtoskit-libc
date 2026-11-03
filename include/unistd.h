@@ -49,6 +49,14 @@ off_t lseek(int fildes, off_t offset, int whence);
 /* The one process the program is (P7.04, D134) */
 pid_t getpid(void);
 
+/*
+ * The seam has no terminals and cannot duplicate a handle (issue #113, D144):
+ * isatty answers 0 with ENOTTY for every valid descriptor, dup fails with
+ * ENOSYS
+ */
+int isatty(int fildes);
+int dup(int fildes);
+
 __LIBC_END_DECLS
 
 #endif /* _UNISTD_H */

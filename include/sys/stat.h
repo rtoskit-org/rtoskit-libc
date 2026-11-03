@@ -25,7 +25,8 @@ __LIBC_BEGIN_DECLS
  * D128, D134): struct stat and fstat, which libstdc++'s file streams and
  * libbacktrace use. A descriptor is a seam handle (D129) and the seam knows
  * only a handle's offset, so fstat fills st_mode and st_size and leaves the
- * other fields zero. POSIX lets <sys/stat.h> make <time.h>'s names visible,
+ * other fields zero; stat opens the path for reading and asks fstat (issue
+ * #113, D144). POSIX lets <sys/stat.h> make <time.h>'s names visible,
  * which gives struct timespec.
  */
 struct stat {
@@ -80,6 +81,7 @@ struct stat {
 #define S_ISVTX 01000
 
 int fstat(int fildes, struct stat *buf);
+int stat(const char *__restrict path, struct stat *__restrict buf);
 
 __LIBC_END_DECLS
 

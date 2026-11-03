@@ -56,6 +56,23 @@
 
 #include "cxx.h"
 
+/*
+ * libstdc++'s <utility> defines std::unreachable() after <stddef.h>; a C23
+ * unreachable() macro would rewrite this definition (issue #113). The address
+ * names the function itself, which a rewritten definition would not declare.
+ */
+namespace headers
+{
+[[noreturn]] inline void unreachable()
+{
+	__builtin_unreachable();
+}
+}
+static_assert(sizeof(&headers::unreachable) == sizeof(void (*)()), "unreachable is not a macro in C++");
+
+/* A C++ module exports setjmp and longjmp only if jmp_buf's element type has a name (issue #113) */
+static_assert(sizeof(__jmp_buf_tag) == sizeof(jmp_buf), "jmp_buf's struct is named");
+
 int headers17(void)
 {
 	char buffer[16];

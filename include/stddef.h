@@ -40,7 +40,13 @@ typedef struct {
 
 #define NULL __LIBC_NULL
 
+/*
+ * C23 7.21.1; C++ has std::unreachable() in <utility> instead, which this
+ * macro would rewrite (issue #113, D120, D144)
+ */
+#ifndef __cplusplus
 #define unreachable() __builtin_unreachable()
+#endif
 
 #define offsetof(type, member) __builtin_offsetof(type, member)
 

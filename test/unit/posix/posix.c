@@ -139,6 +139,20 @@ static void check_file_status(void)
 	/* The one process */
 	CHECK(getpid() == 1 && getpid() == getpid());
 
+	/* stat by path (issue #113); isatty and dup (issue #113): no terminals, no duplicates */
+	CHECK(stat(name, &st) == 0 && S_ISREG(st.st_mode) && st.st_size == 10);
+	errno = 0;
+	CHECK(stat("posix-missing-file", &st) == -1 && errno == ENOENT);
+	fd = open(name, O_RDONLY);
+	errno = 0;
+	CHECK(fd >= 0 && isatty(fd) == 0 && errno == ENOTTY);
+	errno = 0;
+	CHECK(dup(fd) == -1 && errno == ENOSYS && close(fd) == 0);
+	errno = 0;
+	CHECK(isatty(fd) == 0 && errno == EBADF);
+	errno = 0;
+	CHECK(dup(-1) == -1 && errno == EBADF);
+
 	CHECK(remove(name) == 0);
 }
 
