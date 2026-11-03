@@ -3689,6 +3689,15 @@
     "text": 8,
     "unwind": 0
    },
+   "dup.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 48,
+    "unwind": 0
+   },
    "erf.o": {
     "bss": 0,
     "data": 0,
@@ -5046,6 +5055,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 16,
+    "unwind": 0
+   },
+   "isatty.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 48,
     "unwind": 0
    },
    "isblank.o": {
@@ -6740,6 +6758,15 @@
     "text": 22,
     "unwind": 0
    },
+   "stat.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 52,
+    "unwind": 0
+   },
    "stdc_bit_ceil_uc.o": {
     "bss": 0,
     "data": 0,
@@ -8223,7 +8250,7 @@
    "rodata": 10167,
    "tbss": 362,
    "tdata": 8,
-   "text": 161224,
+   "text": 161372,
    "unwind": 0
   }
  },
@@ -9577,6 +9604,7 @@
    "dmull.o:dmull": 8,
    "dsqrtl.o:dsqrtl": 8,
    "dsubl.o:dsubl": 8,
+   "dup.o:dup": 16,
    "erf.o:erf": 136,
    "erfc.o:erfc": 104,
    "erfcf.o:erfcf": 80,
@@ -9735,6 +9763,7 @@
    "imaxdiv.o:imaxdiv": 8,
    "isalnum.o:isalnum": 0,
    "isalpha.o:isalpha": 0,
+   "isatty.o:isatty": 16,
    "isblank.o:isblank": 0,
    "iscntrl.o:iscntrl": 0,
    "isdigit.o:isdigit": 0,
@@ -9961,6 +9990,7 @@
    "sqrtl.o:sqrtl": 8,
    "srand.o:srand": 8,
    "sscanf.o:sscanf": 12,
+   "stat.o:stat": 16,
    "stdc_bit_ceil_uc.o:stdc_bit_ceil_uc": 8,
    "stdc_bit_ceil_ui.o:stdc_bit_ceil_ui": 8,
    "stdc_bit_ceil_ul.o:stdc_bit_ceil_ul": 8,
