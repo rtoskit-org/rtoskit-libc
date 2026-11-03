@@ -977,3 +977,15 @@ Correctness fixes, so the slowdowns are accepted and the baselines re-recorded (
 ## P8.03 — Fixed-point double `sin`, `cos` and `sincos` (speed flavour)
 
 The `dp-fixed` layer (D136): an integer reduction and 64-bit fixed-point polynomials, correctly rounded when the rounding test passes, the double-double path otherwise (`docs/research/sincos.md`). Speed flavour, instructions per call (throughput, 16 arguments in [−10, 10]): `sin` 6,435 → 795 (8.1×), `cos` 6,413 → 1,102 (5.8×), `sincos` 10,528 → 1,456 (7.2×). `cos` includes one argument of the 16 (x = −5.7875) whose result lies 2 units from a halfway point and takes the double-double path. The size flavour is unchanged; no other case changed.
+
+## Phase 8 — Summary
+
+Instructions per call (throughput, 16 arguments in [−10, 10]; size / speed flavour where they differ).
+
+| Case | Before phase 8 | After P8.02 (one reduction) | After P8.03 (fixed point, speed flavour) |
+|---|---:|---:|---:|
+| `sincos` | 12,863 | 10,528 (−18 %) | 1,456 (8.8× in all) |
+| `sincosf` | 1,152 | 784 | — |
+| `sin` / `cos` | 6,435 / 6,413 | — | 795 / 1,102 |
+
+Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sincos.md`.
