@@ -222,6 +222,10 @@ int main(int argc, char **argv)
 	CHECK(fstat(-1, &st) == -1 && errno == EBADF);
 	CHECK(fcntl(1, F_GETFD) == 0 && fcntl(1, F_SETFD, FD_CLOEXEC) == 0 && getpid() == 1);
 
+	/* stat has no files to open; isatty and dup (issue #113) */
+	CHECK(stat("file", &st) == -1 && errno == ENOSYS);
+	CHECK(isatty(1) == 0 && errno == ENOTTY && dup(1) == -1 && errno == ENOSYS);
+
 	/* The last thread's thrd_exit ends the program as exit(EXIT_SUCCESS), after the tss destructor */
 	CHECK(atexit(report) == 0);
 	thrd_exit(5);

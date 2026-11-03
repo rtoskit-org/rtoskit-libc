@@ -289,6 +289,8 @@ static_assert(S_ISREG(S_IFREG) && !S_ISREG(S_IFDIR) && S_ISDIR(S_IFDIR) && S_ISC
 static_assert((S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX) == 07777 && ((S_IRWXU | S_IRWXG | S_IRWXO) & S_IFMT) == 0, "<sys/stat.h> permission bits");
 static_assert(SAME_TYPE(((struct stat){ 0 }).st_size, off_t) && SAME_TYPE(((struct stat){ 0 }).st_mode, mode_t) && SAME_TYPE(((struct stat){ 0 }).st_mtim, struct timespec), "struct stat");
 static_assert(SAME_TYPE(&fstat, int (*)(int, struct stat *)) && SAME_TYPE(&fcntl, int (*)(int, int, ...)) && SAME_TYPE(&getpid, pid_t (*)(void)), "fstat, fcntl, getpid");
+static_assert(SAME_TYPE(&stat, int (*)(const char *restrict, struct stat *restrict)) && SAME_TYPE(&isatty, int (*)(int)) && SAME_TYPE(&dup, int (*)(int)), "stat, isatty, dup (issue #113)");
+static_assert(sizeof(struct __jmp_buf_tag) == sizeof(jmp_buf), "jmp_buf's struct is named (issue #113)");
 static_assert(SCHED_OTHER != SCHED_FIFO && SCHED_OTHER != SCHED_RR && SCHED_FIFO != SCHED_RR && SAME_TYPE(((struct sched_param){ 0 }).sched_priority, int), "<sched.h>");
 static_assert(SAME_TYPE(strcasecmp, int (*)(const char *, const char *)) && SAME_TYPE(strncasecmp, int (*)(const char *, const char *, size_t)), "<strings.h>");
 static_assert(SAME_TYPE(read, ssize_t (*)(int, void *, size_t)) && SAME_TYPE(write, ssize_t (*)(int, const void *, size_t)) && SAME_TYPE(lseek, off_t (*)(int, off_t, int)) && SAME_TYPE(close, int (*)(int)), "<unistd.h> functions");

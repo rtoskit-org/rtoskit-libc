@@ -436,3 +436,24 @@ is the same. Capture never touches files.
 - `test/unit/api`: the new macros, types and prototypes; `<sys/stat.h>` in
   the strict standalone compile.
 - `test/unit/cxx`: `<sys/stat.h>` as C++17 and `gnu++98`.
+
+## Issue #113: what the hosted libstdc++ build still needed (D144)
+
+GCC 16.2's hosted libstdc++, built with the `stdio` backend and `--disable-wchar_t` against the library at `481b636` (sgstreet/rtoskit-gcc#7), found four more things.
+
+- **`stat`.** libstdc++ always defines `HAVE_SYS_STAT_H` when the header exists, and `src/c++17/fs_ops.cc` (through `ops-common.h`) does `using ::stat;`. Without the function, `stat` names only the struct and the file fails to compile.
+  - **Implementation:** the path is opened for reading through the seam, then D134's `fstat` (a seekable handle is a regular file of its end's size), then the handle is closed.
+  - **Limits:** a directory, which the seam cannot open, fails with the port's error. On `port/none` every path fails with `ENOSYS`.
+- **`isatty` and `dup`.** `src/c++23/print.cc` calls `isatty` in `__open_terminal(FILE *)` and `__open_terminal(streambuf *)`, and `dup` in the second, under `HAVE_UNISTD_H`. P7.01 found no consumer of `isatty`; GCC 14's `<print>` is one.
+  - **Behaviour:** the seam can neither tell a terminal from a file nor duplicate a handle. So `isatty` is 0 with `ENOTTY`, and `dup` is −1 with `ENOSYS`.
+  - **Bad descriptors:** both give `EBADF` for a handle the port rejects, tested with a zero-length seek as `fcntl` does.
+  - **Effect on `std::print`:** it then writes plainly, and reaches `dup` only for a terminal.
+- **`jmp_buf`.** A C++ module cannot export a function whose parameter type is an unnamed class. The `std` module's `<csetjmp>` failed with "exposes TU-local entity". The struct inside `jmp_buf[1]` is now `struct __jmp_buf_tag`, as in glibc and newlib. The name is reserved and the layout is unchanged. The other unnamed structs in the headers (`div_t`, `fenv_t` and so on) are typedef names for linkage purposes, which modules accept; only `jmp_buf` is an array of one.
+- **`unreachable()`.** `<stddef.h>`'s C23 macro rewrote libstdc++'s `[[noreturn]] inline void unreachable()` in `<utility>` into a function that calls itself, which fails with "recursive inlining" at `-Os`. It is now defined only in C.
+  - **The other C23 headers:** libstdc++ installs its own `<stdatomic.h>`, `<stdbit.h>` and `<stdckdint.h>`, which come first on C++'s include path. Of the three, only `<stdatomic.h>` reaches ours, and only for Clang before C++23 (`#include_next`). Our `<stdbit.h>` already defines its generic macros only in C.
+  - **The test:** `test/unit/cxx/headers17.cpp` defines a function named `unreachable` after `<stddef.h>` and takes its address. With the macro defined in C++, it fails to compile.
+
+**Not needed** (left undefined by the OS port, and compiled out by libstdc++):
+- `memalign`, `link`, `setenv`, `sleep`, `usleep`, `strerror_l`;
+- `readlink`, `symlink`, `truncate`, `unlinkat`;
+- `getentropy`, without which `std::random_device` has no source.
