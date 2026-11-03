@@ -749,3 +749,7 @@ Correctness fixes, so the growth is accepted: `cbrt.o` +88, `tgamma.o` +500 and 
 ## D132 — the POSIX subset's functions (P7.03)
 
 The new members (`open`, `read`, `write`, `close`, `lseek`, `fileno`, `fdopen`, `strnlen`, `strcasecmp`, `strncasecmp`, `reallocarray`, `sincos`, `sincosf`, `clock_gettime`, `clock_getres`, `nanosleep`, `sched_yield`) are linked only by programs that call them. `__libc_file_new` no longer closes the handle when it fails, so that a failed `fdopen` leaves the descriptor to its caller: `__libc_file_new.o` shrinks by 16 bytes, and its callers close the handle themselves, `fopen.o` +12 and `tmpfile.o` +24 bytes. No reference image links any of them, so every image and both budgets are unchanged.
+
+## D134 — `fstat`, `fcntl` and `getpid` (P7.04)
+
+Three new members (`fstat`, `fcntl`, `getpid`), linked only by programs that call them; no other member, no image and neither budget changes. The optional `LIBC_UNWIND_TABLES=1` build is not measured here: the baselines and budgets are without unwind tables (D134; its cost is in `docs/research/posix-subset.md`).

@@ -4062,6 +4062,15 @@
     "text": 112,
     "unwind": 0
    },
+   "fcntl.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 84,
+    "unwind": 0
+   },
    "fdim.o": {
     "bss": 0,
     "data": 0,
@@ -4908,6 +4917,15 @@
     "text": 4,
     "unwind": 0
    },
+   "fstat.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 164,
+    "unwind": 0
+   },
    "fsub.o": {
     "bss": 0,
     "data": 0,
@@ -4996,6 +5014,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 20,
+    "unwind": 0
+   },
+   "getpid.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
     "unwind": 0
    },
    "gmtime.o": {
@@ -8281,7 +8308,7 @@
    "rodata": 10167,
    "tbss": 362,
    "tdata": 8,
-   "text": 148890,
+   "text": 149142,
    "unwind": 0
   }
  },
@@ -9471,6 +9498,7 @@
    "fadd.o:fadd": 88,
    "faddl.o:faddl": 0,
    "fclose.o:fclose": 16,
+   "fcntl.o:fcntl": 12,
    "fdim.o:fdim": 24,
    "fdimf.o:fdimf": 0,
    "fdiml.o:fdiml": 0,
@@ -9565,6 +9593,7 @@
    "fsetpos.o:fsetpos": 24,
    "fsqrt.o:fsqrt": 56,
    "fsqrtl.o:fsqrtl": 0,
+   "fstat.o:fstat": 40,
    "fsub.o:fsub": 0,
    "fsubl.o:fsubl": 0,
    "ftell.o:ftell": 16,
@@ -9575,6 +9604,7 @@
    "getpayload.o:getpayload": 0,
    "getpayloadf.o:getpayloadf": 0,
    "getpayloadl.o:getpayloadl": 16,
+   "getpid.o:getpid": 0,
    "gmtime.o:gmtime": 4,
    "gmtime_r.o:gmtime_r": 8,
    "hypot.o:hypot": 112,
