@@ -11,6 +11,9 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+/* sincos (PLAN D132) */
+#define _GNU_SOURCE
+
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -109,6 +112,46 @@ static void check_near2(void)
 		++failures;
 }
 
+/* The same for the double sin and cos of the speed flavour's fixed-point kernel (P8.03), also through sincos */
+static const struct {
+	double (*function)(double);
+	double x;
+	double want;
+} near_double[] = {
+#include "near_double.inc"
+};
+
+static uint64_t double_bits(double x)
+{
+	uint64_t bits;
+
+	memcpy(&bits, &x, sizeof(bits));
+	return bits;
+}
+
+static void check_near_double(void)
+{
+	int wrong = 0;
+
+	for (unsigned int i = 0; i < sizeof(near_double) / sizeof(near_double[0]); ++i) {
+		double s;
+		double c;
+		double result = near_double[i].function(near_double[i].x);
+		double paired;
+
+		sincos(near_double[i].x, &s, &c);
+		paired = near_double[i].function == sin ? s : c;
+		if (double_bits(result) != double_bits(near_double[i].want) || double_bits(paired) != double_bits(near_double[i].want)) {
+			printf("near_double %u: f(%a) = %a, sincos %a, want %a\n", i, near_double[i].x, result, paired, near_double[i].want);
+			++wrong;
+		}
+	}
+
+	printf("near_double: %d of %u not correctly rounded\n", wrong, (unsigned int)(sizeof(near_double) / sizeof(near_double[0])));
+	if (wrong != 0)
+		++failures;
+}
+
 static void check_near(void)
 {
 	int wrong = 0;
@@ -158,6 +201,7 @@ int main(void)
 	sweep("erfcf", erfcf, erfc, 0x1p1f, 0x1.28p3f, 4093, false);
 
 	check_near();
+	check_near_double();
 	check_near2();
 
 	if (failures == 0)

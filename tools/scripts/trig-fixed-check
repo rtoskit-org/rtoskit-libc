@@ -20,6 +20,10 @@
 # n pi/2. Needs libmpfr-dev. Run from the project root:
 #
 #   tools/scripts/trig-fixed-check [COUNT]     default 100000000
+#   tools/scripts/trig-fixed-check --near N    print N hard cases per function for
+#                                              test/unit/libm_dense/near_double.inc (tools/libm/trig_fixed_near.c;
+#                                              needs an x86_64 release build, whose sin and cos are the reference
+#                                              for the double-double path)
 #
 # Prints, per function, the largest error in units of the 64-bit
 # significand's last bit, the fallback rate under __LIBC_TRIG_FIXED_ERROR,
@@ -28,7 +32,6 @@
 
 set -euo pipefail
 
-count=${1:-100000000}
 cc=$(tools/scripts/host-cc)
 work=$(mktemp -d)
 trap 'rm -rf "${work}"' EXIT
@@ -37,6 +40,17 @@ flags=(-O2 -std=c23 -nostdinc -isystem include -include include/stdc-predef.h -f
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed.c -o "${work}/kernel.o"
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed_round.c -o "${work}/round.o"
 "${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_check.c "${work}/kernel.o" "${work}/round.o" -lmpfr -lm -o "${work}/check"
+
+if [[ ${1:-} == --near ]]; then
+	library=build/x86_64/release/libc/libc.a
+	[[ -f ${library} ]] || { echo "${library}: missing; build it first (make ARCH_CROSS=x86_64 BUILD_TYPE=release)" >&2; exit 1; }
+	cp "${library}" "${work}/librt.a"
+	objcopy --prefix-symbols=rt_ "${work}/librt.a"
+	"${cc}" -O2 -std=gnu2x -no-pie tools/libm/trig_fixed_near.c "${work}/kernel.o" "${work}/librt.a" -lmpfr -lgmp -lm -o "${work}/near"
+	exec "${work}/near" "${2:-16}"
+fi
+
+count=${1:-100000000}
 
 jobs=$(nproc)
 for ((i = 1; i <= jobs; ++i)); do
