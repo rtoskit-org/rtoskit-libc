@@ -17,17 +17,17 @@
 
 /*
  * To nearest: the 11 bits below the 53-bit significand decide, unless they
- * lie within the error bound of the halfway point 0x400; then the true value
+ * lie within error units of the halfway point 0x400; then the true value
  * may lie on the other side, and the caller takes the double-double path
  */
-bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, double *result)
+bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, unsigned int error, double *result)
 {
 	uint32_t rest = (uint32_t)value->v & 0x7ff;
 	uint64_t significand = value->v >> 11;
 	int exponent = value->exponent;
 	uint64_t bits;
 
-	if (rest - (0x400 - __LIBC_TRIG_FIXED_ERROR) <= 2 * __LIBC_TRIG_FIXED_ERROR)
+	if (rest - (0x400 - error) <= 2 * error)
 		return false;
 
 	if (rest > 0x400) {

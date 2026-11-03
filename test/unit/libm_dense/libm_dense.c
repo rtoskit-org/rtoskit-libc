@@ -112,7 +112,7 @@ static void check_near2(void)
 		++failures;
 }
 
-/* The same for the double sin and cos of the speed flavour's fixed-point kernel (P8.03), also through sincos */
+/* The same for the double sin, cos (P8.03, also through sincos) and tan (P9.03) of the speed flavour's fixed-point kernel */
 static const struct {
 	double (*function)(double);
 	double x;
@@ -140,7 +140,8 @@ static void check_near_double(void)
 		double paired;
 
 		sincos(near_double[i].x, &s, &c);
-		paired = near_double[i].function == sin ? s : c;
+		paired = near_double[i].function == sin ? s : near_double[i].function == cos ? c :
+																					   result;
 		if (double_bits(result) != double_bits(near_double[i].want) || double_bits(paired) != double_bits(near_double[i].want)) {
 			printf("near_double %u: f(%a) = %a, sincos %a, want %a\n", i, near_double[i].x, result, paired, near_double[i].want);
 			++wrong;

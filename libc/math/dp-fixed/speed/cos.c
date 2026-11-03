@@ -38,7 +38,7 @@ double cos(double x)
 		return 1.0 - tiny;
 	}
 
-	if (__libc_trig_fixed(x, __LIBC_TRIG_FIXED_COS, nullptr, &value) && __libc_trig_fixed_round(&value, &result))
+	if (__libc_trig_fixed(x, __LIBC_TRIG_FIXED_COS, nullptr, &value) && __libc_trig_fixed_round(&value, __LIBC_TRIG_FIXED_ERROR, &result))
 		return result;
 
 	__libc_trig_dd(x, __LIBC_TRIG_FIXED_COS, nullptr, &result);

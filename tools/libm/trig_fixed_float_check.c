@@ -12,8 +12,8 @@
  */
 
 /*
- * Every float argument of the D136 kernel's float path (P9.02, Q41, PLAN
- * D141): sinf and cosf of every positive float in [2^-27, 2^20) through
+ * Every float argument of the D136 kernel's float path (P9.02, P9.03, Q41,
+ * Q42): sinf, cosf and tanf of every positive float in [2^-27, 2^20) through
  * __libc_trig_fixed and __libc_trig_fixed_roundf (sin is odd and cos even,
  * and the kernel takes the sign apart, so the negative floats round alike).
  * A float result whose 40 discarded bits lie more than 2^30 units from the
@@ -42,7 +42,11 @@ struct __libc_trig_fixed {
 };
 
 bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *sine, struct __libc_trig_fixed *cosine);
-bool __libc_trig_fixed_roundf(const struct __libc_trig_fixed *value, float *result);
+bool __libc_trig_fixed_roundf(const struct __libc_trig_fixed *value, unsigned int error, float *result);
+bool __libc_tan_fixed(double x, struct __libc_trig_fixed *tangent);
+
+static const unsigned int bounds[3] = { 18, 18, 56 };
+static const char *const names[3] = { "sinf", "cosf", "tanf" };
 
 int main(int argc, char **argv)
 {
@@ -51,31 +55,31 @@ int main(int argc, char **argv)
 	const uint32_t low = 0x32000000u;
 	const uint32_t high = 0x49800000u;
 	unsigned long long arguments = 0;
-	unsigned long long declined[2] = { 0, 0 };
-	unsigned long long checked[2] = { 0, 0 };
-	unsigned long long wrong[2] = { 0, 0 };
-	double worst[2] = { 0, 0 };
+	unsigned long long declined[3] = { 0 };
+	unsigned long long checked[3] = { 0 };
+	unsigned long long wrong[3] = { 0 };
+	double worst[3] = { 0 };
 	mpfr_t exact;
 	mpfr_t value;
 
 	mpfr_inits2(256, exact, value, (mpfr_ptr)0);
 	for (uint32_t bits = low + part; bits < high; bits += parts) {
 		float xf;
-		struct __libc_trig_fixed k[2];
+		struct __libc_trig_fixed k[3];
 
 		memcpy(&xf, &bits, sizeof(xf));
 		++arguments;
-		if (!__libc_trig_fixed((double)xf, 3, &k[0], &k[1])) {
-			declined[0]++;
-			declined[1]++;
+		if (!__libc_trig_fixed((double)xf, 3, &k[0], &k[1]) || !__libc_tan_fixed((double)xf, &k[2])) {
+			for (int f = 0; f < 3; ++f)
+				declined[f]++;
 			continue;
 		}
-		for (int f = 0; f < 2; ++f) {
+		for (int f = 0; f < 3; ++f) {
 			float rounded;
 			uint64_t rest = k[f].v & 0x000000ffffffffffULL;
 			uint64_t distance = rest > 0x0000008000000000ULL ? rest - 0x0000008000000000ULL : 0x0000008000000000ULL - rest;
 
-			if (!__libc_trig_fixed_roundf(&k[f], &rounded)) {
+			if (!__libc_trig_fixed_roundf(&k[f], bounds[f], &rounded)) {
 				declined[f]++;
 				continue;
 			}
@@ -85,8 +89,10 @@ int main(int argc, char **argv)
 			mpfr_set_flt(exact, xf, MPFR_RNDN);
 			if (f == 0)
 				mpfr_sin(exact, exact, MPFR_RNDN);
-			else
+			else if (f == 1)
 				mpfr_cos(exact, exact, MPFR_RNDN);
+			else
+				mpfr_tan(exact, exact, MPFR_RNDN);
 			mpfr_set_uj(value, k[f].v, MPFR_RNDN);
 			mpfr_mul_2si(value, value, k[f].exponent - 63, MPFR_RNDN);
 			if (k[f].negative)
@@ -98,11 +104,11 @@ int main(int argc, char **argv)
 				worst[f] = mpfr_get_d(value, MPFR_RNDU);
 			if (rounded != mpfr_get_flt(exact, MPFR_RNDN)) {
 				wrong[f]++;
-				printf("wrong: %s(%a) = %a, want %a\n", f == 0 ? "sinf" : "cosf", (double)xf, (double)rounded, (double)mpfr_get_flt(exact, MPFR_RNDN));
+				printf("wrong: %s(%a) = %a, want %a\n", names[f], (double)xf, (double)rounded, (double)mpfr_get_flt(exact, MPFR_RNDN));
 			}
 		}
 	}
-	for (int f = 0; f < 2; ++f)
-		printf("%s: %llu arguments, %llu declined, %llu near halfway checked with MPFR, largest error there %.3f units, %llu wrong\n", f == 0 ? "sinf" : "cosf", arguments, declined[f], checked[f], worst[f], wrong[f]);
-	return wrong[0] || wrong[1];
+	for (int f = 0; f < 3; ++f)
+		printf("%s: %llu arguments, %llu declined, %llu near halfway checked with MPFR, largest error there %.3f units, %llu wrong\n", names[f], arguments, declined[f], checked[f], worst[f], wrong[f]);
+	return wrong[0] || wrong[1] || wrong[2];
 }

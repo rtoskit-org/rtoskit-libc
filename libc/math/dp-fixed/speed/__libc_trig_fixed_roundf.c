@@ -22,14 +22,14 @@
  * in the kernel's domain is never subnormal, but a result below 2^-126
  * declines all the same.
  */
-bool __libc_trig_fixed_roundf(const struct __libc_trig_fixed *value, float *result)
+bool __libc_trig_fixed_roundf(const struct __libc_trig_fixed *value, unsigned int error, float *result)
 {
 	uint64_t rest = value->v & 0x000000ffffffffffULL;
 	uint32_t significand = (uint32_t)(value->v >> 40);
 	int exponent = value->exponent;
 	uint32_t bits;
 
-	if (exponent < -126 || rest - (0x0000008000000000ULL - __LIBC_TRIG_FIXED_ERROR) <= 2 * __LIBC_TRIG_FIXED_ERROR)
+	if (exponent < -126 || rest - (0x0000008000000000ULL - error) <= 2 * error)
 		return false;
 
 	if (rest > 0x0000008000000000ULL) {

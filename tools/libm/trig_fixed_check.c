@@ -40,7 +40,12 @@ struct __libc_trig_fixed {
 };
 
 bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *sine, struct __libc_trig_fixed *cosine);
-bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, double *result);
+bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, unsigned int error, double *result);
+bool __libc_tan_fixed(double x, struct __libc_trig_fixed *tangent);
+
+/* The kernels' rounding-test bounds (trig-fixed.h) */
+static const unsigned int bounds[3] = { 18, 18, 56 };
+static const char *const names[3] = { "sin", "cos", "tan" };
 
 struct tally {
 	double worst;
@@ -51,7 +56,7 @@ struct tally {
 	unsigned long long wrong;
 };
 
-static struct tally tallies[2];
+static struct tally tallies[3];
 static mpfr_t exact;
 static mpfr_t value;
 static mpfr_t difference;
@@ -72,14 +77,14 @@ static double error_units(const struct __libc_trig_fixed *k, mpfr_t truth)
 
 static void check(double x)
 {
-	struct __libc_trig_fixed results[2];
+	struct __libc_trig_fixed results[3];
 
-	if (!__libc_trig_fixed(x, 3, &results[0], &results[1])) {
-		tallies[0].declined++;
-		tallies[1].declined++;
+	if (!__libc_trig_fixed(x, 3, &results[0], &results[1]) || !__libc_tan_fixed(x, &results[2])) {
+		for (int f = 0; f < 3; ++f)
+			tallies[f].declined++;
 		return;
 	}
-	for (int f = 0; f < 2; ++f) {
+	for (int f = 0; f < 3; ++f) {
 		struct tally *t = &tallies[f];
 		double rounded;
 		double units;
@@ -88,20 +93,22 @@ static void check(double x)
 		mpfr_set_d(exact, x, MPFR_RNDN);
 		if (f == 0)
 			mpfr_sin(exact, exact, MPFR_RNDN);
-		else
+		else if (f == 1)
 			mpfr_cos(exact, exact, MPFR_RNDN);
+		else
+			mpfr_tan(exact, exact, MPFR_RNDN);
 		units = error_units(&results[f], exact);
 		if (units > t->worst) {
 			t->worst = units;
 			t->worst_x = x;
 		}
-		if (!__libc_trig_fixed_round(&results[f], &rounded)) {
+		if (!__libc_trig_fixed_round(&results[f], bounds[f], &rounded)) {
 			t->fallback++;
 			continue;
 		}
 		if (rounded != mpfr_get_d(exact, MPFR_RNDN)) {
 			t->wrong++;
-			printf("wrong: %s(%a) = %a, want %a\n", f == 0 ? "sin" : "cos", x, rounded, mpfr_get_d(exact, MPFR_RNDN));
+			printf("wrong: %s(%a) = %a, want %a\n", names[f], x, rounded, mpfr_get_d(exact, MPFR_RNDN));
 		}
 	}
 }
@@ -167,10 +174,10 @@ int main(int argc, char **argv)
 
 	int status = 0;
 
-	for (int f = 0; f < 2; ++f) {
+	for (int f = 0; f < 3; ++f) {
 		struct tally *t = &tallies[f];
 
-		printf("%s: %llu arguments, largest error %.3f units at %a, %llu declined, %llu fall back (%.3f %%), %llu wrong\n", f == 0 ? "sin" : "cos", t->arguments, t->worst, t->worst_x, t->declined, t->fallback, 100.0 * (double)t->fallback / (double)(t->arguments ? t->arguments : 1), t->wrong);
+		printf("%s: %llu arguments, largest error %.3f units at %a, %llu declined, %llu fall back (%.3f %%), %llu wrong\n", names[f], t->arguments, t->worst, t->worst_x, t->declined, t->fallback, 100.0 * (double)t->fallback / (double)(t->arguments ? t->arguments : 1), t->wrong);
 		if (t->wrong)
 			status = 1;
 	}

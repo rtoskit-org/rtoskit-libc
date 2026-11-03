@@ -17,6 +17,7 @@
 #include "fixed.h"
 #include "internal/math.h"
 #include "libm-fixed.h"
+#include "trig-fixed.h"
 
 /*
  * C23 7.12.4.7: sin over cos of the reduced argument (PLAN D60), both from
@@ -35,6 +36,9 @@ float tanf(float x)
 	uint64_t cosine;
 	uint32_t result;
 	int k;
+	struct __libc_trig_fixed fast;
+	double wide;
+	float rounded;
 
 	if (isnan(x))
 		return x + x;
@@ -43,6 +47,10 @@ float tanf(float x)
 	/* The x^3 term is below half an ulp of x: the result rounds to x (keeping -0) */
 	if (fabsf(x) < 0x1p-13f)
 		return x;
+
+	/* sin x / cos x from the D136 kernel, rounded to float (P9.03, Q42); the D87 path below for what it declines */
+	if (__libc_trig_fixed_from_float(x, &wide) && __libc_tan_fixed(wide, &fast) && __libc_trig_fixed_roundf(&fast, __LIBC_TAN_FIXED_ERROR, &rounded))
+		return rounded;
 
 	if (fabsf(x) < 0x1p-6f) {
 		k = 0;
