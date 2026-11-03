@@ -1,0 +1,48 @@
+# Phase 9 — Trigonometric follow-ups to phase 8
+
+Prerequisite: PLAN D136–D138 (the D136 fixed-point kernel), Q41–Q43, D110 (armv7-m's exact speed figures), D86–D88 (the float fixed-point functions).
+Targets: the five soft-double cores (armv6-m, armv6s-m, armv7-m, armv7e-m, armv8-m.main), speed flavour.
+
+**Goal:** answer Q41–Q43.
+- **Q43:** `UMULL` for armv7-m's float fixed-point functions.
+- **Q41:** float `sinf`, `cosf` and `sincosf` through the D136 integer reduction and kernel, rounded to float with a rounding test.
+- **Q42:** `tan` (and with it `tanf`) through the same kernel, with a fixed-point quotient.
+
+Q44 (the fallback rate, or a table) is left for the user to decide when this phase ends.
+
+Starting point, speed flavour, instructions per call (`docs/perf`):
+
+| Arch | `sin` | `tan` | `sinf` | `cosf` | `tanf` | `sincosf` |
+|---|---:|---:|---:|---:|---:|---:|
+| armv6-m | 2,877 | 32,451 | 4,729 | 3,742 | 5,140 | 5,505 |
+| armv7-m | 812 | 11,535 | 2,499 | 1,990 | 2,596 | 3,055 |
+| armv7e-m | 803 | 11,198 | 575 | 567 | 794 | 786 |
+
+**Every step's definition of done (DoD)** is phase 8's:
+- the D124 vectors at their bounds;
+- `libm_dense` and the `sincos`/`sincosf` identity tests;
+- `make check` everywhere;
+- `make bench` with no case slower by more than 1 %, and the gains recorded;
+- the size flavour unchanged and the speed budgets holding. A re-lock of an exact speed figure (D110) needs its own decision.
+
+---
+
+## P9.01 — Q43: `UMULL` for armv7-m's float fixed-point functions  `[ ]`
+- [ ] nofp/speed's 32 × 32 → 64 multiply as an inline `UMULL` on armv7-m (an include directory picked in `speed.mk`, as D136's), keeping the 16-bit helper on Armv6-M.
+- [ ] Bench, size, and the armv7-m speed figures re-locked under a decision if they change.
+
+## P9.02 — Q41: `sinf`, `cosf`, `sincosf` through the D136 kernel  `[ ]`
+- [ ] On the cores whose speed flavour has nofp/speed (armv6-m, armv6s-m, armv7-m):
+  - x converted exactly to double, then the kernel;
+  - the 64-bit result rounded to float with a 40-bit rounding test;
+  - the existing D87 path as the fallback (|x| ≥ 2²⁰, and declined results).
+  - armv7e-m and armv8-m.main keep their single-precision FPU path (575 instructions) unless the kernel measures faster there.
+- [ ] Error bound and fallback rate measured on the host over every float in the kernel's range, with no incorrectly rounded result. Tests and bench.
+
+## P9.03 — Q42: `tan` and `tanf` through the D136 kernel  `[ ]`
+- [ ] tan r = sin r / cos r (−cos r / sin r in odd quadrants): a 64-bit reciprocal of the divisor's significand by Newton's iteration from a 32-bit seed, then one product. A rounding test, with the error bound measured on the host, and the double-double path as the fallback.
+- [ ] `tanf` from the same quotient where P9.02 placed `sinf`.
+- [ ] Hard cases in `libm_dense`, a mutant check, and bench.
+
+## P9.04 — Wrap-up  `[ ]`
+- [ ] Notes, decisions, and the question of Q44 put to the user.
