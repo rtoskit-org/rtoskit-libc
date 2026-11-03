@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -97,6 +98,45 @@ static void check_descriptors(void)
 	/* O_TRUNC empties the file */
 	fd = open(name, O_RDWR | O_TRUNC);
 	CHECK(fd >= 0 && lseek(fd, 0, SEEK_END) == 0 && close(fd) == 0);
+
+	CHECK(remove(name) == 0);
+}
+
+/* fstat, fcntl and getpid (P7.04, PLAN D134) */
+static void check_file_status(void)
+{
+	char name[L_tmpnam];
+	struct stat st;
+	int fd;
+
+	CHECK(tmpnam(name) != nullptr);
+	fd = open(name, O_RDWR | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+	CHECK(fd >= 0);
+
+	/* A regular file's size, with the offset left where it was */
+	CHECK(fstat(fd, &st) == 0 && S_ISREG(st.st_mode) && st.st_size == 0);
+	CHECK(write(fd, "0123456789", 10) == 10 && lseek(fd, 3, SEEK_SET) == 3);
+	CHECK(fstat(fd, &st) == 0 && S_ISREG(st.st_mode) && !S_ISDIR(st.st_mode) && !S_ISCHR(st.st_mode) && st.st_size == 10);
+	CHECK(lseek(fd, 0, SEEK_CUR) == 3);
+
+	/* Descriptor flags: accepted, with no effect */
+	CHECK(fcntl(fd, F_GETFD) == 0 && fcntl(fd, F_SETFD, FD_CLOEXEC) == 0);
+	errno = 0;
+	CHECK(fcntl(fd, 99) == -1 && errno == EINVAL);
+	CHECK(close(fd) == 0);
+
+	/* A closed or negative descriptor */
+	errno = 0;
+	CHECK(fstat(fd, &st) == -1 && errno == EBADF);
+	errno = 0;
+	CHECK(fstat(-1, &st) == -1 && errno == EBADF);
+	errno = 0;
+	CHECK(fcntl(fd, F_GETFD) == -1 && errno == EBADF);
+	errno = 0;
+	CHECK(fcntl(-1, F_SETFD, FD_CLOEXEC) == -1 && errno == EBADF);
+
+	/* The one process */
+	CHECK(getpid() == 1 && getpid() == getpid());
 
 	CHECK(remove(name) == 0);
 }
@@ -265,6 +305,7 @@ static void check_clocks(void)
 int main(void)
 {
 	check_descriptors();
+	check_file_status();
 	check_streams();
 	regression_fdopen_failure_keeps_descriptor();
 	check_strings();

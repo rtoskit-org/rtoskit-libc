@@ -25,6 +25,7 @@
 #include <string.h>
 #include <threads.h>
 #include <time.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include "none-test.h"
@@ -213,6 +214,13 @@ int main(int argc, char **argv)
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000 }, nullptr) == -1 && errno == ENOSYS);
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000000000 }, nullptr) == -1 && errno == EINVAL);
 	CHECK(sched_yield() == 0);
+
+	/* No handle seeks, so each is a character device of size 0; flags and the process ID need no seam */
+	struct stat st;
+
+	CHECK(fstat(1, &st) == 0 && S_ISCHR(st.st_mode) && st.st_size == 0);
+	CHECK(fstat(-1, &st) == -1 && errno == EBADF);
+	CHECK(fcntl(1, F_GETFD) == 0 && fcntl(1, F_SETFD, FD_CLOEXEC) == 0 && getpid() == 1);
 
 	/* The last thread's thrd_exit ends the program as exit(EXIT_SUCCESS), after the tss destructor */
 	CHECK(atexit(report) == 0);

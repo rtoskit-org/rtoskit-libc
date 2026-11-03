@@ -38,6 +38,7 @@ TARGET_OBJ_LIBS += libc/sched
 TARGET_OBJ_LIBS += libc/setjmp/${ARCH_CROSS}
 TARGET_OBJ_LIBS += libc/signal
 TARGET_OBJ_LIBS += libc/startup
+TARGET_OBJ_LIBS += libc/stat
 TARGET_OBJ_LIBS += libc/stdbit
 TARGET_OBJ_LIBS += libc/stdio
 TARGET_OBJ_LIBS += libc/stdlib

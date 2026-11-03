@@ -32,4 +32,13 @@ typedef int pid_t;
 /* The clock argument the seam's __rtos_clock_gettime takes */
 typedef int clockid_t;
 
+/* struct stat's fields (<sys/stat.h>, P7.04): Linux's widths, the same on every core */
+typedef unsigned long long dev_t;
+typedef unsigned long long ino_t;
+typedef unsigned int nlink_t;
+typedef unsigned int uid_t;
+typedef unsigned int gid_t;
+typedef long blksize_t;
+typedef long long blkcnt_t;
+
 #endif /* _SYS_TYPES_H */
