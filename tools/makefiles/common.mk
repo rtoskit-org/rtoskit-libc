@@ -22,6 +22,12 @@ export RTOS_PORT := linux
 # The allocator built into libc.a (PLAN D32, D54)
 export LIBC_MALLOC ?= nano
 
+# LIBC_UNWIND_TABLES=1 builds the library with unwind tables, so a backtrace (std::stacktrace, _Unwind_Backtrace)
+# can pass through library frames such as qsort's callbacks (PLAN D128, D134). Off by default: the size baselines
+# and budgets are without them. Run "make clean" after changing it, as for LIBC_MALLOC.
+export LIBC_UNWIND_TABLES ?=
+LIBC_CFLAGS += $(if $(filter 1,${LIBC_UNWIND_TABLES}),-funwind-tables)
+
 -include ${PROJECT_ROOT}/tools/makefiles/${CHIP_FAMILY}.mk
 -include ${PROJECT_ROOT}/tools/makefiles/${CHIP_TYPE}.mk
 -include ${PROJECT_ROOT}/tools/makefiles/${BUILD_TYPE}.mk

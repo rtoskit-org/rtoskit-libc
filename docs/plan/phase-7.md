@@ -49,27 +49,30 @@ seam.
 - [x] The ISO headers declare the non-ISO names only outside strict C23, or when a feature test macro asks (D132).
 - [x] Tests: `test/unit/posix` (new), `test/unit/none`, `test/unit/api` (`posix.c`, and the strict-mode namespace check).
 
-## P7.04 — `std::stacktrace`, capture only  `[~]`
+## P7.04 — `std::stacktrace`, capture only  `[x]`
 Frames are captured as addresses on the target, then symbolized on the host
 with `addr2line` against the ELF, as pi-pico's `sys/backtrace` output is
 today. libstdc++'s libbacktrace is built against the library, but never opens
 the ELF on the target (D128).
-- [ ] Research section in `docs/research/posix-subset.md`:
+- [x] Research section in `docs/research/posix-subset.md`:
   - how libstdc++ builds `<stacktrace>` (`--enable-libstdcxx-backtrace`, libbacktrace in `libstdc++exp.a`, `_Unwind_Backtrace`);
   - which libc names libbacktrace needs to compile and link;
   - what happens when it finds no executable to read (no `/proc/self/exe`, no `getexecname`).
-- [ ] `<sys/stat.h>`: `struct stat` (at least `st_mode` and `st_size`), `mode_t`, the `S_IS*` macros and `S_I*` bits, and `fstat` declared. `fstat` reports the size from `__rtos_seek` to the end, or fails with `ENOSYS` if Q37 leaves no handle for it. `<fcntl.h>` gains `O_CLOEXEC`, `F_GETFD`, `F_SETFD` and `FD_CLOEXEC`, which libbacktrace's open path uses.
-- [ ] An optional unwind-tables build of the library: a build variable (e.g. `LIBC_UNWIND_TABLES=1`, not `#if`) that adds `-funwind-tables` to `LIBC_CFLAGS`, so traces can pass through library frames (`qsort` callbacks, `abort`, `__assert_fail`). The default build, and with it both size budgets and the baselines, stays without unwind tables. The docs say what the option costs.
-- [ ] `__exidx_start` and `__exidx_end`: come from the default linker script for the Linux test port; the `port/none` linker script gains them (D121's note).
-- [ ] `test/unit/cxx` (Arm), built with unwind tables and linked with `-lstdc++exp` when the toolchain provides it:
-  - `std::stacktrace::current()` returns at least the test's own frames;
-  - the frames include one inside the library (a `qsort` comparison callback);
-  - `to_string()` runs without symbol information.
+  *Against this library libstdc++'s configure selects libbacktrace's `alloc.c` (malloc) and `read.c` (no `<sys/mman.h>`), so it needs `open`, `close`, `read`, `lseek`, `fstat`, `fcntl` (`F_SETFD`, `HAVE_FCNTL` is forced for target builds) and `getpid` (`fileline.c`, always), besides string, stdio and malloc functions the library has. The GCC 16 libbacktrace sources (`alloc`, `read`, `elf`, `posix`, `fileline`, `dwarf`, `state`, `backtrace`, `simple`, `sort`, `atomic`) compile against the library's headers in GCC's default C mode. Linking and running them was not done: running externally fetched code needs the user's permission in this session. Without an executable, `backtrace_pcinfo` and `backtrace_syminfo` report an error once and return, and capture is unaffected.*
+- [x] `<sys/stat.h>`: `struct stat` (every POSIX field; `fstat` fills `st_mode`, `st_size` and `st_nlink`), the `S_IS*` macros and `S_I*` bits, and `fstat`. A handle that seeks is a regular file whose size is its end; one that cannot (`ESPIPE`) is a character device of size 0. `<fcntl.h>` gains `O_CLOEXEC`, `F_GETFD`, `F_SETFD`, `FD_CLOEXEC` and `fcntl` (descriptor flags only, with no effect), `<unistd.h>` `getpid` (1), and `<sys/types.h>` `struct stat`'s field types (D134).
+- [x] An optional unwind-tables build of the library: `LIBC_UNWIND_TABLES=1` adds `-funwind-tables` to `LIBC_CFLAGS` (`tools/makefiles/common.mk`). The default build, and with it both size budgets and the baselines, stays without unwind tables. Cost, debug images on armv7e-m: libgcc's EHABI unwinder and personality routine (about 3.4 KB of code, and `abort`, so even a freestanding program needs `__rtos_abort`) plus the tables (1.4 KB for `smoke`, 4.4 KB for `stdio`). `make check` passes with the option on armv7e-m and armv6-m.
+- [x] `__exidx_start` and `__exidx_end`: come from the default linker script for the Linux test port. `port/none` has no linker script of its own (the board's provides the memory map), so `port/none/rtos-none.h` states the contract and the section statement a board script needs.
+- [x] `test/unit/unwind` (Arm), in place of the planned `test/unit/cxx` stack trace (D134):
+  - `_Unwind_Backtrace`, as `std::stacktrace::current()` calls it, returns the test's own frames;
+  - through `qsort`'s comparison callback the walk reaches `main` in a `LIBC_UNWIND_TABLES=1` build, and stops cleanly at the library frame (`EXIDX_CANTUNWIND`) in the default one;
+  - `__exidx_start` < `__exidx_end`.
 
-  Without `libstdc++exp`, the test is reported as skipped, the same way as `bitint` (D127).
-- [ ] The toolchain side, `--enable-libstdcxx-backtrace` in sgstreet/rtoskit-gcc#7: record the configure result.
+  The toolchain's `libstdc++exp.a` has `<stacktrace>`, but its headers are configured for newlib and need a complete `<wchar.h>`, which is outside this library's scope (§1), so `#include <stacktrace>` cannot compile against the library's headers. The `std::stacktrace` test moves to P7.05, with the libstdc++ built against the library.
+- [x] The toolchain side, `--enable-libstdcxx-backtrace` in sgstreet/rtoskit-gcc#7: moved to P7.05 with the rest of the hosted libstdc++ configure.
 
 ## P7.05 — Consumers  `[ ]`
 - [ ] **pi-pico:** a build against the library, with its stdio glue rewritten onto the seam (in pi-pico, not here). Record any name the build still lacks as a Q entry.
 - [ ] **Hosted libstdc++:** configure and build it against the library with the `stdio` backend and Q39's configure route (the toolchain side is sgstreet/rtoskit-gcc#7), and record which optional features configure turned on.
+- [ ] **`std::stacktrace`** (from P7.04, D134): with that libstdc++, `--enable-libstdcxx-backtrace`, a `test/unit/cxx` case linked with `-lstdc++exp` and a `LIBC_UNWIND_TABLES=1` library: `std::stacktrace::current()` returns the test's frames and one inside the library (a `qsort` callback), and `to_string()` runs without symbol information. Reported as skipped without `libstdc++exp`, as `bitint` is (D127).
+- [ ] **Pre-C23 C modes** (Q40): pi-pico builds with `-std=gnu11`.
 - [ ] Close issue #106.

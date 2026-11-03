@@ -3,7 +3,7 @@
 Issue #106. Plan: PLAN D128 (the subset), phase 7. Decisions from this note:
 D129 (descriptors are seam handles; answers Q37), D130 (the library defines
 `open`, `close`, `read` and `write`; answers Q38), D132 (where the ISO
-headers show the subset's names; P7.03). Open: Q39 (how a hosted libstdc++
+headers show the subset's names; P7.03), D134 (P7.04). Open: Q39 (how a hosted libstdc++
 is configured for this library).
 
 ## Sources reviewed
@@ -299,3 +299,140 @@ to sgstreet/rtoskit-gcc#7 (Q39). The library side is unaffected.
 - `test/unit/api`: strict C23 leaves every one of the names free (the test
   defines objects with them), and under `_POSIX_C_SOURCE` each has the
   POSIX type.
+
+## P7.04: what `std::stacktrace` needs
+
+### Sources reviewed
+
+- GCC 16 release branch (`releases/gcc-16`), read for structure only:
+  - `libstdc++-v3/acinclude.m4` `GLIBCXX_ENABLE_BACKTRACE`
+    (<https://github.com/gcc-mirror/gcc/blob/releases/gcc-16/libstdc++-v3/acinclude.m4>);
+  - `libstdc++-v3/src/libbacktrace/Makefile.am`;
+  - `libbacktrace/fileline.c`, `posix.c`, `elf.c`, `read.c`, `alloc.c`
+    (<https://github.com/gcc-mirror/gcc/tree/releases/gcc-16/libbacktrace>).
+- The toolchain in `local/` (arm-none-eabi GCC 16.2, built for newlib): the
+  members and undefined symbols of `libstdc++exp.a`.
+
+### How libstdc++ builds `<stacktrace>`
+
+- `--enable-libstdcxx-backtrace` defaults to `auto`, which follows
+  `is_hosted` (off for freestanding builds and AVR). When on, libbacktrace is
+  compiled into `libstdc++exp.a` with its symbols renamed `__glibcxx_backtrace_*`:
+  - always `atomic`, `backtrace`, `dwarf`, `fileline`, `posix`, `sort`,
+    `simple`, `state` and `cp-demangle`;
+  - a format file, `elf` (from the compiler's object format, ELF32 here);
+  - a view file and an allocator. Without `<sys/mman.h>` they are `read.c`
+    and `alloc.c` (malloc). With it, `mmapio.c` and, when `MAP_ANONYMOUS`
+    exists, `mmap.c`.
+- `HAVE_FCNTL` is forced on for target builds other than mingw, so `posix.c`
+  calls `fcntl(fd, F_SETFD, FD_CLOEXEC)` after `open` (with `O_CLOEXEC` when
+  defined). `getexecname` is assumed only on Solaris.
+- `std::stacktrace::current()` (`__stacktrace_impl::_S_current`) creates a
+  libbacktrace state and calls `backtrace_simple`, which is
+  `_Unwind_Backtrace` with a callback storing each frame's PC. Capture
+  therefore needs only libgcc's unwinder and the EHABI tables.
+  `to_string()` and the entries' `description()`/`source_file()` call
+  `backtrace_pcinfo`/`backtrace_syminfo`, which open the executable. Both
+  paths are in one object (`stacktrace.o`), so the whole of libbacktrace is
+  linked whenever `std::stacktrace` is used.
+
+### The C library names it needs
+
+The toolchain's `libstdc++exp.a` (configured for newlib, which has
+`<sys/mman.h>`) needs these undefined names:
+
+- `open`, `close`, `fcntl`, `fstat`, `getpid`;
+- `mmap`, `munmap`, `getpagesize`;
+- `errno` (as `__thread`, which matches D131);
+- `malloc`, `realloc`, `free`, `memcpy`, `memcmp`, `memset`, `strcmp`,
+  `strncmp`, `strlen`, `strnlen`, `strrchr`, `bsearch`, `snprintf`,
+  `sprintf`;
+- from libgcc and libsupc++: `_Unwind_Backtrace`, `_Unwind_VRS_Get` and
+  `__cxa_demangle`.
+
+Configured against this library there is no `<sys/mman.h>`, so `mmap`,
+`munmap` and `getpagesize` drop out and `read` and `lseek` come in. The
+library already had everything except `fstat`, `fcntl` and `getpid`, which
+P7.04 adds (D134).
+
+**Compile check.** The GCC 16 sources of the eleven files libstdc++ would
+use, with a `config.h` holding what its configure finds for this library
+(`HAVE_FCNTL`, `HAVE_DECL_STRNLEN`, ELF32, no `<sys/mman.h>`), compile
+against the library's headers (`-nostdinc`, `-D_GNU_SOURCE`, GCC's default C
+mode). Linking and running them was not done in this session (running
+fetched code needs the user's permission); P7.05's libstdc++ build does it.
+
+**C mode.** In `-std=gnu11` the same files fail. `<stddef.h>` uses
+`nullptr` unconditionally, as do `<assert.h>`, `<inttypes.h>`,
+`<stdatomic.h>` and `<stdbit.h>`. libstdc++ compiles libbacktrace in the
+compiler's default mode (`gnu23` for GCC 16), so this does not affect it,
+but pi-pico builds with `-std=gnu11` (Q40).
+
+### Without an executable
+
+`fileline_initialize` tries, in order:
+
+1. the file name given to `backtrace_create_state`;
+2. `getexecname`, `_pgmptr`;
+3. `/proc/self/exe`, `/proc/curproc/file`, `/proc/<getpid()>/object/a.out`;
+4. the BSD `sysctl` paths, macOS, Windows and HP-UX.
+
+A file that does not exist moves it to the next candidate. When none opens,
+it reports "libbacktrace could not find executable to open" once through
+the error callback, marks the state failed, and every later `pcinfo` or
+`syminfo` returns at once. libstdc++ then gives entries with an empty
+description and file. On `port/none`, `open` fails with `ENOSYS`, which is
+not `ENOENT`, so the first attempt reports that error and stops; the result
+is the same. Capture never touches files.
+
+### `fstat`, `fcntl`, `getpid` over the seam
+
+- **`fstat`.** The seam knows a handle's offset and nothing else. A seek to
+  the current position tells a seekable handle from a stream: `ESPIPE`
+  becomes a character device of size 0, and another error is returned.
+  Then a seek to the end gives the size, and a seek back restores the
+  offset. `st_nlink` is 1 and the other fields are 0. A pipe on Linux is
+  reported as a character device, not a FIFO; nothing in the subset tells
+  them apart.
+- **`fcntl`.** Only `F_GETFD` and `F_SETFD`, which libbacktrace uses.
+  `FD_CLOEXEC` has no effect, because nothing executes another program, so
+  `F_GETFD` returns 0. A zero-length seek validates the handle, and only
+  `EBADF` from it is an error, since a console may not seek. Other commands
+  give `EINVAL`.
+- **`getpid`.** The program is the only process: 1.
+
+### Unwind tables
+
+- **Without `-funwind-tables`,** C functions get no EHABI entry. The linker
+  marks code without one `EXIDX_CANTUNWIND`, so a walk that reaches a
+  library frame (`qsort` calling a comparison) stops there cleanly.
+- **With `LIBC_UNWIND_TABLES=1`,** every library function has an entry, and
+  the walk continues to `main`.
+- **What the option costs:**
+  - The tables: 8 bytes per function in `.ARM.exidx`, plus `.ARM.extab`
+    entries for frames the compact model cannot describe. That is about
+    40 KB over `libc.a`. In the debug test images it adds 1.4 KB (`smoke`)
+    and 4.4 KB (`stdio`).
+  - The unwinder: each entry references libgcc's personality routine
+    `__aeabi_unwind_cpp_pr0`, which brings in the unwinder (about 3.4 KB)
+    and `abort`.
+
+### Tests
+
+- `test/unit/unwind` (Arm):
+  - own frames;
+  - through `qsort` in both builds;
+  - `__exidx_start` < `__exidx_end`.
+- `test/unit/posix`:
+  - `fstat` on a regular file: size, offset kept;
+  - `fcntl` flags and errors;
+  - `fstat`/`fcntl` on closed and negative descriptors;
+  - `O_CLOEXEC` with `open`;
+  - `getpid`.
+- `test/unit/none`:
+  - `fstat(1)` is a character device;
+  - `fstat(-1)` gives `EBADF`;
+  - `fcntl` and `getpid`.
+- `test/unit/api`: the new macros, types and prototypes; `<sys/stat.h>` in
+  the strict standalone compile.
+- `test/unit/cxx`: `<sys/stat.h>` as C++17 and `gnu++98`.
