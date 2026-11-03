@@ -368,6 +368,18 @@
    "sin/throughput": {
     "insns": 6435.0
    },
+   "sincos/latency": {
+    "insns": 12852.0
+   },
+   "sincos/throughput": {
+    "insns": 12863.56
+   },
+   "sincosf/latency": {
+    "insns": 1154.0
+   },
+   "sincosf/throughput": {
+    "insns": 1152.94
+   },
    "sinf/latency": {
     "insns": 575.19
    },
