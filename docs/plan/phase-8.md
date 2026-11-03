@@ -45,11 +45,17 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
 - [x] Results bit-identical to `sin` and `cos`, so `sincos` keeps its P7.03 guarantee: `test/unit/posix` compares bits and exception flags against separate calls in every rounding direction the core has, over specials, tiny arguments, every quadrant of each reduction regime, the doubles and floats nearest n π/2 and their neighbours, the float hard cases, and a sweep of 141 binades. A mutant that negates one quadrant's sum instead of its double-double fails it.
 - [x] Bench, size and the notes for every architecture. `sincos`: armv6-m −16 %, armv7-m, armv7e-m, armv8-m.main −18 %, armv7e-m-dp −33 %, x86_64 −30 %. `sincosf`: −8 % (size flavour, soft cores) to −35 % (armv6-m speed). No other case changed. `sincos.o` grows to 420–629 bytes, still less than `sin.o` + `cos.o`; no image changes and both budgets hold.
 
-## P8.03 — Fixed-point double `sin` and `cos` on the soft-double cores  `[ ]`
-- [ ] Split if large: Armv6-M (`MULS` only) and Armv7-M/Armv8-M (`UMULL`) may need separate steps.
-- [ ] `sin`, `cos`, `sincos` (and `tan`, if the same kernel serves it) in 64-bit fixed point, in the speed flavour's `speed/` files of the soft-double layers (`nofp`, `soft-dp`), keeping the soft-double path for the size flavour unless the fixed-point version is also smaller.
-- [ ] The error bound measured on the host over at least 10⁸ random arguments plus the D124 vectors, hard cases in `libm_dense`, and a mutant check that the tests catch a lost guard bit.
-- [ ] Bench (target: about 10× on armv7e-m, more on armv6-m), size and the notes.
+## P8.03a — The fixed-point kernel and its error bound  `[~]`
+- [ ] `__libc_trig_fixed`: an integer reduction for |x| < 2²⁰ (x times 2/π to 192 bits, the fraction to 128 bits), r = f π/2 to 64 bits, sin r / r and cos r by Taylor polynomials in z = r² in 64-bit fixed point, the quadrant, and a 64-bit significand per result; its only multiply is `__libc_fixed_wide` (32 × 32 → 64), so one source serves Armv6-M and the `UMULL` cores. Arguments ≥ 2²⁰, or whose reduction cancels more than 64 bits, decline.
+- [ ] The rounding test: round the 64-bit significand to 53 bits when its 11 discarded bits are farther than the error bound from a halfway point (the soft-double cores round to nearest only, D44); otherwise decline to the double-double path.
+- [ ] `tools/scripts/trig-fixed-check`: runs the kernel on the host against MPFR over at least 10⁸ arguments (log-uniform over [2⁻²⁷, 2²⁰) and uniform over [−10, 10]) plus the doubles nearest n π/2, and reports the largest error, the fallback rate, and every fast result that is not correctly rounded (must be none).
+
+## P8.03b — `sin`, `cos`, `sincos` in the speed flavour  `[ ]`
+- [ ] Wire the kernel into the speed flavour of the five soft-double cores (armv6-m, armv6s-m, armv7-m, armv7e-m, armv8-m.main), with the double-double path as the fallback, and `__libc_fixed_wide` as `UMULL` where the core has it. `tan` only if the same kernel serves it.
+- [ ] `libm_dense` hard cases (results near a rounding boundary, arguments near n π/2), the D124 vectors, the `sincos` identity test, and a mutant check that the tests catch a lost guard bit.
+
+## P8.03c — Bench, size, notes  `[ ]`
+- [ ] Bench (target: about 10× on armv7e-m, more on armv6-m), the speed budget, and the notes.
 
 ## P8.04 — Wrap-up  `[ ]`
 - [ ] `docs/perf/<arch>.md` summary, PLAN decisions, and the speed budgets re-locked where a decision allows it.
