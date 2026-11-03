@@ -366,7 +366,7 @@ fetched code needs the user's permission); P7.05's libstdc++ build does it.
 `nullptr` unconditionally, as do `<assert.h>`, `<inttypes.h>`,
 `<stdatomic.h>` and `<stdbit.h>`. libstdc++ compiles libbacktrace in the
 compiler's default mode (`gnu23` for GCC 16), so this does not affect it,
-but pi-pico builds with `-std=gnu11` (Q40).
+but pi-pico builds with `-std=gnu11` (Q40). Resolved by D135: the headers stay C23-only, and pi-pico moves to `-std=gnu23`.
 
 ### Without an executable
 
