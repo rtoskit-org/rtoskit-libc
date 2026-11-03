@@ -131,8 +131,8 @@ cos r is in [0.7, 1] and needs only absolute accuracy. As in P3.05g, arguments f
 
 | Core | Today `sin` | Fixed `sin` (reduction + conversions + polynomial) | Fixed `sincos` |
 |---|---:|---:|---:|
-| armv6-m | 17,710 | about 250 + 150 + 600 ≈ 1,000 | about 1,600 (polynomial) / 1,300 (table) |
-| armv7e-m, armv8-m.main | 6,876 | about 80 + 80 + 100 ≈ 260 | about 360 / 300 |
+| armv6-m | 17,669 | about 250 + 150 + 600 ≈ 1,000 | about 1,600 (polynomial) / 1,300 (table) |
+| armv7e-m, armv8-m.main | 6,435 | about 80 + 80 + 100 ≈ 260 | about 360 / 300 |
 
 ### CORDIC, for the record (D133)
 
@@ -184,3 +184,16 @@ Every row is worse than a fixed-point polynomial or table, so CORDIC is not purs
 ## Bench rows (P8.01)
 
 `test/bench/math` gains `sincos` and `sincosf`, as a unary case whose value is sin + cos over the same 16 arguments in [−10, 10]. Their cost before any change is recorded below and in `docs/perf/<arch>.md`.
+
+Measured with qemu instruction counting (`make bench BENCH_UPDATE=1`, throughput rows, instructions per call; 16 arguments in [−10, 10]). The size and speed flavours differ only where the table shows two figures (size / speed):
+
+| Arch | `sin` | `cos` | `sincos` | `sinf` | `cosf` | `sincosf` |
+|---|---:|---:|---:|---:|---:|---:|
+| armv6-m, armv6s-m | 17,669 | 17,660 | 35,340 | 18,350 / 4,729 | 18,281 / 3,742 | 36,637 / 8,477 |
+| armv7-m | 6,524 | 6,500 | 13,034 | 9,154 / 2,499 | 9,093 / 1,990 | 18,256 / 4,498 |
+| armv7e-m | 6,435 | 6,413 | 12,864 | 575 | 567 | 1,155 |
+| armv8-m.main | 6,435 | 6,413 | 12,864 | 574 | 566 | 1,153 |
+| armv7e-m-dp | 165 | 167 | 344 | 187 | 180 | 380 |
+| x86_64 | 308 | 313 | 635 | 337 | 328 | 679 |
+
+`sincos` costs the sum of `sin` and `cos` plus the wrapper's few instructions everywhere, as P7.03's implementation implies. These are the rows P8.02 and P8.03 improve against. (D133's 6,876 for armv7e-m was an older figure; the current one is 6,435.)

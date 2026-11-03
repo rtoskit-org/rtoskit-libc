@@ -1158,3 +1158,7 @@ change against the P5.04a baseline (c4abaa0). Throughput, instructions per call.
 ## D125 — the libm vectors' accuracy fixes (Q36)
 
 Correctness fixes, so the slowdowns are accepted and the baselines re-recorded (both flavours): `cbrt` 1.4 % slower (the residual's extra soft-double products); `pow` within 1 %. Every other case is within 1 %.
+
+## P8.01 — `sincos` and `sincosf` bench rows
+
+`math/sincos` and `math/sincosf` (the sum of both results over the usual 16 arguments in [−10, 10]) are new; they cost `sin` + `cos` (`sinf` + `cosf`), since P7.03 implements them as the two calls. No other case changed. They are the starting point for phase 8 (`docs/research/sincos.md`).
