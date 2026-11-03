@@ -28,6 +28,8 @@ CFLAGS += -fno-builtin
 # The test's own frames carry unwind tables; the library's do only in a LIBC_UNWIND_TABLES=1 build (PLAN D134).
 # <unwind.h> is the compiler's, searched after the library's headers.
 CFLAGS += -funwind-tables
+# Every frame the test looks for stays a frame in the optimised builds: no sibling calls (noipa in the source stops inlining)
+CFLAGS += -fno-optimize-sibling-calls
 CPPFLAGS += -idirafter $(shell ${CC} ${CROSS_FLAGS} -print-file-name=include)
 CPPFLAGS += -DUNWIND_LIBRARY=$(if $(filter 1,${LIBC_UNWIND_TABLES}),1,0)
 
