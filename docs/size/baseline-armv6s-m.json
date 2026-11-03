@@ -1151,6 +1151,15 @@
     "text": 568,
     "unwind": 0
    },
+   "__libc_cosf_cases.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 32,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
+    "unwind": 0
+   },
    "__libc_cosh_core.o": {
     "bss": 0,
     "data": 0,
@@ -2013,6 +2022,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 246,
+    "unwind": 0
+   },
+   "__libc_sinf_cases.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 16,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
     "unwind": 0
    },
    "__libc_sinf_core.o": {
@@ -6575,7 +6593,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 28,
+    "text": 544,
     "unwind": 0
    },
    "sincosf.o": {
@@ -6584,7 +6602,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 24,
+    "text": 184,
     "unwind": 0
    },
    "sinf.o": {
@@ -8202,10 +8220,10 @@
   "totals": {
    "bss": 1704,
    "data": 116,
-   "rodata": 10119,
+   "rodata": 10167,
    "tbss": 362,
    "tdata": 8,
-   "text": 160548,
+   "text": 161224,
    "unwind": 0
   }
  },
@@ -9924,8 +9942,8 @@
    "setvbuf.o:setvbuf": 24,
    "signal.o:signal": 4,
    "sin.o:sin": 104,
-   "sincos.o:sincos": 24,
-   "sincosf.o:sincosf": 16,
+   "sincos.o:sincos": 120,
+   "sincosf.o:sincosf": 40,
    "sinf.o:sinf": 32,
    "sinh.o:sinh": 152,
    "sinhf.o:libc/math/sp-nearest/sinhf.c:__libc_ff_product": 32,

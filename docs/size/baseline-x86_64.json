@@ -658,7 +658,7 @@
     "libc": {
      "bss": 0,
      "data": 0,
-     "rodata": 3988,
+     "rodata": 3991,
      "tbss": 0,
      "tdata": 0,
      "text": 12258,
@@ -676,7 +676,7 @@
     "other": {
      "bss": 0,
      "data": 0,
-     "rodata": 38,
+     "rodata": 51,
      "tbss": 0,
      "tdata": 0,
      "text": 0,
@@ -704,7 +704,7 @@
    "sections": {
     "bss": 40,
     "data": 0,
-    "rodata": 4096,
+    "rodata": 4112,
     "tbss": 0,
     "tdata": 0,
     "text": 13082,
@@ -919,6 +919,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 293,
+    "unwind": 0
+   },
+   "__libc_cosf_cases.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 32,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
     "unwind": 0
    },
    "__libc_cosh_core.o": {
@@ -1621,6 +1630,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 491,
+    "unwind": 0
+   },
+   "__libc_sinf_cases.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 16,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
     "unwind": 0
    },
    "__libc_sinh_core.o": {
@@ -2895,7 +2913,7 @@
    "cosf.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 32,
+    "rodata": 0,
     "tbss": 0,
     "tdata": 0,
     "text": 82,
@@ -6162,25 +6180,25 @@
    "sincos.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 0,
+    "rodata": 96,
     "tbss": 0,
     "tdata": 0,
-    "text": 48,
+    "text": 533,
     "unwind": 0
    },
    "sincosf.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 0,
+    "rodata": 32,
     "tbss": 0,
     "tdata": 0,
-    "text": 48,
+    "text": 390,
     "unwind": 0
    },
    "sinf.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 48,
+    "rodata": 32,
     "tbss": 0,
     "tdata": 0,
     "text": 305,
@@ -7792,10 +7810,10 @@
   "totals": {
    "bss": 2888,
    "data": 204,
-   "rodata": 17851,
+   "rodata": 17979,
    "tbss": 626,
    "tdata": 8,
-   "text": 102536,
+   "text": 103363,
    "unwind": 0
   }
  },
@@ -9085,8 +9103,8 @@
    "setvbuf.o:setvbuf": 48,
    "signal.o:signal": 8,
    "sin.o:sin": 48,
-   "sincos.o:sincos": 32,
-   "sincosf.o:sincosf": 32,
+   "sincos.o:sincos": 112,
+   "sincosf.o:sincosf": 80,
    "sinf.o:sinf": 48,
    "sinh.o:sinh": 64,
    "sinhf.o:sinhf": 32,

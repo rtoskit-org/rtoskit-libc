@@ -1200,6 +1200,15 @@
     "text": 584,
     "unwind": 0
    },
+   "__libc_cosf_cases.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 32,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
+    "unwind": 0
+   },
    "__libc_cosh_core.o": {
     "bss": 0,
     "data": 0,
@@ -2062,6 +2071,15 @@
     "tbss": 0,
     "tdata": 0,
     "text": 256,
+    "unwind": 0
+   },
+   "__libc_sinf_cases.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 16,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 0,
     "unwind": 0
    },
    "__libc_sinf_core.o": {
@@ -6678,7 +6696,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 48,
+    "text": 524,
     "unwind": 0
    },
    "sincosf.o": {
@@ -6687,7 +6705,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 40,
+    "text": 200,
     "unwind": 0
    },
    "sinf.o": {
@@ -8305,10 +8323,10 @@
   "totals": {
    "bss": 1704,
    "data": 116,
-   "rodata": 10167,
+   "rodata": 10215,
    "tbss": 362,
    "tdata": 8,
-   "text": 149142,
+   "text": 149778,
    "unwind": 0
   }
  },
@@ -9823,8 +9841,8 @@
    "setvbuf.o:setvbuf": 24,
    "signal.o:signal": 4,
    "sin.o:sin": 88,
-   "sincos.o:sincos": 24,
-   "sincosf.o:sincosf": 24,
+   "sincos.o:sincos": 112,
+   "sincosf.o:sincosf": 40,
    "sinf.o:sinf": 32,
    "sinh.o:sinh": 128,
    "sinhf.o:sinhf": 40,

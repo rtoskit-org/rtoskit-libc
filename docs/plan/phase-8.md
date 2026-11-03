@@ -36,10 +36,14 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
 - [x] Fixed-point double sine and cosine: Taylor remainders on |r| ≤ π/4 (9 terms in z reach 2^-63 for sin r / r; a minimax 8-term polynomial about 2^-69), the table alternative (jπ/32, 144 bytes, 5 terms, best for `sincos`), relative accuracy near zero through sin r / r, a 128-bit fixed-point Cody–Waite reduction with the Payne–Hanek words beyond it, a rounding test with about 0.8 % fallback, and multiply costs (about 60 instructions per Horner step on Armv6-M, 10 with `UMULL`). Estimated `sin` ≈ 1,000 instructions on armv6-m and ≈ 260 on armv7e-m. CORDIC: about 1,700–2,000 and 600 for both results, 0.56 ulp absolute error, unbounded relative error near zero: not pursued.
 - [x] Bench cases `math/sincos` and `math/sincosf` (sin + cos of each argument) in both flavours, recorded with `make bench BENCH_UPDATE=1`; no other case changed. `sincos` = `sin` + `cos` on every architecture (armv6-m 35,340, armv7e-m 12,864, armv7e-m-dp 344, x86_64 635 instructions per call).
 
-## P8.02 — One reduction for `sincos` and `sincosf`  `[~]`
-- [ ] A kernel per layer that takes the reduced argument and quadrant and returns both results, shared by `sin`, `cos` and `sincos` where that costs no size; otherwise `sincos` alone in the layer's `speed/` directory (D77).
-- [ ] Results bit-identical to `sin` and `cos`, so `sincos` keeps its P7.03 guarantee.
-- [ ] Bench, size and the notes for every architecture.
+## P8.02 — One reduction for `sincos` and `sincosf`  `[x]`
+- [x] A kernel per path that takes the reduced argument and quadrant and returns both results. The double cores and the float cores were already shared by `sin`/`cos` and `sinf`/`cosf`, so only `sincos` and `sincosf` change, in every flavour:
+  - `libc/math/sincos.c`: `sin`'s and `cos`'s entry tests, one `__libc_rem_pio2`, both double-double cores in one round-to-nearest section, the quadrant choosing and negating (before the final sum, as `sin.c` does, so the directed modes round alike);
+  - `libc/math/sincosf.c` (double path: armv7e-m-dp, x86_64): the new `sincos`, then each result through `__libc_float_round` with `sinf`'s and `cosf`'s hard cases, now shared (`__libc_sinf_cases`, `__libc_cosf_cases`);
+  - `libc/math/sp-nearest/sincosf.c`: one `__libc_rem_pio2f`, `__libc_sinf_core(k)` and `(k + 16)`;
+  - `libc/math/nofp/speed/sincosf.c`: the same with the fixed-point core and its rounding test (armv6-m, armv6s-m, armv7-m speed).
+- [x] Results bit-identical to `sin` and `cos`, so `sincos` keeps its P7.03 guarantee: `test/unit/posix` compares bits and exception flags against separate calls in every rounding direction the core has, over specials, tiny arguments, every quadrant of each reduction regime, the doubles and floats nearest n π/2 and their neighbours, the float hard cases, and a sweep of 141 binades. A mutant that negates one quadrant's sum instead of its double-double fails it.
+- [x] Bench, size and the notes for every architecture. `sincos`: armv6-m −16 %, armv7-m, armv7e-m, armv8-m.main −18 %, armv7e-m-dp −33 %, x86_64 −30 %. `sincosf`: −8 % (size flavour, soft cores) to −35 % (armv6-m speed). No other case changed. `sincos.o` grows to 420–629 bytes, still less than `sin.o` + `cos.o`; no image changes and both budgets hold.
 
 ## P8.03 — Fixed-point double `sin` and `cos` on the soft-double cores  `[ ]`
 - [ ] Split if large: Armv6-M (`MULS` only) and Armv7-M/Armv8-M (`UMULL`) may need separate steps.

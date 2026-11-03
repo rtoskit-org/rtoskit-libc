@@ -969,3 +969,7 @@ Correctness fixes, so the slowdowns are accepted and the baselines re-recorded (
 ## P8.01 — `sincos` and `sincosf` bench rows
 
 `math/sincos` and `math/sincosf` (the sum of both results over the usual 16 arguments in [−10, 10]) are new; they cost `sin` + `cos` (`sinf` + `cosf`), since P7.03 implements them as the two calls. No other case changed. They are the starting point for phase 8 (`docs/research/sincos.md`).
+
+## P8.02 — One reduction for `sincos` and `sincosf`
+
+`sincos` and `sincosf` reduce the argument once and evaluate both results, bit-identical to `sin`/`cos` and `sinf`/`cosf` (`docs/research/sincos.md`). Instructions per call (throughput, 16 arguments in [−10, 10]): `sincos` 12,863 → 10,527 (−18 %); `sincosf` 1,154 → 786 (−32 %) (both flavours). No other case changed.
