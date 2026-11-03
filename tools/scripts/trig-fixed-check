@@ -1,0 +1,65 @@
+#!/usr/bin/env bash
+#
+# Copyright (C) 2026 Red Rocket Computing, LLC
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# trig-fixed-check
+#
+# Created on: Nov 3, 2026
+#     Author: Stephen Street (stephen@redrocketcomputing.com)
+#
+# The error bound of the fixed-point double sine and cosine kernel (P8.03a,
+# PLAN D133, docs/research/sincos.md): compiles
+# libc/math/dp-fixed/speed/__libc_trig_fixed*.c against the library's headers
+# with the host compiler, links tools/libm/trig_fixed_check.c (host stand-ins
+# for __libc_fixed_wide and stdc_leading_zeros, MPFR as the reference) and
+# runs it on every CPU, COUNT random arguments in all plus the doubles near
+# n pi/2. Needs libmpfr-dev. Run from the project root:
+#
+#   tools/scripts/trig-fixed-check [COUNT]     default 100000000
+#
+# Prints, per function, the largest error in units of the 64-bit
+# significand's last bit, the fallback rate under __LIBC_TRIG_FIXED_ERROR,
+# and every fast-path result that is not correctly rounded; exits 1 if there
+# is one. About 15 minutes for 10^8 arguments on four threads.
+
+set -euo pipefail
+
+count=${1:-100000000}
+cc=$(tools/scripts/host-cc)
+work=$(mktemp -d)
+trap 'rm -rf "${work}"' EXIT
+
+flags=(-O2 -std=c23 -nostdinc -isystem include -include include/stdc-predef.h -ffreestanding -fno-builtin)
+"${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed.c -o "${work}/kernel.o"
+"${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed_round.c -o "${work}/round.o"
+"${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_check.c "${work}/kernel.o" "${work}/round.o" -lmpfr -lm -o "${work}/check"
+
+jobs=$(nproc)
+for ((i = 1; i <= jobs; ++i)); do
+	"${work}/check" $((count / jobs)) "${i}" > "${work}/${i}.log" &
+done
+wait
+
+status=0
+cat "${work}"/*.log | grep -E '^wrong' && status=1
+python3 - "${work}" <<'PY'
+import glob, re, sys
+totals = {}
+for path in glob.glob(sys.argv[1] + '/*.log'):
+	for line in open(path):
+		m = re.match(r'(\w+): (\d+) arguments, largest error ([\d.]+) units at (\S+), (\d+) declined, (\d+) fall back .*, (\d+) wrong', line)
+		if not m:
+			continue
+		f, n, worst, at, declined, fallback, wrong = m.groups()
+		t = totals.setdefault(f, [0, 0.0, '', 0, 0, 0])
+		t[0] += int(n); t[3] += int(declined); t[4] += int(fallback); t[5] += int(wrong)
+		if float(worst) > t[1]:
+			t[1], t[2] = float(worst), at
+for f, (n, worst, at, declined, fallback, wrong) in totals.items():
+	print(f'{f}: {n} arguments, largest error {worst:.3f} units at {at}, {declined} declined, {fallback} fall back ({100.0 * fallback / n:.3f} %), {wrong} wrong')
+PY
+exit ${status}
