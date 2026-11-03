@@ -973,3 +973,7 @@ Correctness fixes, so the slowdowns are accepted and the baselines re-recorded (
 ## P8.02 — One reduction for `sincos` and `sincosf`
 
 `sincos` and `sincosf` reduce the argument once and evaluate both results, bit-identical to `sin`/`cos` and `sinf`/`cosf` (`docs/research/sincos.md`). Instructions per call (throughput, 16 arguments in [−10, 10]): `sincos` 12,863 → 10,527 (−18 %); `sincosf` 1,154 → 786 (−32 %) (both flavours). No other case changed.
+
+## P8.03 — Fixed-point double `sin`, `cos` and `sincos` (speed flavour)
+
+The `dp-fixed` layer (D136): an integer reduction and 64-bit fixed-point polynomials, correctly rounded when the rounding test passes, the double-double path otherwise (`docs/research/sincos.md`). Speed flavour, instructions per call (throughput, 16 arguments in [−10, 10]): `sin` 6,435 → 803 (8.0×), `cos` 6,413 → 1,107 (5.8×), `sincos` 10,528 → 1,457 (7.2×). `cos` includes one argument of the 16 (x = −5.7875) whose result lies 2 units from a halfway point and takes the double-double path. The size flavour is unchanged; no other case changed.
