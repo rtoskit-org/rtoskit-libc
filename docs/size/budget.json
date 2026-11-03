@@ -35,11 +35,11 @@
      "ram": 48
     },
     "math-float": {
-     "code": 12536,
+     "code": 15456,
      "ram": 20
     },
     "math-mix": {
-     "code": 39176,
+     "code": 41340,
      "ram": 20
     }
    },
@@ -77,11 +77,11 @@
      "ram": 48
     },
     "math-float": {
-     "code": 12536,
+     "code": 15456,
      "ram": 20
     },
     "math-mix": {
-     "code": 39176,
+     "code": 41340,
      "ram": 20
     }
    },
@@ -119,11 +119,11 @@
      "ram": 48
     },
     "math-float": {
-     "code": 11412,
+     "code": 13516,
      "ram": 20
     },
     "math-mix": {
-     "code": 35024,
+     "code": 36376,
      "ram": 20
     }
    }
