@@ -59,7 +59,7 @@ static _Unwind_Reason_Code record(struct _Unwind_Context *context, void *argumen
 }
 
 /* Returns the frames, and the address the capture returns to (the PC in its caller) */
-[[gnu::noinline]] static void capture(struct trace *trace, uintptr_t *returns_to)
+[[gnu::noipa]] static void capture(struct trace *trace, uintptr_t *returns_to)
 {
 	trace->count = 0;
 	*returns_to = (uintptr_t)__builtin_return_address(0) & ~(uintptr_t)1;
@@ -79,7 +79,7 @@ static struct trace own;
 static uintptr_t own_level;
 static uintptr_t own_main;
 
-[[gnu::noinline]] static void level(void)
+[[gnu::noipa]] static void level(void)
 {
 	own_main = (uintptr_t)__builtin_return_address(0) & ~(uintptr_t)1;
 	capture(&own, &own_level);
@@ -89,7 +89,7 @@ static struct trace through;
 static uintptr_t through_compare;
 static uintptr_t through_main;
 
-static int compare(const void *a, const void *b)
+[[gnu::noipa]] static int compare(const void *a, const void *b)
 {
 	int x = *(const int *)a;
 	int y = *(const int *)b;
@@ -99,7 +99,7 @@ static int compare(const void *a, const void *b)
 	return (x > y) - (x < y);
 }
 
-[[gnu::noinline]] static void sort(void)
+[[gnu::noipa]] static void sort(void)
 {
 	static int values[] = { 3, 1, 2 };
 
