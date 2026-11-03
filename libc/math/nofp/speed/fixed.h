@@ -23,8 +23,8 @@
  * 16-bit halves; each helper is exact.
  */
 
-/* The 64-bit product of a and b, shared out of line (__libc_fixed_wide.c) */
-uint64_t __libc_fixed_wide(uint32_t a, uint32_t b);
+/* The 64-bit product of a and b: out of line on Armv6-M, UMULL inline on armv7-m (fixed-wide.h, picked by speed.mk) */
+#include "fixed-wide.h"
 
 /* The high 32 bits of the product of a and b (rounded down) */
 static inline uint32_t __libc_fixed_high(uint32_t a, uint32_t b)

@@ -208,3 +208,7 @@ Three new members (`fstat`, `fcntl`, `getpid`), linked only by programs that cal
 ## P8.03 — Fixed-point double `sin`, `cos` and `sincos` (speed flavour, D136)
 
 Speed flavour only: `__libc_trig_fixed.o`, `__libc_trig_dd.o` and `__libc_trig_fixed_round.o` (1,372 + 516 + 92 bytes) are new, and the speed `sin.o`, `cos.o` and `sincos.o` shrink by 110–165 bytes each (their double-double code moves to `__libc_trig_dd.o`). A program that calls `sin` or `cos` links the kernel and keeps the double-double cores for the fallback, about 2 KB more. This core's speed figures are exact (D110), so `math-mix`'s is re-locked under D138. The size flavour and its baselines are unchanged.
+
+## P9.01 — `UMULL` for the float fixed-point functions (speed flavour, D140)
+
+`__libc_fixed_wide.o` (the 16-bit product helper) leaves armv7-m's speed library, and its callers multiply inline. `math-float` shrinks by 168 bytes and `math-mix` by 172, and the exact speed figures are re-locked downwards under D140. The size flavour is unchanged.

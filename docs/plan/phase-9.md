@@ -27,9 +27,9 @@ Starting point, speed flavour, instructions per call (`docs/perf`):
 
 ---
 
-## P9.01 — Q43: `UMULL` for armv7-m's float fixed-point functions  `[ ]`
-- [ ] nofp/speed's 32 × 32 → 64 multiply as an inline `UMULL` on armv7-m (an include directory picked in `speed.mk`, as D136's), keeping the 16-bit helper on Armv6-M.
-- [ ] Bench, size, and the armv7-m speed figures re-locked under a decision if they change.
+## P9.01 — Q43: `UMULL` for armv7-m's float fixed-point functions  `[x]`
+- [x] nofp/speed's 32 × 32 → 64 multiply: `fixed.h` includes `fixed-wide.h`. `speed.mk` picks `umull/` (inline `UMULL`) on armv7-m and `muls/` (the out-of-line 16-bit helper, which `subdir.mk` builds only there) on Armv6-M.
+- [x] armv7-m speed flavour, 24 cases faster and none slower: `powf` 865 → 374, `expf` 280 → 125, `exp2f` 235 → 118, `erff` 2,079 → 1,122, `erfcf` 2,018 → 1,068, `log10f` 466 → 259, `log2f` 391 → 247, `logf` 1,233 → 1,026, `tanf` 2,596 → 2,077, `sincosf` 3,055 → 2,553, `cosf` 1,990 → 1,739, `sinf` 2,499 → 2,248. The speed figures are re-locked downwards under D140 (`math-float` −168, `math-mix` −172 bytes). `make check` passes on armv7-m and armv6-m (speed).
 
 ## P9.02 — Q41: `sinf`, `cosf`, `sincosf` through the D136 kernel  `[ ]`
 - [ ] On the cores whose speed flavour has nofp/speed (armv6-m, armv6s-m, armv7-m):
