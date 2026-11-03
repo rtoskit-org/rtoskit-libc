@@ -15,8 +15,8 @@
  * The error of the fixed-point double sine and cosine kernel (P8.03a, PLAN
  * D133, docs/research/sincos.md), measured on the host against MPFR.
  * libc/math/dp-fixed/speed/__libc_trig_fixed.c is compiled against the
- * library's headers and linked here with host stand-ins for the three
- * library functions it calls. For every argument the harness takes sin x
+ * library's headers (with dp-fixed/speed/umull's inline multiply) and linked
+ * here. For every argument the harness takes sin x
  * and cos x from the kernel, compares each 64-bit significand with the
  * exact value (MPFR, 256 bits) in units of its last bit, and checks that a
  * result the rounding test accepts is the correctly rounded double.
@@ -41,22 +41,6 @@ struct __libc_trig_fixed {
 
 bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *sine, struct __libc_trig_fixed *cosine);
 bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, double *result);
-
-/* The library functions the kernel calls */
-uint64_t __libc_fixed_wide(uint32_t a, uint32_t b)
-{
-	return (uint64_t)a * b;
-}
-
-unsigned int stdc_leading_zeros_ui(unsigned int x)
-{
-	return x == 0 ? 32 : (unsigned int)__builtin_clz(x);
-}
-
-unsigned int stdc_leading_zeros_ull(unsigned long long x)
-{
-	return x == 0 ? 64 : (unsigned int)__builtin_clzll(x);
-}
 
 struct tally {
 	double worst;

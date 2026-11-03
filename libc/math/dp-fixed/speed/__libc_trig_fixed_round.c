@@ -12,7 +12,6 @@
  */
 
 #include <stdint.h>
-#include <string.h>
 
 #include "trig-fixed.h"
 
@@ -40,6 +39,6 @@ bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, double *resu
 	}
 
 	bits = ((uint64_t)value->negative << 63) | ((uint64_t)(exponent + 1023) << 52) | (significand & 0x000fffffffffffffULL);
-	memcpy(result, &bits, sizeof(*result));
+	__builtin_memcpy(result, &bits, sizeof(*result));
 	return true;
 }

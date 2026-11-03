@@ -22,7 +22,7 @@ export LIBC_FENV := soft
 # libm layers: libc/math/<layer> replaces the generic files of the same name and may add helpers (D46, D55);
 # soft-dp is the double-precision run-time ABI helpers in integers (D99)
 # soft-int is the conversions to 64-bit integers, in integers (D102)
-export LIBC_MATH_LAYERS := sp sp-nearest fpv4-sp soft-dp soft-int
+export LIBC_MATH_LAYERS := sp sp-nearest fpv4-sp soft-dp soft-int dp-fixed
 # Hand-written string kernels (libc/string/<kernels>; the first directory with a function wins)
 # per flavour: the speed build type sets LIBC_FLAVOUR (PLAN D69, D70, D73)
 LIBC_FLAVOUR ?= size
