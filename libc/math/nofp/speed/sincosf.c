@@ -65,8 +65,8 @@ void sincosf(float x, float *sinp, float *cosp)
 
 	/* The D136 kernel for both, rounded to float (P9.02, Q41); the D87 path below for a result it declines */
 	if (__libc_trig_fixed_from_float(x, &wide) && __libc_trig_fixed(wide, __LIBC_TRIG_FIXED_SIN | __LIBC_TRIG_FIXED_COS, &sine, &cosine)) {
-		have_sine = fabsf(x) >= 0x1p-12f && __libc_trig_fixed_roundf(&sine, sinp);
-		have_cosine = __libc_trig_fixed_roundf(&cosine, cosp);
+		have_sine = fabsf(x) >= 0x1p-12f && __libc_trig_fixed_roundf(&sine, __LIBC_TRIG_FIXED_ERROR, sinp);
+		have_cosine = __libc_trig_fixed_roundf(&cosine, __LIBC_TRIG_FIXED_ERROR, cosp);
 		if (have_cosine && (have_sine || fabsf(x) < 0x1p-12f)) {
 			if (!have_sine)
 				*sinp = x;

@@ -32,6 +32,9 @@ struct __libc_trig_fixed {
 
 #define __LIBC_TRIG_FIXED_ERROR 18u
 
+/* tan's: sin x / cos x by a 64-bit reciprocal (P9.03, measured by tools/scripts/trig-fixed-check) */
+#define __LIBC_TAN_FIXED_ERROR 56u
+
 /* What __libc_trig_fixed computes */
 #define __LIBC_TRIG_FIXED_SIN 1u
 #define __LIBC_TRIG_FIXED_COS 2u
@@ -41,6 +44,27 @@ struct __libc_trig_fixed {
  * four 16-bit products on Armv6-M; the build picks the header (speed.mk)
  */
 #include "trig-wide.h"
+
+/* The high 64 bits of a b, exactly */
+static inline uint64_t __libc_trig_high64(uint64_t a, uint64_t b)
+{
+	uint32_t a0 = (uint32_t)a;
+	uint32_t a1 = (uint32_t)(a >> 32);
+	uint32_t b0 = (uint32_t)b;
+	uint32_t b1 = (uint32_t)(b >> 32);
+	uint64_t low;
+
+	/* Horner's tail coefficients fit in 32 bits: two products */
+	if (b1 == 0)
+		return (__libc_trig_wide(a1, b0) + (__libc_trig_wide(a0, b0) >> 32)) >> 32;
+
+	low = __libc_trig_wide(a0, b0);
+	uint64_t cross0 = __libc_trig_wide(a0, b1);
+	uint64_t cross1 = __libc_trig_wide(a1, b0);
+	uint64_t middle = (low >> 32) + (uint32_t)cross0 + (uint32_t)cross1;
+
+	return __libc_trig_wide(a1, b1) + (cross0 >> 32) + (cross1 >> 32) + (middle >> 32);
+}
 
 /*
  * sin x and cos x (as want asks) for 2^-27 <= |x| < 2^20; false when the
@@ -54,7 +78,7 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
  * within the error bound of a halfway point and the double-double path must
  * decide. The soft-double cores round to nearest only (D44).
  */
-bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, double *result);
+bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, unsigned int error, double *result);
 
 /*
  * The double-double path of sin and cos (sin.c, cos.c) for an argument past
@@ -83,7 +107,7 @@ static inline uint64_t __libc_trig_fixed_abs_bits(double x)
  * within the error bound of a float halfway point, or would be subnormal
  * (P9.02, Q41): the 40 bits below the float significand decide
  */
-bool __libc_trig_fixed_roundf(const struct __libc_trig_fixed *value, float *result);
+bool __libc_trig_fixed_roundf(const struct __libc_trig_fixed *value, unsigned int error, float *result);
 
 /*
  * A float argument for the kernel: true, with x as a double, when |x| is in
@@ -106,5 +130,15 @@ static inline bool __libc_trig_fixed_from_float(float x, double *d)
 	__builtin_memcpy(d, &wide, sizeof(*d));
 	return true;
 }
+
+/*
+ * tan x for 2^-27 <= |x| < 2^20 as sin x / cos x from one kernel call, by a
+ * 64-bit reciprocal of the cosine's significand (P9.03, Q42); false when the
+ * kernel declines
+ */
+bool __libc_tan_fixed(double x, struct __libc_trig_fixed *tangent);
+
+/* tan.c's double-double path for an argument past its entry tests */
+double __libc_tan_dd(double x);
 
 #endif /* _TRIG_FIXED_H */

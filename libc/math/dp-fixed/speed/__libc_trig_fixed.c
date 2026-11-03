@@ -30,27 +30,6 @@ static const uint64_t cosine_terms[9] = { 0x8000000000000000ULL, 0x0aaaaaaaaaaaa
  * counts are spelled as builtins to stay inline (as __libc_sinf_fixed does)
  */
 
-/* The high 64 bits of a b */
-static uint64_t high64(uint64_t a, uint64_t b)
-{
-	uint32_t a0 = (uint32_t)a;
-	uint32_t a1 = (uint32_t)(a >> 32);
-	uint32_t b0 = (uint32_t)b;
-	uint32_t b1 = (uint32_t)(b >> 32);
-	uint64_t low;
-
-	/* Horner's tail coefficients fit in 32 bits: two products */
-	if (b1 == 0)
-		return (__libc_trig_wide(a1, b0) + (__libc_trig_wide(a0, b0) >> 32)) >> 32;
-
-	low = __libc_trig_wide(a0, b0);
-	uint64_t cross0 = __libc_trig_wide(a0, b1);
-	uint64_t cross1 = __libc_trig_wide(a1, b0);
-	uint64_t middle = (low >> 32) + (uint32_t)cross0 + (uint32_t)cross1;
-
-	return __libc_trig_wide(a1, b1) + (cross0 >> 32) + (cross1 >> 32) + (middle >> 32);
-}
-
 /* Bits [position, position + 32) of a little-endian array of words, position >= 0 */
 static uint32_t word_at(const uint32_t *words, int position)
 {
@@ -125,8 +104,8 @@ static bool reduce(uint64_t m, int e, int *quadrant, uint64_t *r, int *exponent,
 		return false;
 	f = ((uint64_t)word_at(fraction, 64 - zeros + 32) << 32) | word_at(fraction, 64 - zeros);
 
-	/* r = f pi/2 = f 2^(-64-zeros) pi_over_2 2^-63 = high64(f, pi_over_2) 2^(-63-zeros) */
-	reduced = high64(f, pi_over_2);
+	/* r = f pi/2 = f 2^(-64-zeros) pi_over_2 2^-63 = __libc_trig_high64(f, pi_over_2) 2^(-63-zeros) */
+	reduced = __libc_trig_high64(f, pi_over_2);
 	*exponent = -zeros;
 	if ((reduced >> 63) == 0) {
 		reduced <<= 1;
@@ -171,9 +150,9 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
 		return false;
 	}
 
-	/* z = r^2 in units of 2^-64: R^2 2^(2 exponent - 126) = high64(R, R) 2^(2 exponent + 2) 2^-64, exponent <= -1 */
+	/* z = r^2 in units of 2^-64: R^2 2^(2 exponent - 126) = __libc_trig_high64(R, R) 2^(2 exponent + 2) 2^-64, exponent <= -1 */
 	shift = -(2 * exponent + 2);
-	z = shift >= 64 ? 0 : high64(r, r) >> shift;
+	z = shift >= 64 ? 0 : __libc_trig_high64(r, r) >> shift;
 
 	/* An odd quadrant swaps the two: sin x needs cos r there, and cos x sin r */
 	odd = (quadrant & 1) != 0;
@@ -186,10 +165,10 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
 		int k;
 
 		for (int j = 7; j >= 0; --j)
-			t = sine_terms[j] - high64(z, t);
-		s63 = 0x8000000000000000ULL - (high64(z, t) >> 1);
-		/* R S 2^(exponent - 126) = high64(R, S) 2^(exponent - 62) */
-		p = high64(r, s63);
+			t = sine_terms[j] - __libc_trig_high64(z, t);
+		s63 = 0x8000000000000000ULL - (__libc_trig_high64(z, t) >> 1);
+		/* R S 2^(exponent - 126) = __libc_trig_high64(R, S) 2^(exponent - 62) */
+		p = __libc_trig_high64(r, s63);
 		k = __builtin_clzll(p);
 		sin_r = (struct __libc_trig_fixed){ .v = p << k, .exponent = exponent + 1 - k, .negative = negative };
 	}
@@ -200,8 +179,8 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
 		int k;
 
 		for (int j = 7; j >= 0; --j)
-			u = cosine_terms[j] - high64(z, u);
-		c63 = 0x8000000000000000ULL - (high64(z, u) >> 1);
+			u = cosine_terms[j] - __libc_trig_high64(z, u);
+		c63 = 0x8000000000000000ULL - (__libc_trig_high64(z, u) >> 1);
 		k = __builtin_clzll(c63);
 		cos_r = (struct __libc_trig_fixed){ .v = c63 << k, .exponent = -k, .negative = false };
 	}

@@ -42,10 +42,11 @@ flags=(-O2 -std=c23 -nostdinc -isystem include -include include/stdc-predef.h -f
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed.c -o "${work}/kernel.o"
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed_round.c -o "${work}/round.o"
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed_roundf.c -o "${work}/roundf.o"
-"${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_check.c "${work}/kernel.o" "${work}/round.o" -lmpfr -lm -o "${work}/check"
+"${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_tan_fixed.c -o "${work}/tan.o"
+"${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_check.c "${work}/kernel.o" "${work}/round.o" "${work}/tan.o" -lmpfr -lm -o "${work}/check"
 
 if [[ ${1:-} == --float ]]; then
-	"${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_float_check.c "${work}/kernel.o" "${work}/roundf.o" -lmpfr -lm -o "${work}/float"
+	"${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_float_check.c "${work}/kernel.o" "${work}/roundf.o" "${work}/tan.o" -lmpfr -lm -o "${work}/float"
 	jobs=$(nproc)
 	for ((i = 0; i < jobs; ++i)); do
 		"${work}/float" "${i}" "${jobs}" > "${work}/float-${i}.log" &
@@ -71,7 +72,7 @@ if [[ ${1:-} == --near ]]; then
 	[[ -f ${library} ]] || { echo "${library}: missing; build it first (make ARCH_CROSS=x86_64 BUILD_TYPE=release)" >&2; exit 1; }
 	cp "${library}" "${work}/librt.a"
 	objcopy --prefix-symbols=rt_ "${work}/librt.a"
-	"${cc}" -O2 -std=gnu2x -no-pie tools/libm/trig_fixed_near.c "${work}/kernel.o" "${work}/librt.a" -lmpfr -lgmp -lm -o "${work}/near"
+	"${cc}" -O2 -std=gnu2x -no-pie tools/libm/trig_fixed_near.c "${work}/kernel.o" "${work}/tan.o" "${work}/librt.a" -lmpfr -lgmp -lm -o "${work}/near"
 	exec "${work}/near" "${2:-16}"
 fi
 

@@ -42,7 +42,7 @@ float cosf(float x)
 		return __libc_math_invalidf();
 
 	/* The D136 kernel, rounded to float (P9.02, Q41); the D87 path below for what it declines */
-	if (__libc_trig_fixed_from_float(x, &wide) && __libc_trig_fixed(wide, __LIBC_TRIG_FIXED_COS, nullptr, &fast) && __libc_trig_fixed_roundf(&fast, &rounded))
+	if (__libc_trig_fixed_from_float(x, &wide) && __libc_trig_fixed(wide, __LIBC_TRIG_FIXED_COS, nullptr, &fast) && __libc_trig_fixed_roundf(&fast, __LIBC_TRIG_FIXED_ERROR, &rounded))
 		return rounded;
 
 	if (fabsf(x) < 0x1p-6f) {

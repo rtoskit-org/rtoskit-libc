@@ -33,7 +33,7 @@ double sin(double x)
 	if (a < __LIBC_TRIG_FIXED_TINY)
 		return __libc_math_tiny(x, -x);
 
-	if (__libc_trig_fixed(x, __LIBC_TRIG_FIXED_SIN, &value, nullptr) && __libc_trig_fixed_round(&value, &result))
+	if (__libc_trig_fixed(x, __LIBC_TRIG_FIXED_SIN, &value, nullptr) && __libc_trig_fixed_round(&value, __LIBC_TRIG_FIXED_ERROR, &result))
 		return result;
 
 	__libc_trig_dd(x, __LIBC_TRIG_FIXED_SIN, &result, nullptr);

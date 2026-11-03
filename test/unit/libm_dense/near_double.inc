@@ -12,7 +12,7 @@
  */
 
 /*
- * Arguments whose sin or cos lies so near the point halfway between two
+ * Arguments whose sin, cos or tan (P9.03) lies so near the point halfway between two
  * doubles that the fixed-point kernel of the speed flavour (P8.03, PLAN D133)
  * rounds its 64-bit result the wrong way without its error test, with the
  * correctly rounded result (MPFR, 256 bits), which the double-double path
@@ -50,3 +50,19 @@
 	{ cos, 0x1.ab5d457a06696p+9, 0x1.f428c8f4948a8p-1 },
 	{ cos, 0x1.486be428b3374p+2, 0x1.a0cb84b52c69ap-2 },
 	{ cos, -0x1.2979d2912ebb6p+2, -0x1.074ed54e92b92p-4 },
+	{ tan, 0x1.029818804b1cep-11, 0x1.029819e01bd8cp-11 },
+	{ tan, 0x1.6de54fc62ab37p+2, -0x1.45570cb4450efp-1 },
+	{ tan, 0x1.0ae052d41a1dep-17, 0x1.0ae052d432495p-17 },
+	{ tan, 0x1.2617623ceb75p+3, -0x1.e91770cda2fd2p-3 },
+	{ tan, 0x1.77891ed726a6p+1, -0x1.afa3428fd7351p-3 },
+	{ tan, 0x1.1c1ed00dcacccp+3, -0x1.371c4ebdc7873p-1 },
+	{ tan, 0x1.e8cc3c21c2f4cp+1, 0x1.9b9e4faba6d94p-1 },
+	{ tan, 0x1.77dfef89cad8p+1, -0x1.a9f9523e2f248p-3 },
+	{ tan, 0x1.43db28ef86dap-11, 0x1.43db2ba295f0dp-11 },
+	{ tan, 0x1.90a197963fea9p-5, 0x1.90f36fbfb55dp-5 },
+	{ tan, -0x1.5af1a5cf16ddcp+1, 0x1.d6fbc2aec9be1p-2 },
+	{ tan, 0x1.63297d576e4bep+1, -0x1.8982e8bb2dbc4p-2 },
+	{ tan, 0x1.1b67eb0724a16p+3, -0x1.46fadfec13a3p-1 },
+	{ tan, 0x1.6133c93d93e1ep+2, -0x1.eaefc5b5312c8p-1 },
+	{ tan, 0x1.de9696d918da1p+0, -0x1.9fb809afef5d2p+1 },
+	{ tan, 0x1.03a6f4ca5e971p-9, 0x1.03a70b0ccd204p-9 },

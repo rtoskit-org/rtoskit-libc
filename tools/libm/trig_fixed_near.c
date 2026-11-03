@@ -16,7 +16,7 @@
  * docs/research/sincos.md): arguments whose 64-bit kernel result lies
  * within the error bound of a halfway point, so the kernel must decline,
  * where rounding the kernel result anyway gives the wrong double, and where
- * the double-double path (the library's x86_64 release sin and cos, prefixed
+ * the double-double path (the library's x86_64 release sin, cos and tan, prefixed
  * rt_) is correctly rounded. A kernel that rounded without its test fails
  * on every one; both flavours must return the correct double.
  * Prints C initializers for test/unit/libm_dense/near_double.inc.
@@ -39,8 +39,10 @@ struct __libc_trig_fixed {
 };
 
 bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *sine, struct __libc_trig_fixed *cosine);
+bool __libc_tan_fixed(double x, struct __libc_trig_fixed *tangent);
 double rt_sin(double x);
 double rt_cos(double x);
+double rt_tan(double x);
 
 /* The kernel result rounded to nearest without the error test */
 static double round_blindly(const struct __libc_trig_fixed *k)
@@ -73,19 +75,19 @@ static uint64_t next(void)
 int main(int argc, char **argv)
 {
 	int count = argc > 1 ? atoi(argv[1]) : 16;
-	int found[2] = { 0, 0 };
+	int found[3] = { 0, 0, 0 };
 	mpfr_t exact;
 
 	state = argc > 2 ? strtoull(argv[2], NULL, 0) : 7;
 	mpfr_init2(exact, 256);
-	while (found[0] < count || found[1] < count) {
+	while (found[0] < count || found[1] < count || found[2] < count) {
 		uint64_t r = next();
 		double x = (r & 1) ? ldexp(1.0 + (double)(r >> 12) * 0x1p-52, (int)((r >> 1) % 47) - 27) : ((double)(r >> 11) * 0x1p-53) * 20.0 - 10.0;
-		struct __libc_trig_fixed k[2];
+		struct __libc_trig_fixed k[3];
 
-		if (fabs(x) < 0x1p-27 || !__libc_trig_fixed(x, 3, &k[0], &k[1]))
+		if (fabs(x) < 0x1p-27 || !__libc_trig_fixed(x, 3, &k[0], &k[1]) || !__libc_tan_fixed(x, &k[2]))
 			continue;
-		for (int f = 0; f < 2; ++f) {
+		for (int f = 0; f < 3; ++f) {
 			uint32_t rest = (uint32_t)k[f].v & 0x7ff;
 			double want;
 			double dd;
@@ -96,13 +98,18 @@ int main(int argc, char **argv)
 			mpfr_set_d(exact, x, MPFR_RNDN);
 			if (f == 0)
 				mpfr_sin(exact, exact, MPFR_RNDN);
-			else
+			else if (f == 1)
 				mpfr_cos(exact, exact, MPFR_RNDN);
+			else
+				mpfr_tan(exact, exact, MPFR_RNDN);
 			want = mpfr_get_d(exact, MPFR_RNDN);
-			dd = f == 0 ? rt_sin(x) : rt_cos(x);
+			dd = f == 0 ? rt_sin(x) : f == 1 ? rt_cos(x) :
+											   rt_tan(x);
 			if (round_blindly(&k[f]) == want || dd != want)
 				continue;
-			printf("\t{ %s, %a, %a },\n", f == 0 ? "sin" : "cos", x, want);
+			printf("\t{ %s, %a, %a },\n", f == 0 ? "sin" : f == 1 ? "cos" :
+																	"tan",
+				   x, want);
 			++found[f];
 		}
 	}
