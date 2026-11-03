@@ -11,9 +11,7 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
-#include <stdbit.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "trig-fixed.h"
 
@@ -27,6 +25,11 @@ static const uint64_t pi_over_2 = 0xc90fdaa22168c235ULL;
 static const uint64_t sine_terms[9] = { 0x2aaaaaaaaaaaaaabULL, 0x0222222222222222ULL, 0x000d00d00d00d00dULL, 0x00002e3bc74aad8eULL, 0x0000006b99159fd5ULL, 0x00000000b092309dULL, 0x0000000000d73f9fULL, 0x000000000000ca96ULL, 0x0000000000000098ULL };
 static const uint64_t cosine_terms[9] = { 0x8000000000000000ULL, 0x0aaaaaaaaaaaaaabULL, 0x005b05b05b05b05bULL, 0x0001a01a01a01a02ULL, 0x0000049f93edde28ULL, 0x00000008f76c77fcULL, 0x000000000c9cba54ULL, 0x00000000000d73faULL, 0x0000000000000b41ULL };
 
+/*
+ * The library builds with -fno-builtin, so the bit copies and leading-zero
+ * counts are spelled as builtins to stay inline (as __libc_sinf_fixed does)
+ */
+
 /* The high 64 bits of a b */
 static uint64_t high64(uint64_t a, uint64_t b)
 {
@@ -34,12 +37,18 @@ static uint64_t high64(uint64_t a, uint64_t b)
 	uint32_t a1 = (uint32_t)(a >> 32);
 	uint32_t b0 = (uint32_t)b;
 	uint32_t b1 = (uint32_t)(b >> 32);
-	uint64_t low = __libc_fixed_wide(a0, b0);
-	uint64_t cross0 = __libc_fixed_wide(a0, b1);
-	uint64_t cross1 = __libc_fixed_wide(a1, b0);
+	uint64_t low;
+
+	/* Horner's tail coefficients fit in 32 bits: two products */
+	if (b1 == 0)
+		return (__libc_trig_wide(a1, b0) + (__libc_trig_wide(a0, b0) >> 32)) >> 32;
+
+	low = __libc_trig_wide(a0, b0);
+	uint64_t cross0 = __libc_trig_wide(a0, b1);
+	uint64_t cross1 = __libc_trig_wide(a1, b0);
 	uint64_t middle = (low >> 32) + (uint32_t)cross0 + (uint32_t)cross1;
 
-	return __libc_fixed_wide(a1, b1) + (cross0 >> 32) + (cross1 >> 32) + (middle >> 32);
+	return __libc_trig_wide(a1, b1) + (cross0 >> 32) + (cross1 >> 32) + (middle >> 32);
 }
 
 /* Bits [position, position + 32) of a little-endian array of words, position >= 0 */
@@ -77,7 +86,7 @@ static bool reduce(uint64_t m, int e, int *quadrant, uint64_t *r, int *exponent,
 		uint64_t carry = 0;
 
 		for (int j = 0; j < 2; ++j) {
-			uint64_t sum = __libc_fixed_wide(two_over_pi[5 - i], m_words[j]) + product[i + j] + carry;
+			uint64_t sum = __libc_trig_wide(two_over_pi[5 - i], m_words[j]) + product[i + j] + carry;
 
 			product[i + j] = (uint32_t)sum;
 			carry = sum >> 32;
@@ -111,7 +120,7 @@ static bool reduce(uint64_t m, int e, int *quadrant, uint64_t *r, int *exponent,
 		zeros += 32;
 	if (zeros == 64)
 		return false;
-	zeros += (int)stdc_leading_zeros(fraction[3 - zeros / 32]);
+	zeros += __builtin_clz(fraction[3 - zeros / 32]);
 	if (zeros > 64)
 		return false;
 	f = ((uint64_t)word_at(fraction, 64 - zeros + 32) << 32) | word_at(fraction, 64 - zeros);
@@ -143,7 +152,7 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
 	struct __libc_trig_fixed cos_r = { 0 };
 	bool odd;
 
-	memcpy(&bits, &x, sizeof(bits));
+	__builtin_memcpy(&bits, &x, sizeof(bits));
 	x_negative = (bits >> 63) != 0;
 	e = (int)((bits >> 52) & 0x7ff) - 1075;
 	m = (bits & 0x000fffffffffffffULL) | 0x0010000000000000ULL;
@@ -181,7 +190,7 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
 		s63 = 0x8000000000000000ULL - (high64(z, t) >> 1);
 		/* R S 2^(exponent - 126) = high64(R, S) 2^(exponent - 62) */
 		p = high64(r, s63);
-		k = (int)stdc_leading_zeros(p);
+		k = __builtin_clzll(p);
 		sin_r = (struct __libc_trig_fixed){ .v = p << k, .exponent = exponent + 1 - k, .negative = negative };
 	}
 	/* cos r = 1 - z (1/2! - z (1/4! - ...)), in [0.7, 1] in units of 2^-63 */
@@ -193,7 +202,7 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
 		for (int j = 7; j >= 0; --j)
 			u = cosine_terms[j] - high64(z, u);
 		c63 = 0x8000000000000000ULL - (high64(z, u) >> 1);
-		k = (int)stdc_leading_zeros(c63);
+		k = __builtin_clzll(c63);
 		cos_r = (struct __libc_trig_fixed){ .v = c63 << k, .exponent = -k, .negative = false };
 	}
 

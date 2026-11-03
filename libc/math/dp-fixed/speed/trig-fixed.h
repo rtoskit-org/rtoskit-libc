@@ -36,8 +36,11 @@ struct __libc_trig_fixed {
 #define __LIBC_TRIG_FIXED_SIN 1u
 #define __LIBC_TRIG_FIXED_COS 2u
 
-/* 32 x 32 -> 64 bits: four 16-bit products on Armv6-M, UMULL on the Thumb-2 cores */
-uint64_t __libc_fixed_wide(uint32_t a, uint32_t b);
+/*
+ * 32 x 32 -> 64 bits, __libc_trig_wide: UMULL inline on the Thumb-2 cores,
+ * four 16-bit products on Armv6-M; the build picks the header (speed.mk)
+ */
+#include "trig-wide.h"
 
 /*
  * sin x and cos x (as want asks) for 2^-27 <= |x| < 2^20; false when the
@@ -52,5 +55,27 @@ bool __libc_trig_fixed(double x, unsigned int want, struct __libc_trig_fixed *si
  * decide. The soft-double cores round to nearest only (D44).
  */
 bool __libc_trig_fixed_round(const struct __libc_trig_fixed *value, double *result);
+
+/*
+ * The double-double path of sin and cos (sin.c, cos.c) for an argument past
+ * their entry tests: the results want asks, as those functions return them
+ */
+void __libc_trig_dd(double x, unsigned int want, double *sine, double *cosine);
+
+/*
+ * |x|'s bits for the entry tests, which the speed files make on the bits
+ * rather than with soft-double compares: NaN and infinity at and above
+ * 0x7ff0..., the tiny arguments of sin.c and cos.c below 2^-27
+ */
+#define __LIBC_TRIG_FIXED_INF 0x7ff0000000000000ULL
+#define __LIBC_TRIG_FIXED_TINY 0x3e40000000000000ULL
+
+static inline uint64_t __libc_trig_fixed_abs_bits(double x)
+{
+	uint64_t bits;
+
+	__builtin_memcpy(&bits, &x, sizeof(bits));
+	return bits & 0x7fffffffffffffffULL;
+}
 
 #endif /* _TRIG_FIXED_H */

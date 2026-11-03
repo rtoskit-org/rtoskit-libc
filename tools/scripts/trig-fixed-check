@@ -15,7 +15,7 @@
 # PLAN D133, docs/research/sincos.md): compiles
 # libc/math/dp-fixed/speed/__libc_trig_fixed*.c against the library's headers
 # with the host compiler, links tools/libm/trig_fixed_check.c (host stand-ins
-# for __libc_fixed_wide and stdc_leading_zeros, MPFR as the reference) and
+# for stdc_leading_zeros, MPFR as the reference; the kernel takes the inline 64-bit multiply of dp-fixed/speed/umull) and
 # runs it on every CPU, COUNT random arguments in all plus the doubles near
 # n pi/2. Needs libmpfr-dev. Run from the project root:
 #
@@ -33,7 +33,7 @@ cc=$(tools/scripts/host-cc)
 work=$(mktemp -d)
 trap 'rm -rf "${work}"' EXIT
 
-flags=(-O2 -std=c23 -nostdinc -isystem include -include include/stdc-predef.h -ffreestanding -fno-builtin)
+flags=(-O2 -std=c23 -nostdinc -isystem include -include include/stdc-predef.h -ffreestanding -fno-builtin -Ilibc/math/dp-fixed/speed/umull)
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed.c -o "${work}/kernel.o"
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed_round.c -o "${work}/round.o"
 "${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_check.c "${work}/kernel.o" "${work}/round.o" -lmpfr -lm -o "${work}/check"
