@@ -79,7 +79,7 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
   | armv8-m.main | 6,435 → 795 (8.1×) | 6,413 → 1,102 (5.8×) | 10,528 → 1,456 (7.2×) |
 
   The target of "about 10× on armv7e-m" is not reached for `cos` and `sincos`, because one of the bench's 16 arguments falls back. Without it, `cos` costs about 720 on armv7e-m (8.9×). Armv6-M reaches 6×, not "more than armv7e-m": each 64-bit product there is 16 `MULS`. A table-driven variant and a narrower fallback are left to P8.04 to weigh.
-- [x] The speed budgets hold on every core. The new members (about 2 KB) are recorded in `docs/size/<arch>.md`, and the size flavour is unchanged.
+- [x] The speed budgets: armv7e-m, armv8-m.main, armv7e-m-dp and x86_64 hold within their margins. armv6-m, armv6s-m and armv7-m hold their speed images to exact figures (D110), so `math-mix` is re-locked under D138 (+1,956 and +1,676 bytes). The new members (about 2 KB) are recorded in `docs/size/<arch>.md`, and the size flavour is unchanged.
 
 ## P8.04 — Wrap-up  `[ ]`
 - [ ] `docs/perf/<arch>.md` summary, PLAN decisions, and the speed budgets re-locked where a decision allows it.
