@@ -68,7 +68,7 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
     - with the bound halved to 9, none fail, because the measured largest error is 7.08 units;
     - the D124 vectors pass every mutant, since their 0.53-ulp bound cannot see a misrounded tie.
 
-## P8.03c — Bench, size, notes  `[ ]`
+## P8.03c — Bench, size, notes  `[~]`
 - [ ] Bench (target: about 10× on armv7e-m, more on armv6-m), the speed budget, and the notes.
 
 ## P8.04 — Wrap-up  `[ ]`
