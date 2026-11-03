@@ -16,6 +16,7 @@
 
 #include "internal/math.h"
 #include "libm-fixed.h"
+#include "trig-fixed.h"
 
 /*
  * C23 7.12.4.6: x reduced exactly to k pi/32 + s (PLAN D60), then the fixed-point
@@ -31,6 +32,9 @@ float sinf(float x)
 	uint64_t v;
 	uint32_t result;
 	int k;
+	struct __libc_trig_fixed fast;
+	double wide;
+	float rounded;
 
 	if (isnan(x))
 		return x + x;
@@ -39,6 +43,10 @@ float sinf(float x)
 	/* The x^3 term is below half an ulp of x: the result rounds to x (keeping -0) */
 	if (fabsf(x) < 0x1p-12f)
 		return x;
+
+	/* The D136 kernel, rounded to float (P9.02, Q41); the D87 path below for what it declines */
+	if (__libc_trig_fixed_from_float(x, &wide) && __libc_trig_fixed(wide, __LIBC_TRIG_FIXED_SIN, &fast, nullptr) && __libc_trig_fixed_roundf(&fast, &rounded))
+		return rounded;
 
 	if (fabsf(x) < 0x1p-6f) {
 		k = 0;

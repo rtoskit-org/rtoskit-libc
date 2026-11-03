@@ -20,6 +20,8 @@
 # n pi/2. Needs libmpfr-dev. Run from the project root:
 #
 #   tools/scripts/trig-fixed-check [COUNT]     default 100000000
+#   tools/scripts/trig-fixed-check --float     every float argument through the float path (P9.02,
+#                                              tools/libm/trig_fixed_float_check.c); about 10 minutes
 #   tools/scripts/trig-fixed-check --near N    print N hard cases per function for
 #                                              test/unit/libm_dense/near_double.inc (tools/libm/trig_fixed_near.c;
 #                                              needs an x86_64 release build, whose sin and cos are the reference
@@ -39,7 +41,30 @@ trap 'rm -rf "${work}"' EXIT
 flags=(-O2 -std=c23 -nostdinc -isystem include -include include/stdc-predef.h -ffreestanding -fno-builtin -Ilibc/math/dp-fixed/speed/umull)
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed.c -o "${work}/kernel.o"
 "${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed_round.c -o "${work}/round.o"
+"${cc}" "${flags[@]}" -c libc/math/dp-fixed/speed/__libc_trig_fixed_roundf.c -o "${work}/roundf.o"
 "${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_check.c "${work}/kernel.o" "${work}/round.o" -lmpfr -lm -o "${work}/check"
+
+if [[ ${1:-} == --float ]]; then
+	"${cc}" -O2 -std=gnu2x tools/libm/trig_fixed_float_check.c "${work}/kernel.o" "${work}/roundf.o" -lmpfr -lm -o "${work}/float"
+	jobs=$(nproc)
+	for ((i = 0; i < jobs; ++i)); do
+		"${work}/float" "${i}" "${jobs}" > "${work}/float-${i}.log" &
+	done
+	wait
+	cat "${work}"/float-*.log | grep -E '^wrong' && exit 1
+	cat "${work}"/float-*.log | python3 -c '
+import re, sys
+t = {}
+for line in sys.stdin:
+	m = re.match(r"(\w+): (\d+) arguments, (\d+) declined, (\d+) near halfway checked with MPFR, largest error there ([\d.]+) units, (\d+) wrong", line)
+	if m:
+		f = m.group(1); v = t.setdefault(f, [0, 0, 0, 0.0, 0])
+		v[0] += int(m.group(2)); v[1] += int(m.group(3)); v[2] += int(m.group(4)); v[3] = max(v[3], float(m.group(5))); v[4] += int(m.group(6))
+for f, (n, d, c, w, x) in t.items():
+	print(f"{f}: {n} arguments, {d} declined, {c} near halfway checked with MPFR, largest error there {w:.3f} units, {x} wrong")
+'
+	exit 0
+fi
 
 if [[ ${1:-} == --near ]]; then
 	library=build/x86_64/release/libc/libc.a
