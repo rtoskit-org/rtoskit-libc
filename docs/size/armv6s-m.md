@@ -765,3 +765,7 @@ Speed flavour only: `__libc_trig_fixed.o`, `__libc_trig_dd.o` and `__libc_trig_f
 ## P9.02, P9.03 — The float functions and `tan` through the D136 kernel (speed flavour, D141, D142)
 
 `sinf` and `cosf` now link the double kernel ahead of their D87 path, and the fixed-point `tan` keeps the double-double path as its fallback. The exact speed figures are re-locked under D142: `math-float` 12,536 → 15,456, `math-mix` 39,176 → 41,340 bytes. The size flavour is unchanged.
+
+## D144 — `stat`, `isatty` and `dup` (issue #113)
+
+Three new members (`stat`, `isatty`, `dup`), linked only by programs that call them; `jmp_buf`'s named struct and `unreachable()` in C only change no object. No other member, no image and neither budget changes.
