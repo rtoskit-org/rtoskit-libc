@@ -36,7 +36,7 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
 - [x] Fixed-point double sine and cosine: Taylor remainders on |r| ≤ π/4 (9 terms in z reach 2^-63 for sin r / r; a minimax 8-term polynomial about 2^-69), the table alternative (jπ/32, 144 bytes, 5 terms, best for `sincos`), relative accuracy near zero through sin r / r, a 128-bit fixed-point Cody–Waite reduction with the Payne–Hanek words beyond it, a rounding test with about 0.8 % fallback, and multiply costs (about 60 instructions per Horner step on Armv6-M, 10 with `UMULL`). Estimated `sin` ≈ 1,000 instructions on armv6-m and ≈ 260 on armv7e-m. CORDIC: about 1,700–2,000 and 600 for both results, 0.56 ulp absolute error, unbounded relative error near zero: not pursued.
 - [x] Bench cases `math/sincos` and `math/sincosf` (sin + cos of each argument) in both flavours, recorded with `make bench BENCH_UPDATE=1`; no other case changed. `sincos` = `sin` + `cos` on every architecture (armv6-m 35,340, armv7e-m 12,864, armv7e-m-dp 344, x86_64 635 instructions per call).
 
-## P8.02 — One reduction for `sincos` and `sincosf`  `[ ]`
+## P8.02 — One reduction for `sincos` and `sincosf`  `[~]`
 - [ ] A kernel per layer that takes the reduced argument and quadrant and returns both results, shared by `sin`, `cos` and `sincos` where that costs no size; otherwise `sincos` alone in the layer's `speed/` directory (D77).
 - [ ] Results bit-identical to `sin` and `cos`, so `sincos` keeps its P7.03 guarantee.
 - [ ] Bench, size and the notes for every architecture.
