@@ -24,6 +24,11 @@ include ${PROJECT_ROOT}/tools/makefiles/project.mk
 CPPFLAGS += -I${PROJECT_ROOT}/libc
 CFLAGS += ${LIBC_CFLAGS} -fno-math-errno
 
+# The 32 x 32 -> 64 multiply: UMULL inline on armv7-m, the 16-bit product helper on Armv6-M (P9.01, Q43; a variant
+# directory, not #if)
+NOFP_WIDE := $(if $(filter armv6-m armv6s-m,${ARCH_CROSS}),muls,umull)
+CPPFLAGS += -I${SOURCE_DIR}/${NOFP_WIDE}
+
 # As the sp-nearest layer whose fallback paths these files keep (PLAN D56)
 CFLAGS += -Wdouble-promotion
 

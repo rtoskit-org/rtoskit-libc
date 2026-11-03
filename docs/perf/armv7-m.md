@@ -798,3 +798,7 @@ Instructions per call (throughput, 16 arguments in [−10, 10]; size / speed fla
 | `sin` / `cos` | 6,524 / 6,500 | — | 812 / 1,117 |
 
 Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sincos.md`.
+
+## P9.01 — `UMULL` for the float fixed-point functions (speed flavour, D140)
+
+nofp/speed's 32 × 32 → 64 multiply is an inline `UMULL` on armv7-m instead of four 16-bit products out of line. 24 cases are faster and none slower (instructions per call): `powf` 865 → 374, `expf` 280 → 125, `exp2f` 235 → 118, `erff` 2,079 → 1,122, `erfcf` 2,018 → 1,068, `log10f` 466 → 259, `log2f` 391 → 247, `logf` 1,233 → 1,026, `tanf` 2,596 → 2,077, `sincosf` 3,055 → 2,553, `cosf` 1,990 → 1,739, `sinf` 2,499 → 2,248.
