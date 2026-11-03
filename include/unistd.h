@@ -46,6 +46,9 @@ ssize_t write(int fildes, const void *buf, size_t nbyte);
 int close(int fildes);
 off_t lseek(int fildes, off_t offset, int whence);
 
+/* The one process the program is (P7.04, D134) */
+pid_t getpid(void);
+
 __LIBC_END_DECLS
 
 #endif /* _UNISTD_H */

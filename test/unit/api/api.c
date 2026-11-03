@@ -45,6 +45,7 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <strings.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -283,6 +284,11 @@ static_assert(O_RDONLY != O_WRONLY && O_RDONLY != O_RDWR && O_WRONLY != O_RDWR &
 static_assert((O_CREAT & O_ACCMODE) == 0 && (O_EXCL & O_ACCMODE) == 0 && (O_TRUNC & O_ACCMODE) == 0 && (O_APPEND & O_ACCMODE) == 0 && (O_NONBLOCK & O_ACCMODE) == 0, "<fcntl.h> flags");
 static_assert(__builtin_popcount(O_CREAT | O_EXCL | O_TRUNC | O_APPEND | O_NONBLOCK) == 5, "<fcntl.h> distinct flags");
 static_assert(SEEK_SET == 0 && SEEK_CUR == 1 && SEEK_END == 2, "<unistd.h> whence");
+static_assert(O_CLOEXEC != 0 && (O_CLOEXEC & (O_ACCMODE | O_CREAT | O_EXCL | O_TRUNC | O_APPEND | O_NONBLOCK)) == 0 && F_GETFD != F_SETFD && FD_CLOEXEC == 1, "<fcntl.h> descriptor flags");
+static_assert(S_ISREG(S_IFREG) && !S_ISREG(S_IFDIR) && S_ISDIR(S_IFDIR) && S_ISCHR(S_IFCHR) && S_ISFIFO(S_IFIFO) && S_ISLNK(S_IFLNK) && S_ISSOCK(S_IFSOCK) && S_ISBLK(S_IFBLK), "<sys/stat.h> file types");
+static_assert((S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX) == 07777 && ((S_IRWXU | S_IRWXG | S_IRWXO) & S_IFMT) == 0, "<sys/stat.h> permission bits");
+static_assert(SAME_TYPE(((struct stat){ 0 }).st_size, off_t) && SAME_TYPE(((struct stat){ 0 }).st_mode, mode_t) && SAME_TYPE(((struct stat){ 0 }).st_mtim, struct timespec), "struct stat");
+static_assert(SAME_TYPE(&fstat, int (*)(int, struct stat *)) && SAME_TYPE(&fcntl, int (*)(int, int, ...)) && SAME_TYPE(&getpid, pid_t (*)(void)), "fstat, fcntl, getpid");
 static_assert(SCHED_OTHER != SCHED_FIFO && SCHED_OTHER != SCHED_RR && SCHED_FIFO != SCHED_RR && SAME_TYPE(((struct sched_param){ 0 }).sched_priority, int), "<sched.h>");
 static_assert(SAME_TYPE(strcasecmp, int (*)(const char *, const char *)) && SAME_TYPE(strncasecmp, int (*)(const char *, const char *, size_t)), "<strings.h>");
 static_assert(SAME_TYPE(read, ssize_t (*)(int, void *, size_t)) && SAME_TYPE(write, ssize_t (*)(int, const void *, size_t)) && SAME_TYPE(lseek, off_t (*)(int, off_t, int)) && SAME_TYPE(close, int (*)(int)), "<unistd.h> functions");

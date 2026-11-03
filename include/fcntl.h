@@ -43,12 +43,25 @@ typedef int pid_t;
 #define O_APPEND 02000
 #define O_NONBLOCK 04000
 
+/*
+ * Close on exec (P7.04, D134): nothing here executes another program, so the
+ * flag is accepted and has no effect; libbacktrace sets it when it opens a
+ * file
+ */
+#define O_CLOEXEC 02000000
+
+/* fcntl's commands: the descriptor flags only */
+#define F_GETFD 1
+#define F_SETFD 2
+#define FD_CLOEXEC 1
+
 /* The whence values <stdio.h> gives fseek */
 #define SEEK_SET 0
 #define SEEK_CUR 1
 #define SEEK_END 2
 
 int open(const char *path, int oflag, ...);
+int fcntl(int fildes, int cmd, ...);
 
 __LIBC_END_DECLS
 
