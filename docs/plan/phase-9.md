@@ -72,4 +72,5 @@ Starting point, speed flavour, instructions per call (`docs/perf`):
 - [x] The speed figures of armv6-m, armv6s-m and armv7-m are re-locked under D142 (`math-float` +2,920 and +2,104 bytes, `math-mix` +2,164 and +1,352). armv7e-m and armv8-m.main hold within their margins. `make check` passes in all 21 configurations after a clean build.
 
 ## P9.04 — Wrap-up  `[x]`
-- [x] D140–D142 (Q41–Q43 resolved), `docs/research/sincos.md` (phase 9), and the perf and size notes per architecture. Q44 is put to the user.
+- [x] D140–D142 (Q41–Q43 resolved), `docs/research/sincos.md` (phase 9), and the perf and size notes per architecture.
+- [x] Q44 put to the user, who chose to leave the fallback as it is (D143).
