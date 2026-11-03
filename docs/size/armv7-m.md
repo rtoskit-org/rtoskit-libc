@@ -212,3 +212,7 @@ Speed flavour only: `__libc_trig_fixed.o`, `__libc_trig_dd.o` and `__libc_trig_f
 ## P9.01 — `UMULL` for the float fixed-point functions (speed flavour, D140)
 
 `__libc_fixed_wide.o` (the 16-bit product helper) leaves armv7-m's speed library, and its callers multiply inline. `math-float` shrinks by 168 bytes and `math-mix` by 172, and the exact speed figures are re-locked downwards under D140. The size flavour is unchanged.
+
+## P9.02, P9.03 — The float functions and `tan` through the D136 kernel (speed flavour, D141, D142)
+
+`sinf` and `cosf` now link the double kernel ahead of their D87 path, and the fixed-point `tan` keeps the double-double path as its fallback. The exact speed figures are re-locked under D142: `math-float` 11,412 → 13,516, `math-mix` 35,024 → 36,376 bytes. The size flavour is unchanged.

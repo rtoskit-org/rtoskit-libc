@@ -722,3 +722,7 @@ Three new members (`fstat`, `fcntl`, `getpid`), linked only by programs that cal
 ## P8.03 — Fixed-point double `sin`, `cos` and `sincos` (speed flavour, D136)
 
 Speed flavour only: `__libc_trig_fixed.o`, `__libc_trig_dd.o` and `__libc_trig_fixed_round.o` (1,368 + 560 + 96 bytes) are new, and the speed `sin.o`, `cos.o` and `sincos.o` shrink by 110–165 bytes each (their double-double code moves to `__libc_trig_dd.o`). A program that calls `sin` or `cos` links the kernel and keeps the double-double cores for the fallback, about 2 KB more; the speed budgets hold (`size-report budget --flavour speed`). The size flavour and its baselines are unchanged.
+
+## P9.03 — `tan` through the D136 kernel (speed flavour, D142)
+
+The speed flavour's `tan` adds `__libc_tan_fixed.o` and `__libc_tan_dd.o` (tan.c's double-double path, now its fallback). The speed budget holds within its margin, and the size flavour is unchanged.

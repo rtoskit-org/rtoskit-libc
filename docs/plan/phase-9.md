@@ -47,12 +47,29 @@ Starting point, speed flavour, instructions per call (`docs/perf`):
   - armv7-m (after P9.01): `sinf` 2,248 → 883, `cosf` 1,739 → 852, `sincosf` 2,553 → 1,234.
 
   `make check` passes on armv6-m and armv7-m (speed).
-- [ ] Size: `math-float` now links the kernel. armv6-m and armv6s-m grow by 2,040 bytes and armv7-m by 1,712, and `math-mix` by about 250. The exact speed figures (D110) are settled once, after P9.03, which changes the same images.
+- [x] Size: `math-float` now links the kernel. armv6-m and armv6s-m grow by 2,040 bytes and armv7-m by 1,712, and `math-mix` by about 250. The exact speed figures are re-locked once, after P9.03, under D142.
 
-## P9.03 — Q42: `tan` and `tanf` through the D136 kernel  `[ ]`
-- [ ] tan r = sin r / cos r (−cos r / sin r in odd quadrants): a 64-bit reciprocal of the divisor's significand by Newton's iteration from a 32-bit seed, then one product. A rounding test, with the error bound measured on the host, and the double-double path as the fallback.
-- [ ] `tanf` from the same quotient where P9.02 placed `sinf`.
-- [ ] Hard cases in `libm_dense`, a mutant check, and bench.
+## P9.03 — Q42: `tan` and `tanf` through the D136 kernel  `[x]`
+- [x] `__libc_tan_fixed`: sin x / cos x from one kernel call, by a 64-bit reciprocal of the cosine's significand. The reciprocal starts from a 17-bit seed (one 32/16-bit division) and takes three Newton iterations, then one product.
+  - **Error bound:** 56 units (analytic). Over 10⁸ arguments the largest measured error is 12.5, 5.6 % of arguments fall back, and none is wrong.
+  - **`tan.c` in the speed flavour (`dp-fixed`):** entry tests on the bits, the quotient, and tan.c's double-double path as `__libc_tan_dd`.
+  - **nofp/speed's `tanf`:** the same quotient rounded to float, ahead of D87. Every float in range was checked on the host, with none declined and none wrong.
+  - **Shared code:** the kernel's `__libc_trig_high64` moves into `trig-fixed.h`, and the rounding helpers take the error bound as a parameter.
+- [x] Tests:
+  - 16 near-halfway `tan` cases in `libm_dense` (48 in all), correct on every core and flavour;
+  - a zero-bound mutant fails 10 of the 16; the other 6 lie exactly on the halfway point.
 
-## P9.04 — Wrap-up  `[ ]`
-- [ ] Notes, decisions, and the question of Q44 put to the user.
+  A stale generic `tan.o` left in an incrementally built `libc.a` first hid the mutant. Clean builds and CI are unaffected (D117).
+- [x] Bench, speed flavour, and nothing slower:
+
+  | Arch | `tan` | `tanf` | `sinf` | `cosf` | `sincosf` |
+  |---|---|---|---|---|---|
+  | armv6-m, armv6s-m | 32,451 → 4,970 | 5,140 → 5,065 | 4,729 → 2,933 | 3,742 → 2,887 | 5,505 → 4,418 |
+  | armv7-m (after P9.01) | 11,535 → 1,012 | 2,077 → 1,083 | 2,248 → 842 | 1,739 → 810 | 2,553 → 1,160 |
+  | armv7e-m, armv8-m.main | about 11,200 → 1,000 | — | — | — | — |
+
+  `sin`, `cos` and `sincos` gain about 4 % from the inlined high product.
+- [x] The speed figures of armv6-m, armv6s-m and armv7-m are re-locked under D142 (`math-float` +2,920 and +2,104 bytes, `math-mix` +2,164 and +1,352). armv7e-m and armv8-m.main hold within their margins. `make check` passes in all 21 configurations after a clean build.
+
+## P9.04 — Wrap-up  `[x]`
+- [x] D140–D142 (Q41–Q43 resolved), `docs/research/sincos.md` (phase 9), and the perf and size notes per architecture. Q44 is put to the user.
