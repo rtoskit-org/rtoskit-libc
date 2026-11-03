@@ -53,9 +53,9 @@ void sincos(double x, double *sinp, double *cosp)
 	}
 
 	if (__libc_trig_fixed(x, missing, &sine, &cosine)) {
-		if (__libc_trig_fixed_round(&sine, sinp))
+		if (__libc_trig_fixed_round(&sine, __LIBC_TRIG_FIXED_ERROR, sinp))
 			missing &= ~__LIBC_TRIG_FIXED_SIN;
-		if (__libc_trig_fixed_round(&cosine, cosp))
+		if (__libc_trig_fixed_round(&cosine, __LIBC_TRIG_FIXED_ERROR, cosp))
 			missing &= ~__LIBC_TRIG_FIXED_COS;
 	}
 	if (missing == 0)
