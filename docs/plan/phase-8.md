@@ -31,7 +31,7 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
 
 ---
 
-## P8.01 — Research  `[ ]`
+## P8.01 — Research  `[~]`
 - [ ] `docs/research/sincos.md`: how musl, glibc, FreeBSD msun, CORE-MATH, ARM optimized-routines and Bionic compute `sincos`/`sincosf` (one reduction, both polynomials, the quadrant swap and signs); where our reductions live per layer (`libc/math`, `sp`, `sp-nearest`, `fpv4-sp`, `fpv5-sp`, `fpv5-dp`, `soft-dp`, `nofp`, `x86_64`), and whether each can return its reduced argument and quadrant to a shared kernel.
 - [ ] Fixed-point double sine and cosine: polynomial degree and coefficient precision for |r| ≤ π/4 in 64-bit (or 64 + 32-bit) fixed point, an error bound that keeps 0.53 ulp (including results near zero, where `sin` needs relative accuracy), the reduction's output format (from `__libc_rem_pio2`), and the multiply cost per core (`MULS` only on Armv6-M, `UMULL` on Armv7-M and Armv8-M). Record CORDIC's numbers next to it.
 - [ ] Bench cases for `sincos` and `sincosf` in `test/bench` (both flavours), measured before any change.
