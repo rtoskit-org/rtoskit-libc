@@ -594,3 +594,7 @@ The new members (`open`, `read`, `write`, `close`, `lseek`, `fileno`, `fdopen`, 
 ## D134 — `fstat`, `fcntl` and `getpid` (P7.04)
 
 Three new members (`fstat`, `fcntl`, `getpid`), linked only by programs that call them; no other member, no image and neither budget changes. The optional `LIBC_UNWIND_TABLES=1` build is not measured here: the baselines and budgets are without unwind tables (D134; its cost is in `docs/research/posix-subset.md`).
+
+## P8.02 — One reduction for `sincos` and `sincosf`
+
+`sincos.o` 40 → 420 and `sincosf.o` 40 → 352 bytes; `sinf.o` −16 and `cosf.o` −32 (their hard-case tables move to `__libc_sinf_cases.o` and `__libc_cosf_cases.o`, shared with `sincosf`): each now holds the entry tests, one reduction and both cores' calls instead of two calls. `sincos.o` is still smaller than `sin.o` + `cos.o`, so a program that calls only `sincos` shrinks; one that also calls `sin` and `cos` grows by the difference. No reference image links them; every image and both budgets are unchanged.
