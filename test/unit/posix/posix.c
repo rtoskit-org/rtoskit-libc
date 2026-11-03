@@ -243,6 +243,14 @@ static void check_reallocarray(void)
 	free(array);
 }
 
+/* The rounding directions the core has (C23 7.6p8): directed ones only with a double FPU or SSE (D44) */
+#ifdef FE_UPWARD
+static const int modes[] = { FE_TONEAREST, FE_UPWARD, FE_DOWNWARD, FE_TOWARDZERO };
+#else
+static const int modes[] = { FE_TONEAREST };
+#endif
+static const size_t mode_count = sizeof(modes) / sizeof(modes[0]);
+
 /* sincos against sin and cos: the same bits and the same exception flags */
 static bool same_double(double x)
 {
@@ -289,10 +297,9 @@ static void check_sincos(void)
 {
 	static const double doubles[] = { 0.0, -0.0, 0x1p-1074, 0x1p-1022, 0x1p-28, -0x1p-27, 0x1.fffffffffffffp-28, 0.5, 1.0, -1.0, 2.0, 3.0, -4.0, 5.0, 3.141592653589793, 1e6, -0x1p20, 0x1.8p20, 1e22, 0x1p1023, 0x1.fffffffffffffp1023, INFINITY, -INFINITY, NAN, -NAN };
 	static const float floats[] = { 0.0f, -0.0f, 0x1p-149f, 0x1p-126f, 0x1p-31f, -0x1p-30f, 0x1p-13f, 0x1p-12f, 0x1p-7f, 0x1p-6f, 0.5f, 1.0f, -1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 3.14159265f, 1e6f, 1e22f, 0x1p127f, 0x1.3170fp+63f, -0x1.2b9622p+67f, 0x1.33333p+13f, INFINITY, -INFINITY, NAN };
-	static const int modes[] = { FE_TONEAREST, FE_UPWARD, FE_DOWNWARD, FE_TOWARDZERO };
 	int saved = fegetround();
 
-	for (size_t m = 0; m < sizeof(modes) / sizeof(modes[0]); ++m) {
+	for (size_t m = 0; m < mode_count; ++m) {
 		CHECK(fesetround(modes[m]) == 0);
 		for (size_t i = 0; i < sizeof(doubles) / sizeof(doubles[0]); ++i)
 			CHECK(same_double(doubles[i]));
