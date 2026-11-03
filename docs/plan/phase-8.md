@@ -81,5 +81,10 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
   The target of "about 10× on armv7e-m" is not reached for `cos` and `sincos`, because one of the bench's 16 arguments falls back. Without it, `cos` costs about 720 on armv7e-m (8.9×). Armv6-M reaches 6×, not "more than armv7e-m": each 64-bit product there is 16 `MULS`. A table-driven variant and a narrower fallback are left to P8.04 to weigh.
 - [x] The speed budgets: armv7e-m, armv8-m.main, armv7e-m-dp and x86_64 hold within their margins. armv6-m, armv6s-m and armv7-m hold their speed images to exact figures (D110), so `math-mix` is re-locked under D138 (+1,956 and +1,676 bytes). The new members (about 2 KB) are recorded in `docs/size/<arch>.md`, and the size flavour is unchanged.
 
-## P8.04 — Wrap-up  `[ ]`
-- [ ] `docs/perf/<arch>.md` summary, PLAN decisions, and the speed budgets re-locked where a decision allows it.
+## P8.04 — Wrap-up  `[x]`
+- [x] `docs/perf/<arch>.md` phase summaries, PLAN D137 (phase 8 closed, its gate), and Q41–Q44 for the follow-ups:
+  - Q41: float `sinf`/`cosf` through the D136 reduction, since double `sin` is now the cheaper of the two on the soft cores;
+  - Q42: `tan`;
+  - Q43: `UMULL` for armv7-m's float fixed-point functions, which needs a D110 re-lock;
+  - Q44: a lower fallback rate, or a table.
+- [x] The speed budgets: re-locked for `math-mix` on armv6-m, armv6s-m and armv7-m under D138, during P8.03's CI. Every other core and image holds.

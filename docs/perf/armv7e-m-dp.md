@@ -887,3 +887,15 @@ Correctness fixes, so the slowdowns are accepted and the baselines re-recorded (
 ## P8.02 — One reduction for `sincos` and `sincosf`
 
 `sincos` and `sincosf` reduce the argument once and evaluate both results, bit-identical to `sin`/`cos` and `sinf`/`cosf` (`docs/research/sincos.md`). Instructions per call (throughput, 16 arguments in [−10, 10]): `sincos` 344 → 230 (−33 %); `sincosf` 379 → 270 (−29 %) (both flavours). No other case changed.
+
+## Phase 8 — Summary
+
+Instructions per call (throughput, 16 arguments in [−10, 10]; size / speed flavour where they differ).
+
+| Case | Before phase 8 | After P8.02 (one reduction) | After P8.03 (fixed point, speed flavour) |
+|---|---:|---:|---:|
+| `sincos` | 344 | 231 (−33 %) | — |
+| `sincosf` | 379 | 270 | — |
+| `sin` / `cos` | 165 / 167 | — | — |
+
+Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sincos.md`.
