@@ -802,3 +802,7 @@ Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sinc
 ## P9.01 — `UMULL` for the float fixed-point functions (speed flavour, D140)
 
 nofp/speed's 32 × 32 → 64 multiply is an inline `UMULL` on armv7-m instead of four 16-bit products out of line. 24 cases are faster and none slower (instructions per call): `powf` 865 → 374, `expf` 280 → 125, `exp2f` 235 → 118, `erff` 2,079 → 1,122, `erfcf` 2,018 → 1,068, `log10f` 466 → 259, `log2f` 391 → 247, `logf` 1,233 → 1,026, `tanf` 2,596 → 2,077, `sincosf` 3,055 → 2,553, `cosf` 1,990 → 1,739, `sinf` 2,499 → 2,248.
+
+## P9.02, P9.03 — Float sine and cosine, and `tan`, through the D136 kernel (speed flavour, D141, D142)
+
+Instructions per call: `tan` 11,535 → 1,012, `tanf` 2,077 → 1,083, `sinf` 2,248 → 842, `cosf` 1,739 → 810, `sincosf` 2,553 → 1,160. `sin`, `cos` and `sincos` gain about 4 % from the inlined high product. No case is slower.

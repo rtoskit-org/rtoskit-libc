@@ -276,3 +276,16 @@ The measured error is under half the analytic bound. So a call takes the fast pa
 | Entry tests on bits, two-product `high64`, `-O2` | 803 | 2,877 |
 
 The estimate in P8.01 (about 260 on armv7e-m) left out the reduction's bookkeeping (word extraction, negation, normalisation) and the calls into the speed flavour's `-Os` code. The remaining cost is spread over the reduction (about a third), the two polynomials, and the rounding.
+
+## Phase 9: the float functions, `tan`, and `UMULL` on armv7-m (D140–D142)
+
+- **Q43, P9.01.** nofp/speed's 32 × 32 → 64 multiply becomes an inline `UMULL` on armv7-m (`fixed-wide.h` in `umull/` or `muls/`, picked by `speed.mk`). It is the same instruction choice D136 made for the double kernel. Every float fixed-point function on armv7-m gains 10–57 %.
+- **Q41, P9.02.**
+  - **Why it works.** A float converts exactly to a double, so the D136 kernel's 64-bit result for `(double)x` is the float function's value to within 18 units of 2⁻⁶³ relative. Rounding to float discards 40 bits, so the test declines only within 18 of 2⁴⁰ units of a halfway point.
+  - **Exhaustive check.** Over every float in [2⁻²⁷, 2²⁰), no result declined. The float path is therefore the kernel plus a rounding step, with the D87 code kept only for |x| ≥ 2²⁰ and tiny `cosf` arguments.
+  - **The check's argument.** A result more than 2³⁰ units from a halfway point cannot be misrounded. Every result within that distance was compared with MPFR.
+- **Q42, P9.03.**
+  - **The quotient.** tan x = sin x / cos x, in every quadrant, from one kernel call. The divisor is a significand in [2⁶³, 2⁶⁴). Its reciprocal 2¹²⁷/d starts from `0xffffffff / (d >> 48)`, about 17 bits, and three Newton steps y(2 − dy) in 64-bit fixed point give about 64 bits. One high product then gives the quotient in (2⁶², 2⁶⁴).
+  - **Error.** The analytic bound is the sum of the sine's and the cosine's relative errors (16.6 + 7.4 units), the reciprocal's (about 1.5) and the product's (2, doubled by the normalising shift): about 55 units, so the bound is 56. The measured largest is 12.5. The fallback rate is 5.6 %, about three times `sin`'s, because the bound is three times larger.
+  - **Speed.** On Armv6-M the quotient costs a `__aeabi_uidiv` and six 64-bit high products of 16 `MULS` each, which is why `tanf` there gains only 1.5 %: D87's divide was already short. On the Thumb-2 cores `tan` costs about 1,000 instructions against 11,200 for the double-double quotient.
+- **Size.** Float programs now link the double kernel (about 1.5–2 KB), and `tan` keeps its double-double fallback. The exact speed figures of the three cores that have them are re-locked under D142.

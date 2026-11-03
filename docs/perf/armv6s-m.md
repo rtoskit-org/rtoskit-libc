@@ -1182,3 +1182,7 @@ Instructions per call (throughput, 16 arguments in [−10, 10]; size / speed fla
 | `sin` / `cos` | 17,669 / 17,660 | — | 2,877 / 3,710 |
 
 Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sincos.md`.
+
+## P9.02, P9.03 — Float sine and cosine, and `tan`, through the D136 kernel (speed flavour, D141, D142)
+
+Instructions per call: `tan` 32,451 → 4,970, `tanf` 5,140 → 5,065, `sinf` 4,729 → 2,933, `cosf` 3,742 → 2,887, `sincosf` 5,505 → 4,418. `sin`, `cos` and `sincos` gain about 4 % from the inlined high product. No case is slower.
