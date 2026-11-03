@@ -53,9 +53,20 @@ short of the 0.53-ulp bound without arithmetic wider than 64 bits.
   - largest error: sin 7.03 units, cos 7.08 (analytic bound about 16.6, so E = 18);
   - fallback 1.8 %; no argument declined; no fast result incorrectly rounded.
 
-## P8.03b — `sin`, `cos`, `sincos` in the speed flavour  `[ ]`
-- [ ] Wire the kernel into the speed flavour of the five soft-double cores (armv6-m, armv6s-m, armv7-m, armv7e-m, armv8-m.main), with the double-double path as the fallback, and `__libc_fixed_wide` as `UMULL` where the core has it. `tan` only if the same kernel serves it.
-- [ ] `libm_dense` hard cases (results near a rounding boundary, arguments near n π/2), the D124 vectors, the `sincos` identity test, and a mutant check that the tests catch a lost guard bit.
+## P8.03b — `sin`, `cos`, `sincos` in the speed flavour  `[x]`
+- [x] The `dp-fixed` layer (D136) on the five soft-double cores (armv6-m, armv6s-m, armv7-m, armv7e-m, armv8-m.main), last in `LIBC_MATH_LAYERS`.
+  - **Speed files:** `sin.c`, `cos.c` and `sincos.c` apply the entry tests on the bits, call the kernel, and fall back to the double-double path (`__libc_trig_dd`, one reduction, both cores only where needed) for a result the kernel declines or cannot round. In `sincos`, each result falls back alone, so both stay bit-identical to this flavour's `sin` and `cos`.
+  - **The multiply:** `__libc_trig_wide` is `UMULL` inline on the Thumb-2 cores (`umull/trig-wide.h`) and nofp's 16-bit product helper on Armv6-M (`muls/trig-wide.h`). `speed.mk` picks the directory, so there is no `#if`.
+  - **Build:** the layer's files build at `-O2` (`LIBC_SPEED_CFLAGS`). The generic `libc/math/subdir.mk` now drops a layer's `speed/` files in the speed flavour too.
+  - `tan` keeps the double-double path. The kernel's polynomials are sin r / r and cos r, and a quotient of them would need a division and an error analysis of its own.
+- [x] Tests:
+  - **`libm_dense`:** `near_double.inc` holds 32 arguments (`tools/scripts/trig-fixed-check --near`) whose 64-bit kernel result is within 4 units of a halfway point, rounds wrongly without the test, and is rounded correctly by the double-double path. They are checked through `sin`, `cos` and `sincos` in every build.
+  - **The D124 vectors and the `sincos` identity test** (`test/unit/posix`) run unchanged.
+  - **Mutants on armv7e-m speed:**
+    - with no rounding test, 32 of 32 dense cases fail;
+    - with a zero bound, 10 of 32 fail (the 22 others sit exactly on the halfway point, which a zero bound still declines);
+    - with the bound halved to 9, none fail, because the measured largest error is 7.08 units;
+    - the D124 vectors pass every mutant, since their 0.53-ulp bound cannot see a misrounded tie.
 
 ## P8.03c — Bench, size, notes  `[ ]`
 - [ ] Bench (target: about 10× on armv7e-m, more on armv6-m), the speed budget, and the notes.

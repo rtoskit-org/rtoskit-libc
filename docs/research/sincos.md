@@ -256,3 +256,23 @@ E = 18 covers the larger estimate.
 - **With the bound at 18** (the script's default run): 100,437,400 arguments per function. The largest errors are unchanged. No fast result was rounded incorrectly. The fallback rate is 1.81 % for sin and 1.86 % for cos.
 
 The measured error is under half the analytic bound. So a call takes the fast path about 98 % of the time, and the rest pay for the double-double path once more. A tighter analysis, or a wider r (96 bits), would lower the fallback rate if P8.03c's measurements show it matters.
+
+## P8.03b: the speed flavour
+
+- **Files:** `sin.c`, `cos.c` and `sincos.c` in `libc/math/dp-fixed/speed/`, with `__libc_trig_dd.c`, the double-double path shared by the three for a declined result.
+- **Entry tests on the bits.** NaN and infinity are at or above 0x7ff0…, and the tiny arguments below 0x3e40… (2⁻²⁷). Each soft-double comparison would otherwise cost tens of instructions.
+- **Builtins.** The library builds with `-fno-builtin`, so the kernel spells its bit copies and leading-zero counts as builtins to keep them inline.
+- **Short products.** `high64` uses two products instead of four when the second operand fits in 32 bits (the small tail coefficients of Horner's rule).
+- **One argument falls back in the bench.** Of the bench's 16 arguments, one `cos` result (x = −5.7875) lies 2 units from a halfway point, so `cos` pays for one double-double call per 16; its average includes it.
+
+**Steps, measured on the bench (armv7e-m and armv6-m speed flavour, `sin` throughput, instructions per call):**
+
+| Step | armv7e-m | armv6-m |
+|---|---:|---:|
+| Before (double-double) | 6,435 | 17,669 |
+| Kernel, out-of-line `__libc_fixed_wide` | 1,476 | 3,300 |
+| `UMULL` inline on Thumb-2 | 1,052 | 3,300 |
+| Builtins for `memcpy` and `clz` | 1,000 | 3,268 |
+| Entry tests on bits, two-product `high64`, `-O2` | 803 | 2,877 |
+
+The estimate in P8.01 (about 260 on armv7e-m) left out the reduction's bookkeeping (word extraction, negation, normalisation) and the calls into the speed flavour's `-Os` code. The remaining cost is spread over the reduction (about a third), the two polynomials, and the rounding.
