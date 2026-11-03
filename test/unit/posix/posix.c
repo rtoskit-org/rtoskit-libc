@@ -16,6 +16,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <fenv.h>
 #include <limits.h>
 #include <math.h>
 #include <sched.h>
@@ -242,30 +243,83 @@ static void check_reallocarray(void)
 	free(array);
 }
 
+/* sincos against sin and cos: the same bits and the same exception flags */
+static bool same_double(double x)
+{
+	double s;
+	double c;
+	double want_s;
+	double want_c;
+	int want_flags;
+
+	feclearexcept(FE_ALL_EXCEPT);
+	want_s = sin(x);
+	want_c = cos(x);
+	want_flags = fetestexcept(FE_ALL_EXCEPT);
+	feclearexcept(FE_ALL_EXCEPT);
+	sincos(x, &s, &c);
+	return memcmp(&s, &want_s, sizeof(s)) == 0 && memcmp(&c, &want_c, sizeof(c)) == 0 && fetestexcept(FE_ALL_EXCEPT) == want_flags;
+}
+
+static bool same_float(float x)
+{
+	float s;
+	float c;
+	float want_s;
+	float want_c;
+	int want_flags;
+
+	feclearexcept(FE_ALL_EXCEPT);
+	want_s = sinf(x);
+	want_c = cosf(x);
+	want_flags = fetestexcept(FE_ALL_EXCEPT);
+	feclearexcept(FE_ALL_EXCEPT);
+	sincosf(x, &s, &c);
+	return memcmp(&s, &want_s, sizeof(s)) == 0 && memcmp(&c, &want_c, sizeof(c)) == 0 && fetestexcept(FE_ALL_EXCEPT) == want_flags;
+}
+
+/*
+ * sincos and sincosf share one reduction (P8.02) and must stay bit-identical
+ * to sin, cos, sinf and cosf (P7.03): specials, tiny arguments, every
+ * quadrant of each reduction regime (none below pi/4, Cody-Waite, Payne-Hanek
+ * from 2^20), the doubles and floats nearest multiples of pi/2, sinf's and
+ * cosf's hard cases, a sweep of exponents, in every rounding direction
+ */
 static void check_sincos(void)
 {
-	static const double doubles[] = { 0.0, -0.0, 0x1p-1074, 0.5, 1.0, -1.0, 3.141592653589793, 1e22, 0x1p1023, INFINITY, -INFINITY, NAN };
-	static const float floats[] = { 0.0f, -0.0f, 0x1p-149f, 0.5f, 1.0f, -1.0f, 3.14159265f, 1e22f, 0x1p127f, INFINITY, -INFINITY, NAN };
+	static const double doubles[] = { 0.0, -0.0, 0x1p-1074, 0x1p-1022, 0x1p-28, -0x1p-27, 0x1.fffffffffffffp-28, 0.5, 1.0, -1.0, 2.0, 3.0, -4.0, 5.0, 3.141592653589793, 1e6, -0x1p20, 0x1.8p20, 1e22, 0x1p1023, 0x1.fffffffffffffp1023, INFINITY, -INFINITY, NAN, -NAN };
+	static const float floats[] = { 0.0f, -0.0f, 0x1p-149f, 0x1p-126f, 0x1p-31f, -0x1p-30f, 0x1p-13f, 0x1p-12f, 0x1p-7f, 0x1p-6f, 0.5f, 1.0f, -1.0f, 2.0f, 3.0f, -4.0f, 5.0f, 3.14159265f, 1e6f, 1e22f, 0x1p127f, 0x1.3170fp+63f, -0x1.2b9622p+67f, 0x1.33333p+13f, INFINITY, -INFINITY, NAN };
+	static const int modes[] = { FE_TONEAREST, FE_UPWARD, FE_DOWNWARD, FE_TOWARDZERO };
+	int saved = fegetround();
 
-	/* Each result is exactly what sin and cos return */
-	for (size_t i = 0; i < sizeof(doubles) / sizeof(doubles[0]); ++i) {
-		double s;
-		double c;
-		double want_s = sin(doubles[i]);
-		double want_c = cos(doubles[i]);
+	for (size_t m = 0; m < sizeof(modes) / sizeof(modes[0]); ++m) {
+		CHECK(fesetround(modes[m]) == 0);
+		for (size_t i = 0; i < sizeof(doubles) / sizeof(doubles[0]); ++i)
+			CHECK(same_double(doubles[i]));
+		for (size_t i = 0; i < sizeof(floats) / sizeof(floats[0]); ++i)
+			CHECK(same_float(floats[i]));
 
-		sincos(doubles[i], &s, &c);
-		CHECK(memcmp(&s, &want_s, sizeof(s)) == 0 && memcmp(&c, &want_c, sizeof(c)) == 0);
+		/* Near n pi/2, where the reduction cancels most, and their neighbours */
+		for (int n = 1; n <= 40; ++n) {
+			double d = n * 1.5707963267948966;
+			float f = (float)d;
+
+			CHECK(same_double(d) && same_double(nextafter(d, 0.0)) && same_double(nextafter(d, 1e300)) && same_double(-d));
+			CHECK(same_float(f) && same_float(nextafterf(f, 0.0f)) && same_float(nextafterf(f, 1e30f)) && same_float(-f));
+		}
+
+		/* A sweep of magnitudes */
+		for (int e = -40; e <= 100; ++e) {
+			for (int k = 0; k < 7; ++k) {
+				double d = ldexp(1.0 + k / 7.0, e);
+				float f = ldexpf(1.0f + (float)k / 7.0f, e);
+
+				CHECK(same_double(d) && same_double(-d));
+				CHECK(same_float(f) && same_float(-f));
+			}
+		}
 	}
-	for (size_t i = 0; i < sizeof(floats) / sizeof(floats[0]); ++i) {
-		float s;
-		float c;
-		float want_s = sinf(floats[i]);
-		float want_c = cosf(floats[i]);
-
-		sincosf(floats[i], &s, &c);
-		CHECK(memcmp(&s, &want_s, sizeof(s)) == 0 && memcmp(&c, &want_c, sizeof(c)) == 0);
-	}
+	fesetround(saved);
 }
 
 static void check_clocks(void)
