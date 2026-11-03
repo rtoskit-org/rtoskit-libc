@@ -27,9 +27,12 @@ CFLAGS += -fno-builtin
 
 all: ${CURDIR}/freestanding.elf ${CURDIR}/freestanding-bare.elf
 
-# Linked with libc.a alone (no port, no startup; check() is the entry): fails if a freestanding function needs the RTOS seam
+# Linked with libc.a alone (no port, no startup; check() is the entry): fails if a freestanding function needs the RTOS seam.
+# A LIBC_UNWIND_TABLES=1 library's unwind entries reference libgcc's EHABI personality routine, which calls abort, so
+# that build needs __rtos_abort and nothing else from the seam (PLAN D134); the stand-in is never called.
+comma := ,
 ${CURDIR}/freestanding-bare.elf: ${CURDIR}/freestanding.o ${EXTRA_ELF_DEPS}
 	@echo "LINKING ${@}"
-	$(LD) ${LDFLAGS} -Wl,-e,check -o $@ $< ${LDLIBS}
+	$(LD) ${LDFLAGS} -Wl,-e,check $(if $(filter 1,${LIBC_UNWIND_TABLES}),-Wl${comma}--defsym=__rtos_abort=check) -o $@ $< ${LDLIBS}
 
 endif
