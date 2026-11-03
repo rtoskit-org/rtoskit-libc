@@ -76,6 +76,9 @@ make library                           # headers, libc*.a and the port archives 
   `nano` (default, set in `common.mk`), `tlsf` or `tiny`
   (`make LIBC_MALLOC=tlsf ...`; run `make clean` after changing it). Every
   variant under `libc/malloc/` is always built and tested (D32, D54).
+- **Unwind tables (D134):** `LIBC_UNWIND_TABLES=1` builds the library with `-funwind-tables`, so a backtrace
+  (`std::stacktrace`, `_Unwind_Backtrace`) passes through library frames; off by default, and the size baselines and
+  budgets are without it. Run `make clean` after changing it.
 - **Size and speed flavours (D73):** the `release` build type is the size
   flavour, `speed` the speed flavour (`-Os`, `LIBC_FLAVOUR := speed`, its own
   build tree and install). Arch files select per-flavour kernels through

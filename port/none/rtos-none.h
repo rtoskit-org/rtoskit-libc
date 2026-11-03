@@ -32,6 +32,17 @@ void __rtos_none_output(const void *buffer, size_t count);
 [[gnu::weak]] extern char __rtos_none_heap_start[];
 [[gnu::weak]] extern char __rtos_none_heap_end[];
 
+/*
+ * Stack capture (std::stacktrace, _Unwind_Backtrace; P7.04, PLAN D134) on Arm:
+ * libgcc's unwinder finds the EHABI index through __exidx_start and
+ * __exidx_end, which the board's linker script defines around the index,
+ * as the toolchain's default script does:
+ *
+ *	.ARM.exidx : { __exidx_start = .; *(.ARM.exidx* .gnu.linkonce.armexidx.*) __exidx_end = .; } > FLASH
+ *
+ * Library frames unwind only in a library built with LIBC_UNWIND_TABLES=1.
+ */
+
 /* Single-threaded: locks need no state */
 struct __rtos_lock {
 	unsigned int word; /* the seam's lock word (rtos-port.h, PLAN D79); the locks themselves are no-ops */
