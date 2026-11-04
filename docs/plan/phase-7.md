@@ -75,4 +75,4 @@ the ELF on the target (D128).
 - [ ] **Hosted libstdc++:** configure and build it against the library with the `stdio` backend and Q39's configure route (the toolchain side is sgstreet/rtoskit-gcc#7), and record which optional features configure turned on.
 - [ ] **`std::stacktrace`** (from P7.04, D134): with that libstdc++, `--enable-libstdcxx-backtrace`, a `test/unit/cxx` case linked with `-lstdc++exp` and a `LIBC_UNWIND_TABLES=1` library: `std::stacktrace::current()` returns the test's frames and one inside the library (a `qsort` callback), and `to_string()` runs without symbol information. Reported as skipped without `libstdc++exp`, as `bitint` is (D127).
 - [ ] **pi-pico in C23** (D135, answers Q40): pi-pico moves from `-std=gnu11` to `-std=gnu23`; the library's headers stay C23-only.
-- [ ] Close issue #106.
+- [x] Close issue #106 (closed as completed: P7.02–P7.04, follow-ups in #113, fixed by #118).
