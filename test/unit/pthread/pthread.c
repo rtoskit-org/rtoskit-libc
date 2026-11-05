@@ -557,6 +557,150 @@ static void check_priority_inheritance(void)
 	CHECK(pthread_mutex_unlock(&mutex) == 0 && pthread_mutexattr_destroy(&attr) == 0);
 }
 
+/* P10.06: read-write locks, barriers and spin locks */
+static pthread_rwlock_t rwlock = PTHREAD_RWLOCK_INITIALIZER;
+static unsigned int rw_value;
+static unsigned int rw_torn;
+
+static void *rw_writer(void *)
+{
+	for (int i = 0; i < 2000; ++i) {
+		pthread_rwlock_wrlock(&rwlock);
+		/* Two halves that only a writer changes, and only together */
+		rw_value += 0x10001u;
+		pthread_rwlock_unlock(&rwlock);
+	}
+
+	return nullptr;
+}
+
+static void *rw_reader(void *)
+{
+	for (int i = 0; i < 2000; ++i) {
+		pthread_rwlock_rdlock(&rwlock);
+		if ((rw_value & 0xffffu) != (rw_value >> 16))
+			__atomic_fetch_add(&rw_torn, 1, __ATOMIC_RELAXED);
+		pthread_rwlock_unlock(&rwlock);
+	}
+
+	return nullptr;
+}
+
+static void *rw_try(void *arg)
+{
+	return (void *)(intptr_t)(arg != nullptr ? pthread_rwlock_trywrlock(&rwlock) : pthread_rwlock_tryrdlock(&rwlock));
+}
+
+static void *rw_timed(void *arg)
+{
+	struct timespec deadline = after(CLOCK_MONOTONIC, 20);
+
+	return (void *)(intptr_t)(arg != nullptr ? pthread_rwlock_clockwrlock(&rwlock, CLOCK_MONOTONIC, &deadline) : pthread_rwlock_clockrdlock(&rwlock, CLOCK_MONOTONIC, &deadline));
+}
+
+static pthread_barrier_t barrier;
+static unsigned int barrier_phase[4];
+static unsigned int barrier_serial;
+static unsigned int barrier_mismatch;
+
+static void *barrier_thread(void *arg)
+{
+	unsigned int index = (unsigned int)(uintptr_t)arg;
+
+	for (unsigned int round = 0; round < 50; ++round) {
+		barrier_phase[index] = round;
+		if (pthread_barrier_wait(&barrier) == PTHREAD_BARRIER_SERIAL_THREAD)
+			__atomic_fetch_add(&barrier_serial, 1, __ATOMIC_RELAXED);
+		/* Everyone reached this round before anyone passed */
+		for (int other = 0; other < 4; ++other)
+			if (__atomic_load_n(&barrier_phase[other], __ATOMIC_RELAXED) < round)
+				__atomic_fetch_add(&barrier_mismatch, 1, __ATOMIC_RELAXED);
+		pthread_barrier_wait(&barrier);
+	}
+
+	return nullptr;
+}
+
+static pthread_spinlock_t spin;
+static unsigned int spin_counter;
+
+static void *spin_count_up(void *)
+{
+	for (int i = 0; i < 5000; ++i) {
+		pthread_spin_lock(&spin);
+		++spin_counter;
+		pthread_spin_unlock(&spin);
+	}
+
+	return nullptr;
+}
+
+static void check_rwlocks(void)
+{
+	pthread_rwlockattr_t attr;
+	pthread_t threads[4];
+	void *value = nullptr;
+	int pshared;
+
+	CHECK(pthread_rwlockattr_init(&attr) == 0 && pthread_rwlockattr_getpshared(&attr, &pshared) == 0 && pshared == PTHREAD_PROCESS_PRIVATE);
+	CHECK(pthread_rwlockattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) == ENOTSUP && pthread_rwlockattr_destroy(&attr) == 0);
+
+	/* Two writers and two readers: readers never see a half-done write */
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_create(&threads[i], nullptr, i < 2 ? rw_writer : rw_reader, nullptr) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_join(threads[i], nullptr) == 0);
+	CHECK(rw_value == 4000u * 0x10001u && rw_torn == 0);
+
+	/* Readers share: another thread reads, but cannot write */
+	CHECK(pthread_rwlock_rdlock(&rwlock) == 0 && pthread_rwlock_rdlock(&rwlock) == 0 && pthread_rwlock_tryrdlock(&rwlock) == 0);
+	CHECK(pthread_create(&threads[0], nullptr, rw_try, nullptr) == 0 && pthread_join(threads[0], &value) == 0 && value == nullptr);
+	CHECK(pthread_rwlock_unlock(&rwlock) == 0);
+	CHECK(pthread_create(&threads[0], nullptr, rw_try, &rwlock) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EBUSY);
+	CHECK(pthread_create(&threads[0], nullptr, rw_timed, &rwlock) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == ETIMEDOUT);
+	CHECK(pthread_rwlock_destroy(&rwlock) == EBUSY);
+	/* Three read locks remain: two here, and the other thread's tryrdlock (readers are not tracked by thread) */
+	for (int i = 0; i < 3; ++i)
+		CHECK(pthread_rwlock_unlock(&rwlock) == 0);
+	CHECK(pthread_rwlock_unlock(&rwlock) == EPERM);
+
+	/* A writer excludes everyone, and is EDEADLK to itself */
+	CHECK(pthread_rwlock_wrlock(&rwlock) == 0 && pthread_rwlock_wrlock(&rwlock) == EDEADLK && pthread_rwlock_rdlock(&rwlock) == EDEADLK);
+	CHECK(pthread_rwlock_trywrlock(&rwlock) == EBUSY && pthread_rwlock_tryrdlock(&rwlock) == EBUSY);
+	CHECK(pthread_create(&threads[0], nullptr, rw_timed, nullptr) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == ETIMEDOUT);
+	CHECK(pthread_create(&threads[0], nullptr, rw_try, nullptr) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EBUSY);
+	CHECK(pthread_rwlock_timedrdlock(&rwlock, &(struct timespec){ .tv_sec = 1 }) == EDEADLK);
+	CHECK(pthread_rwlock_clockwrlock(&rwlock, 42, &(struct timespec){ .tv_sec = 1 }) == EINVAL);
+	CHECK(pthread_rwlock_unlock(&rwlock) == 0 && pthread_rwlock_destroy(&rwlock) == 0);
+	CHECK(pthread_rwlock_init(&rwlock, nullptr) == 0 && pthread_rwlock_timedwrlock(&rwlock, &(struct timespec){ .tv_sec = 1 }) == 0 && pthread_rwlock_unlock(&rwlock) == 0);
+}
+
+static void check_barriers_and_spins(void)
+{
+	pthread_barrierattr_t attr;
+	pthread_t threads[4];
+
+	CHECK(pthread_barrierattr_init(&attr) == 0 && pthread_barrierattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) == ENOTSUP);
+	CHECK(pthread_barrier_init(&barrier, &attr, 0) == EINVAL && pthread_barrier_init(&barrier, &attr, 4) == 0 && pthread_barrierattr_destroy(&attr) == 0);
+
+	/* 50 rounds of four threads: one serial thread per opening, no one ahead of a round */
+	for (uintptr_t i = 0; i < 4; ++i)
+		CHECK(pthread_create(&threads[i], nullptr, barrier_thread, (void *)i) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_join(threads[i], nullptr) == 0);
+	CHECK(barrier_serial == 50 && barrier_mismatch == 0 && pthread_barrier_destroy(&barrier) == 0);
+
+	/* Spin locks */
+	CHECK(pthread_spin_init(&spin, PTHREAD_PROCESS_SHARED) == ENOTSUP && pthread_spin_init(&spin, PTHREAD_PROCESS_PRIVATE) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_create(&threads[i], nullptr, spin_count_up, nullptr) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_join(threads[i], nullptr) == 0);
+	CHECK(spin_counter == 20000);
+	CHECK(pthread_spin_lock(&spin) == 0 && pthread_spin_trylock(&spin) == EBUSY && pthread_spin_destroy(&spin) == EBUSY);
+	CHECK(pthread_spin_unlock(&spin) == 0 && pthread_spin_trylock(&spin) == 0 && pthread_spin_unlock(&spin) == 0 && pthread_spin_destroy(&spin) == 0);
+}
+
 int main(void)
 {
 	check_seam();
@@ -566,6 +710,8 @@ int main(void)
 	check_conditions();
 	check_keys();
 	check_priority_inheritance();
+	check_rwlocks();
+	check_barriers_and_spins();
 
 	if (failures == 0)
 		puts("pass: pthread");

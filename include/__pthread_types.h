@@ -69,4 +69,29 @@ typedef struct {
 	int __pshared;
 } pthread_condattr_t;
 
+/* Readers holding it (or __LIBC_RWLOCK_WRITER, internal/pthread.h), the writer, and a sequence that every release advances */
+typedef struct {
+	unsigned int __state;
+	unsigned int __sequence;
+	struct __rtos_thread *__writer;
+} pthread_rwlock_t;
+
+typedef struct {
+	int __pshared;
+} pthread_rwlockattr_t;
+
+/* Threads to wait for, those arrived, and a generation that every opening advances */
+typedef struct {
+	unsigned int __count;
+	unsigned int __arrived;
+	unsigned int __generation;
+} pthread_barrier_t;
+
+typedef struct {
+	int __pshared;
+} pthread_barrierattr_t;
+
+/* 0 unlocked, 1 locked */
+typedef unsigned int pthread_spinlock_t;
+
 #endif /* ___PTHREAD_TYPES_H */

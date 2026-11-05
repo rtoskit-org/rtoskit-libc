@@ -27,6 +27,17 @@
 int __libc_pthread_mutex_lock(pthread_mutex_t *mutex, int base, const struct timespec *deadline);
 int __libc_pthread_mutex_unlock(pthread_mutex_t *mutex);
 
+/*
+ * Read-write locks (P10.06, PLAN D155): __state counts the readers, or is
+ * __LIBC_RWLOCK_WRITER while a writer holds it; every release advances
+ * __sequence and wakes the waiters, who read the sequence before the state
+ * so that no release is missed
+ */
+#define __LIBC_RWLOCK_WRITER 0xffffffffu
+
+int __libc_pthread_rwlock_rdlock(pthread_rwlock_t *rwlock, int base, const struct timespec *deadline);
+int __libc_pthread_rwlock_wrlock(pthread_rwlock_t *rwlock, int base, const struct timespec *deadline);
+
 /* Release mutex, wait for a signal or the deadline, and take mutex back */
 int __libc_pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex, int base, const struct timespec *deadline);
 

@@ -62,6 +62,15 @@ __LIBC_BEGIN_DECLS
 		0, 0                     \
 	}
 
+/* A read-write lock with no holder */
+#define PTHREAD_RWLOCK_INITIALIZER \
+	{                              \
+		0, 0, 0                    \
+	}
+
+/* What pthread_barrier_wait returns to one of the threads it releases */
+#define PTHREAD_BARRIER_SERIAL_THREAD (-1)
+
 #define PTHREAD_ONCE_INIT \
 	{                     \
 		0                 \
@@ -83,6 +92,14 @@ int pthread_attr_setschedpolicy(pthread_attr_t *attr, int policy);
 int pthread_attr_setscope(pthread_attr_t *attr, int scope);
 int pthread_attr_setstack(pthread_attr_t *attr, void *stackaddr, __SIZE_TYPE__ stacksize);
 int pthread_attr_setstacksize(pthread_attr_t *attr, __SIZE_TYPE__ stacksize);
+
+int pthread_barrier_destroy(pthread_barrier_t *barrier);
+int pthread_barrier_init(pthread_barrier_t *__restrict barrier, const pthread_barrierattr_t *__restrict attr, unsigned int count);
+int pthread_barrier_wait(pthread_barrier_t *barrier);
+int pthread_barrierattr_destroy(pthread_barrierattr_t *attr);
+int pthread_barrierattr_getpshared(const pthread_barrierattr_t *__restrict attr, int *__restrict pshared);
+int pthread_barrierattr_init(pthread_barrierattr_t *attr);
+int pthread_barrierattr_setpshared(pthread_barrierattr_t *attr, int pshared);
 
 int pthread_cond_broadcast(pthread_cond_t *cond);
 int pthread_cond_clockwait(pthread_cond_t *__restrict cond, pthread_mutex_t *__restrict mutex, clockid_t clock_id, const struct timespec *__restrict abstime);
@@ -126,9 +143,31 @@ int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int protocol);
 int pthread_mutexattr_setpshared(pthread_mutexattr_t *attr, int pshared);
 int pthread_mutexattr_settype(pthread_mutexattr_t *attr, int type);
 int pthread_once(pthread_once_t *once_control, void (*init_routine)(void));
+int pthread_rwlock_clockrdlock(pthread_rwlock_t *__restrict rwlock, clockid_t clock_id, const struct timespec *__restrict abstime);
+int pthread_rwlock_clockwrlock(pthread_rwlock_t *__restrict rwlock, clockid_t clock_id, const struct timespec *__restrict abstime);
+int pthread_rwlock_destroy(pthread_rwlock_t *rwlock);
+int pthread_rwlock_init(pthread_rwlock_t *__restrict rwlock, const pthread_rwlockattr_t *__restrict attr);
+int pthread_rwlock_rdlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_timedrdlock(pthread_rwlock_t *__restrict rwlock, const struct timespec *__restrict abstime);
+int pthread_rwlock_timedwrlock(pthread_rwlock_t *__restrict rwlock, const struct timespec *__restrict abstime);
+int pthread_rwlock_tryrdlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_trywrlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_unlock(pthread_rwlock_t *rwlock);
+int pthread_rwlock_wrlock(pthread_rwlock_t *rwlock);
+int pthread_rwlockattr_destroy(pthread_rwlockattr_t *attr);
+int pthread_rwlockattr_getpshared(const pthread_rwlockattr_t *__restrict attr, int *__restrict pshared);
+int pthread_rwlockattr_init(pthread_rwlockattr_t *attr);
+int pthread_rwlockattr_setpshared(pthread_rwlockattr_t *attr, int pshared);
+
 pthread_t pthread_self(void);
 int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param *param);
 int pthread_setschedprio(pthread_t thread, int prio);
+
+int pthread_spin_destroy(pthread_spinlock_t *lock);
+int pthread_spin_init(pthread_spinlock_t *lock, int pshared);
+int pthread_spin_lock(pthread_spinlock_t *lock);
+int pthread_spin_trylock(pthread_spinlock_t *lock);
+int pthread_spin_unlock(pthread_spinlock_t *lock);
 
 __LIBC_END_DECLS
 
