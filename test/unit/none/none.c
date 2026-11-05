@@ -210,6 +210,14 @@ int main(int argc, char **argv)
 	CHECK(close(2) == 0 && close(5) == -1 && errno == EBADF);
 	CHECK(fileno(stdin) == 0 && fileno(stdout) == 1 && fileno(stderr) == 2);
 	CHECK(clock_gettime(CLOCK_MONOTONIC, &ts) == -1 && errno == ENOSYS);
+
+	/* regression_clock_result_zeroed (issue #122): a failed clock read leaves {0, 0}, not the caller's old value */
+	ts = (struct timespec){ .tv_sec = 123, .tv_nsec = 456 };
+	errno = 0;
+	CHECK(clock_gettime(CLOCK_MONOTONIC, &ts) == -1 && errno == ENOSYS && ts.tv_sec == 0 && ts.tv_nsec == 0);
+	ts = (struct timespec){ .tv_sec = 123, .tv_nsec = 456 };
+	errno = 0;
+	CHECK(timespec_get(&ts, TIME_UTC) == 0 && errno == ENOSYS && ts.tv_sec == 0 && ts.tv_nsec == 0);
 	CHECK(clock_getres(CLOCK_REALTIME, &ts) == -1 && errno == ENOSYS);
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000 }, nullptr) == -1 && errno == ENOSYS);
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000000000 }, nullptr) == -1 && errno == EINVAL);

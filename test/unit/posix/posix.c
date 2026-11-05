@@ -356,9 +356,13 @@ static void check_clocks(void)
 	CHECK(clock_getres(CLOCK_MONOTONIC, &ts) == 0 && nanoseconds(&ts) > 0);
 	CHECK(clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == 0 && clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts) == 0);
 
-	/* An unknown clock */
+	/* An unknown clock; regression_clock_result_zeroed (issue #122): a failed read leaves {0, 0} */
+	ts = (struct timespec){ .tv_sec = 123, .tv_nsec = 456 };
 	errno = 0;
-	CHECK(clock_gettime(99, &ts) == -1 && errno == EINVAL);
+	CHECK(clock_gettime(99, &ts) == -1 && errno == EINVAL && ts.tv_sec == 0 && ts.tv_nsec == 0);
+	ts = (struct timespec){ .tv_sec = 123, .tv_nsec = 456 };
+	errno = 0;
+	CHECK(timespec_get(&ts, 99) == 0 && errno == EINVAL && ts.tv_sec == 0 && ts.tv_nsec == 0);
 	errno = 0;
 	CHECK(clock_getres(-1, &ts) == -1 && errno == EINVAL);
 
