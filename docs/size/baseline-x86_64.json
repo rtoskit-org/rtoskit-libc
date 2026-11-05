@@ -903,6 +903,15 @@
     "text": 36,
     "unwind": 0
    },
+   "__libc_call_once_eh.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 16,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 141,
+    "unwind": 88
+   },
    "__libc_cond_wait.o": {
     "bss": 0,
     "data": 0,
@@ -2358,7 +2367,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 105,
+    "text": 106,
     "unwind": 0
    },
    "calloc.o": {
@@ -7837,11 +7846,11 @@
   "totals": {
    "bss": 2888,
    "data": 204,
-   "rodata": 17979,
+   "rodata": 17995,
    "tbss": 626,
    "tdata": 8,
-   "text": 103597,
-   "unwind": 0
+   "text": 103739,
+   "unwind": 88
   }
  },
  "stack": {
@@ -8445,6 +8454,7 @@
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:__libc_dd_sum": 8,
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:atan_unit": 8,
    "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 16,
+   "__libc_call_once_eh.o:__libc_call_once_eh": 32,
    "__libc_cond_wait.o:__libc_cond_wait": 48,
    "__libc_cos_core.o:__libc_cos_core": 8,
    "__libc_cosh_core.o:__libc_cosh_core": 8,
