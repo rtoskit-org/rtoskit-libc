@@ -259,6 +259,15 @@ int main(int argc, char **argv)
 	CHECK(pthread_cond_timedwait(&pcond, &pmutex, &(struct timespec){ .tv_sec = 1 }) == ETIMEDOUT && pthread_mutex_unlock(&pmutex) == 0);
 	CHECK(pthread_key_create(&pkey, nullptr) == 0 && pthread_setspecific(pkey, &pkey) == 0 && pthread_getspecific(pkey) == &pkey && pthread_key_delete(pkey) == 0);
 
+	/* Read-write, barrier and spin locks on one thread (P10.06): a barrier of one opens at once */
+	pthread_rwlock_t prwlock = PTHREAD_RWLOCK_INITIALIZER;
+	pthread_barrier_t pbarrier;
+	pthread_spinlock_t pspin;
+
+	CHECK(pthread_rwlock_rdlock(&prwlock) == 0 && pthread_rwlock_trywrlock(&prwlock) == EBUSY && pthread_rwlock_unlock(&prwlock) == 0);
+	CHECK(pthread_barrier_init(&pbarrier, nullptr, 1) == 0 && pthread_barrier_wait(&pbarrier) == PTHREAD_BARRIER_SERIAL_THREAD);
+	CHECK(pthread_spin_init(&pspin, PTHREAD_PROCESS_PRIVATE) == 0 && pthread_spin_lock(&pspin) == 0 && pthread_spin_trylock(&pspin) == EBUSY && pthread_spin_unlock(&pspin) == 0);
+
 	/* No handle seeks, so each is a character device of size 0; flags and the process ID need no seam */
 	struct stat st;
 

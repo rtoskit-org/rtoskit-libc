@@ -116,9 +116,17 @@ Q45 and Q46 answered: D149 (a range per policy, real round-robin), D150 (`__rtos
   handle is used: the first Arm run found the test reading a handle whose
   thread had already exited and been unmapped.
 
-## P10.06 — Read-write locks, barriers, spin locks  `[ ]`
-- [ ] `pthread_rwlock_*` (with `timedrdlock`/`timedwrlock`/`clock*`),
-  `pthread_barrier_*` (`PTHREAD_BARRIER_SERIAL_THREAD`), `pthread_spin_*`.
+## P10.06 — Read-write locks, barriers, spin locks  `[x]`
+- [x] `pthread_rwlock_*` (with `timedrdlock`/`timedwrlock`/`clock*`,
+  `PTHREAD_RWLOCK_INITIALIZER`), `pthread_barrier_*`
+  (`PTHREAD_BARRIER_SERIAL_THREAD`), `pthread_spin_*`, and the attribute
+  objects (D155).
+- [x] Tests: `test/unit/pthread` (two writers and two readers with no torn
+  read; shared readers, a refused and a timed-out writer; the writer's
+  `EDEADLK`, `EBUSY`s and timed-out reader; `EPERM`; 50 rounds of a
+  four-thread barrier with one serial thread each and no thread ahead; four
+  threads counting under a spin lock), `test/unit/none`; run on x86_64,
+  armv7e-m and armv6-m.
 
 ## P10.07 — `<threads.h>` over `<pthread.h>`  `[ ]`
 - [ ] `thrd_*`, `mtx_*`, `cnd_*`, `tss_*` and `call_once` as wrappers with
