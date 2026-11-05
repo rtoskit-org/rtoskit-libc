@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <pthread.h>
 #include <rtos/rtos-port.h>
 #include <sched.h>
 #include <stdatomic.h>
@@ -239,6 +240,15 @@ int main(int argc, char **argv)
 	CHECK(__rtos_thread_set_sched(__rtos_thread_self(), SCHED_OTHER, 0) == 0 && __rtos_thread_set_sched(__rtos_thread_self(), SCHED_RR, 1) == -EINVAL);
 	CHECK(__rtos_futex_wait(&word, 0, 42, nullptr) == -EINVAL && __rtos_futex_wait(&word, 1, TIME_MONOTONIC, nullptr) == -EAGAIN);
 	CHECK(__rtos_futex_wait(&word, 0, TIME_MONOTONIC, &(struct timespec){ .tv_sec = 1 }) == -ETIMEDOUT);
+
+	/* POSIX threads on one thread (P10.03): no new thread, but once, self and the scheduling queries work */
+	pthread_t pthread;
+	static pthread_once_t pthread_once_control = PTHREAD_ONCE_INIT;
+
+	CHECK(pthread_create(&pthread, nullptr, nullptr, nullptr) == EAGAIN);
+	CHECK(pthread_equal(pthread_self(), pthread_self()) && pthread_join(pthread_self(), nullptr) == EDEADLK);
+	CHECK(pthread_once(&pthread_once_control, once_function) == 0 && once_calls == 2);
+	CHECK(sched_get_priority_max(SCHED_OTHER) == 0 && sched_get_priority_min(SCHED_FIFO) == -1);
 
 	/* No handle seeks, so each is a character device of size 0; flags and the process ID need no seam */
 	struct stat st;

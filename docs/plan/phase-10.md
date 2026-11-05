@@ -61,16 +61,28 @@ Q45 and Q46 answered: D149 (a range per policy, real round-robin), D150 (`__rtos
   explicit scheduling, a refused priority, the caller's stack, the `void *`
   result, both time bases), `test/unit/none` (the one-thread answers).
 
-## P10.03 — `<pthread.h>` and the thread functions  `[ ]`
-- [ ] `<pthread.h>` with every type sized for the largest core of a triple
-  (D15), and the `<limits.h>`/`<unistd.h>` constants and option macros for
-  what is provided (`PTHREAD_KEYS_MAX`, `PTHREAD_DESTRUCTOR_ITERATIONS`,
-  `PTHREAD_STACK_MIN`, `_POSIX_THREADS`, `_POSIX_TIMEOUTS`, and
-  `_POSIX_THREAD_PRIORITY_SCHEDULING` if Q45 provides it).
-- [ ] `pthread_create`, `join`, `detach`, `exit`, `self`, `equal`; the
-  `pthread_attr_*` set; `pthread_setschedparam`/`getschedparam`,
-  `pthread_setschedprio`; `sched_get_priority_max`/`min`.
-- [ ] `pthread_once`, exception-safe as D145's `__libc_call_once_eh`.
+## P10.03 — `<pthread.h>` and the thread functions  `[x]`
+- [x] `<pthread.h>` and `<__pthread_types.h>` (shared with `<sys/types.h>`),
+  each type the same on every core of a triple (D15); `PTHREAD_KEYS_MAX` 32
+  (below POSIX's 128, D152), `PTHREAD_DESTRUCTOR_ITERATIONS` 4,
+  `PTHREAD_STACK_MIN` 512 in `<limits.h>`; `_POSIX_THREADS`,
+  `_POSIX_TIMEOUTS`, `_POSIX_THREAD_ATTR_STACKADDR`/`STACKSIZE` and
+  `_POSIX_THREAD_PRIORITY_SCHEDULING` in `<unistd.h>`.
+- [x] `pthread_create`, `join`, `detach`, `exit`, `self`, `equal`; the
+  `pthread_attr_*` set (detach state, stack size, a caller's stack,
+  scheduling policy and parameter, inheritance, scope); `pthread_setschedparam`,
+  `getschedparam`, `setschedprio`; `sched_get_priority_max`/`min`. `thrd_exit`
+  and `pthread_exit` share `__libc_thread_exit`.
+- [x] `pthread_once` on `call_once`'s state machine, table-free; the toolchain
+  routes `std::call_once` to `__libc_call_once_eh` (D152, P10.08).
+- [x] Tests: `test/unit/pthread` (create and join with a returned and a
+  `pthread_exit` value; `EDEADLK`, `EINVAL` for joining a detached thread
+  and detaching twice; every attribute's default and refused values; a
+  detached-at-creation thread; explicit, out-of-range and inherited
+  scheduling; `setschedprio`; the priority ranges; a caller's stack; four
+  threads racing `pthread_once`; the option macros and limits),
+  `test/unit/none` (`EAGAIN`, `EDEADLK`, `pthread_once`, the ranges),
+  `<pthread.h>` in the standalone and `gnu++98` header tests.
 
 ## P10.04 — Mutexes, condition variables, keys  `[ ]`
 - [ ] `PTHREAD_MUTEX_NORMAL`, `RECURSIVE`, `ERRORCHECK`, `DEFAULT`; `lock`,

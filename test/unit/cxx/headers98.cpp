@@ -39,6 +39,7 @@
 #include <time.h>
 
 #include <fcntl.h>
+#include <pthread.h>
 #include <rtoskit-libc.h>
 #include <sched.h>
 #include <strings.h>
