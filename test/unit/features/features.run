@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+#
+# Copyright (C) 2026 Red Rocket Computing, LLC
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# features.run
+#
+# Created on: Nov 5, 2026
+#     Author: Stephen Street (stephen@redrocketcomputing.com)
+#
+# <rtoskit-libc.h> must name no feature that features.c does not check
+# (issue #125, PLAN D147); then the program checks the rest.
+
+elf=$1
+here=$(dirname "$0")
+header=${here}/../../../include/rtoskit-libc.h
+source=${here}/features.c
+missing=0
+
+for name in $(sed -n 's/^#define __LIBC_HAVE_\([A-Za-z0-9_]*\) 1$/\1/p' "${header}"); do
+	if ! grep -Eq "(__LIBC_HAVE_${name}\b|X\(${name}, )" "${source}"; then
+		echo "fail: <rtoskit-libc.h> names __LIBC_HAVE_${name}, which features.c does not check"
+		missing=1
+	fi
+done
+[[ ${missing} -eq 0 ]] || exit 1
+
+${TARGET_RUNNER:-} "${elf}"
