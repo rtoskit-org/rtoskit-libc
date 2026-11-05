@@ -17,12 +17,19 @@
 #include <rtos/rtos-port.h>
 #include <time.h>
 
-/* POSIX.1-2024 clock_gettime: a clock is a seam time base (CLOCK_REALTIME is TIME_UTC, PLAN D132) */
+/*
+ * POSIX.1-2024 clock_gettime: a clock is a seam time base (CLOCK_REALTIME is
+ * TIME_UTC, PLAN D132). *tp is unspecified on failure; it is zeroed, after
+ * the seam call so a port's partial write is covered too, because callers
+ * such as libstdc++'s clocks ignore the status (issue #122).
+ */
 int clock_gettime(clockid_t clock_id, struct timespec *tp)
 {
 	int status = __rtos_clock_gettime(clock_id, tp);
 
 	if (status < 0) {
+		tp->tv_sec = 0;
+		tp->tv_nsec = 0;
 		errno = -status;
 		return -1;
 	}
