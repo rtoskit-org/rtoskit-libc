@@ -44,6 +44,9 @@
 /* Threads (P1.12) */
 #define __LINUX_SYS_MUNMAP 11
 #define __LINUX_SYS_SCHED_YIELD 24
+
+/* getentropy (issue #127) */
+#define __LINUX_SYS_GETRANDOM 318
 #define __LINUX_SYS_CLONE 56
 #define __LINUX_SYS_EXIT 60
 #define __LINUX_SYS_FUTEX 202
