@@ -769,3 +769,7 @@ Speed flavour only: `__libc_trig_fixed.o`, `__libc_trig_dd.o` and `__libc_trig_f
 ## D144 — `stat`, `isatty` and `dup` (issue #113)
 
 Three new members (`stat`, `isatty`, `dup`), linked only by programs that call them; `jmp_buf`'s named struct and `unreachable()` in C only change no object. No other member, no image and neither budget changes.
+
+## Issue #122 — `clock_gettime` and `timespec_get` zero the result on failure
+
+Members that grew, justified: `clock_gettime.o` 36 → 48 (+12) and `timespec_get.o` 36 → 48 (+12), the two stores that zero the result when the clock read fails (libstdc++'s clocks ignore the status); each frame 8 → 16 bytes, to keep the pointer across the seam call. No image and neither budget changes.
