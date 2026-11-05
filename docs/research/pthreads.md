@@ -1,6 +1,6 @@
 # Research: POSIX threads over the seam, and `<threads.h>` on top (issue #126, phase 10)
 
-Step: P10.01. Decisions: PLAN D148 (this phase), Q45–Q47 (open). Builds on
+Step: P10.01. Decisions: PLAN D148 (this phase), D149–D151 (Q45–Q47: priorities, the futex clock, no cancellation). Builds on
 D43 (the thread seam and `<threads.h>`, `docs/research/threads.md`), D128
 (the POSIX subset), D121 (the C++ ABI hooks) and D145 (`call_once` and
 exceptions).
