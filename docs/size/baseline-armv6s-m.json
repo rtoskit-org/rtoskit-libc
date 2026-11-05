@@ -1124,6 +1124,15 @@
     "text": 28,
     "unwind": 0
    },
+   "__libc_call_once_eh.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 154,
+    "unwind": 36
+   },
    "__libc_clogf_modulus.o": {
     "bss": 0,
     "data": 0,
@@ -2768,7 +2777,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 120,
+    "text": 114,
     "unwind": 0
    },
    "calloc.o": {
@@ -4902,15 +4911,6 @@
     "tbss": 0,
     "tdata": 0,
     "text": 16,
-    "unwind": 0
-   },
-   "getentropy.o": {
-    "bss": 0,
-    "data": 0,
-    "rodata": 0,
-    "tbss": 0,
-    "tdata": 0,
-    "text": 56,
     "unwind": 0
    },
    "getenv.o": {
@@ -8259,8 +8259,8 @@
    "rodata": 10167,
    "tbss": 362,
    "tdata": 8,
-   "text": 161452,
-   "unwind": 0
+   "text": 161544,
+   "unwind": 36
   }
  },
  "stack": {
@@ -9231,6 +9231,8 @@
    "__libc_atan2f_core.o:libc/math/sp-nearest/__libc_atan2f_core.c:__libc_ff_product": 32,
    "__libc_atan2f_core.o:libc/math/sp-nearest/__libc_atan2f_core.c:atan_unit": 120,
    "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 8,
+   "__libc_call_once_eh.o:__libc_call_once_eh": 32,
+   "__libc_call_once_eh.o:libc/threads/__libc_call_once_eh.c:once_guard_finish": 8,
    "__libc_clogf_modulus.o:__libc_clogf_modulus": 64,
    "__libc_clogf_modulus.o:libc/complex/sp-nearest/__libc_clogf_modulus.c:__libc_ff_product": 32,
    "__libc_cond_wait.o:__libc_cond_wait": 32,
@@ -9753,7 +9755,6 @@
    "fwrite.o:fwrite": 24,
    "getc.o:getc": 8,
    "getchar.o:getchar": 8,
-   "getentropy.o:getentropy": 8,
    "getenv.o:getenv": 8,
    "getpayload.o:getpayload": 8,
    "getpayloadf.o:getpayloadf": 8,
@@ -9885,7 +9886,6 @@
    "port/__rtos_clock_getres.o:__rtos_clock_getres": 48,
    "port/__rtos_clock_gettime.o:__rtos_clock_gettime": 48,
    "port/__rtos_close.o:__rtos_close": 24,
-   "port/__rtos_entropy.o:__rtos_entropy": 32,
    "port/__rtos_exit.o:__rtos_exit": 32,
    "port/__rtos_futex_wait.o:__rtos_futex_wait": 48,
    "port/__rtos_futex_wake.o:__rtos_futex_wake": 24,

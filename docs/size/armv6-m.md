@@ -774,6 +774,10 @@ Three new members (`stat`, `isatty`, `dup`), linked only by programs that call t
 
 Members that grew, justified: `clock_gettime.o` 36 → 48 (+12) and `timespec_get.o` 36 → 48 (+12), the two stores that zero the result when the clock read fails (libstdc++'s clocks ignore the status); each frame 8 → 16 bytes, to keep the pointer across the seam call. No image and neither budget changes.
 
+## D145 — `call_once` for C++ (issue #121)
+
+Members that grew, justified: `__libc_call_once_eh.o` 0 → 190 (+190), new: the exception-safe `call_once` that the toolchain's `__gthread_once` calls, with its unwind table (the only library object built with `-fexceptions`); linked only by C++ programs that use `std::call_once`, which already link the unwinder. `call_once.o` 120 → 114 (−6), now sharing `libc/internal/once.h`. New frame: `__libc_call_once_eh` 32 bytes. No image and neither budget changes. Building `call_once.c` itself with `-fexceptions` would instead have added 4,426 bytes (libgcc's unwinder) to every C program that calls `call_once` (armv7e-m `test/unit/none`), which D145 avoids.
+
 ## D146 — `getentropy` (issue #127)
 
 Members that grew, justified: `getentropy.o` 0 → 56 (+56), new, linked only by programs that call it (libstdc++'s `std::random_device`). New frames: `getentropy` 8 bytes; the Linux port's `__rtos_entropy` 32 bytes (the port, not `libc.a`). No image and neither budget changes.

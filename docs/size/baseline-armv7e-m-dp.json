@@ -931,6 +931,15 @@
     "text": 28,
     "unwind": 0
    },
+   "__libc_call_once_eh.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 168,
+    "unwind": 36
+   },
    "__libc_cond_wait.o": {
     "bss": 0,
     "data": 0,
@@ -2413,7 +2422,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 130,
+    "text": 126,
     "unwind": 0
    },
    "calloc.o": {
@@ -4547,15 +4556,6 @@
     "tbss": 0,
     "tdata": 0,
     "text": 12,
-    "unwind": 0
-   },
-   "getentropy.o": {
-    "bss": 0,
-    "data": 0,
-    "rodata": 0,
-    "tbss": 0,
-    "tdata": 0,
-    "text": 52,
     "unwind": 0
    },
    "getenv.o": {
@@ -7904,8 +7904,8 @@
    "rodata": 8983,
    "tbss": 362,
    "tdata": 8,
-   "text": 78822,
-   "unwind": 0
+   "text": 78934,
+   "unwind": 36
   }
  },
  "stack": {
@@ -8565,6 +8565,8 @@
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:__libc_dd_divide": 64,
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:atan_unit": 112,
    "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 8,
+   "__libc_call_once_eh.o:__libc_call_once_eh": 24,
+   "__libc_call_once_eh.o:libc/threads/__libc_call_once_eh.c:once_guard_finish": 0,
    "__libc_cond_wait.o:__libc_cond_wait": 24,
    "__libc_cos_core.o:__libc_cos_core": 56,
    "__libc_cosh_core.o:__libc_cosh_core": 32,
@@ -9000,7 +9002,6 @@
    "fwrite.o:fwrite": 24,
    "getc.o:getc": 0,
    "getchar.o:getchar": 0,
-   "getentropy.o:getentropy": 8,
    "getenv.o:getenv": 0,
    "getpayload.o:getpayload": 0,
    "getpayloadf.o:getpayloadf": 0,
@@ -9129,7 +9130,6 @@
    "port/__rtos_clock_getres.o:__rtos_clock_getres": 48,
    "port/__rtos_clock_gettime.o:__rtos_clock_gettime": 48,
    "port/__rtos_close.o:__rtos_close": 24,
-   "port/__rtos_entropy.o:__rtos_entropy": 40,
    "port/__rtos_exit.o:__rtos_exit": 24,
    "port/__rtos_futex_wait.o:__rtos_futex_wait": 48,
    "port/__rtos_futex_wake.o:__rtos_futex_wake": 24,
