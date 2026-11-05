@@ -27,6 +27,8 @@ int __libc_pthread_mutex_unlock(pthread_mutex_t *mutex)
 		return 0;
 
 	__atomic_store_n(&mutex->__owner, nullptr, __ATOMIC_RELAXED);
+	if (mutex->__protocol == PTHREAD_PRIO_INHERIT)
+		return -__rtos_mutex_unlock_pi(&mutex->__state);
 	if (__atomic_exchange_n(&mutex->__state, __LIBC_MUTEX_UNLOCKED, __ATOMIC_RELEASE) == __LIBC_MUTEX_CONTENDED)
 		__rtos_futex_wake(&mutex->__state, 1);
 

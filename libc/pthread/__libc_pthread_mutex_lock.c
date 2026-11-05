@@ -41,7 +41,13 @@ int __libc_pthread_mutex_lock(pthread_mutex_t *mutex, int base, const struct tim
 			return EDEADLK;
 	}
 
-	if (!__atomic_compare_exchange_n(&mutex->__state, &state, __LIBC_MUTEX_LOCKED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
+	if (mutex->__protocol == PTHREAD_PRIO_INHERIT) {
+		/* The port's priority-inheritance lock owns the word (P10.05, PLAN D154) */
+		int status = __rtos_mutex_lock_pi(&mutex->__state, base, deadline);
+
+		if (status < 0)
+			return -status;
+	} else if (!__atomic_compare_exchange_n(&mutex->__state, &state, __LIBC_MUTEX_LOCKED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
 		while (__atomic_exchange_n(&mutex->__state, __LIBC_MUTEX_CONTENDED, __ATOMIC_ACQUIRE) != __LIBC_MUTEX_UNLOCKED) {
 			int status = __rtos_futex_wait(&mutex->__state, __LIBC_MUTEX_CONTENDED, base, deadline);
 

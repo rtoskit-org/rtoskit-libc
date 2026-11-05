@@ -240,6 +240,21 @@ int __rtos_futex_wait(unsigned int *address, unsigned int expected, int base, co
 int __rtos_futex_wake(unsigned int *address, unsigned int count);
 
 /*
+ * Priority-inheritance locks (P10.05, PLAN D154), for pthread mutexes with
+ * PTHREAD_PRIO_INHERIT. The word is the port's: libc only zeroes it, which
+ * is unlocked, and passes it to these. While a thread waits in
+ * __rtos_mutex_lock_pi, the owner runs at least at the waiter's priority.
+ * lock returns 0, -ETIMEDOUT once the deadline (null: none) on the time
+ * base passed, -EINVAL for a bad time base or tv_nsec, -EDEADLK when the
+ * caller already holds the word, or -ENOSYS when the port has no priority
+ * inheritance; trylock 0 or -EBUSY; unlock 0, or -EPERM when the caller
+ * does not hold the word.
+ */
+int __rtos_mutex_lock_pi(unsigned int *word, int base, const struct timespec *deadline);
+int __rtos_mutex_trylock_pi(unsigned int *word);
+int __rtos_mutex_unlock_pi(unsigned int *word);
+
+/*
  * Support for the __atomic_* library functions libc provides for operations
  * the compiler cannot inline (P1.12, docs/research/threads.md).
  *
