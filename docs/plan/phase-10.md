@@ -34,16 +34,17 @@ objects (`PTHREAD_PROCESS_SHARED` returns `ENOTSUP`), robust mutexes.
 - [x] PLAN D148: the phase, its layering and scope (supersedes D128's
   "`<pthread.h>` stays pi-pico's" and D43's direct `<threads.h>`).
 - [x] Open questions for the seam: Q45 (priorities), Q46 (the clock of a
-  timed wait), Q47 (cancellation for pi-pico).
+  timed wait), Q47 (cancellation for pi-pico), answered by D149, D150 and
+  D151.
 
 ## P10.02 — Seam: attributes, exit value, priorities, clocks  `[ ]`
-Blocked on Q45 and Q46.
+Q45 and Q46 answered: D149 (a range per policy, real round-robin), D150 (`__rtos_futex_wait` takes a time base).
 - [ ] `__rtos_thread_create` takes an attribute record (stack size, a
   caller's stack, priority, explicit or inherited scheduling).
 - [ ] The exit value is `void *` (`__rtos_thread_exit`, `__rtos_thread_join`);
   C11's `int` travels as `intptr_t`.
-- [ ] Priorities: the port's range and a get/set pair (Q45).
-- [ ] `__rtos_futex_wait` with a clock base (Q46).
+- [ ] Priorities (D149): the port's range per policy, and a get/set pair taking POSIX numbers; `SCHED_RR` time-sliced by the port.
+- [ ] `__rtos_futex_wait(address, expected, base, deadline)` (D150).
 - [ ] Both ports; `<threads.h>` adapted to the new seam with no change in
   behaviour; `include/rtos/rtos-port.h` and PLAN §4 updated.
 
@@ -87,6 +88,6 @@ Blocked on Q45 and Q46.
   `docs/research/libstdcxx-features.md`: `--enable-threads=posix`,
   `_GLIBCXX_GTHREAD_USE_WEAK 0`, and `<rtoskit-libc.h>` features for
   `pthread_cond_clockwait`/`pthread_mutex_clocklock`.
-- [ ] What pi-pico drops (`rtos/pthread`, `rtos/threads`) and what its port
-  must implement.
+- [ ] What pi-pico drops (`rtos/pthread`, `rtos/threads`, the cancellation
+  declarations, D151) and what its port must implement.
 - [ ] Phase exit: PLAN's phase table, decisions, size and docs.
