@@ -11,12 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.4.3 */
+/* C23 7.28.4.3 over pthread_mutex_lock */
 int mtx_lock(mtx_t *mtx)
 {
-	return __libc_mutex_lock(mtx, nullptr);
+	return pthread_mutex_lock(&mtx->__mutex) == 0 ? thrd_success : thrd_error;
 }

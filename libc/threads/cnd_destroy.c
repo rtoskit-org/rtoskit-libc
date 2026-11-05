@@ -11,10 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-/* C23 7.28.3.2: a condition variable holds no resources */
+/* C23 7.28.3.2 */
 void cnd_destroy(cnd_t *cond)
 {
-	cond->__sequence = 0;
+	pthread_cond_destroy(&cond->__cond);
 }

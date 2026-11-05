@@ -11,12 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-/* C23 7.28.3.3 */
+/* C23 7.28.3.3: a POSIX condition variable on CLOCK_REALTIME */
 int cnd_init(cnd_t *cond)
 {
-	*cond = (cnd_t){ .__sequence = 0 };
-
-	return thrd_success;
+	return pthread_cond_init(&cond->__cond, nullptr) == 0 ? thrd_success : thrd_error;
 }

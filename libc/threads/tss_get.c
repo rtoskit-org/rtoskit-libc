@@ -11,15 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.6.3: a value set under an older generation of the key is null */
+/* C23 7.28.6.3 over pthread_getspecific */
 void *tss_get(tss_t key)
 {
-	if (key >= __LIBC_TSS_MAX || __libc_tss_values[key].generation != __atomic_load_n(&__libc_tss_keys[key].generation, __ATOMIC_ACQUIRE))
-		return nullptr;
-
-	return __libc_tss_values[key].value;
+	return pthread_getspecific(key);
 }

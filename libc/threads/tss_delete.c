@@ -11,16 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.6.2: no destructors run; the next generation is even (free) and invalidates every value */
+/* C23 7.28.6.2: no destructors run */
 void tss_delete(tss_t key)
 {
-	if (key >= __LIBC_TSS_MAX)
-		return;
-
-	__atomic_store_n(&__libc_tss_keys[key].dtor, nullptr, __ATOMIC_RELAXED);
-	__atomic_fetch_add(&__libc_tss_keys[key].generation, 1, __ATOMIC_ACQ_REL);
+	pthread_key_delete(key);
 }

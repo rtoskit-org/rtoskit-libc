@@ -18,6 +18,7 @@
 
 __LIBC_BEGIN_DECLS
 
+#include <__pthread_types.h>
 #include <time.h>
 
 /* once_flag, ONCE_FLAG_INIT and call_once */
@@ -38,17 +39,15 @@ typedef struct __rtos_thread *thrd_t;
 typedef int (*thrd_start_t)(void *);
 typedef void (*tss_dtor_t)(void *);
 
-/* A mutex word (0 unlocked, 1 locked, 2 locked with waiters), its type, owner and recursion count */
+/* A POSIX mutex, and the C11 type it was made with (mtx_timed decides mtx_timedlock; P10.07, PLAN D156) */
 typedef struct {
-	unsigned int __state;
+	pthread_mutex_t __mutex;
 	int __type;
-	thrd_t __owner;
-	unsigned int __count;
 } mtx_t;
 
-/* A sequence number that every signal advances */
+/* A POSIX condition variable on CLOCK_REALTIME (TIME_UTC) */
 typedef struct {
-	unsigned int __sequence;
+	pthread_cond_t __cond;
 } cnd_t;
 
 /* An index into the key table */

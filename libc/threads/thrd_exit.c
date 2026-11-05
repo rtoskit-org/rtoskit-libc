@@ -11,17 +11,16 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <stdint.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
 /*
- * C23 7.28.5.5: the thread ends with res, which thrd_join returns, after the
- * C++ thread_local and the tss destructors; the last thread to end ends the
- * program as exit(EXIT_SUCCESS) would (__libc_thread_exit, P10.03)
+ * C23 7.28.5.5 over pthread_exit (P10.07): the thread ends with res, which
+ * thrd_join returns, after the C++ thread_local and the key destructors; the
+ * last thread to end ends the program as exit(EXIT_SUCCESS) would
  */
 [[noreturn]] void thrd_exit(int res)
 {
-	__libc_thread_exit((void *)(intptr_t)res);
+	pthread_exit((void *)(intptr_t)res);
 }

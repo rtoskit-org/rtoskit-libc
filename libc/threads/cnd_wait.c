@@ -11,12 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.3.6 */
+/* C23 7.28.3.6 over pthread_cond_wait */
 int cnd_wait(cnd_t *cond, mtx_t *mtx)
 {
-	return __libc_cond_wait(cond, mtx, nullptr);
+	return pthread_cond_wait(&cond->__cond, &mtx->__mutex) == 0 ? thrd_success : thrd_error;
 }
