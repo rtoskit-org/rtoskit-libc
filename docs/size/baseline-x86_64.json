@@ -2727,7 +2727,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 33,
+    "text": 45,
     "unwind": 0
    },
    "clog.o": {
@@ -7515,7 +7515,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 37,
+    "text": 55,
     "unwind": 0
    },
    "timespec_getres.o": {
@@ -7840,7 +7840,7 @@
    "rodata": 17979,
    "tbss": 626,
    "tdata": 8,
-   "text": 103567,
+   "text": 103597,
    "unwind": 0
   }
  },
@@ -9297,7 +9297,7 @@
    "thrd_yield.o:thrd_yield": 8,
    "time.o:time": 32,
    "timegm.o:timegm": 32,
-   "timespec_get.o:timespec_get": 16,
+   "timespec_get.o:timespec_get": 32,
    "timespec_getres.o:timespec_getres": 48,
    "tmpfile.o:tmpfile": 64,
    "tmpnam.o:tmpnam": 32,
