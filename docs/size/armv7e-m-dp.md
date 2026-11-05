@@ -618,3 +618,7 @@ Members that grew, justified: `getentropy.o` 0 → 52 (+52), new, linked only by
 ## `clock_getres` accepts a null result pointer
 
 Members that grew, justified: `clock_getres.o` 36 → 52 (+16), the local the seam fills and the copy out when `res` is not null (POSIX allows a null `res`; the Linux port wrote through it). Frame: `clock_getres` 8 → 24 bytes, the local `struct timespec`. No image and neither budget changes.
+
+## Phase 10 — POSIX threads (P10.02–P10.07, D148–D157)
+
+Members that grew, justified: 106 members, nearly all new (`libc/pthread`, `sched_get_priority_max`/`min`): `<pthread.h>`, linked only by programs that use threads; the seam's futex time base (D150) adds an argument at each wait. Reduced: 15 members, -690 bytes, mostly the C11 functions that are now wrappers over `<pthread.h>` (D156) and the removed `__libc_mutex_lock`, `__libc_mutex_unlock`, `__libc_cond_wait` and `__libc_thread_start`. Images: the seven programs that link the Linux test port's lock grow by 16 bytes each, with the library's share unchanged: the port's `__rtos_futex_wait` rejects an unknown time base (D150) and `__rtos_lock_acquire` passes one. Both budgets hold.
