@@ -11,12 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.4.6 */
+/* C23 7.28.4.6: only the owner may unlock */
 int mtx_unlock(mtx_t *mtx)
 {
-	return __libc_mutex_unlock(mtx);
+	return pthread_mutex_unlock(&mtx->__mutex) == 0 ? thrd_success : thrd_error;
 }

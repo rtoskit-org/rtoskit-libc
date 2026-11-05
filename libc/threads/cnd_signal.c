@@ -11,13 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
-#include <rtos/rtos-port.h>
+#include <pthread.h>
 #include <threads.h>
 
-/* C23 7.28.3.4: a new sequence number, and one waiter woken */
+/* C23 7.28.3.4 over pthread_cond_signal */
 int cnd_signal(cnd_t *cond)
 {
-	__atomic_fetch_add(&cond->__sequence, 1, __ATOMIC_SEQ_CST);
-
-	return __rtos_futex_wake(&cond->__sequence, 1) < 0 ? thrd_error : thrd_success;
+	return pthread_cond_signal(&cond->__cond) == 0 ? thrd_success : thrd_error;
 }

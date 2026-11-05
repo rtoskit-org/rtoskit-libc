@@ -11,11 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
-#include <rtos/rtos-port.h>
+#include <pthread.h>
 #include <threads.h>
 
-/* C23 7.28.5.2 */
+/* C23 7.28.5.2: the same handle as pthread_self */
 thrd_t thrd_current(void)
 {
-	return __rtos_thread_self();
+	return pthread_self();
 }

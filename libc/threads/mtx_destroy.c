@@ -11,10 +11,12 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
 /* C23 7.28.4.3: a mutex holds no resources */
 void mtx_destroy(mtx_t *mtx)
 {
+	pthread_mutex_destroy(&mtx->__mutex);
 	mtx->__type = -1;
 }

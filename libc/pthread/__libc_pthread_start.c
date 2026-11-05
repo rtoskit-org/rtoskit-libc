@@ -12,15 +12,23 @@
  */
 
 #include <pthread.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 #include "internal/threads.h"
 
-/* POSIX pthread_create: returning from start_routine is pthread_exit with its value */
+/*
+ * The first function of every thread (P10.03, P10.07): returning from a
+ * POSIX routine is pthread_exit with its value, and from a C11 one
+ * thrd_exit with its int
+ */
 void *__libc_pthread_start(void *start)
 {
 	struct __libc_pthread_start record = *(struct __libc_pthread_start *)start;
 
 	free(start);
-	pthread_exit(record.func(record.arg));
+	if (record.c11 != nullptr)
+		__libc_thread_exit((void *)(intptr_t)record.c11(record.arg));
+
+	__libc_thread_exit(record.func(record.arg));
 }

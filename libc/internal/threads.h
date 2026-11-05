@@ -14,23 +14,19 @@
 #ifndef _INTERNAL_THREADS_H
 #define _INTERNAL_THREADS_H
 
+#include <pthread.h>
 #include <threads.h>
 
 /*
- * <threads.h> on the seam's threads and futexes (docs/research/threads.md).
+ * <threads.h> and <pthread.h> on the seam's threads and futexes
+ * (docs/research/threads.md, docs/research/pthreads.md); since P10.07
+ * <threads.h> is a layer over <pthread.h> (PLAN D156).
  */
 
-/* Mutex word states */
+/* Mutex word states (internal/pthread.h's mutexes) */
 #define __LIBC_MUTEX_UNLOCKED 0u
 #define __LIBC_MUTEX_LOCKED 1u
 #define __LIBC_MUTEX_CONTENDED 2u
-
-/* Lock with an optional TIME_UTC deadline: thrd_success, thrd_timedout or thrd_error */
-int __libc_mutex_lock(mtx_t *mtx, const struct timespec *deadline);
-int __libc_mutex_unlock(mtx_t *mtx);
-
-/* cnd_wait and cnd_timedwait */
-int __libc_cond_wait(cnd_t *cond, mtx_t *mtx, const struct timespec *deadline);
 
 /* Live threads; the program ends when the last one calls thrd_exit or pthread_exit (C23 7.28.5.5p5) */
 extern unsigned int __libc_thread_count;
@@ -38,21 +34,20 @@ extern unsigned int __libc_thread_count;
 /* The end of a thread for thrd_exit and pthread_exit: destructors, then the seam's exit or exit() (P10.03) */
 [[noreturn]] void __libc_thread_exit(void *result);
 
-/* What pthread_create hands the new thread */
+/*
+ * What pthread_create and thrd_create hand the new thread: a POSIX routine
+ * (func) or a C11 one (c11, func null), and its argument (P10.07)
+ */
 struct __libc_pthread_start {
 	void *(*func)(void *);
+	int (*c11)(void *);
 	void *arg;
 };
 
 void *__libc_pthread_start(void *start);
 
-/* What thrd_create hands the new thread */
-struct __libc_thread_start {
-	thrd_start_t func;
-	void *arg;
-};
-
-void *__libc_thread_start(void *start);
+/* Create a thread that runs start, which it frees; 0 or the seam's negated errno (start is freed on failure) */
+int __libc_pthread_create(pthread_t *thread, const pthread_attr_t *attr, struct __libc_pthread_start *start);
 
 /*
  * Thread-specific storage: a key is in use while its generation is odd; a

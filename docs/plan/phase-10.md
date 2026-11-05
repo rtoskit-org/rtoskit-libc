@@ -128,11 +128,16 @@ Q45 and Q46 answered: D149 (a range per policy, real round-robin), D150 (`__rtos
   threads counting under a spin lock), `test/unit/none`; run on x86_64,
   armv7e-m and armv6-m.
 
-## P10.07 — `<threads.h>` over `<pthread.h>`  `[ ]`
-- [ ] `thrd_*`, `mtx_*`, `cnd_*`, `tss_*` and `call_once` as wrappers with
-  C11's return codes; the ABI change recorded (toolchain and pi-pico
-  rebuild together).
-- [ ] Size: `<threads.h>` programs measured against phase 9's baselines.
+## P10.07 — `<threads.h>` over `<pthread.h>`  `[x]`
+- [x] `thrd_*`, `mtx_*`, `cnd_*` and `tss_*` as wrappers with C11's return
+  codes (D156); `call_once` shares `pthread_once`'s state machine; one
+  creation path for both APIs; the C11 internals (`__libc_mutex_lock`,
+  `__libc_mutex_unlock`, `__libc_cond_wait`, `__libc_thread_start`) are gone.
+  The ABI change is recorded (toolchain and pi-pico rebuild together).
+- [x] `test/unit/threads`, `test/unit/none`, `thrd_exit`, `annexb`, `cxx` and
+  `locks` pass unchanged on x86_64, armv7e-m and armv6-m.
+- [x] Size: measured by the phase's size gates (the reference programs use
+  neither API); members recorded in `docs/size/`.
 
 ## P10.08 — Consumers and wrap-up  `[ ]`
 - [ ] The libstdc++ side for rtoskit-gcc, recorded here and in

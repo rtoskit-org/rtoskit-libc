@@ -11,12 +11,17 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <errno.h>
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.3.5: ts is an absolute TIME_UTC time */
+/* C23 7.28.3.5: ts is an absolute TIME_UTC time, the condition variable's CLOCK_REALTIME */
 int cnd_timedwait(cnd_t *restrict cond, mtx_t *restrict mtx, const struct timespec *restrict ts)
 {
-	return __libc_cond_wait(cond, mtx, ts);
+	int status = pthread_cond_timedwait(&cond->__cond, &mtx->__mutex, ts);
+
+	if (status == ETIMEDOUT)
+		return thrd_timedout;
+
+	return status == 0 ? thrd_success : thrd_error;
 }

@@ -11,30 +11,17 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
-#include <limits.h>
-#include <rtos/rtos-port.h>
+#include <errno.h>
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.4.5 */
+/* C23 7.28.4.5 over pthread_mutex_trylock */
 int mtx_trylock(mtx_t *mtx)
 {
-	thrd_t self = __rtos_thread_self();
-	unsigned int state = __LIBC_MUTEX_UNLOCKED;
+	int status = pthread_mutex_trylock(&mtx->__mutex);
 
-	if ((mtx->__type & mtx_recursive) != 0 && __atomic_load_n(&mtx->__owner, __ATOMIC_RELAXED) == self) {
-		if (mtx->__count == UINT_MAX)
-			return thrd_error;
-		++mtx->__count;
-		return thrd_success;
-	}
-
-	if (!__atomic_compare_exchange_n(&mtx->__state, &state, __LIBC_MUTEX_LOCKED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+	if (status == EBUSY)
 		return thrd_busy;
 
-	__atomic_store_n(&mtx->__owner, self, __ATOMIC_RELAXED);
-	mtx->__count = 1;
-
-	return thrd_success;
+	return status == 0 ? thrd_success : thrd_error;
 }

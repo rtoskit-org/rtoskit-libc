@@ -11,22 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
+#include <pthread.h>
 #include <threads.h>
 
-#include "internal/threads.h"
-
-/* C23 7.28.6.4 */
+/* C23 7.28.6.4 over pthread_setspecific */
 int tss_set(tss_t key, void *val)
 {
-	unsigned int generation;
-
-	if (key >= __LIBC_TSS_MAX)
-		return thrd_error;
-	generation = __atomic_load_n(&__libc_tss_keys[key].generation, __ATOMIC_ACQUIRE);
-	if ((generation & 1) == 0)
-		return thrd_error;
-
-	__libc_tss_values[key] = (struct __libc_tss_value){ .value = val, .generation = generation };
-
-	return thrd_success;
+	return pthread_setspecific(key, val) == 0 ? thrd_success : thrd_error;
 }

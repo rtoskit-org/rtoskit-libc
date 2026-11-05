@@ -11,11 +11,11 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
-#include <rtos/rtos-port.h>
+#include <pthread.h>
 #include <threads.h>
 
-/* C23 7.28.5.3 */
+/* C23 7.28.5.3 over pthread_detach */
 int thrd_detach(thrd_t thr)
 {
-	return __rtos_thread_detach(thr) < 0 ? thrd_error : thrd_success;
+	return pthread_detach(thr) == 0 ? thrd_success : thrd_error;
 }

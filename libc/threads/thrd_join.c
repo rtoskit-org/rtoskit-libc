@@ -11,19 +11,19 @@
  *     Author: Stephen Street (stephen@redrocketcomputing.com)
  */
 
-#include <rtos/rtos-port.h>
+#include <pthread.h>
+#include <stdint.h>
 #include <threads.h>
 
-/* C23 7.28.5.6 */
+/* C23 7.28.5.6 over pthread_join; thrd_exit's int comes back as the thread's value (P10.07) */
 int thrd_join(thrd_t thr, int *res)
 {
-	void *result;
+	void *value;
 
-	if (__rtos_thread_join(thr, &result) < 0)
+	if (pthread_join(thr, &value) != 0)
 		return thrd_error;
-	/* thrd_exit's int travels through the seam's void * (P10.02) */
 	if (res != nullptr)
-		*res = (int)(intptr_t)result;
+		*res = (int)(intptr_t)value;
 
 	return thrd_success;
 }
