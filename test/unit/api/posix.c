@@ -14,6 +14,7 @@
 /* A POSIX feature test macro shows the subset's names in the ISO headers (PLAN D128, D132) */
 #define _POSIX_C_SOURCE 202405L
 
+#include <limits.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,6 +35,7 @@ static_assert(SAME_TYPE(&clock_gettime, int (*)(clockid_t, struct timespec *)), 
 static_assert(SAME_TYPE(&clock_getres, int (*)(clockid_t, struct timespec *)), "clock_getres");
 static_assert(SAME_TYPE(&nanosleep, int (*)(const struct timespec *, struct timespec *)), "nanosleep");
 static_assert(SAME_TYPE((clockid_t)0, int), "clockid_t is <sys/types.h>'s");
+static_assert(GETENTROPY_MAX == 256, "<limits.h> GETENTROPY_MAX (issue #127)");
 
 /* A clock is a seam time base */
 static_assert(CLOCK_REALTIME == TIME_UTC && CLOCK_MONOTONIC == TIME_MONOTONIC && CLOCK_PROCESS_CPUTIME_ID == TIME_ACTIVE && CLOCK_THREAD_CPUTIME_ID == TIME_THREAD_ACTIVE, "<time.h> clocks");

@@ -57,6 +57,12 @@ pid_t getpid(void);
 int isatty(int fildes);
 int dup(int fildes);
 
+/*
+ * POSIX.1-2024 getentropy over the seam's entropy source (issue #127, PLAN
+ * D146): at most GETENTROPY_MAX (<limits.h>) bytes per call
+ */
+int getentropy(void *buffer, size_t length);
+
 __LIBC_END_DECLS
 
 #endif /* _UNISTD_H */

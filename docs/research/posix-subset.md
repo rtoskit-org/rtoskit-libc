@@ -457,3 +457,63 @@ GCC 16.2's hosted libstdc++, built with the `stdio` backend and `--disable-wchar
 - `memalign`, `link`, `setenv`, `sleep`, `usleep`, `strerror_l`;
 - `readlink`, `symlink`, `truncate`, `unlinkat`;
 - `getentropy`, without which `std::random_device` has no source.
+
+## Issue #127: `getentropy` and the seam's entropy source (D146)
+
+libstdc++'s `src/c++11/random.cc` uses `getentropy` for `std::random_device`
+when configure defines `_GLIBCXX_HAVE_GETENTROPY` (a link test against
+`<unistd.h>`). Its other sources (`rdrand`, `rdseed`, `/dev/urandom`,
+`arc4random`) do not exist on an Arm Cortex-M, so without `getentropy`
+constructing the device throws. P7.03 left `getentropy` out because no port
+had a source; #127 asks for the seam call and both port implementations.
+
+### Sources reviewed
+
+- POSIX.1-2024 `functions/getentropy.html` was read for P7.03 but is not
+  reachable from this session (pubs.opengroup.org is outside the network
+  policy); its requirements are taken from the implementations below, which
+  cite it.
+- OpenBSD `getentropy(2)` (<https://man.openbsd.org/getentropy.2>), the
+  origin of the interface, which states conformance to POSIX.1-2024: at most
+  `GETENTROPY_MAX` (256) bytes, `EINVAL` for more, `EFAULT` for a bad buffer.
+- Linux man-pages `getentropy(3)`
+  (<https://man7.org/linux/man-pages/man3/getentropy.3.html>), glibc: declared
+  in `<unistd.h>` (also `<sys/random.h>`); documents `EIO` for more than 256
+  bytes and for a failed fill, `ENOSYS` without the system call; may block
+  until the kernel's pool is initialised, and a successful call always fills
+  the whole buffer.
+- musl `src/misc/getentropy.c`: `EIO` above 256, then `getrandom` in a loop
+  that retries `EINTR` and continues after a short read.
+- FreeBSD `lib/libc/gen/getentropy.c`: `EINVAL` above `GETENTROPY_MAX`,
+  `getrandom` in a loop retrying `EINTR`, and kills the process on any other
+  failure rather than return without entropy.
+
+### Choices
+
+- **Error above 256:** `EINVAL`, as OpenBSD and FreeBSD (which follow
+  POSIX.1-2024) and the issue ask; glibc's and musl's `EIO` predates the
+  standard. `GETENTROPY_MAX` is 256, in `<limits.h>` under D132's
+  `__LIBC_POSIX_VISIBLE` (strict C23 does not reserve the name).
+- **Seam:** `int __rtos_entropy(void *buffer, size_t count)` fills all `count`
+  bytes or fails with a negated errno: `-ENOSYS` without a source, `-EIO` when
+  the source fails. Chunking is the port's business (the library never asks
+  for more than 256 bytes), as is blocking until the source is ready.
+- **No fallback:** a port without a source fails. Seeding from a clock,
+  counter or address would make `std::random_device` look secure when it is
+  not, so the contract forbids it.
+- **`linux` port:** `getrandom(2)` (x86_64 318, Arm EABI 384) with no flags,
+  looping on `EINTR` and short reads; a zero return is `EIO`.
+- **`none` port:** a weak default returning `-ENOSYS`; a board with a
+  hardware generator (an RP2350 TRNG, an STM32 RNG) defines its own.
+- **Length 0:** passed to the seam like any other, so a port without a source
+  still says so (`ENOSYS`).
+
+### Tests
+
+- `test/unit/posix` (Linux port, native and qemu-arm): two 32-byte calls
+  succeed and differ, and are not all zero; 256 and 0 bytes succeed; 257
+  fails with `EINVAL`.
+- `test/unit/none`: 16 bytes fail with `ENOSYS`; 257 with `EINVAL` (the limit
+  is checked before the seam).
+- `test/unit/api`: `getentropy`'s type, `GETENTROPY_MAX == 256`, and that
+  strict C23 leaves `GETENTROPY_MAX` to the program.

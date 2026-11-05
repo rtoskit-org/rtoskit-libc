@@ -16,6 +16,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <rtos/rtos-port.h>
 #include <sched.h>
 #include <stdatomic.h>
@@ -233,6 +234,14 @@ int main(int argc, char **argv)
 	/* stat has no files to open; isatty and dup (issue #113) */
 	CHECK(stat("file", &st) == -1 && errno == ENOSYS);
 	CHECK(isatty(1) == 0 && errno == ENOTTY && dup(1) == -1 && errno == ENOSYS);
+
+	/* No entropy source without a board's (issue #127): never predictable bytes instead */
+	unsigned char entropy[GETENTROPY_MAX + 1];
+
+	errno = 0;
+	CHECK(getentropy(entropy, 16) == -1 && errno == ENOSYS);
+	errno = 0;
+	CHECK(getentropy(entropy, GETENTROPY_MAX + 1) == -1 && errno == EINVAL);
 
 	/* The last thread's thrd_exit ends the program as exit(EXIT_SUCCESS), after the tss destructor */
 	CHECK(atexit(report) == 0);

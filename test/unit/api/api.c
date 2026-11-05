@@ -277,7 +277,7 @@ static_assert(SAME_TYPE((mode_t)0, unsigned int) && SAME_TYPE((pid_t)0, int) && 
  * ISO headers to the program (C23 7.1.3, PLAN D132): each is free for an
  * object of the program's own here
  */
-[[maybe_unused]] static int fileno, fdopen, strnlen, reallocarray, sincos, sincosf, clock_gettime, clock_getres, nanosleep, CLOCK_REALTIME, CLOCK_MONOTONIC;
+[[maybe_unused]] static int fileno, fdopen, strnlen, reallocarray, sincos, sincosf, clock_gettime, clock_getres, nanosleep, CLOCK_REALTIME, CLOCK_MONOTONIC, GETENTROPY_MAX;
 
 static_assert(STDIN_FILENO == 0 && STDOUT_FILENO == 1 && STDERR_FILENO == 2, "<unistd.h>");
 static_assert(O_RDONLY != O_WRONLY && O_RDONLY != O_RDWR && O_WRONLY != O_RDWR && ((O_RDONLY | O_WRONLY | O_RDWR) & ~O_ACCMODE) == 0, "<fcntl.h> access modes");
@@ -290,6 +290,7 @@ static_assert((S_IRWXU | S_IRWXG | S_IRWXO | S_ISUID | S_ISGID | S_ISVTX) == 077
 static_assert(SAME_TYPE(((struct stat){ 0 }).st_size, off_t) && SAME_TYPE(((struct stat){ 0 }).st_mode, mode_t) && SAME_TYPE(((struct stat){ 0 }).st_mtim, struct timespec), "struct stat");
 static_assert(SAME_TYPE(&fstat, int (*)(int, struct stat *)) && SAME_TYPE(&fcntl, int (*)(int, int, ...)) && SAME_TYPE(&getpid, pid_t (*)(void)), "fstat, fcntl, getpid");
 static_assert(SAME_TYPE(&stat, int (*)(const char *restrict, struct stat *restrict)) && SAME_TYPE(&isatty, int (*)(int)) && SAME_TYPE(&dup, int (*)(int)), "stat, isatty, dup (issue #113)");
+static_assert(SAME_TYPE(&getentropy, int (*)(void *, size_t)), "getentropy (issue #127)");
 static_assert(sizeof(struct __jmp_buf_tag) == sizeof(jmp_buf), "jmp_buf's struct is named (issue #113)");
 static_assert(SCHED_OTHER != SCHED_FIFO && SCHED_OTHER != SCHED_RR && SCHED_FIFO != SCHED_RR && SAME_TYPE(((struct sched_param){ 0 }).sched_priority, int), "<sched.h>");
 static_assert(SAME_TYPE(strcasecmp, int (*)(const char *, const char *)) && SAME_TYPE(strncasecmp, int (*)(const char *, const char *, size_t)), "<strings.h>");

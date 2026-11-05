@@ -14,6 +14,8 @@
 #ifndef _LIMITS_H
 #define _LIMITS_H
 
+#include <__cdefs.h>
+
 /* C23 7.10 and 5.2.5.3.2, built from the compiler's predefined macros (PLAN D8) */
 #define __STDC_VERSION_LIMITS_H__ 202311L
 
@@ -72,5 +74,10 @@
 #define LLONG_MIN (-LLONG_MAX - 1LL)
 #define LLONG_MAX __LONG_LONG_MAX__
 #define ULLONG_MAX (LLONG_MAX * 2ULL + 1ULL)
+
+/* POSIX.1-2024: the most bytes one getentropy call returns (issue #127, PLAN D132, D146) */
+#if __LIBC_POSIX_VISIBLE
+#define GETENTROPY_MAX 256
+#endif
 
 #endif /* _LIMITS_H */

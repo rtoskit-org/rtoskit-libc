@@ -45,6 +45,9 @@
 #define __LINUX_SYS_MUNMAP 91
 #define __LINUX_SYS_CLONE 120
 #define __LINUX_SYS_SCHED_YIELD 158
+
+/* getentropy (issue #127) */
+#define __LINUX_SYS_GETRANDOM 384
 #define __LINUX_SYS_CLOCK_NANOSLEEP 407
 #define __LINUX_SYS_FUTEX 422
 
