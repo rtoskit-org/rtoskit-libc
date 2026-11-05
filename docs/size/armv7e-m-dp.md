@@ -614,3 +614,7 @@ Members that grew, justified: `__libc_call_once_eh.o` 0 → 204 (+204), new: the
 ## D146 — `getentropy` (issue #127)
 
 Members that grew, justified: `getentropy.o` 0 → 52 (+52), new, linked only by programs that call it (libstdc++'s `std::random_device`). New frames: `getentropy` 8 bytes; the Linux port's `__rtos_entropy` 40 bytes (the port, not `libc.a`). No image and neither budget changes.
+
+## `clock_getres` accepts a null result pointer
+
+Members that grew, justified: `clock_getres.o` 36 → 52 (+16), the local the seam fills and the copy out when `res` is not null (POSIX allows a null `res`; the Linux port wrote through it). Frame: `clock_getres` 8 → 24 bytes, the local `struct timespec`. No image and neither budget changes.

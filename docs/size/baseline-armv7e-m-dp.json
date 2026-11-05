@@ -2782,7 +2782,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 36,
+    "text": 52,
     "unwind": 0
    },
    "clock_gettime.o": {
@@ -7913,7 +7913,7 @@
    "rodata": 8983,
    "tbss": 362,
    "tdata": 8,
-   "text": 78986,
+   "text": 79002,
    "unwind": 36
   }
  },
@@ -8812,7 +8812,7 @@
    "cimagl.o:cimagl": 0,
    "clearerr.o:clearerr": 8,
    "clock.o:clock": 24,
-   "clock_getres.o:clock_getres": 8,
+   "clock_getres.o:clock_getres": 24,
    "clock_gettime.o:clock_gettime": 16,
    "clog.o:clog": 88,
    "clogf.o:clogf": 8,
