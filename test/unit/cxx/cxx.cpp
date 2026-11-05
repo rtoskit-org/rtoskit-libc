@@ -199,7 +199,7 @@ static void test_exceptions(void)
 }
 
 /*
- * regression_call_once_exception (issue #121): an exception from call_once's
+ * regression_call_once_exception (issue #121): an exception from __libc_call_once_eh's
  * function leaves the flag unset, so the next call runs the function again,
  * and a thread waiting on the flag is woken and runs it itself
  */
@@ -246,7 +246,7 @@ static void test_call_once_exception(void)
 
 	for (int i = 0; i < 3; ++i) {
 		try {
-			call_once(&once_retry, once_throw_first);
+			__libc_call_once_eh(&once_retry, once_throw_first);
 		} catch (const failure &e) {
 			caught += e.code;
 		}
@@ -255,7 +255,7 @@ static void test_call_once_exception(void)
 
 	caught = 0;
 	try {
-		call_once(&once_waited, once_throw_with_waiter);
+		__libc_call_once_eh(&once_waited, once_throw_with_waiter);
 	} catch (const failure &e) {
 		caught = e.code;
 	}

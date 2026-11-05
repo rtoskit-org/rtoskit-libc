@@ -173,3 +173,38 @@ test-port concern only.
 - A TLS image whose address is not a multiple of its alignment
   (`p_vaddr % p_align != 0`). GNU ld always aligns the TLS segment, so
   `test/unit/threads` builds such an image by hand for `__libc_tls_init`.
+
+## `call_once` and exceptions (issue #121, PLAN D145)
+
+C++ requires that an exception from `std::call_once`'s callable propagates to
+the caller and leaves the flag unset, so a later call runs the callable again
+([thread.once.callonce]); glibc's `pthread_once` does this with a cancellation
+cleanup handler, and libstdc++'s own futex-based `call_once` (Linux) resets its
+state in a destructor. With `--enable-threads=c11`, libstdc++ calls the C
+library's `call_once` through `__gthread_once`, so the exception unwinds
+through a C frame.
+
+- **Unwinding through C** needs the frame's unwind table, and a cleanup needs
+  a landing pad: `-fexceptions` with `__attribute__((cleanup))`. The landing
+  pad calls `_Unwind_Resume` and the frame names `__gcc_personality_v0`
+  (libgcc's `unwind-c.o`), both strong references.
+- **Cost if `call_once` carried them:** every C program that calls it links
+  libgcc's unwinder, measured +4,426 bytes of code on armv7e-m
+  (`test/unit/none`) and +4,428 (`test/unit/threads`); on x86_64 the host
+  libgcc keeps the unwinder in `libgcc_eh.a`, which the test link lacks.
+- **Weak references do not work:** a weak `__gcc_personality_v0` resolves to
+  null in a C++ program, since libsupc++ is C++ and never references the C
+  personality (checked with `nm` on GCC 16.2's `libsupc++.a`), so the unwinder
+  would call address 0 when it reaches the frame.
+- **Chosen:** a second entry point, `__libc_call_once_eh`, the only object
+  built with `-fexceptions`; the toolchain's `__gthread_once` calls it. Both
+  entry points use one state machine (`libc/internal/once.h`): a waiter that
+  wakes to find the flag back at NOT_RUN claims it and runs the function.
+- **`longjmp`** out of the function runs no cleanup; the flag stays RUNNING.
+  C23 does not address it, and POSIX leaves `pthread_once` the same way.
+
+Test vectors (`test/unit/cxx`, `regression_call_once_exception`): the first of
+three calls throws and the second runs the function (two tries in all); a
+thread blocked on the flag (state 2, through plain `call_once`) while the
+runner throws is woken and runs the function itself. Without `-fexceptions` on
+`__libc_call_once_eh` the test program aborts, as the issue reported.
