@@ -250,6 +250,15 @@ int main(int argc, char **argv)
 	CHECK(pthread_once(&pthread_once_control, once_function) == 0 && once_calls == 2);
 	CHECK(sched_get_priority_max(SCHED_OTHER) == 0 && sched_get_priority_min(SCHED_FIFO) == -1);
 
+	/* Mutexes, condition variables and keys on one thread (P10.04); without a clock a deadline has passed */
+	pthread_mutex_t pmutex = PTHREAD_MUTEX_INITIALIZER;
+	pthread_cond_t pcond = PTHREAD_COND_INITIALIZER;
+	pthread_key_t pkey;
+
+	CHECK(pthread_mutex_lock(&pmutex) == 0 && pthread_mutex_trylock(&pmutex) == EBUSY);
+	CHECK(pthread_cond_timedwait(&pcond, &pmutex, &(struct timespec){ .tv_sec = 1 }) == ETIMEDOUT && pthread_mutex_unlock(&pmutex) == 0);
+	CHECK(pthread_key_create(&pkey, nullptr) == 0 && pthread_setspecific(pkey, &pkey) == 0 && pthread_getspecific(pkey) == &pkey && pthread_key_delete(pkey) == 0);
+
 	/* No handle seeks, so each is a character device of size 0; flags and the process ID need no seam */
 	struct stat st;
 
