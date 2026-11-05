@@ -96,6 +96,15 @@ struct __rtos_lock {
 #define __LINUX_FUTEX_CLOCK_REALTIME 256
 #define __LINUX_FUTEX_BITSET_ANY 0xffffffff
 
+/* Priority-inheritance futexes (P10.05): the word holds the owner's tid, and the kernel sets the waiters bit */
+#define __LINUX_FUTEX_LOCK_PI 6
+#define __LINUX_FUTEX_UNLOCK_PI 7
+#define __LINUX_FUTEX_LOCK_PI2 13
+#define __LINUX_FUTEX_TID_MASK 0x3fffffffu
+
+/* The calling thread's kernel tid, read once per thread */
+int __rtos_linux_tid(void);
+
 /* clone flags for a thread sharing everything, with its own TLS and a tid the kernel clears at exit */
 #define __LINUX_CLONE_VM 0x00000100
 #define __LINUX_CLONE_FS 0x00000200

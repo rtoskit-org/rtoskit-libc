@@ -13,14 +13,30 @@
 
 #include <errno.h>
 #include <pthread.h>
+#include <rtos/rtos-port.h>
+#include <time.h>
 
-/* POSIX pthread_mutexattr_setprotocol: priority inheritance comes with P10.05; priority protection is not supported */
+/*
+ * POSIX pthread_mutexattr_setprotocol: PTHREAD_PRIO_INHERIT where the port
+ * has priority-inheritance locks (P10.05, PLAN D154), found by taking and
+ * releasing a word of its own; ENOTSUP otherwise, and for
+ * PTHREAD_PRIO_PROTECT
+ */
 int pthread_mutexattr_setprotocol(pthread_mutexattr_t *attr, int value)
 {
-	if (value == PTHREAD_PRIO_INHERIT || value == PTHREAD_PRIO_PROTECT)
+	unsigned int word = 0;
+
+	if (value == PTHREAD_PRIO_PROTECT)
 		return ENOTSUP;
-	if (value != PTHREAD_PRIO_NONE)
+	if (value == PTHREAD_PRIO_INHERIT) {
+		int status = __rtos_mutex_lock_pi(&word, TIME_UTC, nullptr);
+
+		if (status < 0)
+			return ENOTSUP;
+		__rtos_mutex_unlock_pi(&word);
+	} else if (value != PTHREAD_PRIO_NONE) {
 		return EINVAL;
+	}
 	attr->__protocol = value;
 
 	return 0;

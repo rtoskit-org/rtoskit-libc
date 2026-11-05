@@ -31,7 +31,7 @@ int pthread_mutex_trylock(pthread_mutex_t *mutex)
 		return 0;
 	}
 
-	if (!__atomic_compare_exchange_n(&mutex->__state, &state, __LIBC_MUTEX_LOCKED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
+	if (mutex->__protocol == PTHREAD_PRIO_INHERIT ? __rtos_mutex_trylock_pi(&mutex->__state) < 0 : !__atomic_compare_exchange_n(&mutex->__state, &state, __LIBC_MUTEX_LOCKED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED))
 		return EBUSY;
 
 	__atomic_store_n(&mutex->__owner, self, __ATOMIC_RELAXED);

@@ -169,6 +169,17 @@ static void *report_stack(void *arg)
 	return nullptr;
 }
 
+/* Held while a detached thread is checked, so its handle stays valid (a detached thread's handle dies with it) */
+static pthread_mutex_t hold = PTHREAD_MUTEX_INITIALIZER;
+
+static void *wait_for_hold(void *)
+{
+	pthread_mutex_lock(&hold);
+	pthread_mutex_unlock(&hold);
+
+	return nullptr;
+}
+
 static unsigned int once_runs;
 static pthread_once_t once = PTHREAD_ONCE_INIT;
 
@@ -210,8 +221,10 @@ static void check_threads(void)
 
 	/* Joining oneself, a detached thread, and detaching twice */
 	CHECK(pthread_join(pthread_self(), nullptr) == EDEADLK);
-	CHECK(pthread_create(&thread, nullptr, return_arg, nullptr) == 0 && pthread_detach(thread) == 0);
+	CHECK(pthread_mutex_lock(&hold) == 0);
+	CHECK(pthread_create(&thread, nullptr, wait_for_hold, nullptr) == 0 && pthread_detach(thread) == 0);
 	CHECK(pthread_join(thread, nullptr) == EINVAL && pthread_detach(thread) == EINVAL);
+	CHECK(pthread_mutex_unlock(&hold) == 0);
 
 	/* Attributes: defaults, and the values each setter refuses */
 	CHECK(pthread_attr_init(&attr) == 0);
@@ -227,7 +240,9 @@ static void check_threads(void)
 
 	/* A detached thread from its attribute */
 	CHECK(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0);
-	CHECK(pthread_create(&thread, &attr, return_arg, nullptr) == 0 && pthread_join(thread, nullptr) == EINVAL);
+	CHECK(pthread_mutex_lock(&hold) == 0);
+	CHECK(pthread_create(&thread, &attr, wait_for_hold, nullptr) == 0 && pthread_join(thread, nullptr) == EINVAL);
+	CHECK(pthread_mutex_unlock(&hold) == 0);
 	CHECK(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE) == 0);
 
 	/* Explicit scheduling, a priority outside the range, and inheritance */
@@ -475,6 +490,73 @@ static void check_keys(void)
 	CHECK(pthread_key_delete(keys[0]) == 0 && pthread_getspecific(keys[0]) == nullptr && pthread_key_delete(again_key) == 0);
 }
 
+/* P10.05: priority-inheritance mutexes */
+static pthread_mutex_t pi_mutex;
+static unsigned int pi_counter;
+
+static void *pi_count_up(void *)
+{
+	for (int i = 0; i < 5000; ++i) {
+		pthread_mutex_lock(&pi_mutex);
+		++pi_counter;
+		pthread_mutex_unlock(&pi_mutex);
+	}
+
+	return nullptr;
+}
+
+static void *pi_timed(void *arg)
+{
+	struct timespec deadline = after(*(clockid_t *)arg, 20);
+
+	return (void *)(intptr_t)pthread_mutex_clocklock(&pi_mutex, *(clockid_t *)arg, &deadline);
+}
+
+static void check_priority_inheritance(void)
+{
+	pthread_mutexattr_t attr;
+	pthread_mutex_t mutex;
+	pthread_t threads[4];
+	clockid_t realtime = CLOCK_REALTIME;
+	clockid_t monotonic = CLOCK_MONOTONIC;
+	void *value = nullptr;
+	int protocol;
+
+	CHECK(pthread_mutexattr_init(&attr) == 0 && pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_INHERIT) == 0);
+	CHECK(pthread_mutexattr_getprotocol(&attr, &protocol) == 0 && protocol == PTHREAD_PRIO_INHERIT);
+	CHECK(pthread_mutexattr_setprotocol(&attr, 7) == EINVAL);
+
+	/* Mutual exclusion through the port's priority-inheritance lock */
+	CHECK(pthread_mutex_init(&pi_mutex, &attr) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_create(&threads[i], nullptr, pi_count_up, nullptr) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_join(threads[i], nullptr) == 0);
+	CHECK(pi_counter == 20000);
+
+	/* Held here: another thread's trylock, timed lock on each clock, and unlock fail */
+	CHECK(pthread_mutex_lock(&pi_mutex) == 0);
+	CHECK(pthread_create(&threads[0], nullptr, try_from_other, &pi_mutex) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EBUSY);
+	CHECK(pthread_create(&threads[0], nullptr, pi_timed, &realtime) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == ETIMEDOUT);
+	CHECK(pthread_create(&threads[0], nullptr, pi_timed, &monotonic) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == ETIMEDOUT);
+	CHECK(pthread_create(&threads[0], nullptr, unlock_from_other, &pi_mutex) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EPERM);
+	CHECK(pthread_mutex_destroy(&pi_mutex) == EBUSY && pthread_mutex_unlock(&pi_mutex) == 0 && pthread_mutex_destroy(&pi_mutex) == 0);
+
+	/* The types still decide the owner's relock */
+	CHECK(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK) == 0 && pthread_mutex_init(&mutex, &attr) == 0);
+	CHECK(pthread_mutex_lock(&mutex) == 0 && pthread_mutex_lock(&mutex) == EDEADLK && pthread_mutex_unlock(&mutex) == 0 && pthread_mutex_unlock(&mutex) == EPERM);
+	CHECK(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) == 0 && pthread_mutex_init(&mutex, &attr) == 0);
+	CHECK(pthread_mutex_lock(&mutex) == 0 && pthread_mutex_trylock(&mutex) == 0 && pthread_mutex_unlock(&mutex) == 0 && pthread_mutex_unlock(&mutex) == 0);
+
+	/* A condition wait releases and retakes a priority-inheritance mutex */
+	pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+	struct timespec deadline = after(CLOCK_REALTIME, 10);
+
+	CHECK(pthread_mutex_lock(&mutex) == 0 && pthread_cond_timedwait(&cond, &mutex, &deadline) == ETIMEDOUT);
+	CHECK(pthread_create(&threads[0], nullptr, try_from_other, &mutex) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EBUSY);
+	CHECK(pthread_mutex_unlock(&mutex) == 0 && pthread_mutexattr_destroy(&attr) == 0);
+}
+
 int main(void)
 {
 	check_seam();
@@ -483,6 +565,7 @@ int main(void)
 	check_mutexes();
 	check_conditions();
 	check_keys();
+	check_priority_inheritance();
 
 	if (failures == 0)
 		puts("pass: pthread");

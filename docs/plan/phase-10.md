@@ -102,10 +102,19 @@ Q45 and Q46 answered: D149 (a range per policy, real round-robin), D150 (`__rtos
   `PTHREAD_DESTRUCTOR_ITERATIONS` for one that sets itself again),
   `test/unit/none` (lock, `trylock`, a timed wait without a clock, a key).
 
-## P10.05 — Priority-inheritance mutexes  `[ ]`
-- [ ] A seam pair for PI locking (Linux `FUTEX_LOCK_PI`/`UNLOCK_PI`;
-  `port/none` trivially), and `PTHREAD_PRIO_INHERIT` through
-  `pthread_mutexattr_setprotocol` (`ENOTSUP` where the port has none).
+## P10.05 — Priority-inheritance mutexes  `[x]`
+- [x] `__rtos_mutex_lock_pi`, `trylock_pi`, `unlock_pi` (D154): Linux
+  `FUTEX_LOCK_PI`/`LOCK_PI2`/`UNLOCK_PI` with the tid in the word;
+  `port/none` trivially; `PTHREAD_PRIO_INHERIT` through
+  `pthread_mutexattr_setprotocol` (`ENOTSUP` where the port's lock fails).
+- [x] Tests: `test/unit/pthread` (four threads counting under a
+  priority-inheritance mutex; another thread's `trylock`, timed lock on
+  `CLOCK_REALTIME` and on `CLOCK_MONOTONIC`, and unlock against a held one;
+  `EBUSY` from `destroy`; error-checking and recursive types; a condition
+  wait). The boost itself is checked on a target port (D154). The
+  detached-thread checks of P10.03 now keep the thread running while its
+  handle is used: the first Arm run found the test reading a handle whose
+  thread had already exited and been unmapped.
 
 ## P10.06 — Read-write locks, barriers, spin locks  `[ ]`
 - [ ] `pthread_rwlock_*` (with `timedrdlock`/`timedwrlock`/`clock*`),
