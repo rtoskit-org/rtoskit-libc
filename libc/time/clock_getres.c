@@ -17,15 +17,22 @@
 #include <rtos/rtos-port.h>
 #include <time.h>
 
-/* POSIX.1-2024 clock_getres: a clock is a seam time base (CLOCK_REALTIME is TIME_UTC, PLAN D132) */
+/*
+ * POSIX.1-2024 clock_getres: a clock is a seam time base (CLOCK_REALTIME is
+ * TIME_UTC, PLAN D132). res may be null, to ask only whether the clock
+ * exists; the port always gets a local, as for timespec_getres.
+ */
 int clock_getres(clockid_t clock_id, struct timespec *res)
 {
-	int status = __rtos_clock_getres(clock_id, res);
+	struct timespec resolution;
+	int status = __rtos_clock_getres(clock_id, &resolution);
 
 	if (status < 0) {
 		errno = -status;
 		return -1;
 	}
+	if (res != nullptr)
+		*res = resolution;
 
 	return 0;
 }
