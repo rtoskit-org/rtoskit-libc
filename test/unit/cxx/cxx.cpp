@@ -198,6 +198,70 @@ static void test_exceptions(void)
 	check(caught == 7, "rethrow");
 }
 
+/*
+ * regression_call_once_exception (issue #121): an exception from __libc_call_once_eh's
+ * function leaves the flag unset, so the next call runs the function again,
+ * and a thread waiting on the flag is woken and runs it itself
+ */
+static int once_tries;
+static once_flag once_retry = ONCE_FLAG_INIT;
+
+static void once_throw_first(void)
+{
+	if (++once_tries == 1)
+		throw failure{ 1 };
+}
+
+static int waiter_tries;
+static once_flag once_waited = ONCE_FLAG_INIT;
+static thrd_t waiter;
+
+static void once_count(void)
+{
+	++waiter_tries;
+}
+
+static int once_waiter(void *)
+{
+	call_once(&once_waited, once_count);
+	return waiter_tries == 1 ? 0 : 1;
+}
+
+/* Starts a thread that blocks on the flag (WAITING, 2), then throws */
+static void once_throw_with_waiter(void)
+{
+	struct timespec pause = { .tv_sec = 0, .tv_nsec = 1000000 };
+
+	if (thrd_create(&waiter, once_waiter, nullptr) != thrd_success)
+		return;
+	for (int i = 0; i < 1000 && __atomic_load_n(&once_waited.__state, __ATOMIC_ACQUIRE) != 2u; ++i)
+		thrd_sleep(&pause, nullptr);
+	throw failure{ 2 };
+}
+
+static void test_call_once_exception(void)
+{
+	int caught = 0;
+	int result = -1;
+
+	for (int i = 0; i < 3; ++i) {
+		try {
+			__libc_call_once_eh(&once_retry, once_throw_first);
+		} catch (const failure &e) {
+			caught += e.code;
+		}
+	}
+	check(caught == 1 && once_tries == 2, "call_once runs the function again after an exception");
+
+	caught = 0;
+	try {
+		__libc_call_once_eh(&once_waited, once_throw_with_waiter);
+	} catch (const failure &e) {
+		caught = e.code;
+	}
+	check(caught == 2 && thrd_join(waiter, &result) == thrd_success && result == 0, "call_once wakes a waiter after an exception");
+}
+
 static void test_dynamic(void)
 {
 	shape *one = new square;
@@ -237,6 +301,7 @@ int main(void)
 	check(headers98() == 0, "the headers as C++98");
 
 	test_exceptions();
+	test_call_once_exception();
 	test_dynamic();
 	test_finalize();
 

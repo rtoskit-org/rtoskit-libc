@@ -35,6 +35,14 @@ typedef struct {
 
 void call_once(once_flag *flag, void (*func)(void));
 
+/*
+ * call_once for C++: the same, but built with exception tables, so an
+ * exception from func leaves the flag unset and the next call runs func
+ * again. The toolchain's __gthread_once (std::call_once) calls it; a C
+ * program that calls call_once does not link the unwinder (PLAN D145).
+ */
+void __libc_call_once_eh(once_flag *flag, void (*func)(void));
+
 __LIBC_END_DECLS
 
 #endif /* ___ONCE_FLAG_H */
