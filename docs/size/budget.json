@@ -7,31 +7,31 @@
      "ram": 20
     },
     "hello-printf-float": {
-     "code": 10802,
+     "code": 10814,
      "ram": 348
     },
     "hello-printf-int": {
-     "code": 8197,
+     "code": 8209,
      "ram": 348
     },
     "hello-printf-int-minimal": {
-     "code": 4831,
+     "code": 4843,
      "ram": 348
     },
     "hello-printf-int-nofloat": {
-     "code": 5303,
+     "code": 5315,
      "ram": 348
     },
     "hello-puts": {
-     "code": 2239,
+     "code": 2251,
      "ram": 348
     },
     "malloc-heavy": {
-     "code": 2326,
+     "code": 2338,
      "ram": 52
     },
     "malloc-heavy-tiny": {
-     "code": 2246,
+     "code": 2258,
      "ram": 48
     },
     "math-float": {
@@ -49,31 +49,31 @@
      "ram": 20
     },
     "hello-printf-float": {
-     "code": 10802,
+     "code": 10814,
      "ram": 348
     },
     "hello-printf-int": {
-     "code": 8197,
+     "code": 8209,
      "ram": 348
     },
     "hello-printf-int-minimal": {
-     "code": 4831,
+     "code": 4843,
      "ram": 348
     },
     "hello-printf-int-nofloat": {
-     "code": 5303,
+     "code": 5315,
      "ram": 348
     },
     "hello-puts": {
-     "code": 2239,
+     "code": 2251,
      "ram": 348
     },
     "malloc-heavy": {
-     "code": 2326,
+     "code": 2338,
      "ram": 52
     },
     "malloc-heavy-tiny": {
-     "code": 2246,
+     "code": 2258,
      "ram": 48
     },
     "math-float": {
@@ -91,31 +91,31 @@
      "ram": 20
     },
     "hello-printf-float": {
-     "code": 9618,
+     "code": 9634,
      "ram": 348
     },
     "hello-printf-int": {
-     "code": 7785,
+     "code": 7801,
      "ram": 348
     },
     "hello-printf-int-minimal": {
-     "code": 4439,
+     "code": 4455,
      "ram": 348
     },
     "hello-printf-int-nofloat": {
-     "code": 4865,
+     "code": 4881,
      "ram": 348
     },
     "hello-puts": {
-     "code": 2119,
+     "code": 2135,
      "ram": 348
     },
     "malloc-heavy": {
-     "code": 2138,
+     "code": 2154,
      "ram": 52
     },
     "malloc-heavy-tiny": {
-     "code": 2078,
+     "code": 2094,
      "ram": 48
     },
     "math-float": {

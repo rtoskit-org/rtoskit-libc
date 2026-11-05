@@ -123,7 +123,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 722,
+     "text": 738,
      "unwind": 0
     },
     "program": {
@@ -142,7 +142,7 @@
     "rodata": 216,
     "tbss": 4,
     "tdata": 4,
-    "text": 7008,
+    "text": 7024,
     "unwind": 0
    }
   },
@@ -199,7 +199,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 722,
+     "text": 738,
      "unwind": 0
     },
     "program": {
@@ -218,7 +218,7 @@
     "rodata": 220,
     "tbss": 4,
     "tdata": 4,
-    "text": 6980,
+    "text": 6996,
     "unwind": 0
    }
   },
@@ -275,7 +275,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 722,
+     "text": 738,
      "unwind": 0
     },
     "program": {
@@ -294,7 +294,7 @@
     "rodata": 111,
     "tbss": 4,
     "tdata": 4,
-    "text": 4100,
+    "text": 4116,
     "unwind": 0
    }
   },
@@ -351,7 +351,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 722,
+     "text": 738,
      "unwind": 0
     },
     "program": {
@@ -370,7 +370,7 @@
     "rodata": 111,
     "tbss": 4,
     "tdata": 4,
-    "text": 4340,
+    "text": 4356,
     "unwind": 0
    }
   },
@@ -426,7 +426,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 722,
+     "text": 738,
      "unwind": 0
     },
     "program": {
@@ -445,7 +445,7 @@
     "rodata": 15,
     "tbss": 4,
     "tdata": 4,
-    "text": 1868,
+    "text": 1884,
     "unwind": 0
    }
   },
@@ -500,7 +500,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 722,
+     "text": 738,
      "unwind": 0
     },
     "program": {
@@ -519,7 +519,7 @@
     "rodata": 0,
     "tbss": 4,
     "tdata": 4,
-    "text": 1910,
+    "text": 1926,
     "unwind": 0
    }
   },
@@ -574,7 +574,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 4,
-     "text": 722,
+     "text": 738,
      "unwind": 0
     },
     "program": {
@@ -593,7 +593,7 @@
     "rodata": 0,
     "tbss": 4,
     "tdata": 4,
-    "text": 1850,
+    "text": 1866,
     "unwind": 0
    }
   },
@@ -937,17 +937,8 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 168,
+    "text": 170,
     "unwind": 36
-   },
-   "__libc_cond_wait.o": {
-    "bss": 0,
-    "data": 0,
-    "rodata": 0,
-    "tbss": 0,
-    "tdata": 0,
-    "text": 80,
-    "unwind": 0
    },
    "__libc_cos_core.o": {
     "bss": 0,
@@ -1525,24 +1516,6 @@
     "text": 32,
     "unwind": 0
    },
-   "__libc_mutex_lock.o": {
-    "bss": 0,
-    "data": 0,
-    "rodata": 0,
-    "tbss": 0,
-    "tdata": 0,
-    "text": 118,
-    "unwind": 0
-   },
-   "__libc_mutex_unlock.o": {
-    "bss": 0,
-    "data": 0,
-    "rodata": 0,
-    "tbss": 0,
-    "tdata": 0,
-    "text": 64,
-    "unwind": 0
-   },
    "__libc_nano_allocate.o": {
     "bss": 0,
     "data": 0,
@@ -1595,6 +1568,69 @@
     "tbss": 0,
     "tdata": 0,
     "text": 284,
+    "unwind": 0
+   },
+   "__libc_pthread_cond_wait.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 96,
+    "unwind": 0
+   },
+   "__libc_pthread_create.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 136,
+    "unwind": 0
+   },
+   "__libc_pthread_mutex_lock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 158,
+    "unwind": 0
+   },
+   "__libc_pthread_mutex_unlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 80,
+    "unwind": 0
+   },
+   "__libc_pthread_rwlock_rdlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 98,
+    "unwind": 0
+   },
+   "__libc_pthread_rwlock_wrlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 92,
+    "unwind": 0
+   },
+   "__libc_pthread_start.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 26,
     "unwind": 0
    },
    "__libc_quick_exit_handlers.o": {
@@ -1786,13 +1822,13 @@
     "text": 412,
     "unwind": 0
    },
-   "__libc_thread_start.o": {
+   "__libc_thread_exit.o": {
     "bss": 0,
-    "data": 0,
+    "data": 4,
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 18,
+    "text": 68,
     "unwind": 0
    },
    "__libc_time_tm.o": {
@@ -2422,7 +2458,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 126,
+    "text": 128,
     "unwind": 0
    },
    "calloc.o": {
@@ -2836,7 +2872,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 38,
+    "text": 16,
     "unwind": 0
    },
    "cnd_destroy.o": {
@@ -2845,7 +2881,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 6,
+    "text": 4,
     "unwind": 0
    },
    "cnd_init.o": {
@@ -2854,7 +2890,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 8,
+    "text": 18,
     "unwind": 0
    },
    "cnd_signal.o": {
@@ -2863,7 +2899,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 36,
+    "text": 16,
     "unwind": 0
    },
    "cnd_timedwait.o": {
@@ -2872,7 +2908,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 4,
+    "text": 24,
     "unwind": 0
    },
    "cnd_wait.o": {
@@ -2881,7 +2917,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 6,
+    "text": 16,
     "unwind": 0
    },
    "compoundn.o": {
@@ -5455,7 +5491,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 8,
+    "text": 16,
     "unwind": 0
    },
    "mtx_init.o": {
@@ -5464,7 +5500,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 22,
+    "text": 48,
     "unwind": 0
    },
    "mtx_lock.o": {
@@ -5473,7 +5509,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 6,
+    "text": 16,
     "unwind": 0
    },
    "mtx_timedlock.o": {
@@ -5482,7 +5518,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 14,
+    "text": 34,
     "unwind": 0
    },
    "mtx_trylock.o": {
@@ -5491,7 +5527,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 70,
+    "text": 24,
     "unwind": 0
    },
    "mtx_unlock.o": {
@@ -5500,7 +5536,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 4,
+    "text": 16,
     "unwind": 0
    },
    "nan.o": {
@@ -5780,6 +5816,771 @@
     "tbss": 0,
     "tdata": 0,
     "text": 32,
+    "unwind": 0
+   },
+   "pthread_attr_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_attr_getdetachstate.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_attr_getinheritsched.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_attr_getschedparam.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_attr_getschedpolicy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_attr_getscope.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_attr_getstack.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_attr_getstacksize.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_attr_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 14,
+    "unwind": 0
+   },
+   "pthread_attr_setdetachstate.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_attr_setinheritsched.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_attr_setschedparam.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_attr_setschedpolicy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 40,
+    "unwind": 0
+   },
+   "pthread_attr_setscope.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "pthread_attr_setstack.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 16,
+    "unwind": 0
+   },
+   "pthread_attr_setstacksize.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 14,
+    "unwind": 0
+   },
+   "pthread_barrier_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 16,
+    "unwind": 0
+   },
+   "pthread_barrier_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 18,
+    "unwind": 0
+   },
+   "pthread_barrier_wait.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 106,
+    "unwind": 0
+   },
+   "pthread_barrierattr_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_barrierattr_getpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_barrierattr_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_barrierattr_setpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "pthread_cond_broadcast.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 36,
+    "unwind": 0
+   },
+   "pthread_cond_clockwait.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 18,
+    "unwind": 0
+   },
+   "pthread_cond_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_cond_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 18,
+    "unwind": 0
+   },
+   "pthread_cond_signal.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 34,
+    "unwind": 0
+   },
+   "pthread_cond_timedwait.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 24,
+    "unwind": 0
+   },
+   "pthread_cond_wait.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_condattr_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_condattr_getclock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_condattr_getpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_condattr_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_condattr_setclock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 14,
+    "unwind": 0
+   },
+   "pthread_condattr_setpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "pthread_create.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 62,
+    "unwind": 0
+   },
+   "pthread_detach.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 14,
+    "unwind": 0
+   },
+   "pthread_equal.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_exit.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 6,
+    "unwind": 0
+   },
+   "pthread_getschedparam.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 26,
+    "unwind": 0
+   },
+   "pthread_getspecific.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 56,
+    "unwind": 0
+   },
+   "pthread_join.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 46,
+    "unwind": 0
+   },
+   "pthread_key_create.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 84,
+    "unwind": 0
+   },
+   "pthread_key_delete.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 76,
+    "unwind": 0
+   },
+   "pthread_mutex_clocklock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 18,
+    "unwind": 0
+   },
+   "pthread_mutex_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_mutex_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 30,
+    "unwind": 0
+   },
+   "pthread_mutex_lock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_mutex_timedlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_mutex_trylock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 90,
+    "unwind": 0
+   },
+   "pthread_mutex_unlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_mutexattr_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_mutexattr_getprotocol.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_mutexattr_getpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_mutexattr_gettype.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_mutexattr_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_mutexattr_setprotocol.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 56,
+    "unwind": 0
+   },
+   "pthread_mutexattr_setpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "pthread_mutexattr_settype.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_once.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 128,
+    "unwind": 0
+   },
+   "pthread_rwlock_clockrdlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 18,
+    "unwind": 0
+   },
+   "pthread_rwlock_clockwrlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 18,
+    "unwind": 0
+   },
+   "pthread_rwlock_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_rwlock_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_rwlock_rdlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_rwlock_timedrdlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_rwlock_timedwrlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_rwlock_tryrdlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 50,
+    "unwind": 0
+   },
+   "pthread_rwlock_trywrlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 44,
+    "unwind": 0
+   },
+   "pthread_rwlock_unlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 102,
+    "unwind": 0
+   },
+   "pthread_rwlock_wrlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_rwlockattr_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_rwlockattr_getpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_rwlockattr_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 8,
+    "unwind": 0
+   },
+   "pthread_rwlockattr_setpshared.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "pthread_self.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 4,
+    "unwind": 0
+   },
+   "pthread_setschedparam.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_setschedprio.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 34,
+    "unwind": 0
+   },
+   "pthread_setspecific.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 60,
+    "unwind": 0
+   },
+   "pthread_spin_destroy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
+    "unwind": 0
+   },
+   "pthread_spin_init.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 20,
+    "unwind": 0
+   },
+   "pthread_spin_lock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 32,
+    "unwind": 0
+   },
+   "pthread_spin_trylock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 28,
+    "unwind": 0
+   },
+   "pthread_spin_unlock.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 12,
     "unwind": 0
    },
    "putc.o": {
@@ -6149,6 +6950,24 @@
     "tbss": 0,
     "tdata": 0,
     "text": 32,
+    "unwind": 0
+   },
+   "sched_get_priority_max.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 40,
+    "unwind": 0
+   },
+   "sched_get_priority_min.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 40,
     "unwind": 0
    },
    "sched_yield.o": {
@@ -7498,7 +8317,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 100,
+    "text": 58,
     "unwind": 0
    },
    "thrd_current.o": {
@@ -7516,7 +8335,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 12,
+    "text": 16,
     "unwind": 0
    },
    "thrd_equal.o": {
@@ -7530,11 +8349,11 @@
    },
    "thrd_exit.o": {
     "bss": 0,
-    "data": 4,
+    "data": 0,
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 68,
+    "text": 6,
     "unwind": 0
    },
    "thrd_join.o": {
@@ -7543,7 +8362,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 30,
+    "text": 26,
     "unwind": 0
    },
    "thrd_sleep.o": {
@@ -7723,7 +8542,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 84,
+    "text": 16,
     "unwind": 0
    },
    "tss_delete.o": {
@@ -7732,7 +8551,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 48,
+    "text": 4,
     "unwind": 0
    },
    "tss_get.o": {
@@ -7741,7 +8560,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 56,
+    "text": 4,
     "unwind": 0
    },
    "tss_set.o": {
@@ -7750,7 +8569,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 60,
+    "text": 16,
     "unwind": 0
    },
    "ufromfp.o": {
@@ -7913,7 +8732,7 @@
    "rodata": 8983,
    "tbss": 362,
    "tdata": 8,
-   "text": 79002,
+   "text": 81208,
    "unwind": 36
   }
  },
@@ -7965,15 +8784,17 @@
     ]
    },
    "cnd_wait": {
-    "depth": 96,
+    "depth": 152,
     "notes": [
      "assembly: __rtos_linux_syscall"
     ],
     "path": [
      "cnd_wait",
-     "__libc_cond_wait",
-     "__libc_mutex_lock",
-     "__rtos_futex_wait"
+     "pthread_cond_wait",
+     "__libc_pthread_cond_wait",
+     "__libc_pthread_mutex_lock",
+     "__rtos_mutex_lock_pi",
+     "__rtos_linux_tid"
     ]
    },
    "cos": {
@@ -8239,14 +9060,16 @@
     ]
    },
    "mtx_lock": {
-    "depth": 72,
+    "depth": 120,
     "notes": [
      "assembly: __rtos_linux_syscall"
     ],
     "path": [
      "mtx_lock",
-     "__libc_mutex_lock",
-     "__rtos_futex_wait"
+     "pthread_mutex_lock",
+     "__libc_pthread_mutex_lock",
+     "__rtos_mutex_lock_pi",
+     "__rtos_linux_tid"
     ]
    },
    "pow": {
@@ -8467,7 +9290,7 @@
     ]
    },
    "thrd_create": {
-    "depth": 104,
+    "depth": 184,
     "notes": [
      "assembly: __rtos_linux_clone",
      "assembly: __rtos_linux_syscall",
@@ -8475,6 +9298,7 @@
     ],
     "path": [
      "thrd_create",
+     "__libc_pthread_create",
      "__rtos_thread_create",
      "__rtos_linux_reap"
     ]
@@ -8576,7 +9400,6 @@
    "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 8,
    "__libc_call_once_eh.o:__libc_call_once_eh": 24,
    "__libc_call_once_eh.o:libc/threads/__libc_call_once_eh.c:once_guard_finish": 0,
-   "__libc_cond_wait.o:__libc_cond_wait": 24,
    "__libc_cos_core.o:__libc_cos_core": 56,
    "__libc_cosh_core.o:__libc_cosh_core": 32,
    "__libc_cxa_thread_run.o:libc/stdlib/__libc_cxa_thread_run.c:__libc_cxa_thread_run": 16,
@@ -8660,13 +9483,18 @@
    "__libc_math_raise_overflow.o:__libc_math_raise_overflow": 8,
    "__libc_math_raise_underflow.o:__libc_math_raise_underflow": 8,
    "__libc_math_underflow.o:__libc_math_underflow": 8,
-   "__libc_mutex_lock.o:__libc_mutex_lock": 24,
-   "__libc_mutex_unlock.o:__libc_mutex_unlock": 16,
    "__libc_nano_allocate.o:__libc_nano_allocate": 12,
    "__libc_nano_init.o:__libc_nano_init": 24,
    "__libc_nano_release.o:__libc_nano_release": 16,
    "__libc_nano_trim.o:__libc_nano_trim": 0,
    "__libc_pow_integer.o:__libc_pow_integer": 104,
+   "__libc_pthread_cond_wait.o:__libc_pthread_cond_wait": 32,
+   "__libc_pthread_create.o:__libc_pthread_create": 48,
+   "__libc_pthread_mutex_lock.o:__libc_pthread_mutex_lock": 24,
+   "__libc_pthread_mutex_unlock.o:__libc_pthread_mutex_unlock": 16,
+   "__libc_pthread_rwlock_rdlock.o:__libc_pthread_rwlock_rdlock": 24,
+   "__libc_pthread_rwlock_wrlock.o:__libc_pthread_rwlock_wrlock": 32,
+   "__libc_pthread_start.o:__libc_pthread_start": 8,
    "__libc_rem_pio2.o:__libc_rem_pio2": 104,
    "__libc_rem_pio2.o:libc/math/__libc_rem_pio2.c:bits_at.constprop.0": 20,
    "__libc_remainder.o:__libc_remainder": 48,
@@ -8694,7 +9522,7 @@
    "__libc_strtofloat.o:libc/stdlib/__libc_strtofloat.c:parse_exponent.part.0.constprop.0": 32,
    "__libc_strtoint.o:__libc_strtoint": 72,
    "__libc_strtoint.o:libc/stdlib/__libc_strtoint.c:digit_value": 0,
-   "__libc_thread_start.o:__libc_thread_start": 8,
+   "__libc_thread_exit.o:__libc_thread_exit": 8,
    "__libc_tls_block_size.o:__libc_tls_block_size": 0,
    "__libc_tls_init.o:__libc_tls_init": 12,
    "__libc_tm_to_secs.o:__libc_tm_to_secs": 24,
@@ -8820,10 +9648,10 @@
    "close.o:close": 8,
    "cnd_broadcast.o:cnd_broadcast": 8,
    "cnd_destroy.o:cnd_destroy": 0,
-   "cnd_init.o:cnd_init": 0,
+   "cnd_init.o:cnd_init": 8,
    "cnd_signal.o:cnd_signal": 8,
-   "cnd_timedwait.o:cnd_timedwait": 0,
-   "cnd_wait.o:cnd_wait": 0,
+   "cnd_timedwait.o:cnd_timedwait": 8,
+   "cnd_wait.o:cnd_wait": 8,
    "compoundn.o:compoundn": 40,
    "compoundnf.o:compoundnf": 8,
    "compoundnl.o:compoundnl": 0,
@@ -9106,12 +9934,12 @@
    "modf.o:modf": 16,
    "modff.o:modff": 16,
    "modfl.o:modfl": 16,
-   "mtx_destroy.o:mtx_destroy": 0,
-   "mtx_init.o:mtx_init": 0,
-   "mtx_lock.o:mtx_lock": 0,
-   "mtx_timedlock.o:mtx_timedlock": 0,
+   "mtx_destroy.o:mtx_destroy": 8,
+   "mtx_init.o:mtx_init": 32,
+   "mtx_lock.o:mtx_lock": 8,
+   "mtx_timedlock.o:mtx_timedlock": 8,
    "mtx_trylock.o:mtx_trylock": 8,
-   "mtx_unlock.o:mtx_unlock": 0,
+   "mtx_unlock.o:mtx_unlock": 8,
    "nan.o:nan": 0,
    "nanf.o:nanf": 0,
    "nanl.o:nanl": 0,
@@ -9150,22 +9978,29 @@
    "port/__rtos_linux_reap.o:__rtos_linux_reap": 32,
    "port/__rtos_linux_set_tp.o:__rtos_linux_set_tp": 24,
    "port/__rtos_linux_start.o:__rtos_linux_start": 24,
+   "port/__rtos_linux_tid.o:__rtos_linux_tid": 32,
    "port/__rtos_lock_acquire.o:__rtos_lock_acquire": 16,
    "port/__rtos_lock_create.o:__rtos_lock_create": 8,
    "port/__rtos_lock_destroy.o:__rtos_lock_destroy": 8,
    "port/__rtos_lock_release.o:__rtos_lock_release": 8,
+   "port/__rtos_mutex_lock_pi.o:__rtos_mutex_lock_pi": 56,
+   "port/__rtos_mutex_trylock_pi.o:__rtos_mutex_trylock_pi": 8,
+   "port/__rtos_mutex_unlock_pi.o:__rtos_mutex_unlock_pi": 24,
    "port/__rtos_open.o:__rtos_open": 40,
    "port/__rtos_read.o:__rtos_read": 24,
    "port/__rtos_remove.o:__rtos_remove": 24,
    "port/__rtos_rename.o:__rtos_rename": 24,
+   "port/__rtos_sched_priority_range.o:__rtos_sched_priority_range": 0,
    "port/__rtos_seek.o:__rtos_seek": 32,
    "port/__rtos_system.o:__rtos_system": 0,
-   "port/__rtos_thread_create.o:__rtos_thread_create": 48,
+   "port/__rtos_thread_create.o:__rtos_thread_create": 80,
    "port/__rtos_thread_create.o:port/linux/__rtos_thread_create.c:thread_start": 8,
    "port/__rtos_thread_detach.o:__rtos_thread_detach": 8,
    "port/__rtos_thread_exit.o:__rtos_thread_exit": 24,
+   "port/__rtos_thread_get_sched.o:__rtos_thread_get_sched": 0,
    "port/__rtos_thread_join.o:__rtos_thread_join": 40,
    "port/__rtos_thread_self.o:__rtos_thread_self": 4,
+   "port/__rtos_thread_set_sched.o:__rtos_thread_set_sched": 24,
    "port/__rtos_thread_sleep.o:__rtos_thread_sleep": 64,
    "port/__rtos_thread_yield.o:__rtos_thread_yield": 24,
    "port/__rtos_tmpname.o:__rtos_tmpname": 104,
@@ -9181,6 +10016,91 @@
    "powrf.o:powrf": 8,
    "powrl.o:powrl": 0,
    "printf.o:printf": 16,
+   "pthread_attr_destroy.o:pthread_attr_destroy": 0,
+   "pthread_attr_getdetachstate.o:pthread_attr_getdetachstate": 0,
+   "pthread_attr_getinheritsched.o:pthread_attr_getinheritsched": 0,
+   "pthread_attr_getschedparam.o:pthread_attr_getschedparam": 0,
+   "pthread_attr_getschedpolicy.o:pthread_attr_getschedpolicy": 0,
+   "pthread_attr_getscope.o:pthread_attr_getscope": 0,
+   "pthread_attr_getstack.o:pthread_attr_getstack": 0,
+   "pthread_attr_getstacksize.o:pthread_attr_getstacksize": 0,
+   "pthread_attr_init.o:pthread_attr_init": 8,
+   "pthread_attr_setdetachstate.o:pthread_attr_setdetachstate": 0,
+   "pthread_attr_setinheritsched.o:pthread_attr_setinheritsched": 0,
+   "pthread_attr_setschedparam.o:pthread_attr_setschedparam": 0,
+   "pthread_attr_setschedpolicy.o:pthread_attr_setschedpolicy": 24,
+   "pthread_attr_setscope.o:pthread_attr_setscope": 0,
+   "pthread_attr_setstack.o:pthread_attr_setstack": 0,
+   "pthread_attr_setstacksize.o:pthread_attr_setstacksize": 0,
+   "pthread_barrier_destroy.o:pthread_barrier_destroy": 0,
+   "pthread_barrier_init.o:pthread_barrier_init": 0,
+   "pthread_barrier_wait.o:pthread_barrier_wait": 16,
+   "pthread_barrierattr_destroy.o:pthread_barrierattr_destroy": 0,
+   "pthread_barrierattr_getpshared.o:pthread_barrierattr_getpshared": 0,
+   "pthread_barrierattr_init.o:pthread_barrierattr_init": 0,
+   "pthread_barrierattr_setpshared.o:pthread_barrierattr_setpshared": 0,
+   "pthread_cond_broadcast.o:pthread_cond_broadcast": 8,
+   "pthread_cond_clockwait.o:pthread_cond_clockwait": 0,
+   "pthread_cond_destroy.o:pthread_cond_destroy": 0,
+   "pthread_cond_init.o:pthread_cond_init": 0,
+   "pthread_cond_signal.o:pthread_cond_signal": 8,
+   "pthread_cond_timedwait.o:pthread_cond_timedwait": 0,
+   "pthread_cond_wait.o:pthread_cond_wait": 0,
+   "pthread_condattr_destroy.o:pthread_condattr_destroy": 0,
+   "pthread_condattr_getclock.o:pthread_condattr_getclock": 0,
+   "pthread_condattr_getpshared.o:pthread_condattr_getpshared": 0,
+   "pthread_condattr_init.o:pthread_condattr_init": 0,
+   "pthread_condattr_setclock.o:pthread_condattr_setclock": 0,
+   "pthread_condattr_setpshared.o:pthread_condattr_setpshared": 0,
+   "pthread_create.o:pthread_create": 24,
+   "pthread_detach.o:pthread_detach": 8,
+   "pthread_equal.o:pthread_equal": 0,
+   "pthread_exit.o:pthread_exit": 8,
+   "pthread_getschedparam.o:pthread_getschedparam": 16,
+   "pthread_getspecific.o:pthread_getspecific": 8,
+   "pthread_join.o:pthread_join": 24,
+   "pthread_key_create.o:pthread_key_create": 20,
+   "pthread_key_delete.o:pthread_key_delete": 8,
+   "pthread_mutex_clocklock.o:pthread_mutex_clocklock": 0,
+   "pthread_mutex_destroy.o:pthread_mutex_destroy": 0,
+   "pthread_mutex_init.o:pthread_mutex_init": 8,
+   "pthread_mutex_lock.o:pthread_mutex_lock": 0,
+   "pthread_mutex_timedlock.o:pthread_mutex_timedlock": 0,
+   "pthread_mutex_trylock.o:pthread_mutex_trylock": 16,
+   "pthread_mutex_unlock.o:pthread_mutex_unlock": 0,
+   "pthread_mutexattr_destroy.o:pthread_mutexattr_destroy": 0,
+   "pthread_mutexattr_getprotocol.o:pthread_mutexattr_getprotocol": 0,
+   "pthread_mutexattr_getpshared.o:pthread_mutexattr_getpshared": 0,
+   "pthread_mutexattr_gettype.o:pthread_mutexattr_gettype": 0,
+   "pthread_mutexattr_init.o:pthread_mutexattr_init": 0,
+   "pthread_mutexattr_setprotocol.o:pthread_mutexattr_setprotocol": 24,
+   "pthread_mutexattr_setpshared.o:pthread_mutexattr_setpshared": 0,
+   "pthread_mutexattr_settype.o:pthread_mutexattr_settype": 0,
+   "pthread_once.o:pthread_once": 16,
+   "pthread_rwlock_clockrdlock.o:pthread_rwlock_clockrdlock": 0,
+   "pthread_rwlock_clockwrlock.o:pthread_rwlock_clockwrlock": 0,
+   "pthread_rwlock_destroy.o:pthread_rwlock_destroy": 0,
+   "pthread_rwlock_init.o:pthread_rwlock_init": 0,
+   "pthread_rwlock_rdlock.o:pthread_rwlock_rdlock": 0,
+   "pthread_rwlock_timedrdlock.o:pthread_rwlock_timedrdlock": 0,
+   "pthread_rwlock_timedwrlock.o:pthread_rwlock_timedwrlock": 0,
+   "pthread_rwlock_tryrdlock.o:pthread_rwlock_tryrdlock": 0,
+   "pthread_rwlock_trywrlock.o:pthread_rwlock_trywrlock": 8,
+   "pthread_rwlock_unlock.o:pthread_rwlock_unlock": 16,
+   "pthread_rwlock_wrlock.o:pthread_rwlock_wrlock": 0,
+   "pthread_rwlockattr_destroy.o:pthread_rwlockattr_destroy": 0,
+   "pthread_rwlockattr_getpshared.o:pthread_rwlockattr_getpshared": 0,
+   "pthread_rwlockattr_init.o:pthread_rwlockattr_init": 0,
+   "pthread_rwlockattr_setpshared.o:pthread_rwlockattr_setpshared": 0,
+   "pthread_self.o:pthread_self": 0,
+   "pthread_setschedparam.o:pthread_setschedparam": 8,
+   "pthread_setschedprio.o:pthread_setschedprio": 24,
+   "pthread_setspecific.o:pthread_setspecific": 12,
+   "pthread_spin_destroy.o:pthread_spin_destroy": 0,
+   "pthread_spin_init.o:pthread_spin_init": 0,
+   "pthread_spin_lock.o:pthread_spin_lock": 16,
+   "pthread_spin_trylock.o:pthread_spin_trylock": 0,
+   "pthread_spin_unlock.o:pthread_spin_unlock": 0,
    "putc.o:putc": 0,
    "putchar.o:putchar": 0,
    "puts.o:puts": 16,
@@ -9224,6 +10144,8 @@
    "scalbnf.o:scalbnf": 0,
    "scalbnl.o:scalbnl": 0,
    "scanf.o:scanf": 16,
+   "sched_get_priority_max.o:sched_get_priority_max": 16,
+   "sched_get_priority_min.o:sched_get_priority_min": 16,
    "sched_yield.o:sched_yield": 8,
    "setbuf.o:setbuf": 0,
    "setlocale.o:setlocale": 8,
@@ -9410,10 +10332,10 @@
    "trunc.o:trunc": 0,
    "truncf.o:truncf": 0,
    "truncl.o:truncl": 0,
-   "tss_create.o:tss_create": 20,
+   "tss_create.o:tss_create": 8,
    "tss_delete.o:tss_delete": 0,
-   "tss_get.o:tss_get": 8,
-   "tss_set.o:tss_set": 12,
+   "tss_get.o:tss_get": 0,
+   "tss_set.o:tss_set": 8,
    "ufromfp.o:ufromfp": 0,
    "ufromfpf.o:ufromfpf": 0,
    "ufromfpl.o:ufromfpl": 0,
