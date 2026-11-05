@@ -37,7 +37,7 @@ int __libc_mutex_lock(mtx_t *mtx, const struct timespec *deadline)
 
 	if (!__atomic_compare_exchange_n(&mtx->__state, &state, __LIBC_MUTEX_LOCKED, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
 		while (__atomic_exchange_n(&mtx->__state, __LIBC_MUTEX_CONTENDED, __ATOMIC_ACQUIRE) != __LIBC_MUTEX_UNLOCKED) {
-			int status = __rtos_futex_wait(&mtx->__state, __LIBC_MUTEX_CONTENDED, deadline);
+			int status = __rtos_futex_wait(&mtx->__state, __LIBC_MUTEX_CONTENDED, TIME_UTC, deadline);
 
 			if (status == -ETIMEDOUT)
 				return thrd_timedout;

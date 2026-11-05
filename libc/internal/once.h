@@ -45,7 +45,7 @@ static inline bool __libc_once_claim(unsigned int *state)
 		}
 		if (value == __LIBC_ONCE_RUNNING && !__atomic_compare_exchange_n(state, &value, __LIBC_ONCE_WAITING, false, __ATOMIC_ACQUIRE, __ATOMIC_ACQUIRE))
 			continue;
-		__rtos_futex_wait(state, __LIBC_ONCE_WAITING, nullptr);
+		__rtos_futex_wait(state, __LIBC_ONCE_WAITING, TIME_UTC, nullptr);
 		value = __atomic_load_n(state, __ATOMIC_ACQUIRE);
 	}
 

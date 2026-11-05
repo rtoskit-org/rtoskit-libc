@@ -17,7 +17,7 @@
 #include "internal/threads.h"
 
 /* C23 7.28.5.1p3: returning from func is thrd_exit with its result */
-int __libc_thread_start(void *start)
+void *__libc_thread_start(void *start)
 {
 	struct __libc_thread_start record = *(struct __libc_thread_start *)start;
 

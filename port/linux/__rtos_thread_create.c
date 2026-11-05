@@ -33,17 +33,38 @@ static int thread_start(void *argument)
 
 /*
  * One mapping per thread: the stack grows down from the thread record, and
- * the TLS block follows the record (docs/research/threads.md). The kernel
+ * the TLS block follows the record (docs/research/threads.md). A caller's
+ * stack (P10.02) replaces the mapping's: the mapping then holds the record
+ * and the TLS block only, and the stack is the caller's to free. The kernel
  * stores the tid before clone returns and clears it when the thread is gone.
  */
-int __rtos_thread_create(struct __rtos_thread **result, int (*entry)(void *), void *arg)
+int __rtos_thread_create(struct __rtos_thread **result, const struct __rtos_thread_attr *attr, void *(*entry)(void *), void *arg)
 {
+	struct __rtos_thread *self = __rtos_thread_self();
+	size_t stack_size = attr != nullptr && attr->stack_size != 0 ? attr->stack_size : __LINUX_STACK_SIZE;
+	size_t own_stack = attr != nullptr && attr->stack != nullptr ? 0 : stack_size;
 	size_t tls_size = __libc_tls_block_size(&__rtos_linux_tls_image);
-	size_t size = (__LINUX_STACK_SIZE + sizeof(struct __rtos_thread) + tls_size + __LINUX_PAGE_SIZE - 1) & ~(__LINUX_PAGE_SIZE - 1);
+	size_t size = (own_stack + sizeof(struct __rtos_thread) + tls_size + __LINUX_PAGE_SIZE - 1) & ~(__LINUX_PAGE_SIZE - 1);
+	int policy = self->policy;
+	int priority = self->priority;
 	struct __rtos_thread *thread;
+	void *stack_top;
 	long mapping;
 	long status;
 	void *tp;
+
+	if (attr != nullptr && !attr->inherit) {
+		int min;
+		int max;
+
+		status = __rtos_sched_priority_range(attr->policy, &min, &max);
+		if (status < 0)
+			return (int)status;
+		if (attr->priority < min || attr->priority > max)
+			return -EINVAL;
+		policy = attr->policy;
+		priority = attr->priority;
+	}
 
 	__rtos_linux_reap();
 
@@ -51,11 +72,13 @@ int __rtos_thread_create(struct __rtos_thread **result, int (*entry)(void *), vo
 	if (__linux_is_error(mapping))
 		return -ENOMEM;
 
-	thread = (struct __rtos_thread *)(mapping + __LINUX_STACK_SIZE);
-	*thread = (struct __rtos_thread){ .tid = 0, .state = __LINUX_THREAD_JOINABLE, .entry = entry, .arg = arg, .mapping = (void *)mapping, .mapping_size = size };
+	thread = (struct __rtos_thread *)(mapping + own_stack);
+	*thread = (struct __rtos_thread){ .tid = 0, .state = __LINUX_THREAD_JOINABLE, .entry = entry, .arg = arg, .mapping = (void *)mapping, .mapping_size = size, .policy = policy, .priority = priority };
 	tp = __libc_tls_init(thread + 1, &__rtos_linux_tls_image);
+	/* The stack's top, 16-byte aligned as both ABIs want it */
+	stack_top = own_stack != 0 ? (void *)thread : (void *)(((uintptr_t)attr->stack + stack_size) & ~(uintptr_t)15);
 
-	status = __rtos_linux_clone(__LINUX_CLONE_THREAD_FLAGS, thread, &thread->tid, &thread->tid, tp, thread_start, thread);
+	status = __rtos_linux_clone(__LINUX_CLONE_THREAD_FLAGS, stack_top, &thread->tid, &thread->tid, tp, thread_start, thread);
 	if (__linux_is_error(status)) {
 		__linux_syscall2(__LINUX_SYS_MUNMAP, mapping, (long)size);
 		return (int)status;

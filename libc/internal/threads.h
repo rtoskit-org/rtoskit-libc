@@ -41,7 +41,7 @@ struct __libc_thread_start {
 	void *arg;
 };
 
-int __libc_thread_start(void *start);
+void *__libc_thread_start(void *start);
 
 /*
  * Thread-specific storage: a key is in use while its generation is odd; a

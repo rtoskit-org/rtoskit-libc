@@ -37,16 +37,29 @@ objects (`PTHREAD_PROCESS_SHARED` returns `ENOTSUP`), robust mutexes.
   timed wait), Q47 (cancellation for pi-pico), answered by D149, D150 and
   D151.
 
-## P10.02 — Seam: attributes, exit value, priorities, clocks  `[ ]`
+## P10.02 — Seam: attributes, exit value, priorities, clocks  `[x]`
 Q45 and Q46 answered: D149 (a range per policy, real round-robin), D150 (`__rtos_futex_wait` takes a time base).
-- [ ] `__rtos_thread_create` takes an attribute record (stack size, a
-  caller's stack, priority, explicit or inherited scheduling).
-- [ ] The exit value is `void *` (`__rtos_thread_exit`, `__rtos_thread_join`);
-  C11's `int` travels as `intptr_t`.
-- [ ] Priorities (D149): the port's range per policy, and a get/set pair taking POSIX numbers; `SCHED_RR` time-sliced by the port.
-- [ ] `__rtos_futex_wait(address, expected, base, deadline)` (D150).
-- [ ] Both ports; `<threads.h>` adapted to the new seam with no change in
+- [x] `__rtos_thread_create(thread, attr, entry, arg)` takes a
+  `struct __rtos_thread_attr` (stack size, a caller's stack, policy,
+  priority, inherit); a null attribute is the port's default and inherits
+  the creator's scheduling.
+- [x] The exit value is `void *` (`__rtos_thread_exit`, `__rtos_thread_join`,
+  which accepts a null result pointer); C11's `int` travels as `intptr_t`.
+- [x] Priorities (D149): `__rtos_sched_priority_range(policy, &min, &max)`,
+  `__rtos_thread_get_sched`/`set_sched` in POSIX numbers. The Linux test
+  port reports Linux's ranges (`SCHED_FIFO` and `SCHED_RR` 1–99,
+  `SCHED_OTHER` 0) and records the setting without applying it: it runs
+  unprivileged, where the kernel refuses the real-time policies.
+  `port/none` has `SCHED_OTHER` at 0 only.
+- [x] `__rtos_futex_wait(address, expected, base, deadline)` (D150): the Linux
+  port waits with `FUTEX_WAIT_BITSET` on `CLOCK_REALTIME` for `TIME_UTC` and
+  `CLOCK_MONOTONIC` for `TIME_MONOTONIC`; both ports reject another base and
+  a bad `tv_nsec` with `-EINVAL`.
+- [x] Both ports; `<threads.h>` adapted to the new seam with no change in
   behaviour; `include/rtos/rtos-port.h` and PLAN §4 updated.
+- [x] Tests: `test/unit/pthread` (new; the seam's ranges, inherited and
+  explicit scheduling, a refused priority, the caller's stack, the `void *`
+  result, both time bases), `test/unit/none` (the one-thread answers).
 
 ## P10.03 — `<pthread.h>` and the thread functions  `[ ]`
 - [ ] `<pthread.h>` with every type sized for the largest core of a triple

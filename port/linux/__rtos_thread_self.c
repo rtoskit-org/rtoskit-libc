@@ -15,7 +15,7 @@
 
 #include "linux.h"
 
-struct __rtos_thread __rtos_linux_main_thread = { .state = __LINUX_THREAD_JOINABLE };
+struct __rtos_thread __rtos_linux_main_thread = { .state = __LINUX_THREAD_JOINABLE, .policy = SCHED_OTHER, .priority = 0 };
 thread_local struct __rtos_thread *__rtos_linux_self;
 
 /* New threads set their record at start; the initial thread has none in its TLS */

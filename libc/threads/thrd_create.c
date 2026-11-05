@@ -30,7 +30,7 @@ int thrd_create(thrd_t *thr, thrd_start_t func, void *arg)
 	start->arg = arg;
 
 	__atomic_fetch_add(&__libc_thread_count, 1, __ATOMIC_RELAXED);
-	status = __rtos_thread_create(thr, __libc_thread_start, start);
+	status = __rtos_thread_create(thr, nullptr, __libc_thread_start, start);
 	if (status < 0) {
 		__atomic_fetch_sub(&__libc_thread_count, 1, __ATOMIC_RELAXED);
 		free(start);
