@@ -4494,6 +4494,15 @@
     "text": 14,
     "unwind": 0
    },
+   "getentropy.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 58,
+    "unwind": 0
+   },
    "getenv.o": {
     "bss": 0,
     "data": 0,
@@ -7840,7 +7849,7 @@
    "rodata": 17979,
    "tbss": 626,
    "tdata": 8,
-   "text": 103597,
+   "text": 103655,
    "unwind": 0
   }
  },
@@ -8905,6 +8914,7 @@
    "fwrite.o:fwrite": 48,
    "getc.o:getc": 8,
    "getchar.o:getchar": 8,
+   "getentropy.o:getentropy": 16,
    "getenv.o:getenv": 8,
    "getpayload.o:getpayload": 8,
    "getpayloadf.o:getpayloadf": 8,
@@ -9037,6 +9047,7 @@
    "port/__rtos_clock_getres.o:__rtos_clock_getres": 8,
    "port/__rtos_clock_gettime.o:__rtos_clock_gettime": 8,
    "port/__rtos_close.o:__rtos_close": 8,
+   "port/__rtos_entropy.o:__rtos_entropy": 8,
    "port/__rtos_exit.o:__rtos_exit": 8,
    "port/__rtos_futex_wait.o:__rtos_futex_wait": 8,
    "port/__rtos_futex_wake.o:__rtos_futex_wake": 8,

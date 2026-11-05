@@ -773,3 +773,7 @@ Three new members (`stat`, `isatty`, `dup`), linked only by programs that call t
 ## Issue #122 — `clock_gettime` and `timespec_get` zero the result on failure
 
 Members that grew, justified: `clock_gettime.o` 36 → 48 (+12) and `timespec_get.o` 36 → 48 (+12), the two stores that zero the result when the clock read fails (libstdc++'s clocks ignore the status); each frame 8 → 16 bytes, to keep the pointer across the seam call. No image and neither budget changes.
+
+## D146 — `getentropy` (issue #127)
+
+Members that grew, justified: `getentropy.o` 0 → 56 (+56), new, linked only by programs that call it (libstdc++'s `std::random_device`). New frames: `getentropy` 8 bytes; the Linux port's `__rtos_entropy` 32 bytes (the port, not `libc.a`). No image and neither budget changes.
