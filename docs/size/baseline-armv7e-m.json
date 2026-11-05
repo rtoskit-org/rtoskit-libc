@@ -1173,6 +1173,15 @@
     "text": 28,
     "unwind": 0
    },
+   "__libc_call_once_eh.o": {
+    "bss": 0,
+    "data": 0,
+    "rodata": 0,
+    "tbss": 0,
+    "tdata": 0,
+    "text": 168,
+    "unwind": 36
+   },
    "__libc_clogf_modulus.o": {
     "bss": 0,
     "data": 0,
@@ -2871,7 +2880,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 130,
+    "text": 126,
     "unwind": 0
    },
    "calloc.o": {
@@ -8353,8 +8362,8 @@
    "rodata": 10215,
    "tbss": 362,
    "tdata": 8,
-   "text": 149966,
-   "unwind": 0
+   "text": 150130,
+   "unwind": 36
   }
  },
  "stack": {
@@ -9136,6 +9145,8 @@
    "__libc_atan2f_core.o:libc/math/sp-nearest/__libc_atan2f_core.c:__libc_ff_product": 16,
    "__libc_atan2f_core.o:libc/math/sp-nearest/__libc_atan2f_core.c:atan_unit": 88,
    "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 8,
+   "__libc_call_once_eh.o:__libc_call_once_eh": 24,
+   "__libc_call_once_eh.o:libc/threads/__libc_call_once_eh.c:once_guard_finish": 0,
    "__libc_clogf_modulus.o:__libc_clogf_modulus": 56,
    "__libc_cond_wait.o:__libc_cond_wait": 24,
    "__libc_cos_core.o:__libc_cos_core": 128,

@@ -20,4 +20,7 @@ include ${PROJECT_ROOT}/tools/makefiles/project.mk
 CPPFLAGS += -I${PROJECT_ROOT}/libc
 CFLAGS += ${LIBC_CFLAGS}
 
+# std::call_once: an exception from the function unwinds through __libc_call_once_eh and resets the flag (issue #121, PLAN D145)
+${CURDIR}/__libc_call_once_eh.o: CFLAGS += -fexceptions
+
 endif
