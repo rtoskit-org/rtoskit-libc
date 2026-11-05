@@ -17,7 +17,7 @@
 #include "rtos-none.h"
 
 /* libc ends the program itself when its last thread exits; this is never reached with one thread */
-[[noreturn]] void __rtos_thread_exit(int)
+[[noreturn]] void __rtos_thread_exit(void *)
 {
 	__rtos_exit(EXIT_SUCCESS);
 }

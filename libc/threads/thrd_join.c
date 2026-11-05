@@ -17,12 +17,13 @@
 /* C23 7.28.5.6 */
 int thrd_join(thrd_t thr, int *res)
 {
-	int result;
+	void *result;
 
 	if (__rtos_thread_join(thr, &result) < 0)
 		return thrd_error;
+	/* thrd_exit's int travels through the seam's void * (P10.02) */
 	if (res != nullptr)
-		*res = result;
+		*res = (int)(intptr_t)result;
 
 	return thrd_success;
 }

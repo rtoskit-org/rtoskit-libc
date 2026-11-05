@@ -226,6 +226,20 @@ int main(int argc, char **argv)
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000000000 }, nullptr) == -1 && errno == EINVAL);
 	CHECK(sched_yield() == 0);
 
+	/* The thread seam's scheduling and time base (P10.02, PLAN D149, D150): SCHED_OTHER at 0 only */
+	int policy;
+	int priority;
+	int min;
+	int max;
+	unsigned int word = 0;
+
+	CHECK(__rtos_sched_priority_range(SCHED_OTHER, &min, &max) == 0 && min == 0 && max == 0);
+	CHECK(__rtos_sched_priority_range(SCHED_FIFO, &min, &max) == -EINVAL);
+	CHECK(__rtos_thread_get_sched(__rtos_thread_self(), &policy, &priority) == 0 && policy == SCHED_OTHER && priority == 0);
+	CHECK(__rtos_thread_set_sched(__rtos_thread_self(), SCHED_OTHER, 0) == 0 && __rtos_thread_set_sched(__rtos_thread_self(), SCHED_RR, 1) == -EINVAL);
+	CHECK(__rtos_futex_wait(&word, 0, 42, nullptr) == -EINVAL && __rtos_futex_wait(&word, 1, TIME_MONOTONIC, nullptr) == -EAGAIN);
+	CHECK(__rtos_futex_wait(&word, 0, TIME_MONOTONIC, &(struct timespec){ .tv_sec = 1 }) == -ETIMEDOUT);
+
 	/* No handle seeks, so each is a character device of size 0; flags and the process ID need no seam */
 	struct stat st;
 

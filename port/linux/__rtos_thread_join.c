@@ -20,7 +20,7 @@
  * Wait until the kernel clears the tid (a shared futex wake, the kind
  * CLONE_CHILD_CLEARTID sends), then the stack is free to unmap.
  */
-int __rtos_thread_join(struct __rtos_thread *thread, int *result)
+int __rtos_thread_join(struct __rtos_thread *thread, void **result)
 {
 	int tid;
 
@@ -30,7 +30,8 @@ int __rtos_thread_join(struct __rtos_thread *thread, int *result)
 	while ((tid = __atomic_load_n(&thread->tid, __ATOMIC_ACQUIRE)) != 0)
 		__linux_syscall6(__LINUX_SYS_FUTEX, (long)&thread->tid, __LINUX_FUTEX_WAIT, tid, 0, 0, 0);
 
-	*result = thread->result;
+	if (result != nullptr)
+		*result = thread->result;
 	__linux_syscall2(__LINUX_SYS_MUNMAP, (long)thread->mapping, (long)thread->mapping_size);
 	__rtos_linux_reap();
 

@@ -41,7 +41,7 @@ void __rtos_lock_acquire(struct __rtos_lock *lock)
 		if (__atomic_compare_exchange_n(&lock->word, &word, want, false, __ATOMIC_ACQUIRE, __ATOMIC_RELAXED)) {
 			if (word == 0)
 				return;
-			__rtos_futex_wait(&lock->word, want, nullptr);
+			__rtos_futex_wait(&lock->word, want, TIME_UTC, nullptr);
 			self |= __RTOS_LOCK_SLOW;
 			word = 0;
 		}

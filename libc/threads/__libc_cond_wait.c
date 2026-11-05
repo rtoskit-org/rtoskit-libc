@@ -35,7 +35,7 @@ int __libc_cond_wait(cnd_t *cond, mtx_t *mtx, const struct timespec *deadline)
 		return thrd_error;
 	}
 
-	status = __rtos_futex_wait(&cond->__sequence, sequence, deadline);
+	status = __rtos_futex_wait(&cond->__sequence, sequence, TIME_UTC, deadline);
 
 	while (__libc_mutex_lock(mtx, nullptr) != thrd_success)
 		continue;

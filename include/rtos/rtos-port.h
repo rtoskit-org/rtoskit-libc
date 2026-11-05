@@ -32,6 +32,7 @@ __LIBC_BEGIN_DECLS
  * negated <errno.h> value, which libc stores in errno.
  */
 
+#include <sched.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <time.h>
@@ -176,35 +177,66 @@ int __rtos_lock_create(struct __rtos_lock **lock);
 void __rtos_lock_destroy(struct __rtos_lock *lock);
 
 /*
- * Threads (P1.12, docs/research/threads.md). The port defines struct
- * __rtos_thread; <threads.h> identifies a thread by a pointer to it. A new
- * thread runs entry(arg) with its own stack and TLS block (initialised with
- * __libc_tls_init); if entry returns, the thread ends with its result.
- * __rtos_thread_self works in every thread, the initial one included.
- * Functions returning int give 0 or a negated errno; __rtos_thread_sleep
- * returns -EINTR, with the time left in remaining when that is not null, if
- * a signal ends the sleep early.
+ * Threads (P1.12, docs/research/threads.md; attributes, the exit value
+ * and scheduling P10.02, PLAN D148-D150). The port defines struct
+ * __rtos_thread; <threads.h> and <pthread.h> identify a thread by a pointer
+ * to it. A new thread runs entry(arg) with its own stack and TLS block
+ * (initialised with __libc_tls_init); if entry returns, the thread ends
+ * with its result, which __rtos_thread_join hands back. attr may be null
+ * for the port's defaults. __rtos_thread_self works in every thread, the
+ * initial one included. Functions returning int give 0 or a negated errno;
+ * __rtos_thread_sleep returns -EINTR, with the time left in remaining when
+ * that is not null, if a signal ends the sleep early.
  */
 struct __rtos_thread;
 
-int __rtos_thread_create(struct __rtos_thread **thread, int (*entry)(void *), void *arg);
-[[noreturn]] void __rtos_thread_exit(int result);
-int __rtos_thread_join(struct __rtos_thread *thread, int *result);
+/*
+ * How to create a thread. stack_size 0 is the port's default; a stack that
+ * is not null is the caller's, of stack_size bytes, and the port does not
+ * free it. With inherit true the new thread takes its creator's policy and
+ * priority, otherwise policy and priority (PTHREAD_EXPLICIT_SCHED).
+ */
+struct __rtos_thread_attr {
+	size_t stack_size;
+	void *stack;
+	int policy;
+	int priority;
+	bool inherit;
+};
+
+int __rtos_thread_create(struct __rtos_thread **thread, const struct __rtos_thread_attr *attr, void *(*entry)(void *), void *arg);
+[[noreturn]] void __rtos_thread_exit(void *result);
+int __rtos_thread_join(struct __rtos_thread *thread, void **result);
 int __rtos_thread_detach(struct __rtos_thread *thread);
 struct __rtos_thread *__rtos_thread_self(void);
 void __rtos_thread_yield(void);
 int __rtos_thread_sleep(const struct timespec *duration, struct timespec *remaining);
 
 /*
- * Wait and wake on an address (P1.12). __rtos_futex_wait blocks the caller
- * while *address equals expected, until a wake for that address, the
- * TIME_UTC deadline (null: none) or an unspecified reason; it returns 0
- * after a wake or early return, -EAGAIN if *address differed on entry and
- * -ETIMEDOUT once the deadline passed. __rtos_futex_wake unblocks up to
+ * Scheduling (P10.02, PLAN D149). Priorities are POSIX numbers, higher more
+ * urgent, in a range per policy (SCHED_FIFO, SCHED_RR, SCHED_OTHER from
+ * <sched.h>) that the port maps onto its scheduler; SCHED_RR time-slices
+ * threads of equal priority. __rtos_sched_priority_range gives -EINVAL for
+ * a policy the port does not support; set gives -EINVAL for a priority
+ * outside the policy's range and -EPERM where the port refuses the change.
+ */
+int __rtos_sched_priority_range(int policy, int *min, int *max);
+int __rtos_thread_get_sched(struct __rtos_thread *thread, int *policy, int *priority);
+int __rtos_thread_set_sched(struct __rtos_thread *thread, int policy, int priority);
+
+/*
+ * Wait and wake on an address (P1.12; the time base P10.02, PLAN D150).
+ * __rtos_futex_wait blocks the caller while *address equals expected, until
+ * a wake for that address, the deadline (null: none), an absolute time on
+ * the time base base (TIME_UTC or TIME_MONOTONIC), or an unspecified
+ * reason; it returns 0 after a wake or early return, -EAGAIN if *address
+ * differed on entry, -ETIMEDOUT once the deadline passed and -EINVAL for a
+ * time base the port does not have or a deadline whose tv_nsec is outside
+ * [0, 1e9). __rtos_futex_wake unblocks up to
  * count waiters (UINT_MAX: all) and returns how many, or a negated errno.
  * libc builds mutexes, condition variables and call_once on these.
  */
-int __rtos_futex_wait(unsigned int *address, unsigned int expected, const struct timespec *deadline);
+int __rtos_futex_wait(unsigned int *address, unsigned int expected, int base, const struct timespec *deadline);
 int __rtos_futex_wake(unsigned int *address, unsigned int count);
 
 /*

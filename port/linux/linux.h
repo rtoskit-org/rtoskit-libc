@@ -108,7 +108,7 @@ struct __rtos_lock {
 #define __LINUX_CLONE_CHILD_CLEARTID 0x00200000
 #define __LINUX_CLONE_THREAD_FLAGS (__LINUX_CLONE_VM | __LINUX_CLONE_FS | __LINUX_CLONE_FILES | __LINUX_CLONE_SIGHAND | __LINUX_CLONE_THREAD | __LINUX_CLONE_SYSVSEM | __LINUX_CLONE_SETTLS | __LINUX_CLONE_PARENT_SETTID | __LINUX_CLONE_CHILD_CLEARTID)
 
-/* Each thread's mapping: its stack, then its record, then its TLS block */
+/* Each thread's mapping: its stack (unless the caller gave one), then its record, then its TLS block */
 #define __LINUX_STACK_SIZE (256UL << 10)
 #define __LINUX_PAGE_SIZE 4096UL
 
@@ -116,12 +116,18 @@ struct __rtos_lock {
 #define __LINUX_THREAD_DETACHED 1u
 #define __LINUX_THREAD_EXITED 2u
 
+/* Linux's own priority ranges (sched_get_priority_min/max): SCHED_FIFO and SCHED_RR 1-99, SCHED_OTHER 0 */
+#define __LINUX_RT_PRIORITY_MIN 1
+#define __LINUX_RT_PRIORITY_MAX 99
+
 struct __rtos_thread {
 	int tid; /* set by clone, cleared and futex-woken by the kernel when the thread is gone */
-	int result;
+	void *result;
 	unsigned int state;
-	int (*entry)(void *);
+	void *(*entry)(void *);
 	void *arg;
+	int policy; /* recorded, not applied: the test port runs unprivileged (P10.02) */
+	int priority;
 	void *mapping;
 	size_t mapping_size;
 	struct __rtos_thread *next; /* on the list of detached threads waiting to be unmapped */

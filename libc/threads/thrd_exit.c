@@ -37,5 +37,5 @@ unsigned int __libc_thread_count = 1;
 	if (__atomic_sub_fetch(&__libc_thread_count, 1, __ATOMIC_ACQ_REL) == 0)
 		exit(EXIT_SUCCESS);
 
-	__rtos_thread_exit(res);
+	__rtos_thread_exit((void *)(intptr_t)res);
 }

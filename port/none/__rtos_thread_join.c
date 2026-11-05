@@ -17,7 +17,7 @@
 #include "rtos-none.h"
 
 /* There is no other thread to join */
-int __rtos_thread_join(struct __rtos_thread *, int *)
+int __rtos_thread_join(struct __rtos_thread *, void **)
 {
 	return -EINVAL;
 }

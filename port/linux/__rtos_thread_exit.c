@@ -20,7 +20,7 @@
  * zombie list, which a later create or join clears once the kernel has
  * cleared its tid. Exiting the initial thread leaves the others running.
  */
-[[noreturn]] void __rtos_thread_exit(int result)
+[[noreturn]] void __rtos_thread_exit(void *result)
 {
 	struct __rtos_thread *thread = __rtos_thread_self();
 

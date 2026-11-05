@@ -17,7 +17,7 @@
 #include "rtos-none.h"
 
 /* One thread only: thrd_create reports thrd_error */
-int __rtos_thread_create(struct __rtos_thread **, int (*)(void *), void *)
+int __rtos_thread_create(struct __rtos_thread **, const struct __rtos_thread_attr *, void *(*)(void *), void *)
 {
 	return -ENOSYS;
 }
