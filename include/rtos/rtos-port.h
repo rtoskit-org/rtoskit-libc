@@ -105,6 +105,17 @@ int __rtos_clock_gettime(int base, struct timespec *ts);
 int __rtos_clock_getres(int base, struct timespec *res);
 
 /*
+ * Entropy (issue #127, PLAN D146): fill buffer with count bytes from the
+ * port's entropy source (a hardware random number generator, or the host's
+ * getrandom), blocking until the source can supply them. libc asks for at
+ * most GETENTROPY_MAX (256) bytes at a time. Return 0 once every byte is
+ * written, or a negated errno: -ENOSYS when the port has no source, -EIO
+ * when the source fails. A port must never substitute predictable bytes
+ * (a clock, a counter, an address) for a missing source.
+ */
+int __rtos_entropy(void *buffer, size_t count);
+
+/*
  * Heap (PLAN D31). libc's allocator asks for its memory once, at the first
  * allocation, by calling this with index 0, 1, 2, ... until it returns false
  * (at most 8 regions). Each region is a fixed block of memory the allocator

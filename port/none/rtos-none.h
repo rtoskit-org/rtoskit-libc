@@ -25,6 +25,13 @@
 void __rtos_none_output(const void *buffer, size_t count);
 
 /*
+ * Bare metal has no entropy source: __rtos_entropy is a weak default
+ * returning -ENOSYS, so getentropy (and C++'s std::random_device) fails. A
+ * board with a hardware random number generator defines its own (issue
+ * #127, PLAN D146).
+ */
+
+/*
  * The heap is the memory between these symbols, which the board's linker
  * script defines. They are weak: without them there is no heap, and a board
  * may instead replace __rtos_heap_region itself to describe several regions.

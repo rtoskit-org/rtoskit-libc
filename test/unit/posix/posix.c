@@ -381,6 +381,21 @@ static void check_clocks(void)
 	CHECK(sched_yield() == 0);
 }
 
+/* getentropy over the Linux port's getrandom (issue #127) */
+static void check_entropy(void)
+{
+	unsigned char first[GETENTROPY_MAX + 1];
+	unsigned char second[32];
+	unsigned char zero[32] = { 0 };
+
+	CHECK(GETENTROPY_MAX == 256);
+	CHECK(getentropy(first, 32) == 0 && getentropy(second, 32) == 0);
+	CHECK(memcmp(first, second, 32) != 0 && memcmp(first, zero, 32) != 0);
+	CHECK(getentropy(first, GETENTROPY_MAX) == 0 && getentropy(first, 0) == 0);
+	errno = 0;
+	CHECK(getentropy(first, GETENTROPY_MAX + 1) == -1 && errno == EINVAL);
+}
+
 int main(void)
 {
 	check_descriptors();
@@ -391,6 +406,7 @@ int main(void)
 	check_reallocarray();
 	check_sincos();
 	check_clocks();
+	check_entropy();
 
 	if (failures == 0)
 		puts("pass: posix");
