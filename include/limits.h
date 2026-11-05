@@ -78,6 +78,16 @@
 /* POSIX.1-2024: the most bytes one getentropy call returns (issue #127, PLAN D132, D146) */
 #if __LIBC_POSIX_VISIBLE
 #define GETENTROPY_MAX 256
+
+/*
+ * POSIX threads (phase 10, PLAN D152): the key table's size (below POSIX's
+ * minimum of 128, for RAM: every thread holds a value per key), the passes
+ * of key destructors at thread exit, and the smallest stack pthread_attr_t
+ * accepts (the port may need more)
+ */
+#define PTHREAD_KEYS_MAX 32
+#define PTHREAD_DESTRUCTOR_ITERATIONS 4
+#define PTHREAD_STACK_MIN 512
 #endif
 
 #endif /* _LIMITS_H */

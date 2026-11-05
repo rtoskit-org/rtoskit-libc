@@ -41,4 +41,7 @@ typedef unsigned int gid_t;
 typedef long blksize_t;
 typedef long long blkcnt_t;
 
+/* The threads types (phase 10, PLAN D148), shared with <pthread.h> */
+#include <__pthread_types.h>
+
 #endif /* _SYS_TYPES_H */

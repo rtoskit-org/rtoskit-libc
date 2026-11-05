@@ -14,12 +14,15 @@
 #define _POSIX_C_SOURCE 202405L
 
 #include <errno.h>
+#include <limits.h>
+#include <pthread.h>
 #include <rtos/rtos-port.h>
 #include <sched.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 /*
  * POSIX threads (phase 10, docs/research/pthreads.md) on the Linux test
@@ -135,10 +138,144 @@ static void check_futex_base(void)
 	CHECK(__rtos_futex_wait(&word, 0, TIME_UTC, &deadline) == -ETIMEDOUT);
 }
 
+/* P10.03: the thread functions, attributes, scheduling and pthread_once */
+static void *return_arg(void *arg)
+{
+	return arg;
+}
+
+static void *exit_arg(void *arg)
+{
+	pthread_exit(arg);
+}
+
+static void *report_sched(void *arg)
+{
+	struct sched_param param;
+	int *policy = arg;
+
+	pthread_getschedparam(pthread_self(), policy, &param);
+	policy[1] = param.sched_priority;
+
+	return nullptr;
+}
+
+static void *report_stack(void *arg)
+{
+	int local = 0;
+
+	*(uintptr_t *)arg = (uintptr_t)&local;
+
+	return nullptr;
+}
+
+static unsigned int once_runs;
+static pthread_once_t once = PTHREAD_ONCE_INIT;
+
+static void once_body(void)
+{
+	struct timespec pause = { .tv_nsec = 2000000 };
+
+	/* Long enough for the other threads to arrive and wait */
+	nanosleep(&pause, nullptr);
+	__atomic_fetch_add(&once_runs, 1, __ATOMIC_RELAXED);
+}
+
+static void *once_thread(void *)
+{
+	return (void *)(intptr_t)pthread_once(&once, once_body);
+}
+
+static void check_threads(void)
+{
+	static unsigned char stack[64 << 10] __attribute__((aligned(16)));
+	pthread_t thread;
+	pthread_t threads[4];
+	pthread_attr_t attr;
+	struct sched_param param;
+	void *value = nullptr;
+	int report[2];
+	int detach;
+	int inherit;
+	int policy;
+	int scope;
+	size_t size;
+	void *address;
+	uintptr_t local = 0;
+
+	/* create, join, the value of a return and of pthread_exit */
+	CHECK(pthread_create(&thread, nullptr, return_arg, &value) == 0 && pthread_join(thread, &value) == 0 && value == &value);
+	CHECK(pthread_create(&thread, nullptr, exit_arg, &once) == 0 && pthread_join(thread, &value) == 0 && value == &once);
+	CHECK(pthread_equal(pthread_self(), pthread_self()) && !pthread_equal(pthread_self(), thread));
+
+	/* Joining oneself, a detached thread, and detaching twice */
+	CHECK(pthread_join(pthread_self(), nullptr) == EDEADLK);
+	CHECK(pthread_create(&thread, nullptr, return_arg, nullptr) == 0 && pthread_detach(thread) == 0);
+	CHECK(pthread_join(thread, nullptr) == EINVAL && pthread_detach(thread) == EINVAL);
+
+	/* Attributes: defaults, and the values each setter refuses */
+	CHECK(pthread_attr_init(&attr) == 0);
+	CHECK(pthread_attr_getdetachstate(&attr, &detach) == 0 && detach == PTHREAD_CREATE_JOINABLE);
+	CHECK(pthread_attr_getinheritsched(&attr, &inherit) == 0 && inherit == PTHREAD_INHERIT_SCHED);
+	CHECK(pthread_attr_getscope(&attr, &scope) == 0 && scope == PTHREAD_SCOPE_SYSTEM);
+	CHECK(pthread_attr_getschedpolicy(&attr, &policy) == 0 && policy == SCHED_OTHER);
+	CHECK(pthread_attr_setdetachstate(&attr, 7) == EINVAL && pthread_attr_setinheritsched(&attr, 7) == EINVAL);
+	CHECK(pthread_attr_setscope(&attr, PTHREAD_SCOPE_PROCESS) == ENOTSUP && pthread_attr_setscope(&attr, 7) == EINVAL);
+	CHECK(pthread_attr_setschedpolicy(&attr, 42) == EINVAL);
+	CHECK(pthread_attr_setstacksize(&attr, PTHREAD_STACK_MIN - 1) == EINVAL && pthread_attr_setstack(&attr, stack, PTHREAD_STACK_MIN - 1) == EINVAL);
+	CHECK(pthread_attr_setstacksize(&attr, 128 << 10) == 0 && pthread_attr_getstacksize(&attr, &size) == 0 && size == (128 << 10));
+
+	/* A detached thread from its attribute */
+	CHECK(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED) == 0);
+	CHECK(pthread_create(&thread, &attr, return_arg, nullptr) == 0 && pthread_join(thread, nullptr) == EINVAL);
+	CHECK(pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE) == 0);
+
+	/* Explicit scheduling, a priority outside the range, and inheritance */
+	param.sched_priority = 30;
+	CHECK(pthread_attr_setinheritsched(&attr, PTHREAD_EXPLICIT_SCHED) == 0 && pthread_attr_setschedpolicy(&attr, SCHED_RR) == 0 && pthread_attr_setschedparam(&attr, &param) == 0);
+	CHECK(pthread_create(&thread, &attr, report_sched, report) == 0 && pthread_join(thread, nullptr) == 0);
+	CHECK(report[0] == SCHED_RR && report[1] == 30);
+	param.sched_priority = 100;
+	CHECK(pthread_attr_setschedparam(&attr, &param) == 0 && pthread_create(&thread, &attr, report_sched, report) == EINVAL);
+	param.sched_priority = 40;
+	CHECK(pthread_setschedparam(pthread_self(), SCHED_FIFO, &param) == 0);
+	CHECK(pthread_create(&thread, nullptr, report_sched, report) == 0 && pthread_join(thread, nullptr) == 0);
+	CHECK(report[0] == SCHED_FIFO && report[1] == 40);
+	CHECK(pthread_setschedprio(pthread_self(), 41) == 0 && pthread_getschedparam(pthread_self(), &policy, &param) == 0 && policy == SCHED_FIFO && param.sched_priority == 41);
+	CHECK(pthread_setschedprio(pthread_self(), 0) == EINVAL);
+	param.sched_priority = 0;
+	CHECK(pthread_setschedparam(pthread_self(), SCHED_OTHER, &param) == 0);
+	CHECK(pthread_setschedparam(pthread_self(), 42, &param) == EINVAL);
+
+	/* sched_get_priority_max/min */
+	CHECK(sched_get_priority_min(SCHED_FIFO) == 1 && sched_get_priority_max(SCHED_FIFO) == 99 && sched_get_priority_max(SCHED_OTHER) == 0);
+	errno = 0;
+	CHECK(sched_get_priority_max(42) == -1 && errno == EINVAL);
+
+	/* The caller's stack */
+	CHECK(pthread_attr_init(&attr) == 0 && pthread_attr_setstack(&attr, stack, sizeof(stack)) == 0);
+	CHECK(pthread_attr_getstack(&attr, &address, &size) == 0 && address == stack && size == sizeof(stack));
+	CHECK(pthread_create(&thread, &attr, report_stack, &local) == 0 && pthread_join(thread, nullptr) == 0);
+	CHECK(local >= (uintptr_t)stack && local < (uintptr_t)stack + sizeof(stack));
+	CHECK(pthread_attr_destroy(&attr) == 0);
+
+	/* pthread_once raced by four threads runs its routine once */
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_create(&threads[i], nullptr, once_thread, nullptr) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_join(threads[i], &value) == 0 && value == nullptr);
+	CHECK(once_runs == 1 && pthread_once(&once, once_body) == 0 && once_runs == 1);
+
+	/* The option macros (<unistd.h>) and limits (<limits.h>) */
+	CHECK(_POSIX_THREADS > 0 && _POSIX_TIMEOUTS > 0 && _POSIX_THREAD_PRIORITY_SCHEDULING > 0);
+	CHECK(PTHREAD_KEYS_MAX == 32 && PTHREAD_DESTRUCTOR_ITERATIONS == 4 && PTHREAD_STACK_MIN == 512);
+}
+
 int main(void)
 {
 	check_seam();
 	check_futex_base();
+	check_threads();
 
 	if (failures == 0)
 		puts("pass: pthread");

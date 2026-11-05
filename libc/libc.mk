@@ -34,6 +34,7 @@ TARGET_OBJ_LIBS += libc/malloc
 TARGET_OBJ_LIBS += libc/malloc/${LIBC_MALLOC}
 TARGET_OBJ_LIBS += libc/math
 TARGET_OBJ_LIBS += $(addprefix libc/math/,${LIBC_MATH_LAYERS})
+TARGET_OBJ_LIBS += libc/pthread
 TARGET_OBJ_LIBS += libc/sched
 TARGET_OBJ_LIBS += libc/setjmp/${ARCH_CROSS}
 TARGET_OBJ_LIBS += libc/signal

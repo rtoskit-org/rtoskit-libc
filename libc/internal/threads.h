@@ -32,8 +32,19 @@ int __libc_mutex_unlock(mtx_t *mtx);
 /* cnd_wait and cnd_timedwait */
 int __libc_cond_wait(cnd_t *cond, mtx_t *mtx, const struct timespec *deadline);
 
-/* Live threads; the program ends when the last one calls thrd_exit (C23 7.28.5.5p5) */
+/* Live threads; the program ends when the last one calls thrd_exit or pthread_exit (C23 7.28.5.5p5) */
 extern unsigned int __libc_thread_count;
+
+/* The end of a thread for thrd_exit and pthread_exit: destructors, then the seam's exit or exit() (P10.03) */
+[[noreturn]] void __libc_thread_exit(void *result);
+
+/* What pthread_create hands the new thread */
+struct __libc_pthread_start {
+	void *(*func)(void *);
+	void *arg;
+};
+
+void *__libc_pthread_start(void *start);
 
 /* What thrd_create hands the new thread */
 struct __libc_thread_start {

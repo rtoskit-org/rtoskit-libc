@@ -63,6 +63,13 @@ int dup(int fildes);
  */
 int getentropy(void *buffer, size_t length);
 
+/* The POSIX threads options the library provides (phase 10, PLAN D148, D149) */
+#define _POSIX_THREADS 202405L
+#define _POSIX_TIMEOUTS 202405L
+#define _POSIX_THREAD_ATTR_STACKADDR 202405L
+#define _POSIX_THREAD_ATTR_STACKSIZE 202405L
+#define _POSIX_THREAD_PRIORITY_SCHEDULING 202405L
+
 __LIBC_END_DECLS
 
 #endif /* _UNISTD_H */
