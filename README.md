@@ -496,6 +496,8 @@ Read these first:
   [open questions](docs/plan/PLAN.md#7-open-questions).
 - [`docs/toolchain.md`](docs/toolchain.md): the tool versions we build and
   test with.
+- [`docs/release.md`](docs/release.md): how releases are made, and the
+  prebuilt archives each one carries (`docs/release/` holds the notes).
 
 For more detail:
 

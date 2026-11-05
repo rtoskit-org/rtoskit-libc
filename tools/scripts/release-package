@@ -1,0 +1,55 @@
+#!/bin/sh
+#
+# Copyright (C) 2026 Red Rocket Computing, LLC
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# release-package
+#
+# Created on: Nov 5, 2026
+#     Author: Stephen Street (stephen@redrocketcomputing.com)
+#
+# Packages one architecture of a release (docs/release.md, PLAN D158):
+#
+#   tools/scripts/release-package <version> <arch> [<output directory>]
+#
+# installs the headers and the libc*.a, libm.a and port archives of the release (size) and speed builds with
+# "make library" into a staging directory, then writes <output directory>/rtoskit-libc-<version>-<arch>.tar.xz
+# (default dist/) holding rtoskit-libc-<version>-<arch>/{release,speed}/{include,lib}, LICENSE, README.md and
+# VERSION. Run it from the project root after a build of that architecture (make check builds every build type).
+
+set -eu
+
+if [ $# -lt 2 ] || [ $# -gt 3 ]; then
+	echo "usage: release-package <version> <arch> [<output directory>]" >&2
+	exit 2
+fi
+
+version=$1
+arch=$2
+output=${3:-dist}
+name="rtoskit-libc-${version}-${arch}"
+
+if [ ! -f Makefile ] || [ ! -f include/rtos/rtos-port.h ]; then
+	echo "release-package: run it from the project root" >&2
+	exit 2
+fi
+
+mkdir -p "${output}"
+output=$(cd "${output}" && pwd)
+stage=$(mktemp -d)
+trap 'rm -rf "${stage}"' EXIT
+
+for build_type in release speed; do
+	make --no-print-directory ARCH_CROSS="${arch}" BUILD_TYPE="${build_type}" PREFIX="${stage}/prefix" library >/dev/null
+	mkdir -p "${stage}/${name}/${build_type}"
+	cp -R "${stage}/prefix/${arch}/${build_type}/include" "${stage}/prefix/${arch}/${build_type}/lib" "${stage}/${name}/${build_type}/"
+done
+
+cp LICENSE README.md "${stage}/${name}/"
+printf '%s\n' "${version}" >"${stage}/${name}/VERSION"
+
+tar -C "${stage}" --owner=0 --group=0 --numeric-owner --sort=name -cJf "${output}/${name}.tar.xz" "${name}"
+echo "${output}/${name}.tar.xz"

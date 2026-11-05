@@ -58,3 +58,4 @@ build/
 images/
 local/
 __pycache__/
+dist/
