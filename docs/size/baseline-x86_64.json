@@ -2727,7 +2727,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 33,
+    "text": 63,
     "unwind": 0
    },
    "clock_gettime.o": {
@@ -7858,7 +7858,7 @@
    "rodata": 17995,
    "tbss": 626,
    "tdata": 8,
-   "text": 103797,
+   "text": 103827,
    "unwind": 88
   }
  },
@@ -8717,7 +8717,7 @@
    "cimagl.o:cimagl": 8,
    "clearerr.o:clearerr": 16,
    "clock.o:clock": 32,
-   "clock_getres.o:clock_getres": 16,
+   "clock_getres.o:clock_getres": 32,
    "clock_gettime.o:clock_gettime": 16,
    "clog.o:clog": 80,
    "clog.o:libc/complex/clog.c:__libc_dd_add": 8,
