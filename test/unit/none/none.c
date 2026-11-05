@@ -220,6 +220,8 @@ int main(int argc, char **argv)
 	errno = 0;
 	CHECK(timespec_get(&ts, TIME_UTC) == 0 && errno == ENOSYS && ts.tv_sec == 0 && ts.tv_nsec == 0);
 	CHECK(clock_getres(CLOCK_REALTIME, &ts) == -1 && errno == ENOSYS);
+	errno = 0;
+	CHECK(clock_getres(CLOCK_MONOTONIC, nullptr) == -1 && errno == ENOSYS);
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000 }, nullptr) == -1 && errno == ENOSYS);
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 1000000000 }, nullptr) == -1 && errno == EINVAL);
 	CHECK(sched_yield() == 0);

@@ -366,6 +366,11 @@ static void check_clocks(void)
 	errno = 0;
 	CHECK(clock_getres(-1, &ts) == -1 && errno == EINVAL);
 
+	/* regression_clock_getres_null: res may be null, to ask whether the clock exists */
+	CHECK(clock_getres(CLOCK_MONOTONIC, nullptr) == 0 && clock_getres(CLOCK_REALTIME, nullptr) == 0);
+	errno = 0;
+	CHECK(clock_getres(99, nullptr) == -1 && errno == EINVAL);
+
 	/* nanosleep sleeps at least the time asked, on the monotonic clock */
 	CHECK(clock_gettime(CLOCK_MONOTONIC, &before) == 0);
 	CHECK(nanosleep(&(struct timespec){ .tv_nsec = 2000000 }, nullptr) == 0);
