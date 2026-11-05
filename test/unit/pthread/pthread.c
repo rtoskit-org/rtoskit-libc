@@ -271,11 +271,218 @@ static void check_threads(void)
 	CHECK(PTHREAD_KEYS_MAX == 32 && PTHREAD_DESTRUCTOR_ITERATIONS == 4 && PTHREAD_STACK_MIN == 512);
 }
 
+/* P10.04: mutexes, condition variables and keys */
+static pthread_mutex_t shared_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t shared_cond = PTHREAD_COND_INITIALIZER;
+static unsigned int counter;
+static int ready;
+
+static void *count_up(void *)
+{
+	for (int i = 0; i < 10000; ++i) {
+		pthread_mutex_lock(&shared_mutex);
+		++counter;
+		pthread_mutex_unlock(&shared_mutex);
+	}
+
+	return nullptr;
+}
+
+static void *try_from_other(void *arg)
+{
+	return (void *)(intptr_t)pthread_mutex_trylock(arg);
+}
+
+static void *unlock_from_other(void *arg)
+{
+	return (void *)(intptr_t)pthread_mutex_unlock(arg);
+}
+
+static void *signal_ready(void *)
+{
+	struct timespec pause = { .tv_nsec = 5000000 };
+
+	nanosleep(&pause, nullptr);
+	pthread_mutex_lock(&shared_mutex);
+	ready = 1;
+	pthread_cond_signal(&shared_cond);
+	pthread_mutex_unlock(&shared_mutex);
+
+	return nullptr;
+}
+
+static struct timespec after(clockid_t clock, long milliseconds)
+{
+	struct timespec ts;
+
+	clock_gettime(clock, &ts);
+	ts.tv_nsec += milliseconds * 1000000L;
+	ts.tv_sec += ts.tv_nsec / 1000000000L;
+	ts.tv_nsec %= 1000000000L;
+
+	return ts;
+}
+
+static unsigned int destructor_calls;
+static pthread_key_t again_key;
+
+static void count_destructor(void *)
+{
+	++destructor_calls;
+}
+
+static void again_destructor(void *value)
+{
+	/* Setting a value again asks for another pass, at most PTHREAD_DESTRUCTOR_ITERATIONS in all */
+	++destructor_calls;
+	pthread_setspecific(again_key, value);
+}
+
+static void *set_keys(void *arg)
+{
+	pthread_key_t *keys = arg;
+
+	pthread_setspecific(keys[0], &keys[0]);
+	pthread_setspecific(again_key, &keys[1]);
+	return pthread_getspecific(keys[0]);
+}
+
+static void check_mutexes(void)
+{
+	pthread_mutex_t mutex;
+	pthread_mutexattr_t attr;
+	pthread_t threads[4];
+	struct timespec start;
+	struct timespec end;
+	struct timespec deadline;
+	void *value = nullptr;
+	int type;
+
+	/* Attributes */
+	CHECK(pthread_mutexattr_init(&attr) == 0 && pthread_mutexattr_gettype(&attr, &type) == 0 && type == PTHREAD_MUTEX_DEFAULT);
+	CHECK(pthread_mutexattr_settype(&attr, 7) == EINVAL);
+	CHECK(pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) == ENOTSUP && pthread_mutexattr_setprotocol(&attr, PTHREAD_PRIO_PROTECT) == ENOTSUP);
+
+	/* Mutual exclusion under contention */
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_create(&threads[i], nullptr, count_up, nullptr) == 0);
+	for (int i = 0; i < 4; ++i)
+		CHECK(pthread_join(threads[i], nullptr) == 0);
+	CHECK(counter == 40000);
+
+	/* Error-checking: relock EDEADLK, a stranger's unlock EPERM, destroy while locked EBUSY */
+	CHECK(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK) == 0 && pthread_mutex_init(&mutex, &attr) == 0);
+	CHECK(pthread_mutex_unlock(&mutex) == EPERM);
+	CHECK(pthread_mutex_lock(&mutex) == 0 && pthread_mutex_lock(&mutex) == EDEADLK && pthread_mutex_trylock(&mutex) == EBUSY);
+	CHECK(pthread_mutex_destroy(&mutex) == EBUSY);
+	CHECK(pthread_create(&threads[0], nullptr, unlock_from_other, &mutex) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EPERM);
+	CHECK(pthread_create(&threads[0], nullptr, try_from_other, &mutex) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EBUSY);
+
+	CHECK(pthread_mutex_unlock(&mutex) == 0 && pthread_mutex_destroy(&mutex) == 0);
+
+	/* Timed and clock-selecting locks against a held mutex: a deadline long past, a bad one, a short wait */
+	deadline = (struct timespec){ .tv_sec = 1 };
+
+	CHECK(pthread_mutex_init(&mutex, nullptr) == 0 && pthread_mutex_lock(&mutex) == 0);
+	CHECK(pthread_mutex_timedlock(&mutex, &deadline) == ETIMEDOUT);
+	CHECK(pthread_mutex_timedlock(&mutex, &(struct timespec){ .tv_nsec = 1000000000 }) == EINVAL);
+	CHECK(pthread_mutex_clocklock(&mutex, 42, &deadline) == EINVAL);
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	deadline = after(CLOCK_MONOTONIC, 20);
+	CHECK(pthread_mutex_clocklock(&mutex, CLOCK_MONOTONIC, &deadline) == ETIMEDOUT);
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	CHECK(nanoseconds(&end) - nanoseconds(&start) >= 20000000);
+	CHECK(pthread_mutex_unlock(&mutex) == 0);
+	deadline = after(CLOCK_REALTIME, 1000);
+	CHECK(pthread_mutex_timedlock(&mutex, &deadline) == 0 && pthread_mutex_unlock(&mutex) == 0);
+
+	/* Recursive: counts, and only the last unlock releases */
+	CHECK(pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) == 0 && pthread_mutex_init(&mutex, &attr) == 0);
+	CHECK(pthread_mutex_lock(&mutex) == 0 && pthread_mutex_lock(&mutex) == 0 && pthread_mutex_trylock(&mutex) == 0);
+	CHECK(pthread_mutex_unlock(&mutex) == 0 && pthread_mutex_unlock(&mutex) == 0);
+	CHECK(pthread_create(&threads[0], nullptr, try_from_other, &mutex) == 0 && pthread_join(threads[0], &value) == 0 && (intptr_t)value == EBUSY);
+	CHECK(pthread_mutex_unlock(&mutex) == 0 && pthread_mutex_unlock(&mutex) == EPERM);
+	CHECK(pthread_mutexattr_destroy(&attr) == 0);
+}
+
+static void check_conditions(void)
+{
+	pthread_condattr_t attr;
+	pthread_cond_t cond;
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	pthread_t thread;
+	struct timespec deadline;
+	struct timespec start;
+	struct timespec end;
+	clockid_t clock;
+
+	/* Attributes: CLOCK_REALTIME by default, CLOCK_MONOTONIC on request, nothing else */
+	CHECK(pthread_condattr_init(&attr) == 0 && pthread_condattr_getclock(&attr, &clock) == 0 && clock == CLOCK_REALTIME);
+	CHECK(pthread_condattr_setclock(&attr, CLOCK_PROCESS_CPUTIME_ID) == EINVAL && pthread_condattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) == ENOTSUP);
+	CHECK(pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) == 0 && pthread_condattr_getclock(&attr, &clock) == 0 && clock == CLOCK_MONOTONIC);
+
+	/* A signal wakes the waiter, which holds the mutex again */
+	CHECK(pthread_create(&thread, nullptr, signal_ready, nullptr) == 0);
+	CHECK(pthread_mutex_lock(&shared_mutex) == 0);
+	while (!ready)
+		CHECK(pthread_cond_wait(&shared_cond, &shared_mutex) == 0);
+	CHECK(pthread_mutex_trylock(&shared_mutex) == EBUSY && pthread_mutex_unlock(&shared_mutex) == 0);
+	CHECK(pthread_join(thread, nullptr) == 0);
+
+	/* Timed waits: on the condition variable's own clock, and on a chosen one */
+	CHECK(pthread_cond_init(&cond, &attr) == 0 && pthread_mutex_lock(&mutex) == 0);
+	clock_gettime(CLOCK_MONOTONIC, &start);
+	deadline = after(CLOCK_MONOTONIC, 20);
+	CHECK(pthread_cond_timedwait(&cond, &mutex, &deadline) == ETIMEDOUT);
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	CHECK(nanoseconds(&end) - nanoseconds(&start) >= 20000000 && pthread_mutex_trylock(&mutex) == EBUSY);
+	deadline = after(CLOCK_REALTIME, 10);
+	CHECK(pthread_cond_clockwait(&cond, &mutex, CLOCK_REALTIME, &deadline) == ETIMEDOUT);
+	CHECK(pthread_cond_clockwait(&cond, &mutex, 42, &deadline) == EINVAL);
+	CHECK(pthread_cond_timedwait(&cond, &mutex, &(struct timespec){ .tv_nsec = -1 }) == EINVAL);
+	CHECK(pthread_mutex_unlock(&mutex) == 0);
+
+	/* Waiting without the mutex, and the rest */
+	CHECK(pthread_cond_wait(&cond, &mutex) == EPERM);
+	CHECK(pthread_cond_signal(&cond) == 0 && pthread_cond_broadcast(&cond) == 0 && pthread_cond_destroy(&cond) == 0 && pthread_condattr_destroy(&attr) == 0);
+}
+
+static void check_keys(void)
+{
+	pthread_key_t keys[PTHREAD_KEYS_MAX + 1];
+	pthread_t thread;
+	void *value = nullptr;
+	unsigned int created = 0;
+
+	/* Every key, then EAGAIN */
+	while (created < PTHREAD_KEYS_MAX && pthread_key_create(&keys[created], nullptr) == 0)
+		++created;
+	CHECK(created == PTHREAD_KEYS_MAX && pthread_key_create(&keys[created], nullptr) == EAGAIN);
+	for (unsigned int i = 0; i < created; ++i)
+		CHECK(pthread_key_delete(keys[i]) == 0);
+	CHECK(pthread_key_delete(keys[0]) == EINVAL && pthread_setspecific(keys[0], &value) == EINVAL && pthread_getspecific(keys[0]) == nullptr);
+	CHECK(pthread_key_delete(PTHREAD_KEYS_MAX) == EINVAL);
+
+	/* Values per thread, and a deleted key reads as null */
+	CHECK(pthread_key_create(&keys[0], count_destructor) == 0 && pthread_key_create(&again_key, again_destructor) == 0);
+	CHECK(pthread_setspecific(keys[0], &value) == 0 && pthread_getspecific(keys[0]) == &value);
+
+	/* Destructors at thread exit: one call for keys[0], PTHREAD_DESTRUCTOR_ITERATIONS for the key that sets itself again */
+	destructor_calls = 0;
+	CHECK(pthread_create(&thread, nullptr, set_keys, keys) == 0 && pthread_join(thread, &value) == 0 && value == &keys[0]);
+	CHECK(destructor_calls == 1 + PTHREAD_DESTRUCTOR_ITERATIONS);
+	CHECK(pthread_getspecific(keys[0]) == &value);
+	CHECK(pthread_key_delete(keys[0]) == 0 && pthread_getspecific(keys[0]) == nullptr && pthread_key_delete(again_key) == 0);
+}
+
 int main(void)
 {
 	check_seam();
 	check_futex_base();
 	check_threads();
+	check_mutexes();
+	check_conditions();
+	check_keys();
 
 	if (failures == 0)
 		puts("pass: pthread");

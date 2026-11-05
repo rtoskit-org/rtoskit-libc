@@ -84,14 +84,23 @@ Q45 and Q46 answered: D149 (a range per policy, real round-robin), D150 (`__rtos
   `test/unit/none` (`EAGAIN`, `EDEADLK`, `pthread_once`, the ranges),
   `<pthread.h>` in the standalone and `gnu++98` header tests.
 
-## P10.04 — Mutexes, condition variables, keys  `[ ]`
-- [ ] `PTHREAD_MUTEX_NORMAL`, `RECURSIVE`, `ERRORCHECK`, `DEFAULT`; `lock`,
-  `trylock`, `timedlock`, `clocklock`, `unlock`, `init`, `destroy`, static
-  initialisers; `pthread_mutexattr_*`.
-- [ ] `pthread_cond_wait`, `timedwait`, `clockwait`, `signal`, `broadcast`;
-  `pthread_condattr_setclock`/`getclock`.
-- [ ] `pthread_key_create`, `delete`, `getspecific`, `setspecific`, with
-  destructor passes up to `PTHREAD_DESTRUCTOR_ITERATIONS`.
+## P10.04 — Mutexes, condition variables, keys  `[x]`
+- [x] `PTHREAD_MUTEX_NORMAL`, `RECURSIVE`, `ERRORCHECK`, `DEFAULT`; `lock`,
+  `trylock`, `timedlock`, `clocklock`, `unlock`, `init`, `destroy`,
+  `PTHREAD_MUTEX_INITIALIZER`; `pthread_mutexattr_*` (D153).
+- [x] `pthread_cond_wait`, `timedwait`, `clockwait`, `signal`, `broadcast`,
+  `PTHREAD_COND_INITIALIZER`; `pthread_condattr_setclock`/`getclock` and
+  `setpshared`/`getpshared`.
+- [x] `pthread_key_create`, `delete`, `getspecific`, `setspecific` on
+  `<threads.h>`'s key table, with its destructor passes.
+- [x] Tests: `test/unit/pthread` (four threads counting under a mutex; each
+  type's relock, stranger's unlock, `trylock` and `destroy`; timed and
+  clock-selecting locks with a past, a bad and a 20 ms deadline; a signalled
+  wait that holds the mutex again; timed waits on the condition's own clock
+  and on a chosen one; `EPERM`; every key, then `EAGAIN`; deleted keys;
+  destructor passes, one for a plain key and
+  `PTHREAD_DESTRUCTOR_ITERATIONS` for one that sets itself again),
+  `test/unit/none` (lock, `trylock`, a timed wait without a clock, a key).
 
 ## P10.05 — Priority-inheritance mutexes  `[ ]`
 - [ ] A seam pair for PI locking (Linux `FUTEX_LOCK_PI`/`UNLOCK_PI`;
