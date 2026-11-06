@@ -3,8 +3,8 @@
 rtoskit-libc is a C standard library for small embedded systems. It
 implements ISO C23 (N3220), was written clean-room from the standard text,
 and reaches the operating system through one link-time interface, so the
-same library runs on bare metal or under any RTOS that provides a dozen or
-so functions. It is licensed under the [Mozilla Public License 2.0](LICENSE).
+same library runs on bare metal or under any RTOS that provides a few
+dozen functions. It is licensed under the [Mozilla Public License 2.0](LICENSE).
 
 It targets Arm Cortex-M, from the Cortex-M0 to the Cortex-M7 and Cortex-M33,
 and builds for x86-64 as well, which is where it is developed and tested.
@@ -18,24 +18,32 @@ and builds for x86-64 as well, which is where it is developed and tested.
    `memset_explicit`, `strfromd` and `timegm`, as well as `<threads.h>` and
    `<stdatomic.h>`. The library is itself written in C23.
 
-2. **Correct results.** `printf` and `strtod` convert floating-point values
+2. **POSIX threads and a minimal POSIX subset.** `<pthread.h>` (threads
+   with attributes and priorities; normal, recursive, error-checking and
+   priority-inheriting mutexes; condition variables; keys; read-write
+   locks; barriers; spin locks) is part of `libc.a`, and `<threads.h>` is a
+   thin layer over it. Descriptor I/O, `clock_gettime`, `nanosleep`,
+   `sched_yield` and the other names an RTOS port or a hosted libstdc++
+   needs are there too, and every header compiles as C++.
+
+3. **Correct results.** `printf` and `strtod` convert floating-point values
    exactly, at any precision. The float maths functions are correctly
    rounded, and the double functions are below 0.53 ulp. Floating-point
    exceptions are raised on every core, including those without an FPU.
 
-3. **Small by construction.** Each function lives in its own file and
+4. **Small by construction.** Each function lives in its own file and
    section, so `--gc-sections` keeps only what a program calls. There is no
    hidden global state: per-thread state such as `errno`, `strtok`'s position
    and `rand`'s seed is `thread_local`. Differences between cores come from
    the build choosing different files, never from `#if`.
 
-4. **One interface to the OS.** Locks, threads, thread-local storage, time,
+5. **One interface to the OS.** Locks, threads, thread-local storage, time,
    I/O, the heap and exit all go through `__rtos_*` functions declared in
    [`include/rtos/rtos-port.h`](include/rtos/rtos-port.h). A port implements
    them in its own archive. Two ports are included: `port/none` for bare
    metal and `port/linux`, which the test suite runs on.
 
-5. **A size build and a speed build.** The `release` build is as small as we
+6. **A size build and a speed build.** The `release` build is as small as we
    can make it. The `speed` build compiles the same sources with faster
    string routines, conversions and, on cores without an FPU, fixed-point
    maths. Drop-in archives trim `printf` further (`libc-nofloat.a`,
@@ -44,10 +52,23 @@ and builds for x86-64 as well, which is where it is developed and tested.
    allocators: nano, TLSF or tiny.
 
 The project's goals, architecture and every design decision (numbered D1 to
-D117) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
+D160) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
 done in phases: conformance first, then size, then speed, then a comparison
 with Arm Optimized Routines, then a round of speed work that the size
-budgets had held back.
+budgets had held back, then the POSIX subset and C++ support, faster sine
+and cosine, and POSIX threads.
+
+## Getting it
+
+Each [release](https://github.com/sgstreet/rtoskit-libc/releases) carries
+one prebuilt archive per architecture, `rtoskit-libc-<version>-<arch>.tar.xz`,
+holding the headers and archives of the `release` and `speed` builds, with
+`SHA256SUMS` and a build-provenance attestation for each
+(`gh attestation verify <archive> --repo sgstreet/rtoskit-libc`). Unpack one
+and use its `release/include` and `release/lib` wherever this README uses
+`images/<arch>/release/`. Releases are 0.x for now: the ABI and the OS
+interface may still change before 1.0. To build it yourself, read on;
+[`docs/release.md`](docs/release.md) describes how releases are made.
 
 ## How it compares
 
@@ -451,8 +472,8 @@ details, and `test/unit/cxx` for what is tested.
 
 To run on your RTOS, copy `port/none`, implement the `__rtos_*` functions
 declared in [`include/rtos/rtos-port.h`](include/rtos/rtos-port.h) (locks
-and futexes, thread creation, TLS setup, time, I/O, the heap regions and
-exit), and link your port's archive in place of `librtos-none.a`. With the
+and futexes, priority-inheritance locks, thread creation and scheduling,
+TLS setup, time, I/O, the heap regions and exit), and link your port's archive in place of `librtos-none.a`. With the
 spec file, `--port=<name>` selects `librtos-<name>.a`.
 
 On bare metal, `port/none` works as it is: your startup code calls
@@ -498,7 +519,7 @@ Read these first:
 - [`docs/configuration.md`](docs/configuration.md): the archives, the build
   variants, the cores, the allocators, the ports and parent builds.
 - [`docs/plan/PLAN.md`](docs/plan/PLAN.md): goals, scope and architecture,
-  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D117) and the
+  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D160) and the
   [open questions](docs/plan/PLAN.md#7-open-questions).
 - [`docs/toolchain.md`](docs/toolchain.md): the tool versions we build and
   test with.
@@ -526,7 +547,10 @@ For more detail:
   [armv8-m.main](docs/perf/armv8-m.main.md).
 - The task lists of each phase: [1](docs/plan/phase-1.md),
   [2](docs/plan/phase-2.md), [3](docs/plan/phase-3.md),
-  [4](docs/plan/phase-4.md), [5](docs/plan/phase-5.md).
+  [4](docs/plan/phase-4.md), [5](docs/plan/phase-5.md),
+  [6](docs/plan/phase-6.md) (planned), [7](docs/plan/phase-7.md),
+  [8](docs/plan/phase-8.md), [9](docs/plan/phase-9.md),
+  [10](docs/plan/phase-10.md).
 - [`CLAUDE.md`](CLAUDE.md): how we work on the code: the workflow, the
   coding style and the tests.
 - [`docs/standard/`](docs/standard/): the standard text the clean-room work
