@@ -13,5 +13,5 @@
 
 # C++ is tested on the Arm architectures only; the x86_64 development build has no C++ runtime to link (PLAN D121)
 ifeq (${ARCH_FAMILY},arm)
-SRC += ${SOURCE_DIR}/cxx.cpp ${SOURCE_DIR}/headers17.cpp ${SOURCE_DIR}/headers98.cpp
+SRC += ${SOURCE_DIR}/cxx.cpp ${SOURCE_DIR}/headers17.cpp ${SOURCE_DIR}/headers98.cpp ${SOURCE_DIR}/std_names.cpp
 endif

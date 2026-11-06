@@ -22,5 +22,6 @@ void __cxa_finalize(void *dso);
 
 int headers17(void);
 int headers98(void);
+int std_names(void);
 
 #endif /* _CXX_H */

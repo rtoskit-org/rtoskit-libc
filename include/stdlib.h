@@ -38,8 +38,15 @@ typedef __WCHAR_TYPE__ wchar_t;
 /* The "C" locale is single-byte (C23 7.24p3) */
 #define MB_CUR_MAX ((size_t)1)
 
-/* once_flag, ONCE_FLAG_INIT and call_once (7.24p2, also in <threads.h>) */
+/*
+ * once_flag, ONCE_FLAG_INIT and call_once (7.24p2, also in <threads.h>). C
+ * only: C++ has std::once_flag and std::call_once, and libstdc++'s <cstdlib>
+ * includes this header, so "using namespace std" would make the C names
+ * ambiguous (issue #138, PLAN D161)
+ */
+#ifndef __cplusplus
 #include <__once_flag.h>
+#endif
 
 typedef struct {
 	int quot;
