@@ -28,6 +28,13 @@ export LIBC_MALLOC ?= nano
 export LIBC_UNWIND_TABLES ?=
 LIBC_CFLAGS += $(if $(filter 1,${LIBC_UNWIND_TABLES}),-funwind-tables)
 
+# LIBC_EXTRA_CFLAGS is the parent build's: compiler flags appended after the library's own, for the C sources of
+# libc.a, its flavour archives and the port archives (for example -mpoke-function-name on Arm). Not the assembler
+# sources, the link or the test programs. Empty by default, and the size baselines and budgets are without it.
+# Run "make clean" after changing it, as for LIBC_MALLOC (PLAN D160).
+export LIBC_EXTRA_CFLAGS ?=
+LIBC_CFLAGS += ${LIBC_EXTRA_CFLAGS}
+
 -include ${PROJECT_ROOT}/tools/makefiles/${CHIP_FAMILY}.mk
 -include ${PROJECT_ROOT}/tools/makefiles/${CHIP_TYPE}.mk
 -include ${PROJECT_ROOT}/tools/makefiles/${BUILD_TYPE}.mk

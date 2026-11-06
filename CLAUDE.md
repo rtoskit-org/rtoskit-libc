@@ -79,6 +79,9 @@ make library                           # headers, libc*.a and the port archives 
 - **Unwind tables (D134):** `LIBC_UNWIND_TABLES=1` builds the library with `-funwind-tables`, so a backtrace
   (`std::stacktrace`, `_Unwind_Backtrace`) passes through library frames; off by default, and the size baselines and
   budgets are without it. Run `make clean` after changing it.
+- **Parent flags (D160):** `LIBC_EXTRA_CFLAGS` appends a parent build's compiler flags after `LIBC_CFLAGS` for the
+  library's and ports' C sources (e.g. `-mpoke-function-name`); empty by default, and the size baselines and budgets
+  are without it. Run `make clean` after changing it.
 - **Size and speed flavours (D73):** the `release` build type is the size
   flavour, `speed` the speed flavour (`-Os`, `LIBC_FLAVOUR := speed`, its own
   build tree and install). Arch files select per-flavour kernels through

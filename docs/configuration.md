@@ -253,7 +253,13 @@ search also starts one level down, inside the checkout. The glue has to:
    place of picolibc's `--specs`, and link `libc.a` (or a flavour archive),
    its own port archive and libgcc in a group.
 5. **Hand over the parent's compiler** with `CROSS_COMPILE`, so nothing is
-   downloaded twice; it must be GCC 14 or newer.
+   downloaded twice; it must be GCC 14 or newer. Add the parent's own
+   compiler flags with `LIBC_EXTRA_CFLAGS` (for example
+   `-funwind-tables -mpoke-function-name` on Arm), never with `CFLAGS` or
+   `LIBC_CFLAGS`, which would replace the library's flags. They apply to the
+   C sources of `libc*.a` and the port archives, not to the assembler
+   sources, the link or the tests; run `make clean` after changing them
+   (D160).
 6. **Order the parent's build** so that the modules which used to depend on
    `libc` depend on `rtoskit-libc`.
 
@@ -267,6 +273,8 @@ A sysroot layout (`make ARCH_CROSS=<arch> ... install` with `MULTIDIR`) and
 | `ARCH_CROSS` | every architecture in `ARCHS` | one architecture, e.g. `armv7e-m` |
 | `BUILD_TYPE` | `debug`, `release` and `speed` | one build type (`speed` is the speed flavour) |
 | `LIBC_MALLOC` | `nano` | the allocator in `libc.a` |
+| `LIBC_UNWIND_TABLES=1` | off | build the library with `-funwind-tables` (D134) |
+| `LIBC_EXTRA_CFLAGS` | empty | the parent's compiler flags, appended after the library's own for the C sources of `libc*.a` and the port archives (D160) |
 | `HOST_CC` | `gcc` if it is GCC 14 or newer, else the newest `gcc-NN` | the host compiler for the x86_64 build; it must be GCC 14 or newer (D107) |
 | `V=1` | off | show the commands |
 
