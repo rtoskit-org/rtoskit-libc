@@ -287,6 +287,8 @@ Set these on the `make` command line.
 | `BUILD_TYPE` | `all` | One build type: `debug`, `release` or `speed` |
 | `BUILDS` | `debug release speed` | The build types that `BUILD_TYPE=all` loops over |
 | `LIBC_MALLOC` | `nano` | The allocator inside `libc.a`: `nano`, `tlsf` or `tiny`. Run `make clean` after changing it. All three are always built and tested. |
+| `LIBC_UNWIND_TABLES=1` | off | Builds the library with `-funwind-tables`, so a backtrace (`std::stacktrace`, `_Unwind_Backtrace`) passes through library frames. Run `make clean` after changing it. |
+| `LIBC_EXTRA_CFLAGS` | empty | Compiler flags added after the library's own, for the C sources of the library and port archives, e.g. `-mpoke-function-name`. Run `make clean` after changing it. |
 | `HOST_CC` | found | The host GCC for x86-64, version 14 or newer |
 | `CROSS_COMPILE` | the downloaded GCC 16.2 | The prefix of your own arm-none-eabi toolchain, e.g. `/opt/arm/bin/arm-none-eabi-`, version 14 or newer |
 | `OUTPUT_ROOT` | `build` | Where the build trees go |
@@ -473,6 +475,7 @@ $(MAKE) -C $(LIBC_DIR) \
 	OUTPUT_ROOT=<build dir> PREFIX=<install dir> \
 	ARCH_CROSS=armv8-m.main BUILD_TYPE=release \
 	CROSS_COMPILE=$(CROSS_COMPILE) \
+	LIBC_EXTRA_CFLAGS="-funwind-tables -mpoke-function-name" \
 	library
 ```
 
@@ -480,7 +483,10 @@ It then links `<install dir>/armv8-m.main/release/{include,lib}` as shown
 above, or sets `RTOSKIT_LIBC` to that install and uses the spec file. Pass
 every directory on the command line, or a parent that uses the same
 variable names will leak its own values in. An external `CROSS_COMPILE` is
-used as given and must be GCC 14 or newer. The details, including the glue
+used as given and must be GCC 14 or newer. `LIBC_EXTRA_CFLAGS` is the
+parent's own: its flags go after the library's, so the parent never restates
+them. They reach the C sources of `libc*.a` and the port archives, not the
+assembler sources, the link or the tests. The details, including the glue
 for a pi-pico-style parent, are in
 [`docs/configuration.md`](docs/configuration.md#building-from-another-project-d105).
 A sysroot and crosstool-NG integration are tracked in issue #65.
