@@ -176,6 +176,13 @@ script today; a `port/none` linker script must provide them too.
   `__cxa_atexit` returns nonzero, as `atexit` does.
 - A thread that uses no `thread_local` object with a destructor runs an empty
   list.
+- A name C declares that namespace `std` declares differently: with
+  `using namespace std;`, `once_flag` from `<mutex>` and C's `::once_flag`
+  from `<stdlib.h>` (which libstdc++'s `<cstdlib>` includes) are ambiguous, so
+  `<stdlib.h>` leaves C's `once_flag`, `ONCE_FLAG_INIT` and `call_once` out in
+  C++ (issue #138, D161); `<threads.h>`, which C++ does not have, keeps them.
+  `test/unit/cxx/std_names.cpp` includes every other header and declares
+  stand-ins for `std::once_flag`, `std::call_once` and `std::unreachable`.
 
 ## Test vectors
 

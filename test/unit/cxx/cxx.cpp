@@ -299,6 +299,7 @@ int main(void)
 	check(strcmp(trace, "AB") == 0, "static constructors in order");
 	check(headers17() == 0, "the headers as C++17");
 	check(headers98() == 0, "the headers as C++98");
+	check(std_names() == 1, "no C name hides one of namespace std's");
 
 	test_exceptions();
 	test_call_once_exception();
