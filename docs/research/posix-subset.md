@@ -143,7 +143,7 @@ null, and `toupper`/`tolower` call the C functions), is the right OS layer.
 The toolchain therefore needs a small libstdc++ patch: a configure branch
 (`--with-rtoskit-libc`, or an `arm*-*-eabi*` case in `crossconfig.m4`) that
 selects `os/generic` and declares exactly what D128 provides. This belongs
-to sgstreet/rtoskit-gcc#7 (Q39). The library side is unaffected.
+to rtoskit-org/rtoskit-gcc#7 (Q39). The library side is unaffected.
 
 ## Consequences for D128
 
@@ -439,7 +439,7 @@ is the same. Capture never touches files.
 
 ## Issue #113: what the hosted libstdc++ build still needed (D144)
 
-GCC 16.2's hosted libstdc++, built with the `stdio` backend and `--disable-wchar_t` against the library at `481b636` (sgstreet/rtoskit-gcc#7), found four more things.
+GCC 16.2's hosted libstdc++, built with the `stdio` backend and `--disable-wchar_t` against the library at `481b636` (rtoskit-org/rtoskit-gcc#7), found four more things.
 
 - **`stat`.** libstdc++ always defines `HAVE_SYS_STAT_H` when the header exists, and `src/c++17/fs_ops.cc` (through `ops-common.h`) does `using ::stat;`. Without the function, `stat` names only the struct and the file fails to compile.
   - **Implementation:** the path is opened for reading through the seam, then D134's `fstat` (a seekable handle is a regular file of its end's size), then the handle is closed.
