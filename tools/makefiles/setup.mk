@@ -1,5 +1,3 @@
-GITHUB_ACCOUNT ?= sgstreet
-
 # arm-none-eabi GCC 16.2 (red-rocket-computing/cross-dev release v0.3.0). The target is the
 # versioned driver, so changing the version installs the new toolchain on the next build.
 COMPILER_VERSION ?= v0.3.0

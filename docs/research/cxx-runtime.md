@@ -146,13 +146,13 @@ ways:
 The test toolchain uses `--enable-threads=no` (the single gthreads model).
 Static local initialisation guards and `std::mutex` do no locking. A
 `gthr-rtoskit.h` over `<threads.h>` belongs to the toolchain
-([sgstreet/rtoskit-gcc#2](https://github.com/sgstreet/rtoskit-gcc/issues/2)),
+([rtoskit-org/rtoskit-gcc#2](https://github.com/rtoskit-org/rtoskit-gcc/issues/2)),
 not to this library.
 
 ## What the toolchain still has to do
 
 Building `g++` and libstdc++ against rtoskit-libc is
-[sgstreet/rtoskit-gcc#7](https://github.com/sgstreet/rtoskit-gcc/issues/7):
+[rtoskit-org/rtoskit-gcc#7](https://github.com/rtoskit-org/rtoskit-gcc/issues/7):
 
 - drop `--disable-__cxa_atexit`;
 - build libstdc++ narrow (`--disable-wchar_t`) for every multilib;

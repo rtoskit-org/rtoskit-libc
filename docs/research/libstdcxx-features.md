@@ -2,7 +2,7 @@
 
 libstdc++'s `configure` runs no link tests on a cross target. For newlib and
 picolibc it has its own branches that say what those libraries provide; for
-this library, sgstreet/rtoskit-gcc's patch
+this library, rtoskit-org/rtoskit-gcc's patch
 `0002-libstdcxx-add-rtoskit-libc-os-port.patch` adds a `--with-rtoskit-libc`
 branch that hard-codes 57 `AC_DEFINE`s (the float and `long double` math
 functions, `hypot`, `strtof`, `aligned_alloc`, `quick_exit`,

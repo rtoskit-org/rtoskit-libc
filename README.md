@@ -60,11 +60,11 @@ and cosine, and POSIX threads.
 
 ## Getting it
 
-Each [release](https://github.com/sgstreet/rtoskit-libc/releases) carries
+Each [release](https://github.com/rtoskit-org/rtoskit-libc/releases) carries
 one prebuilt archive per architecture, `rtoskit-libc-<version>-<arch>.tar.xz`,
 holding the headers and archives of the `release` and `speed` builds, with
 `SHA256SUMS` and a build-provenance attestation for each
-(`gh attestation verify <archive> --repo sgstreet/rtoskit-libc`). Unpack one
+(`gh attestation verify <archive> --repo rtoskit-org/rtoskit-libc`). Unpack one
 and use its `release/include` and `release/lib` wherever this README uses
 `images/<arch>/release/`. Releases are 0.x for now: the ABI and the OS
 interface may still change before 1.0. To build it yourself, read on;
@@ -463,8 +463,8 @@ arm-none-eabi-g++ ... -nostdlib main.o -Wl,--start-group libc.a libsupc++.a libs
 Wide characters are out of scope, so libstdc++ has to be configured with
 `--disable-wchar_t`. Building `g++` and a hosted libstdc++ against
 rtoskit-libc is the toolchain's job
-([rtoskit-gcc#7](https://github.com/sgstreet/rtoskit-gcc/issues/7); the thread
-model is [rtoskit-gcc#2](https://github.com/sgstreet/rtoskit-gcc/issues/2)). See
+([rtoskit-gcc#7](https://github.com/rtoskit-org/rtoskit-gcc/issues/7); the thread
+model is [rtoskit-gcc#2](https://github.com/rtoskit-org/rtoskit-gcc/issues/2)). See
 [`docs/research/cxx-runtime.md`](docs/research/cxx-runtime.md) for the
 details, and `test/unit/cxx` for what is tested.
 
