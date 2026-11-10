@@ -2484,25 +2484,25 @@
   },
   "threads": {
    "call_once/done": {
-    "insns": 18.0
+    "insns": 20.0
    },
    "mtx/nested": {
-    "insns": 145.0
+    "insns": 182.0
    },
    "mtx/plain": {
-    "insns": 82.0
+    "insns": 105.0
    },
    "mtx/recursive": {
-    "insns": 85.0
+    "insns": 105.0
    },
    "mtx/timed": {
-    "insns": 82.0
+    "insns": 105.0
    },
    "mtx/trylock": {
-    "insns": 76.0
+    "insns": 101.0
    },
    "tss_get": {
-    "insns": 34.0
+    "insns": 35.0
    }
   }
  },

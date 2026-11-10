@@ -1192,3 +1192,9 @@ Instructions per call: `tan` 32,451 → 4,970, `tanf` 5,140 → 5,065, `sinf` 4,
 `docs/perf/baseline-<arch>-fast.json` holds the fast build's counts, equal case for case to the speed build's: no
 `libc/math/fast/` file yet. The release and speed counts are unchanged by the step (the same `libc.a`); their
 baselines still predate P10.07's `threads` cost (Q52).
+
+## D166 — Phase 10's `threads` cost, re-locked (Q52)
+
+P10.07 put `<threads.h>` over `<pthread.h>` (D156); the baselines, last recorded at P8.02, are re-locked for it in
+the release and speed build types alike. Instructions per operation: `mtx/plain` and `mtx/timed` 205 → 228, `mtx/recursive` 208 → 228, `mtx/trylock` 203 → 225, `mtx/nested` 275 → 312, `call_once/done` 22 → 25, `tss_get` 37 → 40. No other case changed. A direct
+uncontended path for plain mutexes is issue #144.
