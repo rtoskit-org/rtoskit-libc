@@ -13,3 +13,5 @@
 
 # The out-of-line 16-bit product helper only where fixed-wide.h declares it (Armv6-M); armv7-m multiplies inline (P9.01)
 SRC := $(filter-out $(if $(filter armv6-m armv6s-m,${ARCH_CROSS}),,${SOURCE_DIR}/__libc_fixed_wide.c),$(wildcard ${SOURCE_DIR}/*.c))
+# In the fast flavour, less those of the fast/ directories (PLAN D162, common.mk)
+SRC := $(call libc_math_fast_filter,${SRC})

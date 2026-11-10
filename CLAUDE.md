@@ -90,6 +90,12 @@ make library                           # headers, libc*.a and the port archives 
   with a function wins. Speed-only C goes in the module's `speed/` directory
   (D77): a file there replaces the generic file of the same name in the speed
   flavour only; never `#if`.
+- **The fast flavour (D162, D164):** the `fast` build type is the speed flavour
+  (`LIBC_FLAVOURS := speed fast`) with a faster, less accurate libm: files in
+  `libc/math/fast/` and `libc/math/<layer>/fast/` replace the generic, layer and
+  `speed/` files of the same name in fast only. A module that may be shadowed
+  filters `LIBC_MATH_FAST_STEMS` (`libc_math_fast_filter`, `common.mk`); a
+  `libc.a` member name in two modules stops the build (`libc.unique`).
 - **Flavour archives (D53, D54):** `libc-nofloat.a`, `libc-minimal-printf.a`
   and `libc-tinymalloc.a` are `libc.a` with some members replaced; a program
   links one instead of `libc.a`.

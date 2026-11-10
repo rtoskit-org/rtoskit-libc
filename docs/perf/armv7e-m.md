@@ -993,3 +993,21 @@ Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sinc
 ## P9.02, P9.03 — Float sine and cosine, and `tan`, through the D136 kernel (speed flavour, D141, D142)
 
 Instructions per call: `tan` 11,198 → 1,005. `sin`, `cos` and `sincos` gain about 4 % from the inlined high product. No case is slower.
+
+## P11.02a — The `fast` build type (D162, D164)
+
+`docs/perf/baseline-<arch>-fast.json` holds the fast build's counts, equal case for case to the speed build's: no
+`libc/math/fast/` file yet. The release and speed counts are unchanged by the step (the same `libc.a`); their
+baselines still predate P10.07's `threads` cost (Q52).
+
+The phase 11 starting point against picolibc 1.8.6 and newlib-nano 4.4.0 (`bench-runner --build-type fast compare`,
+geometric means as a ratio to the fast build; the exit target is picolibc at or above 1.00 for math, P11.06):
+
+| Program | rtoskit (size) | rtoskit (speed) | rtoskit (fast) | picolibc | newlib-nano |
+|---|---:|---:|---:|---:|---:|
+| string (603 cases) | 1.51 | 1.00 | 1.00 | 1.48 | 1.18 |
+| stdio (23 cases) | 1.22 | 1.00 | 1.00 | 1.16 | 0.94 |
+| strto (21 cases) | 6.17 | 1.00 | 1.00 | 1.00 | 1.77 |
+| malloc (9 cases) | 1.07 | 1.00 | 1.00 | 7.21 | 0.68 |
+| qsort (8 cases) | 3.67 | 1.00 | 1.00 | 1.38 | 1.49 |
+| math (128 cases) | 1.14 | 1.00 | 1.00 | 0.44 | 0.47 |

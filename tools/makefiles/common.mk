@@ -35,6 +35,13 @@ LIBC_CFLAGS += $(if $(filter 1,${LIBC_UNWIND_TABLES}),-funwind-tables)
 export LIBC_EXTRA_CFLAGS ?=
 LIBC_CFLAGS += ${LIBC_EXTRA_CFLAGS}
 
+# The fast flavour's libm files (PLAN D162): the stems of the files in libc/math/fast/ and libc/math/<layer>/fast/
+# when the build type's LIBC_FLAVOURS (speed.mk, fast.mk) has fast, else nothing. A fast/ file replaces the generic,
+# layer and speed/ file of the same stem, so each of those modules' subdir.mk drops them from its SRC
+LIBC_MATH_FAST_DIRS = $(if $(filter fast,${LIBC_FLAVOURS}),${PROJECT_ROOT}/libc/math/fast $(foreach layer,${LIBC_MATH_LAYERS},${PROJECT_ROOT}/libc/math/${layer}/fast))
+LIBC_MATH_FAST_STEMS = $(basename $(notdir $(wildcard $(foreach dir,${LIBC_MATH_FAST_DIRS},${dir}/*.c ${dir}/*.S))))
+libc_math_fast_filter = $(filter-out $(foreach stem,${LIBC_MATH_FAST_STEMS},${SOURCE_DIR}/${stem}.c ${SOURCE_DIR}/${stem}.S),${1})
+
 -include ${PROJECT_ROOT}/tools/makefiles/${CHIP_FAMILY}.mk
 -include ${PROJECT_ROOT}/tools/makefiles/${CHIP_TYPE}.mk
 -include ${PROJECT_ROOT}/tools/makefiles/${BUILD_TYPE}.mk

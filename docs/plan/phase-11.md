@@ -79,39 +79,57 @@ the complex functions; long double beyond sharing the double functions (D7).
 - [x] The maintainer confirmed D162's reading of Q48: no build type sets
   `errno` from `<math.h>`, `fast` included (D163).
 
-## P11.02 — The `fast` build type and its gates  `[ ]`
-- [ ] `tools/makefiles/fast.mk` like `speed.mk` (`-Os -g3`,
+## P11.02 — The `fast` build type and its gates
+
+Split (CLAUDE.md workflow) into P11.02a, the build type and every gate but the
+audit of the strict-contract tests, and P11.02b, that audit: eight tests of
+about 2,500 lines whose fast expectations each need their own reading.
+
+### P11.02a — The build type, the fallback chain and the gates  `[x]`
+- [x] `tools/makefiles/fast.mk` like `speed.mk` (`-Os -g3`,
   `LIBC_SPEED_CFLAGS := -O2`, `-DNDEBUG -DBUILD_TYPE_FAST`, `export
-  LIBC_FLAVOUR := fast`); `BUILDS ?= debug release speed fast`; `make help`
-  and `docs/configuration.md`; `build/<arch>/fast/`, `images/<arch>/fast/`.
-- [ ] The fallback chain: exported `LIBC_FLAVOURS` (`speed` → `speed`,
+  LIBC_FLAVOUR := fast`); `BUILDS ?= debug release speed fast`; `make help`,
+  README and `docs/configuration.md`; `build/<arch>/fast/`, `images/<arch>/fast/`.
+- [x] The fallback chain: exported `LIBC_FLAVOURS` (`speed` → `speed`,
   `fast` → `speed fast`); every `$(filter speed,${LIBC_FLAVOUR})` in
   `libc/libc.mk`, `libc/math/subdir.mk`, `libc/stdio/subdir.mk`,
   `libc/stdlib/subdir.mk` and the layer makefiles filters `LIBC_FLAVOURS`;
   `LIBC_STRING_KERNELS_fast := ${LIBC_STRING_KERNELS_speed}` in every arch
   file.
-- [ ] `fast/` directories: `libc/math/fast/` and `libc/math/<layer>/fast/`
+- [x] `fast/` directories: `libc/math/fast/` and `libc/math/<layer>/fast/`
   replace same-named generic, layer and `speed/` files (precedence
   `<layer>/fast/` > `fast/` > `<layer>/speed/` > `<layer>/` > generic);
   archived from `libc/libc.mk` only when `fast` is in `LIBC_FLAVOURS`; one
   check that a `fast` build with no `fast/` file has the speed build's
-  `libc.a` members, byte for byte (`size-report` on both).
-- [ ] Tests: `test/unit/libm_vectors` bounds moved into `bounds.c` (today's,
+  `libc.a` members, byte for byte (`size-report --build-type fast same --as
+  speed`). A `libc.a` member name in two modules now stops the build
+  (`libc.unique`, D164).
+- [x] Tests: `test/unit/libm_vectors` bounds moved into `bounds.c` (today's,
   same checks) and `fast/bounds.c` (the contract), selected by the module's
-  `subdir.mk`; the audit of every strict-contract test (`float_hard`,
+  `subdir.mk`; a `flavours` case that the fast build's headers equal the
+  speed build's (`flavours.run`, and `math_errhandling` in `flavours.c`).
+- [x] Bench: `docs/perf/baseline-<arch>-fast.json` (equal to speed at this
+  step); `bench-runner compare` and `aor` take `--build-type fast` as the
+  reference column. The release and speed baselines predate P10.07's
+  `threads` cost, so `make bench` fails there as before (Q52, not blocking).
+- [x] Size: the fast flavour in `docs/size/budget.json` under the speed
+  flavour's rule (D73); `size-report --build-type fast budget --flavour fast`.
+- [x] CI (D119): `make check` covers `fast` through `BUILDS`; the Arm size
+  job adds the fast budget; note the 33 % longer `make check` against Q33.
+- [x] Release (D158, D163): the workflow and `release-package` leave the
+  `fast` tree out until P11.06; `docs/release.md` says so.
+
+### P11.02b — The strict-contract tests' fast expectations  `[ ]`
+- [ ] The audit of every strict-contract test (`float_hard`,
   `float_accuracy`, `libm_dense`, `libm_exp`, `libm_trig`, `libm_special`,
   `fpu_math`, `float_exact`) with a `fast/` expectation file where one is
-  needed (D163); a `flavours` case that the fast build's headers equal the
-  speed build's.
-- [ ] Bench: `docs/perf/baseline-<arch>-fast.json` (equal to speed at this
-  step); `bench-runner compare` and `aor` take `--build-type fast` as the
-  reference column.
-- [ ] Size: the fast flavour in `docs/size/budget.json` under the speed
-  flavour's rule (D73); `size-report --build-type fast budget --flavour fast`.
-- [ ] CI (D119): `make check` covers `fast` through `BUILDS`; the Arm size
-  job adds the fast budget; note the 33 % longer `make check` against Q33.
-- [ ] Release (D158, D163): the workflow and `release-package` leave the
-  `fast` tree out until P11.06; `docs/release.md` says so.
+  needed (D163): every check about the last bit or a directed result of a
+  relaxed function moves into the file, every other check (special values,
+  exceptions, ranges, symmetry) stays in the shared source; the strict
+  files unchanged in debug, release and speed. The audit's findings go into
+  `docs/research/fast-math.md`.
+- [ ] `make check` in all four build types; with no `fast/` libm file the
+  fast expectations pass as the strict ones do.
 
 ## P11.03 — Float exp, log and pow  `[ ]`
 - [ ] Research: `docs/research/libm-fast-float-exp-log.md` (a 2^(j/N) table

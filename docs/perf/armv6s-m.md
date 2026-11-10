@@ -1186,3 +1186,9 @@ Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sinc
 ## P9.02, P9.03 — Float sine and cosine, and `tan`, through the D136 kernel (speed flavour, D141, D142)
 
 Instructions per call: `tan` 32,451 → 4,970, `tanf` 5,140 → 5,065, `sinf` 4,729 → 2,933, `cosf` 3,742 → 2,887, `sincosf` 5,505 → 4,418. `sin`, `cos` and `sincos` gain about 4 % from the inlined high product. No case is slower.
+
+## P11.02a — The `fast` build type (D162, D164)
+
+`docs/perf/baseline-<arch>-fast.json` holds the fast build's counts, equal case for case to the speed build's: no
+`libc/math/fast/` file yet. The release and speed counts are unchanged by the step (the same `libc.a`); their
+baselines still predate P10.07's `threads` cost (Q52).

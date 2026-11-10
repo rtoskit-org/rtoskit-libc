@@ -12,8 +12,9 @@
 #
 
 # The pull request gate (PLAN D119): on every architecture, make check (unit tests and
-# libc-test's in-tree replacements, D126, then libgcc-check) in all three build types; on the Arm architectures
-# also the size gates (size-report diff and both flavours' budgets, PLAN D51, D71, D111). Runs in an
+# libc-test's in-tree replacements, D126, then libgcc-check) in all four build types (BUILDS, the fast build type
+# since P11.02, D162, which adds a third to each job's make check, Q33); on the Arm architectures
+# also the size gates (size-report diff and the size, speed and fast flavours' budgets, PLAN D51, D71, D111). Runs in an
 # Ubuntu 26.04 container, whose make is 4.4.1 (D117), gcc 15 (the x86_64 build, D107) and qemu-user 10.2
 # (TARGET_RUNNER on Arm, D36); the arm-none-eabi GCC 16.2 is the one make setup downloads.
 name: ci
@@ -72,3 +73,4 @@ jobs:
           tools/scripts/size-report diff --arch ${{ matrix.arch }}
           tools/scripts/size-report budget --arch ${{ matrix.arch }}
           tools/scripts/size-report --build-type speed budget --flavour speed --arch ${{ matrix.arch }}
+          tools/scripts/size-report --build-type fast budget --flavour fast --arch ${{ matrix.arch }}
