@@ -922,3 +922,13 @@ the release and speed baselines with no other case changed.
 | `expf` | 172 | 52 | -70 % |
 | `exp2f` | 195 | 50 | -74 % |
 | `exp10f` | 188 | 52 | -72 % |
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+The double `libc/math/fast/` files: 2 atanh in double, one rounding (D169). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `logf` | 162 | 81 | -50 % |
+| `log2f` | 203 | 81 | -60 % |
+| `log10f` | 173 | 83 | -52 % |

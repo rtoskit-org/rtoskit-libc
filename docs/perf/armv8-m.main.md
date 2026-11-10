@@ -1016,3 +1016,13 @@ the release and speed baselines with no other case changed.
 | `expf` | 160 | 58 | -64 % |
 | `exp2f` | 141 | 59 | -58 % |
 | `exp10f` | 160 | 66 | -59 % |
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+The float-only `sp-nearest/fast/` files: a 32-entry table, an exact high part (D169). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `logf` | 165 | 74 | -55 % |
+| `log2f` | 154 | 80 | -48 % |
+| `log10f` | 165 | 83 | -49 % |

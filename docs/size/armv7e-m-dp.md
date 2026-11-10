@@ -634,3 +634,8 @@ as the speed flavour (`docs/size/budget.json`).
 
 Release and speed unchanged (`size-report diff`; the speed budget holds). Fast members: `expf.o` 16 → 288, `exp2f.o` 92 → 272, `exp10f.o` 16 → 288, and `__libc_fast_exp2_table.o` 256 (the speed `expf` and `exp10f` call the double functions). The fast flavour's
 budget holds.
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+Release and speed unchanged (`size-report diff`); the fast budget holds. Fast members (code and constants, speed →
+fast, bytes): `logf.o` 116 → 360, `log2f.o` 16 → 360, `log10f.o` 84 → 376.

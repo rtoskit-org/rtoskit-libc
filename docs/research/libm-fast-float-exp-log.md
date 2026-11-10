@@ -139,3 +139,72 @@ Instructions per call (`make bench`, fast against speed):
 | `expf` | 237 → 48 | 172 → 52 | 160 → 58 |
 | `exp2f` | 302 → 47 | 195 → 50 | 141 → 59 |
 | `exp10f` | 284 → 48 | 188 → 52 | 160 → 66 |
+
+## 7. The logarithms on the double-FPU cores (P11.03b)
+
+No table: x = 2^e m with m in [√½, √2) (subnormal x first scaled by 2^23;
+the exponent field and a halving above √2 do the split), and in double
+
+    log m = 2 atanh s = 2s (1 + s² Q(s²)),   s = (m − 1)/(m + 1)
+
+with Q the Taylor coefficients 1/3, 1/5, …, 1/13: |s| ≤ 0.1716, relative
+error 2^-39.5 (4,001 points, 200 bits). m − 1 and 2 + f are exact in
+double (m has 24 bits); the division rounds once, 2^-53. Then
+`logf` = e ln2 + log m, `log2f` = e + log m / ln2, `log10f` = e log10 2 +
+log m / ln10, all in double, rounded once to float. One double division
+counts one instruction under the bench and costs about 20 cycles on the
+FPU, against the table lookups a polynomial-only form would need.
+
+**log(1) is +0 in every mode** (F.10.3.7): rounding downward, m − 1 = 1 − 1
+is −0, and so was the result; `libm_vectors` caught it on x86_64 and
+armv7e-m-dp. The files return +0 for x = 1 before the split
+(`libm_thresholds` checks it downward too).
+
+## 8. The logarithms on the single-precision FPU cores (P11.03b)
+
+Float only, so the error budget leaves no room for a second large rounding:
+the result is HI + (r + LO) with HI exact.
+
+- **Reduction** (`__libc_fast_logf_reduce`): x = 2^k z with z in
+  [0.6992, 1.3984): subtracting 0x3f330000 from x's bits gives k in the
+  exponent field and the entry i of 32 in the next 5 bits (each entry 2^18
+  ulps of z wide); z = x's bits less k's. r = z·(1/c_i) − 1 by a fused
+  multiply-add, |r| < 0.0235, with 1/c_i rounded to float and log c_i taken
+  of that rounded reciprocal (−log(1/c_i)), so the identity is exact.
+- **Tables** (`sp-nearest/fast/__libc_fast_logf_{invc,ln,log2,log10}.c`,
+  32 floats and three 32 × 2 tables, 896 bytes in all, one object each):
+  −log(1/c_i) in each base as a multiple of 2^-16 and a low part. Since
+  ln2_hi and log10(2)_hi are multiples of 2^-16 too, k ln2_hi + high (and
+  k + high, k log10(2)_hi + high) is exact for |k| ≤ 150: at most 23
+  significant bits.
+- **Near 1** the entry holding 1 has c = 1, but it spans only [0.996, 1.023);
+  next to it log c_i and r cancel, and the first build measured up to 2.72 ulp
+  (`log10f` at 0.996). Within 2^-5 of 1 the reduction now takes r = x − 1,
+  exact by Sterbenz's lemma, against that entry; beyond, |log x| > 0.031 and
+  the cancellation costs at most 1/8 ulp.
+- **log1p(r) = r + r² q(r)**, q of degree 3 fitted on [−2^-5, 2^-5]·1.01:
+  relative error 2^-30 on log1p.
+- `logf` = HI + (r + (k ln2_lo + low + r² q)); `log2f` and `log10f` multiply
+  r by 1/ln2 or 1/ln10 as a float plus its rounding error (a fused
+  multiply-add) plus the constant's low part.
+
+## 9. Measured (P11.03b)
+
+Every positive float (2,139,095,041 arguments) against glibc's double
+function, as section 6:
+
+| Function | double path | float path |
+|---|---:|---:|
+| `logf` | 0.5000 ulp, all correctly rounded | 0.7507 ulp, 0.026 % not CR |
+| `log2f` | 0.5000 ulp | 0.7943 ulp, 0.027 % |
+| `log10f` | 0.5000 ulp | 0.8341 ulp, 0.027 % |
+
+Instructions per call (speed → fast):
+
+| Function | x86_64 | armv7e-m-dp | armv7e-m, armv8-m.main |
+|---|---:|---:|---:|
+| `logf` | 267 → 69 | 162 → 81 | 165 → 74 |
+| `log2f` | 337 → 71 | 203 → 81 | 154 → 80 |
+| `log10f` | 303 → 72 | 173 → 83 | 165 → 83 |
+
+The cores without an FPU keep the speed files (D168, P11.03e).

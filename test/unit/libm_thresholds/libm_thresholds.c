@@ -99,9 +99,37 @@ static void check_exponentials(void)
 	RAISES(is_positive_zero(expf(-1000.0f)) && is_positive_zero(exp2f(-1000.0f)) && is_positive_zero(exp10f(-1000.0f)), FE_UNDERFLOW);
 }
 
+static void check_logarithms(void)
+{
+	static float (*const functions[])(float) = { logf, log2f, log10f };
+
+	for (unsigned int i = 0; i < sizeof(functions) / sizeof(functions[0]); ++i) {
+		float (*f)(float) = functions[i];
+
+		/* F.10.3.7, .8, .10: NaN; +inf; log(+-0) = -inf with divide-by-zero; a negative x is invalid */
+		QUIET(isnan(f(NAN)) && f(INFINITY) == INFINITY);
+		RAISES(f(0.0f) == -INFINITY && f(-0.0f) == -INFINITY, FE_DIVBYZERO);
+		RAISES(isnan(f(-1.0f)) && isnan(f(-0x1p-149f)) && isnan(f(-INFINITY)), FE_INVALID);
+		/* log(1) = +0 (regression: rounding downward, the fast double path's m - 1 gave -0) */
+		QUIET(is_positive_zero(f(1.0f)));
+#ifdef FE_DOWNWARD
+		fesetround(FE_DOWNWARD);
+		QUIET(is_positive_zero(f(1.0f)));
+		fesetround(FE_TONEAREST);
+#endif
+		/* The ends of the range: the smallest subnormal and FLT_MAX, finite and of the right sign */
+		QUIET(f(0x1p-149f) < 0.0f && isfinite(f(0x1p-149f)) && f(FLT_MAX) > 0.0f && isfinite(f(FLT_MAX)));
+	}
+	/* log2 is exact at the powers of two, normal and subnormal */
+	for (int k = -149; k <= 127; k += 7)
+		QUIET(log2f(ldexpf(1.0f, k)) == (float)k);
+	CHECK(logf(0x1p-149f) < -103.27f && logf(0x1p-149f) > -103.28f && logf(FLT_MAX) > 88.72f && logf(FLT_MAX) < 88.73f);
+}
+
 int main(void)
 {
 	check_exponentials();
+	check_logarithms();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");
