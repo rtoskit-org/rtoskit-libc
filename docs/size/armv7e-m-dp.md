@@ -639,3 +639,7 @@ budget holds.
 
 Release and speed unchanged (`size-report diff`); the fast budget holds. Fast members (code and constants, speed →
 fast, bytes): `logf.o` 116 → 360, `log2f.o` 16 → 360, `log10f.o` 84 → 376.
+
+## P11.03c — Fast `powf` (D170)
+
+Release and speed: no growth (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed → fast, bytes): `powf.o` 20 → 924 (speed calls `pow`).

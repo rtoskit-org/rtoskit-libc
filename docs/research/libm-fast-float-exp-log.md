@@ -208,3 +208,119 @@ Instructions per call (speed → fast):
 | `log10f` | 303 → 72 | 173 → 83 | 165 → 83 |
 
 The cores without an FPU keep the speed files (D168, P11.03e).
+
+## 10. `powf` (P11.03c)
+
+### Sources (ideas only)
+
+- **FreeBSD msun `e_powf.c`** (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/e_powf.c>,
+  read 2026-11-10 through a summary): float arithmetic only, no table; log2|x|
+  from s = (m − 1)/(m + 1) about two pivots (1 and 1.5) as float-float, a
+  long odd polynomial in s; y split into a high part with cleared low bits so
+  y·log2|x| is a float-float; the exponential by a polynomial and a rational
+  reconstruction; the parity of y from its exponent and significand bits;
+  |y| above 2^27 short-cut. No ulp bound stated.
+- **Arm Optimized Routines `powf.c`** (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/powf.c>,
+  read 2026-11-10 through a summary): in double, log2|x| from a 32-entry
+  reciprocal table, r = z·(1/c) − 1 and a degree 5 polynomial; the product
+  y·log2|x| as one double (y is a float, so it cannot overflow); 2^t by the
+  same 32-entry exp2 table and a degree 3 polynomial; integer y and its
+  parity by bit tests; 0.82 ulp stated (0.5 + the relative error · 2^24).
+
+What we take: on the double-FPU cores, the double evaluation (one product,
+one rounding); on the single-precision FPU cores, the reciprocal table of
+section 8 with log2|x| carried as a float pair, since the product's error
+grows with |y log2|x|| and float arithmetic must keep about 2^-35.
+
+### The special cases (`__libc_fast_powf_special`, every fast powf)
+
+C23 F.10.4.5 in the order the strict files take it: y = ±0 or x = 1 → 1
+(even for a NaN); a NaN → x + y; y = ±∞ by |x| against 1 (pow(−1, ±∞) = 1);
+x = ±0 → ±∞ with divide-by-zero (a division at run time, so it is not
+folded) for y < 0, ±0 for y > 0; x = ±∞ → ∞ or 0; a negative x to a
+non-integer → NaN with invalid; y = 1 → x. The parity: y is an integer when
+truncf(y) = y, and odd only below 2^24 (every larger float is even). A
+negative x to an odd power negates |x|^y at the end.
+
+### The double-FPU cores (`libc/math/fast/powf.c`)
+
+x = 2^e m, m in [√½, √2) (`__libc_fast_logf_split`); log2|x| = e +
+log m·(1/ln2) with log m to 2^-39.5 relative (section 7); t = y·log2|x| in
+double. For |t| < 150 the product's and the logarithm's errors are below
+2^-32 absolute, 2^-32·ln2 relative after the exponential; `__libc_fast_exp2`
+(section 3) adds 2^-30.7, and the one rounding to float ½ ulp: below 0.51
+ulp. t beyond ±1000 returns `__libc_math_overflow`/`underflow` (a far
+argument would round to an infinite or zero result anyway); between, the
+exponential's own scaling gives ∞, a subnormal or zero.
+
+### The single-precision FPU cores (`libc/math/sp-nearest/fast/powf.c`)
+
+The result 2^t is within ½ + ε ulp only if t is known to about 2^-25
+absolute; with |t| up to 150 that is 2^-32 relative for t and, for x near 1
+where log2|x| is small and |y| large, an absolute error of about 2^-39 in
+log2|x| (|y| up to 2^14 keeps x^y finite with log2 x ≈ 0.003). So
+`__libc_fast_log2f_extended` returns log2|x| as hi + lo:
+
+- the reduction of section 8 without its near-1 short cut: x = 2^k z,
+  p = z·(1/c_i) rounded with its error p_lo by a fused multiply-add, r = p − 1
+  exact (Sterbenz), so z/c_i − 1 = r + p_lo exactly;
+- log1p(r + p_lo) = r − r²/2 + r³q₃(r) + p_lo/(1 + r): the square's error by a
+  fused multiply-add, q₃ of degree 3 fitted here on the table's r range
+  (relative error 2^-37.3), and p_lo/(1 + r) as p_lo(1 − r + r²). The first
+  build used p_lo(1 − r): p_lo reaches 2^-24, and the missing p_lo·r² left
+  2^-38 at x ≈ 0.996 (entry 18, |log2 x| = 0.003), so powf(0x1.fdd94ap-1,
+  −0x1.31f942p+14) was 1.34 ulp and 15 of 400 million samples reached 1 ulp;
+- the products by 1/ln2 as a float plus its rounding error (fused
+  multiply-add) plus 1/ln2's low part; log2 c_i as a full float and its
+  remainder from the table's two parts (a Fast2Sum, exact); k, log2 c_i, the
+  r term and the r² term combined by exact two-sums, every error kept in lo.
+
+Measured over every float in [0.5, 2): |hi + lo − log2 x| at most 2^-39.1
+(2^-41.6 to 2^-43 next to 1). Then t_hi = y·hi, t_lo = fma(y, hi, −t_hi) +
+y·lo; k = round(t_hi), f = t_hi − k exact; u = (f + t_lo)·ln2 as u_hi = f·ln2f
+and u_lo its rounding error + f·(ln2 − ln2f) + t_lo·ln2f; then
+`__libc_fast_expf_kernel` (section 4) with k. t_hi ≥ 128.5 overflows and
+t_hi ≤ −151 underflows whatever the low parts (|lo| < 2^-20 |hi|), with the
+raise helpers of section 5 and the sign. The kernel's own scaling covers
+128 > t ≥ −151, subnormals included. No double arithmetic (the module refuses
+`__aeabi_d*`).
+
+### A strict-library bug found on the way
+
+`libm_thresholds`' new powf cases found that the strict `pow` (and so the
+strict `powf` and `powl` on the double cores) returned +1 for (−1)^y with an
+odd y beyond 2^20, and for |x| = 1 and |y| beyond 2^20 rounded 1 − 2^-60
+downward to 1 − 2^-53: the exact power-of-two path stops at |y| = 2^20, and
+the path after it, exp(z) = 1 + z for |z| < 2^-60, kept neither the sign
+nor exactness. The exact path now bounds the power y·ilogb(x) by 2^20
+instead of y, so ±1 to any integer power ends there, exactly and with its
+sign, at no cost in size (`pow.o` 4 bytes smaller on x86_64, 8 on armv7e-m, the
+same elsewhere; an explicit |x| = 1 test
+cost 24–32 bytes and broke the no-FPU cores' locked speed and fast budgets).
+`regression_pow_minus_one` checks it in three rounding directions.
+
+## 11. Measured (P11.03c)
+
+Random samples against glibc's double `pow` (a double reference: exact
+enough for an ulp measure of a float), four groups of 400 million: (0) any
+positive finite x and y with t uniform in [−150, 128]; (1) x within 2^-4 of 1
+and t uniform (|y| up to 2^18), plus a second run within 2^-12 of 1; (2) a
+negative x to an odd integer power; (3) uniform bit patterns of x and y.
+
+| Group | double path | float path |
+|---|---:|---:|
+| any x, t in range | 0.5095 ulp | 0.8531 ulp |
+| x near 1, large y | 0.5096 ulp | 0.8749 ulp |
+| negative x, odd y | 0.5094 ulp | 0.8382 ulp |
+| uniform bits | 0.5095 ulp | 0.8398 ulp |
+
+None reached 1 ulp. The libm vectors, every special case and the
+thresholds (`libm_thresholds`) pass in every build type.
+
+Instructions per call (`powf`, speed → fast): x86_64 633 → 181,
+armv7e-m-dp 398 → 159, armv7e-m 367 → 215,
+armv8-m.main 353 → 203. The `pow` fix also shortened the strict `pow`
+in every build type (a power of two is now tested before y's size, which
+skips a double comparison): by 8–10 instructions on x86_64 and armv7e-m-dp
+(where the strict `powf` calls it), 31–70 on the soft double cores. The cores without an FPU keep the
+speed files (D168, P11.03e).

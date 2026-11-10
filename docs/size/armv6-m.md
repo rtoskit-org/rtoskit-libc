@@ -806,3 +806,7 @@ budget holds.
 
 Release and speed unchanged (`size-report diff`); the fast budget holds. Fast members (code and constants, speed →
 fast, bytes): none: fast is the speed flavour here.
+
+## P11.03c — Fast `powf` (D170)
+
+Release and speed: no growth (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed → fast, bytes): none: fast is the speed flavour here.

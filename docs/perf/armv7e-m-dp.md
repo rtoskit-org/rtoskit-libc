@@ -932,3 +932,16 @@ The double `libc/math/fast/` files: 2 atanh in double, one rounding (D169). Inst
 | `logf` | 162 | 81 | -50 % |
 | `log2f` | 203 | 81 | -60 % |
 | `log10f` | 173 | 83 | -52 % |
+
+## P11.03c — Fast `powf` (D170)
+
+The double `libc/math/fast/powf.c`: 2^(y log2 |x|) in double, one rounding; the strict `pow` fix (a power of two tested before y's size) is shorter in every build type (D170). Instructions per call (throughput).
+
+| Function | build | before | after | change |
+|---|---|---:|---:|---:|
+| `pow` | release | 401 | 393 | -2.0 % |
+| `powf` | release | 406 | 398 | -2.0 % |
+| `pow` | speed | 401 | 393 | -2.0 % |
+| `powf` | speed | 406 | 398 | -2.0 % |
+| `pow` | fast | 401 | 393 | -2.0 % |
+| `powf` | fast | 406 | 159 | -60.8 % |

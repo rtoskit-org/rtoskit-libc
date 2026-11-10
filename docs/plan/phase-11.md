@@ -198,9 +198,17 @@ fast bench re-locked with the gains and the members recorded.
   on armv7e-m-dp, 267 → 69 on x86_64). Exhaustive: double 0.5000, float at
   most 0.8341 ulp (D169).
 
-### P11.03c — `powf`  `[ ]`
-- [ ] Research (the note): `powf` as 2^(y log2 x) with log2 x to about
-  2^-34 (D163: below 1 ulp); implementation, tests, gains.
+### P11.03c — `powf`  `[x]`
+- [x] Research (the note, sections 10–11): the F.10.4.5 cases in one helper;
+  2^(y log2 |x|) in double on the double-FPU cores; on the single-precision
+  FPU cores log2 |x| as a float pair to 2^-39 absolute, the product's error
+  by a fused multiply-add and the exp kernel (the first build's p_lo (1 − r)
+  left 1.34 ulp near x = 0.996); implementation, tests (`libm_thresholds`:
+  every F.10.4.5 case, the thresholds and exceptions;
+  `regression_pow_minus_one`: the strict `pow` gave +1 for (−1)^odd beyond
+  2^20), gains (`powf` 367 → 215 on armv7e-m, 398 → 159 on
+  armv7e-m-dp, 633 → 181 on x86_64). Sampled: double 0.5096, float at most 0.8749 ulp
+  (D170).
 
 ### P11.03d — `expm1f`, `exp2m1f`, `exp10m1f`, `log1pf`, `log2p1f`, `log10p1f`, `cbrtf`  `[ ]`
 - [ ] Research (the note), over P11.03a's and P11.03b's kernels, keeping the

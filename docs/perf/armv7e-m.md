@@ -1038,3 +1038,14 @@ The float-only `sp-nearest/fast/` files: a 32-entry table, an exact high part (D
 | `logf` | 165 | 74 | -55 % |
 | `log2f` | 154 | 80 | -48 % |
 | `log10f` | 165 | 83 | -49 % |
+
+## P11.03c — Fast `powf` (D170)
+
+The float-only `sp-nearest/fast/powf.c`: log2 |x| as a float pair, the exp kernel; the strict `pow` fix makes `pow` shorter in every build type (D170). Instructions per call (throughput).
+
+| Function | build | before | after | change |
+|---|---|---:|---:|---:|
+| `pow` | release | 11,564 | 11,531 | -0.3 % |
+| `pow` | speed | 11,564 | 11,531 | -0.3 % |
+| `pow` | fast | 11,564 | 11,531 | -0.3 % |
+| `powf` | fast | 367 | 215 | -41.4 % |
