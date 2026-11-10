@@ -261,3 +261,8 @@ fast, bytes): none: fast is the speed flavour here.
 ## P11.03c — Fast `powf` (D170)
 
 Release and speed: no growth (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed → fast, bytes): none: fast is the speed flavour here.
+
+## P11.03d — Fast m1 and p1 forms, `cbrtf` (D171)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
+speed → fast, bytes; several speed members call a shared core or the double function, not counted): none: fast is the speed flavour here.

@@ -849,3 +849,18 @@ Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e); t
 | `pow` | release | 11,864 | 11,833 | -0.3 % |
 | `pow` | speed | 11,864 | 11,833 | -0.3 % |
 | `pow` | fast | 11,864 | 11,833 | -0.3 % |
+
+## P11.03d — Fast m1 and p1 forms, `cbrtf` (D171)
+
+Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e). Instructions per call (throughput), speed and fast. `test/bench/math` gains `exp2m1`, `exp10m1`, `log2p1` and
+`log10p1` (float and double) in every build type; nothing else changed in release and speed.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expm1f` | 6,065 | 6,065 | 0 |
+| `exp2m1f` | 4,979 | 4,979 | 0 |
+| `exp10m1f` | 6,135 | 6,135 | 0 |
+| `log1pf` | 6,386 | 6,386 | 0 |
+| `log2p1f` | 5,545 | 5,545 | 0 |
+| `log10p1f` | 6,619 | 6,619 | 0 |
+| `cbrtf` | 3,545 | 3,545 | 0 |

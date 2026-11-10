@@ -945,3 +945,18 @@ The double `libc/math/fast/powf.c`: 2^(y log2 |x|) in double, one rounding; the 
 | `powf` | speed | 406 | 398 | -2.0 % |
 | `pow` | fast | 401 | 393 | -2.0 % |
 | `powf` | fast | 406 | 159 | -60.8 % |
+
+## P11.03d — Fast m1 and p1 forms, `cbrtf` (D171)
+
+The double `libc/math/fast/` files: the series near 0, x itself as m − 1, `cbrtf` by one Halley step; one rounding (D171). Instructions per call (throughput), speed and fast. `test/bench/math` gains `exp2m1`, `exp10m1`, `log2p1` and
+`log10p1` (float and double) in every build type; nothing else changed in release and speed.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expm1f` | 187 | 66 | -65 % |
+| `exp2m1f` | 176 | 56 | -69 % |
+| `exp10m1f` | 194 | 59 | -70 % |
+| `log1pf` | 209 | 88 | -58 % |
+| `log2p1f` | 211 | 83 | -61 % |
+| `log10p1f` | 211 | 84 | -60 % |
+| `cbrtf` | 135 | 73 | -46 % |

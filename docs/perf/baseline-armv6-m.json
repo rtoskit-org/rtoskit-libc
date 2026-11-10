@@ -224,6 +224,18 @@
    "exp10f/throughput": {
     "insns": 11103.38
    },
+   "exp10m1/latency": {
+    "insns": 14855.62
+   },
+   "exp10m1/throughput": {
+    "insns": 14813.0
+   },
+   "exp10m1f/latency": {
+    "insns": 12405.31
+   },
+   "exp10m1f/throughput": {
+    "insns": 12406.19
+   },
    "exp2/latency": {
     "insns": 14169.0
    },
@@ -235,6 +247,18 @@
    },
    "exp2f/throughput": {
     "insns": 9269.31
+   },
+   "exp2m1/latency": {
+    "insns": 14642.75
+   },
+   "exp2m1/throughput": {
+    "insns": 14605.5
+   },
+   "exp2m1f/latency": {
+    "insns": 10062.0
+   },
+   "exp2m1f/throughput": {
+    "insns": 10067.62
    },
    "expf/latency": {
     "insns": 11028.75
@@ -320,6 +344,18 @@
    "log10f/throughput": {
     "insns": 12365.06
    },
+   "log10p1/latency": {
+    "insns": 22209.06
+   },
+   "log10p1/throughput": {
+    "insns": 22163.25
+   },
+   "log10p1f/latency": {
+    "insns": 13202.19
+   },
+   "log10p1f/throughput": {
+    "insns": 13201.81
+   },
    "log1p/latency": {
     "insns": 18070.44
    },
@@ -343,6 +379,18 @@
    },
    "log2f/throughput": {
     "insns": 10547.38
+   },
+   "log2p1/latency": {
+    "insns": 22192.62
+   },
+   "log2p1/throughput": {
+    "insns": 22149.62
+   },
+   "log2p1f/latency": {
+    "insns": 11002.44
+   },
+   "log2p1f/throughput": {
+    "insns": 11003.31
    },
    "logf/latency": {
     "insns": 12367.06

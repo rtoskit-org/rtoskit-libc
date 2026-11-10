@@ -153,10 +153,10 @@
     "insns": 131.81
    },
    "cbrtf/latency": {
-    "insns": 136.38
+    "insns": 73.88
    },
    "cbrtf/throughput": {
-    "insns": 135.31
+    "insns": 72.81
    },
    "cos/latency": {
     "insns": 168.5
@@ -224,6 +224,18 @@
    "exp10f/throughput": {
     "insns": 52.31
    },
+   "exp10m1/latency": {
+    "insns": 182.69
+   },
+   "exp10m1/throughput": {
+    "insns": 181.62
+   },
+   "exp10m1f/latency": {
+    "insns": 60.12
+   },
+   "exp10m1f/throughput": {
+    "insns": 59.06
+   },
    "exp2/latency": {
     "insns": 183.69
    },
@@ -235,6 +247,18 @@
    },
    "exp2f/throughput": {
     "insns": 50.31
+   },
+   "exp2m1/latency": {
+    "insns": 173.69
+   },
+   "exp2m1/throughput": {
+    "insns": 172.62
+   },
+   "exp2m1f/latency": {
+    "insns": 56.56
+   },
+   "exp2m1f/throughput": {
+    "insns": 55.5
    },
    "expf/latency": {
     "insns": 53.38
@@ -249,10 +273,10 @@
     "insns": 171.62
    },
    "expm1f/latency": {
-    "insns": 188.38
+    "insns": 67.12
    },
    "expm1f/throughput": {
-    "insns": 187.31
+    "insns": 66.06
    },
    "floor/latency": {
     "insns": 12.69
@@ -320,6 +344,18 @@
    "log10f/throughput": {
     "insns": 83.31
    },
+   "log10p1/latency": {
+    "insns": 199.44
+   },
+   "log10p1/throughput": {
+    "insns": 198.38
+   },
+   "log10p1f/latency": {
+    "insns": 84.88
+   },
+   "log10p1f/throughput": {
+    "insns": 83.81
+   },
    "log1p/latency": {
     "insns": 188.44
    },
@@ -327,10 +363,10 @@
     "insns": 187.38
    },
    "log1pf/latency": {
-    "insns": 210.12
+    "insns": 88.88
    },
    "log1pf/throughput": {
-    "insns": 209.06
+    "insns": 87.81
    },
    "log2/latency": {
     "insns": 200.69
@@ -343,6 +379,18 @@
    },
    "log2f/throughput": {
     "insns": 81.31
+   },
+   "log2p1/latency": {
+    "insns": 199.44
+   },
+   "log2p1/throughput": {
+    "insns": 198.38
+   },
+   "log2p1f/latency": {
+    "insns": 84.0
+   },
+   "log2p1f/throughput": {
+    "insns": 82.94
    },
    "logf/latency": {
     "insns": 82.38

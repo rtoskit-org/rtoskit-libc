@@ -15,5 +15,5 @@
 # a layer's file is the core's own, and beats a generic fast one)
 LIBC_MATH_FAST_LAYERED := $(call libc_math_layer_stems,${LIBC_MATH_LAYERS})
 SRC := $(filter-out $(foreach stem,${LIBC_MATH_FAST_LAYERED},${SOURCE_DIR}/${stem}.c ${SOURCE_DIR}/${stem}.S),$(wildcard ${SOURCE_DIR}/*.c ${SOURCE_DIR}/*.S))
-# The 2^(j/32) table only where an exponential of this directory stays
-SRC := $(if $(filter %/expf.c %/exp2f.c %/exp10f.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp2_table.c,${SRC}))
+# The 2^(j/32) table only where a user of __libc_fast_exp2 in this directory stays
+SRC := $(if $(filter %/expf.c %/exp2f.c %/exp10f.c %/expm1f.c %/exp2m1f.c %/exp10m1f.c %/powf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp2_table.c,${SRC}))

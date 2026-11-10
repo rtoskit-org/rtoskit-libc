@@ -1037,3 +1037,18 @@ The float-only `sp-nearest/fast/powf.c`: log2 |x| as a float pair, the exp kerne
 | `pow` | speed | 11,565 | 11,532 | -0.3 % |
 | `pow` | fast | 11,565 | 11,532 | -0.3 % |
 | `powf` | fast | 353 | 203 | -42.5 % |
+
+## P11.03d — Fast m1 and p1 forms, `cbrtf` (D171)
+
+The float-only `sp-nearest/fast/` files: the m1 kernel with exact leading terms, the p1 reduction with 1 + x's error carried, `cbrtf` by Newton steps (D171). Instructions per call (throughput), speed and fast. `test/bench/math` gains `exp2m1`, `exp10m1`, `log2p1` and
+`log10p1` (float and double) in every build type; nothing else changed in release and speed.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expm1f` | 178 | 78 | -56 % |
+| `exp2m1f` | 173 | 75 | -57 % |
+| `exp10m1f` | 186 | 92 | -50 % |
+| `log1pf` | 197 | 96 | -51 % |
+| `log2p1f` | 186 | 101 | -46 % |
+| `log10p1f` | 197 | 104 | -47 % |
+| `cbrtf` | 149 | 78 | -48 % |
