@@ -18,6 +18,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "float_accuracy.h"
+
 /*
  * The float transcendental functions against the double functions on the
  * widened argument (good to about 2^-53, far below a float ulp): the error of
@@ -201,7 +203,7 @@ static void check_specials(const struct unary *test)
 
 		if (isnan(got) && isnan(expected))
 			continue;
-		if (bits_of(got) == bits_of(expected) || ulp_error(got, test->reference(x)) < 1.0)
+		if (bits_of(got) == bits_of(expected) || ulp_error(got, test->reference(x)) < float_accuracy_tolerance(test->name, test->reference(x)))
 			continue;
 		snprintf(message, sizeof(message), "fail: %s(%a) = %a, expected %a\n", test->name, (double)x, (double)got, (double)expected);
 		fputs(message, stdout);
@@ -242,7 +244,7 @@ static void check_unary(const struct unary *test)
 
 		if (got != (float)exact && !(isnan(got) && isnan(exact)))
 			++misrounded;
-		if (error >= 1.0 && failures < 20) {
+		if (error >= float_accuracy_tolerance(test->name, exact) && failures < 20) {
 			snprintf(message, sizeof(message), "fail: %s(%a) = %a, exact %a\n", test->name, (double)x, (double)got, exact);
 			fputs(message, stdout);
 			++failures;
@@ -256,8 +258,8 @@ static void check_unary(const struct unary *test)
 	count += sweep;
 	snprintf(message, sizeof(message), "%s: max %.3f ulp at %a, %ld of %ld not correctly rounded\n", test->name, worst, (double)worst_x, misrounded, count);
 	fputs(message, stdout);
-	/* Faithful everywhere, and correctly rounded but for rare near-halfway cases */
-	if (worst >= 0.52 || misrounded > count / 10000 + 1)
+	/* Faithful everywhere, and correctly rounded but for rare near-halfway cases (expect.c, fast/expect.c) */
+	if (!float_accuracy_within(test->name, worst, misrounded, count))
 		++failures;
 }
 
@@ -278,7 +280,7 @@ static void record(struct statistics *statistics, const char *name, float x, flo
 	++statistics->count;
 	if (got != (float)exact && !(isnan(got) && isnan(exact)))
 		++statistics->misrounded;
-	if (error >= 1.0 && failures < 20) {
+	if (error >= float_accuracy_tolerance(name, exact) && failures < 20) {
 		snprintf(message, sizeof(message), "fail: %s(%a, %a) = %a, exact %a\n", name, (double)x, (double)y, (double)got, exact);
 		fputs(message, stdout);
 		++failures;
@@ -296,7 +298,7 @@ static void report(const struct statistics *statistics, const char *name)
 
 	snprintf(message, sizeof(message), "%s: max %.3f ulp at (%a, %a), %ld of %ld not correctly rounded\n", name, statistics->worst, (double)statistics->worst_x, (double)statistics->worst_y, statistics->misrounded, statistics->count);
 	fputs(message, stdout);
-	if (statistics->worst >= 0.52 || statistics->misrounded > statistics->count / 10000 + 1)
+	if (!float_accuracy_within(name, statistics->worst, statistics->misrounded, statistics->count))
 		++failures;
 }
 
@@ -326,7 +328,7 @@ static void check_binary_specials(const struct binary *test)
 			float got = test->function(x, y);
 			double exact = test->reference(x, y);
 
-			if ((isnan(got) && isnan(exact)) || ulp_error(got, exact) < 1.0)
+			if ((isnan(got) && isnan(exact)) || ulp_error(got, exact) < float_accuracy_tolerance(test->name, exact))
 				continue;
 			snprintf(message, sizeof(message), "fail: %s(%a, %a) = %a, expected %a\n", test->name, (double)x, (double)y, (double)got, exact);
 			fputs(message, stdout);
@@ -380,7 +382,7 @@ static void check_integer(const struct integer *test)
 			float got = test->function(x, specials[j]);
 			double exact = test->reference(x, specials[j]);
 
-			if ((isnan(got) && isnan(exact)) || ulp_error(got, exact) < 1.0)
+			if ((isnan(got) && isnan(exact)) || ulp_error(got, exact) < float_accuracy_tolerance(test->name, exact))
 				continue;
 			snprintf(message, sizeof(message), "fail: %s(%a, %lld) = %a, expected %a\n", test->name, (double)x, specials[j], (double)got, exact);
 			fputs(message, stdout);

@@ -459,3 +459,40 @@ mechanism is the project's own build system.
   except a zero, whose value and sign are F.10's (`log(1) = +0`,
   `sin(±0) = ±0`); the nonzero exact results F.10 fixes (`exp(0) = 1`,
   `pow(x, ±0) = 1`) are `libm_special`'s, in P11.02b's audit.
+
+## 10. The audit of the strict-contract tests (P11.02b)
+
+What each test that checks today's contract checks, and what it keeps in
+`fast` (D163 (3): every check not about the last bit stays shared).
+
+| Test | What it checks | In `fast` |
+|---|---|---|
+| `fpu_math` | the FPU layers' instructions (`VRINT*`, `VMAXNM`, `VFMA`, `VSQRT`, `SQRTSD`) against the generic C: the same bits and flags in every mode | unchanged: exact functions stay exact (§4.1); no `fast/` file |
+| `float_exact` | the exact float functions against the double ones: the same bits | unchanged, as `fpu_math` |
+| `float_hard` (x86_64, armv7e-m-dp) | 50 halfway hard cases of 16 float functions in every mode, correctly rounded, inexact raised | `fast/expect.c`: a relaxed function to nearest either float around the exact value (and the far neighbour with a 1.5 ulp bound), in a directed mode a finite result of the right sign; `erfcf`, `lgammaf`, `tgammaf` strict; inexact still required |
+| `float_accuracy` | every float function sampled against the double one: each result below 1 ulp, the worst below 0.52, at most 1 in 10,000 + 1 not correctly rounded, the special values within 1 ulp | `fast/expect.c`: a relaxed function's results and worst below its bound, no rounding count, a zero result exactly; the rest strict |
+| `libm_dense` | dense sweeps of the fixed-point float functions (at most 1 in 10,000 + 1 not correctly rounded) and near-halfway cases of 6 float functions, `powf` and double `sin`/`cos`/`tan`/`sincos`, all correctly rounded | `fast/expect.c`: a relaxed float result within its bound of the double function; a relaxed double near-halfway result the correctly rounded one or a neighbour (no better reference in the test: bound + 1/2 ulp); `erfcf` strict |
+| `libm_exp` (P11.02c) | reference vectors (1 ulp double, correctly rounded float to nearest; 2 and 1 ulp directed), F.10.3–F.10.4 special values with exact exception sets, exact results (`exp2(k)`, `exp10(k)`, `log2(2^k)`, `log10(10^k)`, `cbrt(27)`, `rootn`, `pow`'s and `compoundn`'s), directed underflow and overflow results | the vectors at the fast bound to nearest and no bound directed; F.10's values, signed zeros, overflow, underflow and exceptions shared; the exact results F.10 does not fix within the bound, inexact then allowed |
+| `libm_trig` (P11.02c) | as `libm_exp` for the trigonometric, pi-scaled and hyperbolic functions (F.10.1, F.10.2) | as `libm_exp` |
+| `libm_special` (P11.02c) | as `libm_exp` for `erf`, `erfc`, `lgamma`, `tgamma` (F.10.5), the exact factorials and the range boundaries | only `erf` is relaxed (1.5 ulp); the rest strict |
+
+Notes:
+
+- **The x86_64 `float_accuracy` measures `sp-nearest`, not the library.** On
+  x86_64 the test links the float-float layer of the single-precision cores
+  into itself, so that millions of arguments run natively (D57). In `fast`
+  it still measures that layer, so the x86_64 run checks the fast
+  expectation on strict code; the Arm runs measure the fast `libc.a`. When
+  P11.03 adds `sp-nearest`-shadowing files, the x86_64 test should link
+  them instead (P11.03 decides, per `libc/math/fast/` layout).
+- **`signbit` returns a nonzero value, not 1**, and not the same one for a
+  float and a double; comparing two `signbit` results directly made every
+  negative result of `libm_dense`'s fast expectation fail. The helpers
+  compare `!signbit(a) == !signbit(b)`; `libm_vectors/fast/bounds.c` was
+  corrected the same way (its two values were both doubles, so it had not
+  failed).
+- **Inexact.** The strict tests require inexact on an inexact result and no
+  exception on an exact one. In `fast`, inexact is still required where the
+  result is inexact (`float_hard`): any computation of an inexact result in
+  floating point raises it. Where `fast` no longer requires an exact result
+  (P11.02c's `exp2(k)` class), it can no longer require "no inexact" either.

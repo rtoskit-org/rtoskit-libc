@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "libm_dense.h"
+
 /*
  * Dense sweeps where the speed flavour's fixed-point float functions on
  * Armv6-M (PLAN D86, D87, D88, D114, D115) have their largest error: the logarithms around
@@ -63,7 +65,7 @@ static void sweep(const char *name, float (*function)(float), double (*reference
 			float want = (float)reference((double)x);
 
 			++count;
-			if (bits_of(result) != bits_of(want)) {
+			if (!libm_dense_accept(name, result, reference((double)x))) {
 				if (wrong < 3)
 					printf("%s(%a) = %a, want %a\n", name, (double)x, (double)result, (double)want);
 				++wrong;
@@ -72,7 +74,7 @@ static void sweep(const char *name, float (*function)(float), double (*reference
 	}
 
 	printf("%s: %lu of %lu not correctly rounded\n", name, wrong, count);
-	if (wrong > count / 10000 + 1)
+	if (wrong > libm_dense_allowance(name, count))
 		++failures;
 }
 
@@ -101,7 +103,7 @@ static void check_near2(void)
 	for (unsigned int i = 0; i < sizeof(near2) / sizeof(near2[0]); ++i) {
 		float result = powf(near2[i].x, near2[i].y);
 
-		if (bits_of(result) != bits_of(near2[i].want)) {
+		if (!libm_dense_near("powf", result, near2[i].want, pow(near2[i].x, near2[i].y))) {
 			printf("near2 %u: powf(%a, %a) = %a, want %a\n", i, (double)near2[i].x, (double)near2[i].y, (double)result, (double)near2[i].want);
 			++wrong;
 		}
@@ -121,14 +123,6 @@ static const struct {
 #include "near_double.inc"
 };
 
-static uint64_t double_bits(double x)
-{
-	uint64_t bits;
-
-	memcpy(&bits, &x, sizeof(bits));
-	return bits;
-}
-
 static void check_near_double(void)
 {
 	int wrong = 0;
@@ -142,7 +136,10 @@ static void check_near_double(void)
 		sincos(near_double[i].x, &s, &c);
 		paired = near_double[i].function == sin ? s : near_double[i].function == cos ? c :
 																					   result;
-		if (double_bits(result) != double_bits(near_double[i].want) || double_bits(paired) != double_bits(near_double[i].want)) {
+		const char *name = near_double[i].function == sin ? "sin" : near_double[i].function == cos ? "cos" :
+																									 "tan";
+
+		if (!libm_dense_near_double(name, result, near_double[i].want) || !libm_dense_near_double(name, paired, near_double[i].want)) {
 			printf("near_double %u: f(%a) = %a, sincos %a, want %a\n", i, near_double[i].x, result, paired, near_double[i].want);
 			++wrong;
 		}
@@ -153,14 +150,31 @@ static void check_near_double(void)
 		++failures;
 }
 
+/* The name and the double reference of a function of near.inc, for the build type's expectation (expect.c) */
+static const struct {
+	float (*function)(float);
+	const char *name;
+	double (*reference)(double);
+} near_functions[] = {
+	{ cosf, "cosf", cos },
+	{ erfcf, "erfcf", erfc },
+	{ erff, "erff", erf },
+	{ log10f, "log10f", log10 },
+	{ sinf, "sinf", sin },
+	{ tanf, "tanf", tan },
+};
+
 static void check_near(void)
 {
 	int wrong = 0;
 
 	for (unsigned int i = 0; i < sizeof(near) / sizeof(near[0]); ++i) {
 		float result = near[i].function(near[i].x);
+		unsigned int f = 0;
 
-		if (bits_of(result) != bits_of(near[i].want)) {
+		while (f < sizeof(near_functions) / sizeof(near_functions[0]) - 1 && near_functions[f].function != near[i].function)
+			++f;
+		if (near_functions[f].function != near[i].function || !libm_dense_near(near_functions[f].name, result, near[i].want, near_functions[f].reference((double)near[i].x))) {
 			printf("near %u: f(%a) = %a, want %a\n", i, (double)near[i].x, (double)result, (double)near[i].want);
 			++wrong;
 		}
