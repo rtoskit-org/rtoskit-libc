@@ -17,7 +17,7 @@
  * function: the C23 F.10 values (NaN, both infinities, both zeros), the first overflow to +inf and the last finite
  * results, the smallest normal and a subnormal result (gradual underflow, no flush), the last nonzero result and the
  * first zero, and the overflow and underflow exceptions where the core keeps them (D44, D45); for powf, every case
- * of C23 F.10.4.5 as well. Each point is far enough from its threshold, in ulps, that every contract gives the same
+ * of C23 F.10.4.5 as well; the m1 and p1 forms and cbrtf near 0 too, where the relative accuracy matters. Each point is far enough from its threshold, in ulps, that every contract gives the same
  * answer.
  */
 
@@ -174,11 +174,80 @@ static void check_powers(void)
 	RAISES(is_positive_zero(powf(FLT_MIN, 2.0f)) && is_positive_zero(powf(0x1p-149f, 1.5f)) && is_positive_zero(powf(1.0001f, -1e7f)), FE_UNDERFLOW);
 }
 
+static bool near(float x, float want)
+{
+	return fabsf(x - want) <= 0x1p-21f * fabsf(want);
+}
+
+static void check_minus_one(void)
+{
+	static float (*const functions[])(float) = { expm1f, exp2m1f, exp10m1f };
+
+	for (unsigned int i = 0; i < sizeof(functions) / sizeof(functions[0]); ++i) {
+		float (*f)(float) = functions[i];
+
+		/* F.10.3.3, .5, .6: NaN, +inf, -1 for -inf, +-0 with its sign, all without an exception */
+		QUIET(isnan(f(NAN)) && f(INFINITY) == INFINITY && f(-INFINITY) == -1.0f);
+		QUIET(is_positive_zero(f(0.0f)) && is_negative_zero(f(-0.0f)));
+		/* Far below 0 the result is -1; beside it, still above */
+		CHECK(f(-1000.0f) == -1.0f && f(-30.0f) == -1.0f);
+	}
+	/* The first overflow (ln, log2 and log10 of FLT_MAX are 88.72, 128 and 38.53) and finite results below it */
+	RAISES(expm1f(88.8f) == INFINITY && exp2m1f(128.0f) == INFINITY && exp10m1f(38.6f) == INFINITY, FE_OVERFLOW);
+	RAISES(expm1f(1000.0f) == INFINITY && exp2m1f(200.5f) == INFINITY && exp10m1f(100.0f) == INFINITY, FE_OVERFLOW);
+	QUIET(isfinite(expm1f(88.7f)) && expm1f(88.7f) > 0x1p127f && isfinite(exp10m1f(38.5f)) && exp10m1f(38.5f) > 0x1p127f);
+	QUIET(isfinite(exp2m1f(127.99f)) && exp2m1f(127.99f) > 0x1p127f && near(exp2m1f(127.0f), 0x1p127f));
+	/* -1 from where the power is below a quarter of -1's ulp below 1, and not yet above it */
+	CHECK(expm1f(-18.5f) == -1.0f && exp2m1f(-26.5f) == -1.0f && exp10m1f(-8.5f) == -1.0f);
+	CHECK(expm1f(-16.0f) > -1.0f && exp2m1f(-23.0f) > -1.0f && exp10m1f(-7.0f) > -1.0f);
+	/* Near 0 the relative accuracy: x, x ln2 and x ln10, subnormal results included */
+	QUIET(expm1f(0x1p-30f) == 0x1p-30f && expm1f(-0x1p-30f) == -0x1p-30f && near(expm1f(0x1p-12f), 0x1.0008p-12f));
+	CHECK(near(exp2m1f(0x1p-60f), 0x1.62e430p-61f) && near(exp10m1f(-0x1p-60f), -0x1.26bb1cp-59f));
+	CHECK(is_subnormal(exp2m1f(0x1p-140f)) && is_subnormal(exp10m1f(0x1p-140f)) && is_subnormal(expm1f(0x1p-140f)));
+	QUIET(near(expm1f(1.0f), 0x1.b7e152p+0f) && near(exp2m1f(-1.0f), -0.5f) && near(exp10m1f(2.0f), 99.0f));
+}
+
+static void check_plus_one(void)
+{
+	static float (*const functions[])(float) = { log1pf, log2p1f, log10p1f };
+
+	for (unsigned int i = 0; i < sizeof(functions) / sizeof(functions[0]); ++i) {
+		float (*f)(float) = functions[i];
+
+		/* F.10.3.8, .9, .11: NaN; +inf; log(1 + -1) = -inf with divide-by-zero; below -1 invalid; +-0 with its sign */
+		QUIET(isnan(f(NAN)) && f(INFINITY) == INFINITY);
+		RAISES(f(-1.0f) == -INFINITY, FE_DIVBYZERO);
+		RAISES(isnan(f(-1.5f)) && isnan(f(-0x1.000002p+0f)) && isnan(f(-INFINITY)), FE_INVALID);
+		QUIET(is_positive_zero(f(0.0f)) && is_negative_zero(f(-0.0f)));
+		/* The ends of the range: just above -1, and FLT_MAX */
+		QUIET(f(-0x1.fffffep-1f) < -1.0f && isfinite(f(-0x1.fffffep-1f)) && f(FLT_MAX) > 1.0f && isfinite(f(FLT_MAX)));
+	}
+	/* Near 0 the relative accuracy: x, x/ln2 and x/ln10, subnormal results included */
+	QUIET(log1pf(0x1p-30f) == 0x1p-30f && log1pf(-0x1p-30f) == -0x1p-30f && near(log1pf(0x1p-12f), 0x1.fffp-13f));
+	CHECK(near(log2p1f(0x1p-60f), 0x1.715476p-60f) && near(log10p1f(-0x1p-60f), -0x1.bcb7b2p-62f));
+	CHECK(is_subnormal(log2p1f(0x1p-140f)) && is_subnormal(log10p1f(0x1p-140f)) && is_subnormal(log1pf(0x1p-140f)));
+	QUIET(near(log1pf(1.0f), 0x1.62e430p-1f) && near(log2p1f(1.0f), 1.0f) && near(log10p1f(99.0f), 2.0f));
+	CHECK(near(log1pf(-0x1.fffffep-1f), -0x1.0a2b24p+4f) && near(log2p1f(FLT_MAX), 128.0f) && near(log10p1f(FLT_MAX), 0x1.344136p+5f));
+}
+
+static void check_cube_root(void)
+{
+	/* F.10.4.1: +-0, +-inf and NaN unchanged, without an exception */
+	QUIET(is_positive_zero(cbrtf(0.0f)) && is_negative_zero(cbrtf(-0.0f)) && isnan(cbrtf(NAN)));
+	QUIET(cbrtf(INFINITY) == INFINITY && cbrtf(-INFINITY) == -INFINITY);
+	/* Cubes, the ends of the range (a subnormal x has a normal root) and the sign */
+	QUIET(near(cbrtf(27.0f), 3.0f) && near(cbrtf(-8.0f), -2.0f) && near(cbrtf(0x1p-147f), 0x1p-49f) && near(cbrtf(-0x1p-149f), -0x1.428a30p-50f));
+	QUIET(near(cbrtf(FLT_MAX), 0x1.965feap+42f) && near(cbrtf(FLT_MIN), 0x1p-42f) && near(cbrtf(-0x1.fffffep-127f), -0x1p-42f));
+}
+
 int main(void)
 {
 	check_exponentials();
 	check_logarithms();
 	check_powers();
+	check_minus_one();
+	check_plus_one();
+	check_cube_root();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

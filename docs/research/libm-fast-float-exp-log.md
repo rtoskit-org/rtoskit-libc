@@ -324,3 +324,139 @@ in every build type (a power of two is now tested before y's size, which
 skips a double comparison): by 8–10 instructions on x86_64 and armv7e-m-dp
 (where the strict `powf` calls it), 31–70 on the soft double cores. The cores without an FPU keep the
 speed files (D168, P11.03e).
+
+## 12. The m1 and p1 forms (P11.03d)
+
+`expm1f`, `exp2m1f`, `exp10m1f`, `log1pf`, `log2p1f`, `log10p1f` over the
+kernels of sections 3, 4, 7 and 8. Near 0 the result is about x (or x ln b,
+x / ln b), so an error relative to 1, harmless for e^x or log x, would be
+large relative to the result: each form keeps its accuracy relative to |x|.
+
+### Sources (ideas only)
+
+- **FreeBSD `s_expm1f.c`** (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_expm1f.c>,
+  read 2026-11-10 through a summary): float only; x = k ln2 + r with a split
+  ln2; a short rational approximation with one division and a correction
+  term near 0; x itself below about 2^-25; 2^k by the exponent field with
+  special cases for very negative k, large k and k = 128. No bound stated.
+- **FreeBSD `s_log1pf.c`** (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_log1pf.c>):
+  float only; x itself (or x − x²/2) for tiny x; otherwise u = 1 + x with a
+  correction term for the rounding of the sum, u's exponent and mantissa in
+  [√½, √2), s = f/(2 + f) and a polynomial in s². No bound stated.
+- **Arm Optimized Routines `expm1f`, `log1pf`** (AdvSIMD;
+  <https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/expm1f.c>,
+  `.../log1pf.c`): expm1(r) = r + r² P(r) with P of degree 5, the result as
+  p·2^n + (2^n − 1) (no cancellation near 0); 1.13 and 1.20 ulp stated.
+
+What we take: the result built as (2^k − 1) + 2^k(…) so that k = 0 needs no
+subtraction of 1; 1 + x with its rounding error carried; x itself as m − 1
+near 0 where the double path can.
+
+### The double-FPU cores (`libc/math/fast/`)
+
+- **m1:** u = x ln b in double. Within |u| ≤ 1/8, e^u − 1 = u(1 + u P(u))
+  with the Taylor series to u⁶ (`__libc_fast_expm1_series`, relative error
+  2^-30.3 however small u is; u(1 + uP) rather than u + u²P, which turns −0
+  into +0); beyond, `__libc_fast_exp2`(x log2 b) − 1, whose 2^-30.5 relative
+  to 2^t is at most 2^-28 relative to a result at least 0.11 from 0. One
+  rounding to float: at most 0.5473 ulp measured. `expm1f` keeps the other
+  build types' tiny path (x itself with underflow below 2^-30).
+- **p1:** within 1/4 of 0, log(1 + x) from x itself
+  (`__libc_fast_log1p_double`, the series of section 7 taking f = m − 1
+  directly); beyond, 1 + x in double, exact there, split as 2^e m
+  (`__libc_fast_log_split`). The first build formed 1 + x everywhere: below
+  2^-29 the sum is not exact in double, and `log1pf`, `log2p1f`, `log10p1f`
+  measured 1.02, 1.94 and 2.24 ulp near 2^-30. Now every one is at most
+  0.5000 ulp.
+
+### The single-precision FPU cores (`libc/math/sp-nearest/fast/`)
+
+- **m1** (`__libc_fast_expm1f_kernel`, over the reductions of section 4):
+  for |k| ≤ 24, e^u − 1 = u_hi + u_hi²/2 + (the square's error + u_lo(1 +
+  u_hi) + u_hi³ q₃(u)), u_hi² exact by a fused multiply-add and q₃ the
+  upper part of section 4's polynomial (shared, `__libc_fast_expf_q3`). For
+  k = 0 that is the result; otherwise (2^k − 1) + 2^k u_hi + 2^k u_hi²/2 by
+  exact two-sums, then 2^k times the rest. For k < −24 the power is below
+  2^-24 beside −1; above 2^24 the 1 joins the kernel's tail as 2^-k. Three
+  builds measured on the way: the tail rounded whole gave 1.12 ulp (2^k
+  times its rounding, k = 1, a result near 0.43); squaring u rounded gave
+  1.04 (a quarter ulp of a result near 0.24); `exp10m1f`'s reduction low
+  part k (log10(2)f − log10 2) reaches 2^-21 at k = 24, and u_lo(1 + u_hi)
+  dropped a third of an ulp of it (1.25 ulp at x = 7.07), so `exp10m1f` now
+  takes r + r_lo as a fresh pair by a two-sum first.
+- **p1** (`__libc_fast_log1pf_reduce`): within 2^-5 of 0, r = x exactly
+  against the entry holding 1; otherwise 1 + x = u + c by a two-sum, u
+  reduced as section 8 (`__libc_fast_logf_split_z`), and c/(1 + x) carried
+  into the low part as c·2^-k·(1/c_i)(1 − r). Then the bases as `logf`,
+  `log2f`, `log10f`.
+- **Below 2^-90** `exp10m1f`, `log2p1f` and `log10p1f` scale x by 2^64 first
+  and round once on the way back: the constants' low parts underflowed and
+  the results reached 0.98–0.9999 ulp near FLT_MIN. Zero returns itself:
+  where the low part is negative, −0 + +0 would be +0.
+
+Under `-Os` and `-fno-builtin`, `fabs` and `fabsf` are calls and a helper
+used twice is not inlined: the hot paths use `__builtin_fabsf` and
+`__builtin_fabs`, the kernel evaluates `__libc_fast_expf_q3` once for both
+of its paths, and the double p1 files call `__libc_fast_log1p_double`
+once (with f = x near 0, or m − 1, and e added only when nonzero: its +0
+would turn log(1 + −0) = −0 into +0).
+
+## 13. `cbrtf` (P11.03d)
+
+- **FreeBSD `s_cbrtf.c`** (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_cbrtf.c>,
+  read through a summary): an initial guess of about 5 bits from the bit
+  pattern (the exponent divided by 3), then two Halley steps in double; the
+  final float rounding said to be correct to nearest.
+- **Arm Optimized Routines `cbrtf`** (AdvSIMD, `.../advsimd/cbrtf.c`): m in
+  [0.5, 1), a degree 3 polynomial, one Newton step, 2^(i/3) from a 5-entry
+  table; 1.15–1.64 ulp stated.
+
+Ours, on both paths: |x| = 2^(3q + j) f with f in [1, 2) and j = 0, 1, 2
+(q = floor(e/3) by a division of a positive number), m = 2^j f, and the
+start cbrt(f)·cbrt(2^j) from a polynomial fitted here by Chebyshev
+interpolation (degree 2: 2^-10.1; degree 3: 2^-13.2):
+
+- **double:** degree 3, one Halley step t(t³ + 2m)/(2t³ + m), cubic, to about
+  2^-39; rounded once to float (every float is a normal double: no scaling).
+  The start uses plain products: the first build's three `__builtin_fma`
+  calls are a software `fma` on x86_64, whose baseline has no FMA, and
+  measured 1,057 instructions against speed's 150.
+- **float:** degree 2, one Newton step in float (about 2^-21), then one with
+  the residual t³ − m from exact products (t² and its error by a fused
+  multiply-add), to about 2^-40 before the last rounding; subnormals scaled
+  by 2^24 first.
+
+Both measured on every finite float: at most 0.5000 ulp, 0.0001 % not
+correctly rounded (against `cbrtl`).
+
+## 14. Measured (P11.03d)
+
+Every float argument of the function's range (the m1 forms from just below
+their −1 threshold to their overflow, the p1 forms from −1 to FLT_MAX,
+`cbrtf` all finite floats) against glibc's long double `expm1l`, `log1pl`
+and `cbrtl` (glibc 2.39 has no `exp2m1` and the like; x ln b and the
+division by ln b in long double):
+
+| Function | Arguments | double path | float path |
+|---|---:|---:|---:|
+| `expm1f` | 2,220,097,538 | 0.5473 ulp | 0.8432 ulp |
+| `exp2m1f` | 2,228,813,826 | 0.5473 | 0.8345 |
+| `exp10m1f` | 2,200,961,026 | 0.5468 | 0.8472 |
+| `log1pf` | 3,204,434,336 | 0.5000 | 0.7539 |
+| `log2p1f` | 3,204,434,336 | 0.5000 | 0.8061 |
+| `log10p1f` | 3,204,434,336 | 0.5000 | 0.8404 |
+| `cbrtf` | 4,278,162,238 | 0.5000 | 0.5000 |
+
+Instructions per call (speed → fast):
+
+| Function | x86_64 | armv7e-m-dp | armv7e-m, armv8-m.main |
+|---|---:|---:|---:|
+| `expm1f` | 264 → 61 | 187 → 66 | 178 → 78 |
+| `exp2m1f` | 275 → 56 | 176 → 56 | 173 → 75 |
+| `exp10m1f` | 293 → 57 | 194 → 59 | 186 → 92 |
+| `log1pf` | 343 → 80 | 209 → 88 | 197 → 96 |
+| `log2p1f` | 369 → 75 | 211 → 83 | 186 → 101 |
+| `log10p1f` | 369 → 76 | 211 → 84 | 197 → 104 |
+| `cbrtf` | 150 → 71 | 135 → 73 | 149 → 81 |
+
+On armv8-m.main `cbrtf` is 78. The cores without an FPU keep the speed files (D168, P11.03e).

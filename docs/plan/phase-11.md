@@ -210,9 +210,16 @@ fast bench re-locked with the gains and the members recorded.
   armv7e-m-dp, 633 → 181 on x86_64). Sampled: double 0.5096, float at most 0.8749 ulp
   (D170).
 
-### P11.03d — `expm1f`, `exp2m1f`, `exp10m1f`, `log1pf`, `log2p1f`, `log10p1f`, `cbrtf`  `[ ]`
-- [ ] Research (the note), over P11.03a's and P11.03b's kernels, keeping the
-  relative accuracy near 0; implementation, tests, gains.
+### P11.03d — `expm1f`, `exp2m1f`, `exp10m1f`, `log1pf`, `log2p1f`, `log10p1f`, `cbrtf`  `[x]`
+- [x] Research (the note, sections 12–14), over P11.03a's and P11.03b's
+  kernels, keeping the relative accuracy near 0: the m1 forms' leading
+  terms by exact two-sums on the float path, the series near 0 on the
+  double path; 1 + x with its error carried (float) or never formed near 0
+  (double); `cbrtf` by a polynomial start and Newton or Halley steps;
+  implementation, tests (`libm_thresholds`: the seven functions' special
+  values, thresholds and near-0 results), gains (`expm1f` 178 → 78, `log1pf`
+  197 → 96, `cbrtf` 149 → 81 on armv7e-m; `expm1f` 264 → 61 on x86_64). Every float:
+  double at most 0.5473 ulp, float at most 0.8472 (D171).
 
 ### P11.03e — The cores without an FPU  `[ ]`
 - [ ] armv6-m, armv6s-m, armv7-m: fixed-point `nofp/fast/` variants of the
