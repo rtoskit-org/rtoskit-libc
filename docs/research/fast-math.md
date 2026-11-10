@@ -496,3 +496,36 @@ Notes:
   result is inexact (`float_hard`): any computation of an inexact result in
   floating point raises it. Where `fast` no longer requires an exact result
   (P11.02c's `exp2(k)` class), it can no longer require "no inexact" either.
+
+## 11. The inline-check tests (P11.02c)
+
+`libm_exp`, `libm_trig` and `libm_special` check every kind of property line
+by line. Each check was read against section 4.1:
+
+- **Shared, unchanged, in every build type:** C23 F.10's special values and
+  signed zeros (`exp(±0) = 1`, `log(1) = +0` in every mode, `sin(±0)`,
+  `acos(1) = +0` in every mode, `atan(±∞)`, `atan2`'s special pairs,
+  `pow`'s F.10.4.5 table, `powr`'s and `pown`'s and `rootn`'s and
+  `compoundn`'s F.10 cases, the pi functions at the integers and
+  half-integers, the hyperbolic functions' zeros and infinities, `erf(±∞)`);
+  NaNs; overflow to ±∞ and the overflow thresholds (`sinh(710.48)`);
+  results that round to zero (`exp(-746)`, `exp2(-1075)`, `pow(2, -1075.5)`,
+  `powf(-2, -150)`: a zero exactly, as in D164); ranges (`exp(-708.5) <
+  DBL_MIN`); every exception set; and the functions outside the relaxed
+  families (`rsqrt`, `hypot`, `sqrt`, `erfc`, `lgamma`, `tgamma`).
+- **Through `libm_expect.h`:** the reference vectors' bound
+  (`libm_vector_within`); an exact result F.10 does not fix (`libm_exact`,
+  `libm_exactf`: the value, or in fast a neighbour); a directed result
+  (`libm_directed`: in fast the sign, and the mode's overflow result
+  exactly); an absolute tolerance (`libm_near`, one ulp wider in fast: the
+  `compoundn` regression cases of P2.05c3); and `EXPECT_EXACT`, which in fast
+  no longer compares inexact for a result that need not be exact.
+- **One header pair, not a file per test.** The three tests use the same
+  bound table, so `test/unit/include/strict/libm_expect.h` and
+  `fast/libm_expect.h` serve all three, as `static inline` functions, picked
+  by the module's include path on `LIBC_FLAVOURS`: the same selection by the
+  build as D165's `subdir.mk`, with no source to compile per module.
+- The strict header is exactly the comparisons the tests made (`==`, the
+  bound table, `fabs(...) <=`, every exception bit), so debug, release and
+  speed check what they checked before; with no `fast/` libm file the fast
+  header passes everywhere too.

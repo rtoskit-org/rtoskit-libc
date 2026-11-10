@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* The build type's expectations (strict/ or fast/, by include path: the module's makefile) */
+#include "libm_expect.h"
+
 /*
  * libm part 3 (P1.15, docs/research/libm-trig.md): trigonometric,
  * pi-scaled and hyperbolic functions. Reference vectors (exact values from
@@ -68,6 +71,19 @@ static void fail(int line, const char *what)
 			EXPECT(condition, flags);             \
 			fesetround(0);                        \
 		}                                         \
+	} while (false)
+
+/* EXPECT for a check of exact results through libm_exact: the fast contract allows inexact there (libm_expect.h) */
+#define EXPECT_EXACT(condition, flags)                                                        \
+	do {                                                                                      \
+		bool holds;                                                                           \
+		unsigned int raised;                                                                  \
+                                                                                              \
+		feclearexcept(FE_ALL_EXCEPT);                                                         \
+		holds = (condition);                                                                  \
+		raised = (unsigned int)fetestexcept(FE_ALL_EXCEPT) & libm_exact_flags();              \
+		if (!holds || raised != ((flags) & (unsigned int)FE_ALL_EXCEPT & libm_exact_flags())) \
+			fail(__LINE__, #condition " raising " #flags);                                    \
 	} while (false)
 
 enum function {
@@ -232,7 +248,6 @@ static double ulp_error(double got, double hi, double lo, bool single)
 static void check_vectors(void)
 {
 	/* Nearest: 1 ulp for double, correct rounding for float; directed: 2 and 1 ulp */
-	static const double bound[2][2] = { { 1.0, 0.5 + 0x1p-20 }, { 2.0, 1.0 } };
 	double worst[40] = { 0 };
 
 	for (int direction = 0; direction < 4; ++direction) {
@@ -245,7 +260,7 @@ static void check_vectors(void)
 
 			fesetround(0);
 			error = ulp_error(got, vectors[i].hi, vectors[i].lo, single);
-			if (!(error <= bound[direction != 0][single])) {
+			if (!libm_vector_within(names[vectors[i].function % 20], single, direction, error, got, vectors[i].hi)) {
 				char message[200];
 
 				snprintf(message, sizeof(message), "%s%s(%a, %a) direction %d = %a, want %a + %a: %g ulp", names[vectors[i].function % 20], single ? "f" : "", vectors[i].x, vectors[i].b, direction, got, vectors[i].hi, vectors[i].lo, error);
@@ -269,27 +284,27 @@ static void check_trigonometric(void)
 	EXPECT(cos(-0.0) == 1.0 && cos(0.0) == 1.0, 0);
 	EXPECT(isnan(sin(INFINITY)) && isnan(cos(-INFINITY)) && isnan(tan(INFINITY)), INVALID);
 	EXPECT(isnan(sin(NAN)) && isnan(cos(NAN)) && isnan(tanf(NAN)), 0);
-	EXPECT(sin(0x1p-1070) == 0x1p-1070, UNDERFLOW | INEXACT);
-	IN_DIRECTION(2, sin(0x1p-30) == nextafter(0x1p-30, 0.0), INEXACT);
-	IN_DIRECTION(1, tan(0x1p-30) == nextafter(0x1p-30, 1.0), INEXACT);
-	IN_DIRECTION(2, cos(0x1p-30) == nextafter(1.0, 0.0), INEXACT);
-	EXPECT(cos(0x1p-1074) == 1.0, INEXACT);
-	IN_DIRECTION(1, sinf(0x1p-140f) == 0x1p-140f, UNDERFLOW | INEXACT);
-	IN_DIRECTION(2, sinf(0x1p-140f) == nextafterf(0x1p-140f, 0.0f), UNDERFLOW | INEXACT);
-	CHECK(sin(0x1.921fb54442d18p+0) == 1.0 && cos(0x1.921fb54442d18p+0) == 0x1.1a62633145c07p-54);
-	CHECK(sin(0x1.921fb54442d18p+1) == 0x1.1a62633145c07p-53 && tan(0x1.921fb54442d18p-1) == 0x1.fffffffffffffp-1);
-	CHECK(sin(0x1p1023) == 0x1.205248cbdb760p-1 && cos(0x1p1023) == -0x1.a719f26c232bfp-1);
+	EXPECT(libm_exact("sin", sin(0x1p-1070), 0x1p-1070), UNDERFLOW | INEXACT);
+	IN_DIRECTION(2, libm_directed("sin", sin(0x1p-30), nextafter(0x1p-30, 0.0)), INEXACT);
+	IN_DIRECTION(1, libm_directed("tan", tan(0x1p-30), nextafter(0x1p-30, 1.0)), INEXACT);
+	IN_DIRECTION(2, libm_directed("cos", cos(0x1p-30), nextafter(1.0, 0.0)), INEXACT);
+	EXPECT(libm_exact("cos", cos(0x1p-1074), 1.0), INEXACT);
+	IN_DIRECTION(1, libm_directed("sin", sinf(0x1p-140f), 0x1p-140f), UNDERFLOW | INEXACT);
+	IN_DIRECTION(2, libm_directed("sin", sinf(0x1p-140f), nextafterf(0x1p-140f, 0.0f)), UNDERFLOW | INEXACT);
+	CHECK(libm_exact("sin", sin(0x1.921fb54442d18p+0), 1.0) && libm_exact("cos", cos(0x1.921fb54442d18p+0), 0x1.1a62633145c07p-54));
+	CHECK(libm_exact("sin", sin(0x1.921fb54442d18p+1), 0x1.1a62633145c07p-53) && libm_exact("tan", tan(0x1.921fb54442d18p-1), 0x1.fffffffffffffp-1));
+	CHECK(libm_exact("sin", sin(0x1p1023), 0x1.205248cbdb760p-1) && libm_exact("cos", cos(0x1p1023), -0x1.a719f26c232bfp-1));
 
 	/* F.10.1.2, F.10.1.1, F.10.1.3, F.10.1.4 */
 	EXPECT(asin(-0.0) == 0 && signbit(asin(-0.0)) && atan(-0.0) == 0 && signbit(atan(-0.0)), 0);
 	EXPECT(acos(1.0) == 0 && !signbit(acos(1.0)), 0);
 	IN_DIRECTION(2, acos(1.0) == 0 && !signbit(acos(1.0)), 0);
 	EXPECT(isnan(asin(1.5)) && isnan(acos(-1.0000000000000002)) && isnan(asinf(-INFINITY)), INVALID);
-	CHECK(asin(1.0) == 0x1.921fb54442d18p+0 && acos(-1.0) == 0x1.921fb54442d18p+1 && acos(0.0) == 0x1.921fb54442d18p+0);
-	CHECK(atan(INFINITY) == 0x1.921fb54442d18p+0 && atan(-0x1p100) == -0x1.921fb54442d18p+0 && atan(1.0) == 0x1.921fb54442d18p-1);
-	EXPECT(asin(0x1p-1070) == 0x1p-1070 && atan(-0x1p-1070) == -0x1p-1070, UNDERFLOW | INEXACT);
-	IN_DIRECTION(1, asin(0x1p-30) == nextafter(0x1p-30, 1.0), INEXACT);
-	IN_DIRECTION(1, atan(0x1p-30) == 0x1p-30, INEXACT);
+	CHECK(libm_exact("asin", asin(1.0), 0x1.921fb54442d18p+0) && libm_exact("acos", acos(-1.0), 0x1.921fb54442d18p+1) && libm_exact("acos", acos(0.0), 0x1.921fb54442d18p+0));
+	CHECK(atan(INFINITY) == 0x1.921fb54442d18p+0 && libm_exact("atan", atan(-0x1p100), -0x1.921fb54442d18p+0) && libm_exact("atan", atan(1.0), 0x1.921fb54442d18p-1));
+	EXPECT(libm_exact("asin", asin(0x1p-1070), 0x1p-1070) && libm_exact("atan", atan(-0x1p-1070), -0x1p-1070), UNDERFLOW | INEXACT);
+	IN_DIRECTION(1, libm_directed("asin", asin(0x1p-30), nextafter(0x1p-30, 1.0)), INEXACT);
+	IN_DIRECTION(1, libm_directed("atan", atan(0x1p-30), 0x1p-30), INEXACT);
 	EXPECT(atan2(0.0, -0.0) == 0x1.921fb54442d18p+1 && atan2(-0.0, -1.0) == -0x1.921fb54442d18p+1, INEXACT);
 	EXPECT(atan2(-0.0, 0.0) == 0 && signbit(atan2(-0.0, 0.0)) && atan2(0.0, 5.0) == 0 && !signbit(atan2(0.0, 5.0)), 0);
 	EXPECT(atan2(1.0, 0.0) == 0x1.921fb54442d18p+0 && atan2(-INFINITY, 2.0) == -0x1.921fb54442d18p+0, INEXACT);
@@ -297,12 +312,12 @@ static void check_trigonometric(void)
 	EXPECT(atan2(1.0, INFINITY) == 0 && atan2(-1.0, INFINITY) == 0 && signbit(atan2(-1.0, INFINITY)), 0);
 	EXPECT(isnan(atan2(NAN, 1.0)) && isnan(atan2(1.0, NAN)), 0);
 	EXPECT(atan2(0x1p-1000, 0x1p100) == 0 && atan2(-0x1p-1022, DBL_MAX) == 0 && signbit(atan2(-0x1p-1022, DBL_MAX)), UNDERFLOW | INEXACT);
-	EXPECT(atan2(0x1p-1060, 1.0) == 0x1p-1060, UNDERFLOW | INEXACT);
-	IN_DIRECTION(3, atan2(0x1p-1060, 1.0) == 0x1p-1060 - 0x1p-1074, UNDERFLOW | INEXACT);
-	CHECK(atan2(DBL_MAX, 0x1p-1022) == 0x1.921fb54442d18p+0 && atan2(1.0, 1.0) == 0x1.921fb54442d18p-1 && atan2(-1.0, -1.0) == -0x1.2d97c7f3321d2p+1);
-	EXPECT(atan2f(0x1p-127f, 1.0f) == 0x1p-127f, UNDERFLOW | INEXACT);
-	IN_DIRECTION(3, atan2f(0x1p-127f, 1.0f) == nextafterf(0x1p-127f, 0.0f), UNDERFLOW | INEXACT);
-	CHECK(atan2l(1.0L, -1.0L) == 0x1.2d97c7f3321d2p+1L && acosl(-1.0L) == 0x1.921fb54442d18p+1L);
+	EXPECT(libm_exact("atan2", atan2(0x1p-1060, 1.0), 0x1p-1060), UNDERFLOW | INEXACT);
+	IN_DIRECTION(3, libm_directed("atan2", atan2(0x1p-1060, 1.0), 0x1p-1060 - 0x1p-1074), UNDERFLOW | INEXACT);
+	CHECK(libm_exact("atan2", atan2(DBL_MAX, 0x1p-1022), 0x1.921fb54442d18p+0) && libm_exact("atan2", atan2(1.0, 1.0), 0x1.921fb54442d18p-1) && libm_exact("atan2", atan2(-1.0, -1.0), -0x1.2d97c7f3321d2p+1));
+	EXPECT(libm_exactf("atan2", atan2f(0x1p-127f, 1.0f), 0x1p-127f), UNDERFLOW | INEXACT);
+	IN_DIRECTION(3, libm_directed("atan2", atan2f(0x1p-127f, 1.0f), nextafterf(0x1p-127f, 0.0f)), UNDERFLOW | INEXACT);
+	CHECK(libm_exact("atan2", (double)atan2l(1.0L, -1.0L), 0x1.2d97c7f3321d2p+1) && libm_exact("acos", (double)acosl(-1.0L), 0x1.921fb54442d18p+1));
 }
 
 static void check_pi_functions(void)
@@ -321,18 +336,18 @@ static void check_pi_functions(void)
 	EXPECT(sinpi(0x1p60) == 0 && sinpi(-0x1p60) == 0 && signbit(sinpi(-0x1p60)) && cospi(0x1p60) == 1.0, 0);
 	EXPECT(cospi(0x1p52 + 1) == -1.0 && tanpi(0x1p52 + 1) == 0 && signbit(tanpi(0x1p52 + 1)), 0);
 	EXPECT(isnan(sinpi(INFINITY)) && isnan(cospi(-INFINITY)) && isnan(tanpi(INFINITY)), INVALID);
-	EXPECT(sinpi(0.25) == 0x1.6a09e667f3bcdp-1 && cospi(0.25) == 0x1.6a09e667f3bcdp-1 && tanpi(0.25) == 1.0, INEXACT);
-	EXPECT(sinpi(1.0 / 6) == 0.5 || sinpi(1.0 / 6) == 0x1.fffffffffffffp-2, INEXACT);
-	EXPECT(sinpi(0x1p-1074) == 0x1p-1073 + 0x1p-1074, UNDERFLOW | INEXACT);
-	EXPECT(asinpi(1.0) == 0.5 && asinpi(-1.0) == -0.5 && acospi(-1.0) == 1.0 && acospi(1.0) == 0 && acospi(0.0) == 0.5, 0);
-	EXPECT(atanpi(INFINITY) == 0.5 && atanpi(-1.0) == -0.25 && atanpi(-0.0) == 0 && signbit(atanpi(-0.0)), 0);
+	EXPECT(libm_exact("sinpi", sinpi(0.25), 0x1.6a09e667f3bcdp-1) && libm_exact("cospi", cospi(0.25), 0x1.6a09e667f3bcdp-1) && libm_exact("tanpi", tanpi(0.25), 1.0), INEXACT);
+	EXPECT(libm_exact("sinpi", sinpi(1.0 / 6), 0.5) || sinpi(1.0 / 6) == 0x1.fffffffffffffp-2, INEXACT);
+	EXPECT(libm_exact("sinpi", sinpi(0x1p-1074), 0x1p-1073 + 0x1p-1074), UNDERFLOW | INEXACT);
+	EXPECT_EXACT(libm_exact("asinpi", asinpi(1.0), 0.5) && libm_exact("asinpi", asinpi(-1.0), -0.5) && libm_exact("acospi", acospi(-1.0), 1.0) && acospi(1.0) == 0 && libm_exact("acospi", acospi(0.0), 0.5), 0);
+	EXPECT_EXACT(atanpi(INFINITY) == 0.5 && libm_exact("atanpi", atanpi(-1.0), -0.25) && atanpi(-0.0) == 0 && signbit(atanpi(-0.0)), 0);
 	EXPECT(isnan(asinpi(2.0)) && isnan(acospi(-1.5)), INVALID);
 	EXPECT(atan2pi(0.0, -0.0) == 1.0 && atan2pi(-0.0, -2.0) == -1.0 && atan2pi(1.0, 0.0) == 0.5, 0);
-	EXPECT(atan2pi(3.0, 3.0) == 0.25 && atan2pi(-3.0, -3.0) == -0.75 && atan2pi(INFINITY, -INFINITY) == 0.75, 0);
+	EXPECT_EXACT(libm_exact("atan2pi", atan2pi(3.0, 3.0), 0.25) && libm_exact("atan2pi", atan2pi(-3.0, -3.0), -0.75) && atan2pi(INFINITY, -INFINITY) == 0.75, 0);
 	EXPECT(atan2pi(-0.0, 1.0) == 0 && signbit(atan2pi(-0.0, 1.0)), 0);
-	EXPECT(asinpi(0x1p-1060) == 0x145fp-1074, UNDERFLOW | INEXACT);
+	EXPECT(libm_exact("asinpi", asinpi(0x1p-1060), 0x145fp-1074), UNDERFLOW | INEXACT);
 	EXPECT(atan2pi(0x1p-1000, 0x1p30) < 0x1p-1022, UNDERFLOW | INEXACT);
-	CHECK(sinpif(0.5f) == 1.0f && cospif(1.0f) == -1.0f && atan2pif(1.0f, -1.0f) == 0.75f && acospil(0.5L) == 1.0L / 3);
+	CHECK(sinpif(0.5f) == 1.0f && cospif(1.0f) == -1.0f && libm_exactf("atan2pi", atan2pif(1.0f, -1.0f), 0.75f) && libm_exact("acospi", (double)acospil(0.5L), (double)(1.0L / 3)));
 }
 
 static void check_hyperbolic(void)
@@ -344,22 +359,22 @@ static void check_hyperbolic(void)
 	EXPECT(sinh(-INFINITY) == -INFINITY && cosh(-INFINITY) == INFINITY && tanh(-INFINITY) == -1.0, 0);
 	EXPECT(asinh(-INFINITY) == -INFINITY && acosh(INFINITY) == INFINITY, 0);
 	EXPECT(sinh(711.0) == INFINITY && cosh(-711.0) == INFINITY && sinh(-1000.0) == -INFINITY, OVERFLOW | INEXACT);
-	CHECK(sinh(710.4) < DBL_MAX && cosh(710.4) == sinh(710.4) && sinh(710.48) == INFINITY);
+	CHECK(sinh(710.4) < DBL_MAX && libm_exact("cosh", cosh(710.4), sinh(710.4)) && sinh(710.48) == INFINITY);
 	EXPECT(isnan(acosh(0.5)) && isnan(acosh(-INFINITY)) && isnan(atanh(1.5)), INVALID);
 	EXPECT(atanh(1.0) == INFINITY && atanh(-1.0) == -INFINITY, DIVBYZERO);
-	EXPECT(tanh(30.0) == 1.0 && tanh(-30.0) == -1.0, INEXACT);
-	CHECK(tanh(15.0) == 0x1.ffffffffff96ap-1 && tanh(-15.0) == -0x1.ffffffffff96ap-1);
-	IN_DIRECTION(2, tanh(30.0) == nextafter(1.0, 0.0), INEXACT);
-	IN_DIRECTION(1, tanh(-30.0) == nextafter(-1.0, 0.0), INEXACT);
-	IN_DIRECTION(1, cosh(0x1p-30) == nextafter(1.0, 2.0), INEXACT);
-	EXPECT(cosh(0x1p-1074) == 1.0, INEXACT);
-	EXPECT(sinh(0x1p-1070) == 0x1p-1070 && tanh(0x1p-1070) == 0x1p-1070, UNDERFLOW | INEXACT);
-	IN_DIRECTION(1, sinh(0x1p-30) == nextafter(0x1p-30, 1.0), INEXACT);
-	IN_DIRECTION(2, asinh(0x1p-30) == nextafter(0x1p-30, 0.0), INEXACT);
-	IN_DIRECTION(1, atanh(-0x1p-30) == -0x1p-30, INEXACT);
-	EXPECT(sinhf(0x1p-140f) == 0x1p-140f && atanhf(-0x1p-140f) == -0x1p-140f, UNDERFLOW | INEXACT);
-	CHECK(asinh(DBL_MAX) == 0x1.633ce8fb9f87ep+9 && acosh(DBL_MAX) == 0x1.633ce8fb9f87ep+9 && atanh(0.5) == 0x1.193ea7aad030bp-1);
-	CHECK(coshf(1.0f) == 0x1.8b0756p+0f && tanhl(0.5L) == 0x1.d9353d7568af3p-2L);
+	EXPECT(libm_exact("tanh", tanh(30.0), 1.0) && libm_exact("tanh", tanh(-30.0), -1.0), INEXACT);
+	CHECK(libm_exact("tanh", tanh(15.0), 0x1.ffffffffff96ap-1) && libm_exact("tanh", tanh(-15.0), -0x1.ffffffffff96ap-1));
+	IN_DIRECTION(2, libm_directed("tanh", tanh(30.0), nextafter(1.0, 0.0)), INEXACT);
+	IN_DIRECTION(1, libm_directed("tanh", tanh(-30.0), nextafter(-1.0, 0.0)), INEXACT);
+	IN_DIRECTION(1, libm_directed("cosh", cosh(0x1p-30), nextafter(1.0, 2.0)), INEXACT);
+	EXPECT(libm_exact("cosh", cosh(0x1p-1074), 1.0), INEXACT);
+	EXPECT(libm_exact("sinh", sinh(0x1p-1070), 0x1p-1070) && libm_exact("tanh", tanh(0x1p-1070), 0x1p-1070), UNDERFLOW | INEXACT);
+	IN_DIRECTION(1, libm_directed("sinh", sinh(0x1p-30), nextafter(0x1p-30, 1.0)), INEXACT);
+	IN_DIRECTION(2, libm_directed("asinh", asinh(0x1p-30), nextafter(0x1p-30, 0.0)), INEXACT);
+	IN_DIRECTION(1, libm_directed("atanh", atanh(-0x1p-30), -0x1p-30), INEXACT);
+	EXPECT(libm_exactf("sinh", sinhf(0x1p-140f), 0x1p-140f) && libm_exactf("atanh", atanhf(-0x1p-140f), -0x1p-140f), UNDERFLOW | INEXACT);
+	CHECK(libm_exact("asinh", asinh(DBL_MAX), 0x1.633ce8fb9f87ep+9) && libm_exact("acosh", acosh(DBL_MAX), 0x1.633ce8fb9f87ep+9) && libm_exact("atanh", atanh(0.5), 0x1.193ea7aad030bp-1));
+	CHECK(libm_exactf("cosh", coshf(1.0f), 0x1.8b0756p+0f) && libm_exact("tanh", (double)tanhl(0.5L), 0x1.d9353d7568af3p-2));
 }
 
 int main(void)
