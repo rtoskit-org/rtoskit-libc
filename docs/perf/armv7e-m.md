@@ -1011,3 +1011,9 @@ geometric means as a ratio to the fast build; the exit target is picolibc at or 
 | malloc (9 cases) | 1.07 | 1.00 | 1.00 | 7.21 | 0.68 |
 | qsort (8 cases) | 3.67 | 1.00 | 1.00 | 1.38 | 1.49 |
 | math (128 cases) | 1.14 | 1.00 | 1.00 | 0.44 | 0.47 |
+
+## D166 — Phase 10's `threads` cost, re-locked (Q52)
+
+P10.07 put `<threads.h>` over `<pthread.h>` (D156); the baselines, last recorded at P8.02, are re-locked for it in
+the release and speed build types alike. Instructions per operation: `mtx/plain` and `mtx/timed` 84 → 107, `mtx/recursive` 87 → 107, `mtx/trylock` 78 → 103, `mtx/nested` 147 → 184, `call_once/done` 19 → 21, `tss_get` 34 → 35. No other case changed. A direct
+uncontended path for plain mutexes is issue #144.

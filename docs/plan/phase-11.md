@@ -111,8 +111,8 @@ P11.02c, the fast expectations of the three tests of inline checks.
   speed build's (`flavours.run`, and `math_errhandling` in `flavours.c`).
 - [x] Bench: `docs/perf/baseline-<arch>-fast.json` (equal to speed at this
   step); `bench-runner compare` and `aor` take `--build-type fast` as the
-  reference column. The release and speed baselines predate P10.07's
-  `threads` cost, so `make bench` fails there as before (Q52, not blocking).
+  reference column. The release and speed baselines predated P10.07's
+  `threads` cost (Q52); re-locked by D166, the fast path is issue #144.
 - [x] Size: the fast flavour in `docs/size/budget.json` under the speed
   flavour's rule (D73); `size-report --build-type fast budget --flavour fast`.
 - [x] CI (D119): `make check` covers `fast` through `BUILDS`; the Arm size
