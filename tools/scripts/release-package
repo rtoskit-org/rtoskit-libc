@@ -42,6 +42,7 @@ output=$(cd "${output}" && pwd)
 stage=$(mktemp -d)
 trap 'rm -rf "${stage}"' EXIT
 
+# Not the fast build type until phase 11 meets its exit criterion (P11.06, PLAN D163)
 for build_type in release speed; do
 	make --no-print-directory ARCH_CROSS="${arch}" BUILD_TYPE="${build_type}" PREFIX="${stage}/prefix" library >/dev/null
 	mkdir -p "${stage}/${name}/${build_type}"

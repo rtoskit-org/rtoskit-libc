@@ -8,6 +8,8 @@ LDFLAGS += -Os -g3
 # +10 % size budget), with the arch files' speed kernels; a hot module may add
 # LIBC_SPEED_CFLAGS to its own CFLAGS
 export LIBC_FLAVOUR := speed
+# The flavour directories in increasing priority (PLAN D162): speed/ files only
+export LIBC_FLAVOURS := speed
 LIBC_SPEED_CFLAGS := -O2
 
 # Optimised code: gas cannot interleave source (-h) once the compiler reorders lines

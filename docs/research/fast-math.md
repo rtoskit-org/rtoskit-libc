@@ -407,3 +407,55 @@ core; the other cores recorded, not gated.
   arguments.
 - In the directed modes (x86_64, armv7e-m-dp): every special value above
   with its F.10 sign in each mode.
+
+## 9. What building the type found (P11.02a)
+
+Notes from implementing section 7 (D164); no outside code was consulted, the
+mechanism is the project's own build system.
+
+- **An archive keeps two members of the same name.** `ar rcs` given
+  `a/x.o` and `b/x.o` stores both, and the link takes whichever the symbol
+  index names first. The library has relied on every shadowing `subdir.mk`
+  filtering the shadowed file, and on D117's documented delete of a stale
+  object; a missed filter or a stale object linked the wrong code silently.
+  With `fast/` files about to shadow generic, layer and `speed/` files, a
+  check before archiving (`libc.unique`: the sorted member names have no
+  duplicate) turns both mistakes into a build error, in every build type.
+  It found the stale objects of the test below at once.
+- **Which modules must filter.** Every module that holds a libm function a
+  `fast/` file may replace: the generic `libc/math`, the `sp` and
+  `sp-nearest` layers and the two `speed/` directories (`nofp/speed`,
+  `dp-fixed/speed`). The other layers hold instructions (`fpv4-sp`,
+  `fpv5-sp`, `fpv5-dp`, `x86_64`: `sqrt`, `fma`, rounding), the soft-float
+  helpers or conversions, which the fast contract keeps exact; a layer that
+  gains a shadowed file gets a `subdir.mk` then, and `libc.unique` stops the
+  build until it does. The stems come from one place,
+  `LIBC_MATH_FAST_STEMS` in `tools/makefiles/common.mk`, empty unless
+  `LIBC_FLAVOURS` has `fast`, so the other build types parse to the same
+  sources.
+- **The precedence, tested and removed.** With temporary files
+  `libc/math/fast/{exp,expf,sin,logf}.c` and
+  `libc/math/sp-nearest/fast/logf.c`, each defining a marker symbol, the fast
+  `libc.a` of armv7e-m and armv6-m took the generic fast `exp`, `expf`
+  (over `sp-nearest` and `nofp/speed`) and `sin` (over `dp-fixed/speed`) and
+  the layer's `logf` over the generic fast one; x86_64 and armv7e-m-dp,
+  which have no `sp-nearest` layer, took the generic fast `logf`; no speed
+  `libc.a` had a marker.
+- **Comparing two build types' objects.** With `-g3`, the objects of the
+  speed and fast builds differ in `.debug_macro` (the command line's
+  `-DBUILD_TYPE_*`) and in the string table, which names each macro group
+  `wm4.<file>.<line>.<hash>`. `size-report same` compares every section but
+  the debug ones and their relocations, with those names masked. Without a
+  `fast/` file every member of every architecture's fast `libc.a` is then
+  equal to the speed one, in the same order; the debug, release and speed
+  archives are byte-identical to the ones built before the change.
+- **The bounds in the fast directed modes.** Section 4 promises no error
+  bound in a directed mode, but the overflow result of the mode and the
+  sign. `fast/bounds.c` checks exactly that for the relaxed families
+  (`got == want` when the vector's direction overflows, the sign of the
+  correctly rounded result otherwise), and the speed contract for the rest.
+  To nearest, a representable exact result of a relaxed function is held to
+  the bound, not to its bits (`cbrt(8) = 2` is not required, section 4.1),
+  except a zero, whose value and sign are F.10's (`log(1) = +0`,
+  `sin(±0) = ±0`); the nonzero exact results F.10 fixes (`exp(0) = 1`,
+  `pow(x, ±0) = 1`) are `libm_special`'s, in P11.02b's audit.

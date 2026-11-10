@@ -261,14 +261,15 @@ each core gets is described in
 
 ### Build types
 
-There are three builds of the same sources, chosen with `BUILD_TYPE`.
-Without it, `make` builds all three, each in its own tree.
+There are four builds of the same sources, chosen with `BUILD_TYPE`.
+Without it, `make` builds all four, each in its own tree.
 
 | `BUILD_TYPE` | Optimisation | Use it for |
 |---|---|---|
 | `debug` | `-O0 -g3`, `assert` enabled | Stepping through the library in a debugger |
 | `release` | `-Os -g3`, `NDEBUG` | The size build, and the one to ship. A size budget ([`docs/size/budget.json`](docs/size/budget.json)) keeps it from growing. |
 | `speed` | `-Os -g3`, `NDEBUG`, plus faster routines | The speed build. It adds 32-byte-per-iteration `memcpy`, `memmove` and `memset`, word-at-a-time `strlen`, `strcmp`, `strchr` and `memchr` on Thumb-2, block copies on Armv6-M, fast paths in `strtol`, `printf` and `strtod`, and fixed-point float maths on the cores without an FPU. |
+| `fast` | as `speed` | The speed build with a faster maths library that is less accurate and rounds to nearest only (phase 11, in progress). Until that work lands it is the speed build, and the release archives leave it out. |
 
 Both optimised builds install the same headers and archive names, so a
 program switches between them by pointing at the other install. One caution:
@@ -284,7 +285,7 @@ GCC's own code does, so use the size build if your system sets
 | `all` (the default) | Builds and installs the library, the ports, the tests, the examples, and the size and benchmark programs |
 | `library` | Builds and installs only what a program links against: the headers, the `libc*.a` archives and the port archives |
 | `check` | Builds, then runs the unit and conformance tests, and a check that nothing links libgcc's copy of our functions |
-| `bench` | Builds the size and speed builds and runs the benchmarks against the records in [`docs/perf`](docs/perf/) (run `make setup-bench` once first) |
+| `bench` | Builds the size, speed and fast builds and runs the benchmarks against the records in [`docs/perf`](docs/perf/) (run `make setup-bench` once first) |
 | `aor` | Fetches and builds Arm Optimized Routines for comparison, and runs its smoke test |
 | `setup`, `setup-bench` | Downloads the Arm toolchain into `local/` (the first build does this anyway); builds the instruction-counting qemu |
 | `info` | Prints what one architecture and build type resolve to: toolchain, FPU, paths |
@@ -305,8 +306,8 @@ Set these on the `make` command line.
 |---|---|---|
 | `ARCH_CROSS` | `all` | One architecture, from the table above. An unknown name stops with the list. |
 | `ARCHS` | all seven | The architectures that `ARCH_CROSS=all` loops over, e.g. `ARCHS="armv6-m armv8-m.main"` |
-| `BUILD_TYPE` | `all` | One build type: `debug`, `release` or `speed` |
-| `BUILDS` | `debug release speed` | The build types that `BUILD_TYPE=all` loops over |
+| `BUILD_TYPE` | `all` | One build type: `debug`, `release`, `speed` or `fast` |
+| `BUILDS` | `debug release speed fast` | The build types that `BUILD_TYPE=all` loops over |
 | `LIBC_MALLOC` | `nano` | The allocator inside `libc.a`: `nano`, `tlsf` or `tiny`. Run `make clean` after changing it. All three are always built and tested. |
 | `LIBC_UNWIND_TABLES=1` | off | Builds the library with `-funwind-tables`, so a backtrace (`std::stacktrace`, `_Unwind_Backtrace`) passes through library frames. Run `make clean` after changing it. |
 | `LIBC_EXTRA_CFLAGS` | empty | Compiler flags added after the library's own, for the C sources of the library and port archives, e.g. `-mpoke-function-name`. Run `make clean` after changing it. |

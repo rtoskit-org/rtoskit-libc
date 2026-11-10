@@ -12,7 +12,7 @@
 #
 
 # The release (docs/release.md, PLAN D158). Pushing a tag vX.Y.Z runs the pull request gate of ci.yml on the
-# tagged commit for every architecture, packages each architecture's release and speed builds with
+# tagged commit for every architecture, packages each architecture's release and speed builds (not fast until P11.06, D163) with
 # tools/scripts/release-package, attests the packages' provenance and opens a DRAFT release holding them,
 # SHA256SUMS and the notes: docs/release/vX.Y.Z.md, then GitHub's generated list of the pull requests since
 # the previous published release (grouped by .github/release.yml; none for the first release). Nothing is public until the maintainer reviews
@@ -76,6 +76,7 @@ jobs:
           tools/scripts/size-report diff --arch ${{ matrix.arch }}
           tools/scripts/size-report budget --arch ${{ matrix.arch }}
           tools/scripts/size-report --build-type speed budget --flavour speed --arch ${{ matrix.arch }}
+          tools/scripts/size-report --build-type fast budget --flavour fast --arch ${{ matrix.arch }}
 
       - name: Package
         run: tools/scripts/release-package "${TAG#v}" ${{ matrix.arch }} dist

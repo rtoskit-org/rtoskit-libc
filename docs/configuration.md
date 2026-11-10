@@ -25,12 +25,14 @@ linked in front of it.
 
 ## Size or speed
 
-Each architecture builds two optimised libraries (D73):
+Each architecture builds two optimised libraries (D73), and a third in
+progress, `fast` (phase 11, D162):
 
 | Build type | Install | What it is |
 |---|---|---|
 | `release` | `images/<arch>/release/` | the size flavour: the smallest code, the default |
 | `speed` | `images/<arch>/speed/` | the speed flavour: the same `-Os` library with faster kernels (on the Thumb-2 cores, `memcpy`/`memmove`/`memset` that copy 32 bytes per iteration and use unaligned word access, and word-at-a-time `strcmp`/`strchr`; on Armv6-M, block copies and shift-merged misaligned copies; on every core, `strtol` and printf integer conversions without 64-bit division and a `strtod` fast path; on Armv6-M and armv7-m, fixed-point `expf`, `exp2f`, `logf`, `log2f`, `log10f`, `powf`, `sinf`, `cosf`, `tanf`, `erff` and `erfcf` that fall back to the size flavour's code when their rounding is not certain), within 10 % of the size flavour's code size, 20 % for the math reference programs, and at least 256 bytes of code for every image (`docs/size/budget.json`, D87, D111); the speed images of armv6-m, armv6s-m and armv7-m are held to their own figures instead (D110, D116) |
+| `fast` | `images/<arch>/fast/` | the fast flavour (D162, D163): the speed flavour with a faster libm, whose accuracy is relaxed to below 1 ulp to nearest for exp, log, pow, trig and inverse trig and below 1.5 ulp for `tan`, the hyperbolic functions and `erf`, rounding to nearest only, with `errno`, the exceptions and the special values as in the other build types. `LIBC_FLAVOURS` (`speed fast`) makes it fall back to the speed flavour's kernels and `speed/` files, then take the `libc/math/fast/` and `libc/math/<layer>/fast/` files. Until phase 11 adds those files it is the speed flavour (the same `libc.a` members), and the release archives leave it out (D163) |
 
 Both flavours ship the same headers and archives (`libc.a`, the flavour
 archives, `libm.a`). The speed flavour's Thumb-2 kernels use unaligned
@@ -271,7 +273,7 @@ A sysroot layout (`make ARCH_CROSS=<arch> ... install` with `MULTIDIR`) and
 | Variable | Default | Effect |
 |---|---|---|
 | `ARCH_CROSS` | every architecture in `ARCHS` | one architecture, e.g. `armv7e-m` |
-| `BUILD_TYPE` | `debug`, `release` and `speed` | one build type (`speed` is the speed flavour) |
+| `BUILD_TYPE` | `debug`, `release`, `speed` and `fast` | one build type (`speed` is the speed flavour, `fast` the speed flavour with a faster libm) |
 | `LIBC_MALLOC` | `nano` | the allocator in `libc.a` |
 | `LIBC_UNWIND_TABLES=1` | off | build the library with `-funwind-tables` (D134) |
 | `LIBC_EXTRA_CFLAGS` | empty | the parent's compiler flags, appended after the library's own for the C sources of `libc*.a` and the port archives (D160) |

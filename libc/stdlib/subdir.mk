@@ -11,6 +11,7 @@
 #     Author: Stephen Street (stephen@redrocketcomputing.com)
 #
 
-# The generic files, less those the speed flavour replaces with the file of the same name in speed/ (PLAN D77)
-LIBC_SPEED_OVERRIDES := $(if $(filter speed,${LIBC_FLAVOUR}),$(notdir $(wildcard ${SOURCE_DIR}/speed/*.c)))
+# The generic files, less those the speed flavour replaces with the file of the same name in speed/ (PLAN D77); the
+# fast flavour falls back to them (LIBC_FLAVOURS, D162)
+LIBC_SPEED_OVERRIDES := $(if $(filter speed,${LIBC_FLAVOURS}),$(notdir $(wildcard ${SOURCE_DIR}/speed/*.c)))
 SRC := $(filter-out $(addprefix ${SOURCE_DIR}/,${LIBC_SPEED_OVERRIDES}),$(wildcard ${SOURCE_DIR}/*.c))

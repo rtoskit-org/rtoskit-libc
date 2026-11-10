@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+#
+# Copyright (C) 2026 Red Rocket Computing, LLC
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# flavours.run
+#
+# Created on: Nov 10, 2026
+#     Author: Stephen Street (stephen@redrocketcomputing.com)
+#
+
+# Usage: flavours.run <flavours.elf>
+# The flavours test linked against libc.a, then the headers: every build type installs exactly the headers of
+# include/, so the fast build's are the speed build's (PLAN D162: a program cannot tell them apart by their headers).
+# INSTALL_ROOT is the build type's install, exported by the top-level Makefile.
+
+${TARGET_RUNNER:-} "$1" || exit $?
+diff -r "${PROJECT_ROOT:?}/include" "${INSTALL_ROOT:?}/include" || { echo "fail: ${INSTALL_ROOT}/include differs from include/"; exit 1; }
+echo "headers: ${INSTALL_ROOT}/include is include/"

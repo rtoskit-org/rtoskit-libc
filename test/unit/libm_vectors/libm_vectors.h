@@ -75,4 +75,19 @@ extern const size_t libm_long_double_function_count;
 extern const struct libm_function libm_float_functions[];
 extern const size_t libm_float_function_count;
 
+/*
+ * The accuracy contract of the build type (D162, D163): bounds.c for debug, release and speed, fast/bounds.c for
+ * fast, selected by subdir.mk. libm_vectors.c checks the special values, the exact functions and the exceptions
+ * itself, the same in every build type, and asks these about the rest. precision_kind is 0 for double, 1 for long
+ * double and 2 for float; direction 0 is to nearest.
+ */
+/* Whether a result to nearest whose exact value is representable (want) must be want, bit for bit */
+bool libm_exact_result_required(const struct libm_function *f, int precision_kind, double want);
+/*
+ * Whether a finite result is within the bound: to nearest, error is in ulps of the exact value, otherwise of the
+ * correctly rounded want; flags are the vector's for the direction; float_is_correctly_rounded says whether this
+ * core's float functions are correctly rounded in the speed flavour (D98)
+ */
+bool libm_within_bound(const struct libm_function *f, int precision_kind, int direction, double got, double want, double error, int flags, bool float_is_correctly_rounded);
+
 #endif /* _LIBM_VECTORS_H */

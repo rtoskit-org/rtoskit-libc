@@ -5,7 +5,7 @@ endif
 
 # The architectures (ARCH_CROSS toolchain files under tools/makefiles/, PLAN D24, D106)
 ARCHS ?= x86_64 armv6-m armv6s-m armv7-m armv7e-m armv7e-m-dp armv8-m.main
-BUILDS ?= debug release speed
+BUILDS ?= debug release speed fast
 
 export ARCH_CROSS ?= all
 export BUILD_TYPE ?= all
@@ -101,9 +101,9 @@ library:
 	done
 .PHONY: library
 
-# Benchmarks measure the two flavours: release (size) and speed (PLAN D73)
+# Benchmarks measure the flavours: release (size), speed (PLAN D73) and fast (D162)
 bench:
-	@for build_type in release speed; do \
+	@for build_type in release speed fast; do \
 		${MAKE} --no-print-directory -f ${PROJECT_ROOT}/Makefile BUILD_TYPE=$$build_type bench || exit $$?; \
 	done
 .PHONY: bench
@@ -151,7 +151,7 @@ check: target
 	${PROJECT_ROOT}/tools/scripts/libgcc-check --nm ${NM} --libgcc $(shell ${CC} ${CROSS_FLAGS} -print-libgcc-file-name) ${BUILD_ROOT}
 .PHONY: check
 
-# Build, then run the test/bench programs and compare them with docs/perf/baseline-<arch>[-speed].json
+# Build, then run the test/bench programs and compare them with docs/perf/baseline-<arch>[-speed|-fast].json
 # (tools/scripts/bench-runner, PLAN D72); BENCH_UPDATE=1 records the results as the new baseline
 bench: target setup-bench
 	cd ${PROJECT_ROOT} && tools/scripts/bench-runner --build-root ${OUTPUT_ROOT} --build-type ${BUILD_TYPE} run --arch ${ARCH_CROSS}
@@ -200,7 +200,7 @@ help:
 	@echo "  install                Install all build artifacts"
 	@echo "  check                  Build and run the tests"
 	@echo "  library                Build and install only the headers, libc*.a and the port archives"
-	@echo "  bench                  Build release and speed, run the benchmarks against docs/perf"
+	@echo "  bench                  Build release, speed and fast, run the benchmarks against docs/perf"
 	@echo "  setup-bench            Build the instruction-counting qemu for bench into local/"
 	@echo "  aor                    Fetch and build Arm Optimized Routines for comparison, run its smoke test"
 	@echo "  db                     Generate compilation database (bear)"
@@ -217,7 +217,7 @@ help:
 	@echo "Configuration variables:"
 	@echo "  ARCH_CROSS=all         Which architecture(s): all (${ARCHS}), or a single one"
 	@echo "  ARCHS=\"...\"            The architectures ARCH_CROSS=all loops over"
-	@echo "  BUILD_TYPE=all         Build variant: debug, release, speed (the speed flavour), or all (${BUILDS})"
+	@echo "  BUILD_TYPE=all         Build variant: debug, release, speed (the speed flavour), fast (speed with a faster libm), or all (${BUILDS})"
 	@echo "  BUILDS=\"...\"           The build types BUILD_TYPE=all loops over"
 	@echo "  LIBC_MALLOC=nano       The allocator inside libc.a: nano, tlsf or tiny (make clean after changing it)"
 	@echo "  HOST_CC=<gcc>          The host GCC 14 or newer for x86_64 (found by tools/scripts/host-cc)"

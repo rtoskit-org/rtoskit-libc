@@ -26,6 +26,12 @@
 #   tools/scripts/size-report budget --lock              write docs/size/budget.json from the build
 #   tools/scripts/size-report --build-type speed budget --flavour speed --lock --arch A
 #                                                        lock A's speed-flavour figures (PLAN D110)
+#   tools/scripts/size-report --build-type fast budget --flavour fast
+#                                                        the fast flavour, budgeted as speed (PLAN D162)
+#   tools/scripts/size-report --build-type fast same --as speed [--arch A ...]
+#                                                        list the libc.a members that differ from the speed
+#                                                        build's, debug sections aside; exit status 1 when one
+#                                                        does (P11.02: none without a fast/ file)
 #   tools/scripts/size-report aor [--record | --from-record]
 #                                                        what each Arm Optimized Routines routine costs against
 #                                                        ours, and test/size relinked with AOR ("make aor" first);
@@ -118,6 +124,28 @@ def elf_sections(data):
 		return []
 	is64, order, headers, names = parsed
 	return [(c_string(names, h[0]), h[1], h[2], h[5]) for h in headers]
+
+
+def elf_contents(data):
+	"""{name: bytes} of every section of an ELF object but the debug information and its relocations, which hold
+	the build type's macros (-g3), so two build types that compile the same code compare equal."""
+	parsed = elf_headers(data)
+	if parsed is None:
+		return {}
+	is64, order, headers, names = parsed
+	contents = {}
+	for h in headers:
+		name = c_string(names, h[0])
+		if name.startswith(('.debug', '.rel.debug', '.rela.debug')):
+			continue
+		# SHT_NOBITS (8) has a size but no bytes in the file
+		body = h[5] if h[1] == 8 else data[h[4]:h[4] + h[5]]
+		# The string table also names the .debug_macro groups, wm4.<file>.<line>.<hash of the macros>: debug
+		# information too, whose hash covers the command line's -DBUILD_TYPE_*
+		if name == '.strtab':
+			body = re.sub(rb'wm4\.[^\0]*', b'wm4', body)
+		contents[name] = (h[1], h[2], body)
+	return contents
 
 
 def elf_functions(data):
@@ -521,6 +549,35 @@ def measure(arch, build_type, build_root='build'):
 	}
 
 
+def command_same(args):
+	"""Whether this build type's libc.a has the members of another's, in order and byte for byte but the debug
+	sections (PLAN D162: a fast build with no fast/ file is the speed build)."""
+	differ = False
+	for arch in args.arch:
+		archives = [os.path.join(args.build_root, arch, build_type, 'libc', 'libc.a') for build_type in (args.build_type, args.same_as)]
+		for archive in archives:
+			if not os.path.exists(archive):
+				raise SystemExit(f'{archive}: missing; build first')
+		ours, theirs = (archive_members(archive) for archive in archives)
+		names = [name for name, body in ours]
+		other = [name for name, body in theirs]
+		bodies = dict(theirs)
+		changed = [name for name, body in ours if name in bodies and elf_contents(body) != elf_contents(bodies[name])]
+		added = sorted(set(names) - set(other))
+		removed = sorted(set(other) - set(names))
+		order = names != other and not added and not removed
+		if changed or added or removed or order:
+			differ = True
+		state = 'differs from' if changed or added or removed or order else 'is the same as'
+		print(f'{arch}: {args.build_type} libc.a {state} {args.same_as}\'s ({len(names)} members)')
+		for label, items in (('changed', changed), ('only in ' + args.build_type, added), ('only in ' + args.same_as, removed)):
+			if items:
+				print(f'  {label} ({len(items)}): {" ".join(items)}')
+		if order:
+			print('  the same members in another order')
+	return 1 if differ else 0
+
+
 def baseline_path(directory, arch):
 	return os.path.join(directory, f'baseline-{arch}.json')
 
@@ -779,8 +836,9 @@ def command_compare(args):
 # with figures locked from a flavour's own images (flavour_images, PLAN D110) is held to those, no margin.
 # A flavour's margin is at least its floor in bytes (floor_bytes, PLAN D111), so a small image can take a
 # shared kernel: the kernel costs the same bytes in every image, and a percentage of a 2 KB image is not one.
-BUDGET_MARGINS = {'size': 0, 'speed': 10}
-BUDGET_FLOORS = {'size': 0, 'speed': 256}
+# The fast flavour (PLAN D162) is budgeted as the speed flavour: the same margin, floor, program margins and own figures
+BUDGET_MARGINS = {'size': 0, 'speed': 10, 'fast': 10}
+BUDGET_FLOORS = {'size': 0, 'speed': 256, 'fast': 256}
 
 
 def budget_path(directory):
@@ -1011,6 +1069,9 @@ def main():
 	p.add_argument('--arch', action='append', choices=ARCHS)
 	p.add_argument('--flavour', choices=sorted(BUDGET_MARGINS), default='size')
 	p.add_argument('--lock', action='store_true', help='write the budget from this build')
+	p = sub.add_parser('same')
+	p.add_argument('--arch', action='append', choices=ARCHS)
+	p.add_argument('--as', dest='same_as', required=True, help='the build type to compare with, e.g. speed')
 	p = sub.add_parser('compare')
 	p.add_argument('--work', default=os.path.join('tmp', 'size-compare'))
 	p = sub.add_parser('aor')
@@ -1021,7 +1082,7 @@ def main():
 	args.explicit_arch = getattr(args, 'arch', None) is not None
 	if not args.explicit_arch:
 		args.arch = ARCHS
-	commands = {'report': command_report, 'diff': command_diff, 'markdown': command_markdown, 'compare': command_compare, 'budget': command_budget, 'aor': command_aor}
+	commands = {'report': command_report, 'diff': command_diff, 'markdown': command_markdown, 'compare': command_compare, 'budget': command_budget, 'aor': command_aor, 'same': command_same}
 	return commands[args.command](args)
 
 

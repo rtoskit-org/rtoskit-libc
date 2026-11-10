@@ -28,6 +28,8 @@ LIBC_FLAVOUR ?= size
 export LIBC_FPU := sse2
 LIBC_STRING_KERNELS_size :=
 LIBC_STRING_KERNELS_speed := x86_64
+# The fast flavour has the speed kernels (PLAN D162)
+LIBC_STRING_KERNELS_fast := ${LIBC_STRING_KERNELS_speed}
 export LIBC_STRING_KERNELS = ${LIBC_STRING_KERNELS_${LIBC_FLAVOUR}}
 
 # The host compiler: any GCC 14 or newer (PLAN D9, D107). tools/scripts/host-cc picks plain gcc when it is new

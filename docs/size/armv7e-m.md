@@ -757,3 +757,10 @@ Members that grew, justified: `clock_getres.o` 36 → 52 (+16), the local the se
 ## Phase 10 — POSIX threads (P10.02–P10.07, D148–D157)
 
 Members that grew, justified: 106 members, nearly all new (`libc/pthread`, `sched_get_priority_max`/`min`): `<pthread.h>`, linked only by programs that use threads; the seam's futex time base (D150) adds an argument at each wait. Reduced: 15 members, -690 bytes, mostly the C11 functions that are now wrappers over `<pthread.h>` (D156) and the removed `__libc_mutex_lock`, `__libc_mutex_unlock`, `__libc_cond_wait` and `__libc_thread_start`. Images: the seven programs that link the Linux test port's lock grow by 16 bytes each, with the library's share unchanged: the port's `__rtos_futex_wait` rejects an unknown time base (D150) and `__rtos_lock_acquire` passes one. Both budgets hold.
+
+## P11.02a — The `fast` build type (D162, D164)
+
+No member, image or stack depth changed: the size and speed flavours build the same objects, and the fast
+flavour's `libc.a` has the speed flavour's members, byte for byte but the debug sections
+(`size-report --build-type fast same --as speed`). No `libc/math/fast/` member yet. The fast flavour is budgeted
+as the speed flavour (`docs/size/budget.json`).

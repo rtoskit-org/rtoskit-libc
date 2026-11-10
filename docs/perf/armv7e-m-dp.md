@@ -899,3 +899,9 @@ Instructions per call (throughput, 16 arguments in [−10, 10]; size / speed fla
 | `sin` / `cos` | 165 / 167 | — | — |
 
 Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sincos.md`.
+
+## P11.02a — The `fast` build type (D162, D164)
+
+`docs/perf/baseline-<arch>-fast.json` holds the fast build's counts, equal case for case to the speed build's: no
+`libc/math/fast/` file yet. The release and speed counts are unchanged by the step (the same `libc.a`); their
+baselines still predate P10.07's `threads` cost (Q52).

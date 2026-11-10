@@ -17,15 +17,18 @@
  * docs/research/libm-vectors.md). The bounds are the library's documented
  * contracts, each no looser than libc-test's (1.5 ulp to nearest, 3 ulp in
  * the directed modes):
- * - double and long double: below 0.53 ulp of the exact result (the README's
- *   claim, tighter than D47's and D48's 1 ulp);
- * - float: correctly rounded where every floating type is the FPU's or the
- *   double path's (the cores where <fenv.h> is complete, D98), and within
- *   1 ulp on the float-float layer of the other cores (D57);
- * - exact functions (rounding to integer, fmod, scaling, ...): exact;
- * - in the directed rounding modes, where the core has them: float correctly
- *   rounded (those cores are the ones whose float functions are, D98), and
- *   double within 3 ulp of the correctly rounded result.
+ * - debug, release and speed (bounds.c): double and long double below 0.53 ulp
+ *   of the exact result (the README's claim, tighter than D47's and D48's
+ *   1 ulp); float correctly rounded where every floating type is the FPU's or
+ *   the double path's (the cores where <fenv.h> is complete, D98), and within
+ *   1 ulp on the float-float layer of the other cores (D57); in the directed
+ *   rounding modes, where the core has them, float correctly rounded (those
+ *   cores are the ones whose float functions are, D98), and double within
+ *   3 ulp of the correctly rounded result;
+ * - fast (fast/bounds.c, D162, D163): below 1 or 1.5 ulp to nearest for the
+ *   relaxed families, no error bound in the directed modes;
+ * - in every build type: exact functions (rounding to integer, fmod, scaling,
+ *   ...) exact, and NaN and infinite results bit for bit.
  * The largest error of each function is printed where it exceeds half an ulp
  * to nearest, so the measured accuracy stays visible.
  * Where <fenv.h> has exceptions, invalid, divide-by-zero and overflow must
@@ -261,13 +264,13 @@ static void check_flags([[maybe_unused]] const struct libm_function *f, [[maybe_
 	/* Without FE_INVALID (C23 7.6p6) the core keeps no exceptions: nothing to compare */
 }
 
-/* The value, within the bound for the function and direction */
-static void check_value(const struct libm_function *f, const struct libm_vector *v, int direction, double got, bool exact)
+/* The value, within the build type's bound for the function and direction (bounds.c, fast/bounds.c) */
+static void check_value(const struct libm_function *f, int precision_kind, const struct libm_vector *v, int direction, double got, bool exact)
 {
 	double want = v->result[direction];
 	bool zero_sign_any = (v->flags[direction] & LIBM_ZERO_SIGN_ANY) != 0;
 
-	if (isnan(want) || isinf(want) || exact || (direction == 0 && v->delta == 0.0)) {
+	if (isnan(want) || isinf(want) || exact || (direction == 0 && v->delta == 0.0 && libm_exact_result_required(f, precision_kind, want))) {
 		if (!same_bits(got, want, zero_sign_any))
 			report(f, v, direction, "value", got, want);
 		return;
@@ -284,12 +287,12 @@ static void check_value(const struct libm_function *f, const struct libm_vector 
 		error -= v->delta;
 		if (fabs(error) > worst_nearest)
 			worst_nearest = fabs(error);
-		if (f->precision == 24 ? (float_is_correctly_rounded ? got != want : fabs(error) >= 1.0) : fabs(error) >= 0.53)
+		if (!libm_within_bound(f, precision_kind, direction, got, want, error, v->flags[direction], float_is_correctly_rounded))
 			report(f, v, direction, "error beyond the bound", got, want);
 	} else {
 		if (fabs(error) > worst_directed)
 			worst_directed = fabs(error);
-		if (f->precision == 24 ? got != want : fabs(error) > 3.0)
+		if (!libm_within_bound(f, precision_kind, direction, got, want, error, v->flags[direction], float_is_correctly_rounded))
 			report(f, v, direction, "directed rounding", got, want);
 	}
 }
@@ -350,23 +353,23 @@ static void check_function(const struct libm_function *f, int precision_kind)
 					break;
 				}
 				case LIBM_FREXP:
-					check_value(f, v, d, out.value, true);
+					check_value(f, precision_kind, v, d, out.value, true);
 					if (isfinite(v->x) && out.integer != v->aux)
 						report(f, v, d, "exponent", (double)out.integer, (double)v->aux);
 					break;
 				case LIBM_MODF:
-					check_value(f, v, d, out.value, true);
+					check_value(f, precision_kind, v, d, out.value, true);
 					if (!same_bits(out.extra, v->extra, false))
 						report(f, v, d, "integral part", out.extra, v->extra);
 					break;
 				case LIBM_REMQUO:
-					check_value(f, v, d, out.value, true);
+					check_value(f, precision_kind, v, d, out.value, true);
 					/* C23 7.12.10.3: the sign of x/y, and the low three bits of the integral quotient (aux is sign * (8 + low bits)) */
 					if (!isnan(v->result[d]) && ((out.integer < 0) != (v->aux < 0) || (llabs(out.integer) & 7) != labs(v->aux) - 8))
 						report(f, v, d, "quotient", (double)out.integer, (double)v->aux);
 					break;
 				default:
-					check_value(f, v, d, out.value, exact);
+					check_value(f, precision_kind, v, d, out.value, exact);
 					break;
 			}
 			check_flags(f, v, d, expected, out.raised);
