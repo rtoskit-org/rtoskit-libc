@@ -14,7 +14,8 @@
 #include <fenv.h>
 #include <math.h>
 #include <stdio.h>
-#include <string.h>
+
+#include "float_hard.h"
 
 /*
  * The hard cases of the float functions that round their double function's
@@ -90,14 +91,6 @@ static const struct hard_case cases[] = {
 	{ "tgammaf", tgammaf, 0x1.c0a8eap-48f, 0x1.242422p+47f, +1 },
 };
 
-static unsigned int bits_of(float x)
-{
-	unsigned int bits;
-
-	memcpy(&bits, &x, sizeof(bits));
-	return bits;
-}
-
 /* The correctly rounded result in mode: the exact value lies between result and its neighbour toward direction */
 static float expected(const struct hard_case *c, int mode)
 {
@@ -135,7 +128,7 @@ int main(void)
 			int inexact = fetestexcept(FE_INEXACT);
 
 			fesetround(FE_TONEAREST);
-			if (bits_of(got) != bits_of(want) || !inexact) {
+			if (!float_hard_accept(c->name, modes[m] == FE_TONEAREST, got, want, c->result, c->direction) || !inexact) {
 				printf("%s(%a) %s: %a, want %a%s\n", c->name, (double)c->x, names[m], (double)got, (double)want, inexact ? "" : " (no inexact)");
 				++failures;
 			}

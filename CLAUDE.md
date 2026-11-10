@@ -263,6 +263,9 @@ Any exception needs a PLAN.md decision entry.
   `docs/perf/<arch>.md` (`bench-runner markdown --previous <rev>`).
 - **CI (D119):** `.github/workflows/ci.yml` runs `make check` per architecture, plus the Arm size
   gates, in an `ubuntu:26.04` container on every pull request (opened, reopened, ready or updated).
+- **Per-contract expectations (D164, D165):** a test that checks the strict libm contract asks an expectation file,
+  `expect.c` (debug, release, speed) or `fast/expect.c` (fast), selected by its `subdir.mk` on `LIBC_FLAVOURS`;
+  the fast contract's relaxed families and bounds are in `test/unit/include/fast_contract.h`.
 - Never skip, disable or weaken a test to get green. Fix the code, or record a
   justified scope exclusion that refers to PLAN.md §1.
 

@@ -82,8 +82,9 @@ the complex functions; long double beyond sharing the double functions (D7).
 ## P11.02 — The `fast` build type and its gates
 
 Split (CLAUDE.md workflow) into P11.02a, the build type and every gate but the
-audit of the strict-contract tests, and P11.02b, that audit: eight tests of
-about 2,500 lines whose fast expectations each need their own reading.
+audit of the strict-contract tests; P11.02b, that audit (eight tests of about
+2,500 lines) with the fast expectations of the three uniform tests; and
+P11.02c, the fast expectations of the three tests of inline checks.
 
 ### P11.02a — The build type, the fallback chain and the gates  `[x]`
 - [x] `tools/makefiles/fast.mk` like `speed.mk` (`-Os -g3`,
@@ -119,17 +120,37 @@ about 2,500 lines whose fast expectations each need their own reading.
 - [x] Release (D158, D163): the workflow and `release-package` leave the
   `fast` tree out until P11.06; `docs/release.md` says so.
 
-### P11.02b — The strict-contract tests' fast expectations  `[ ]`
-- [ ] The audit of every strict-contract test (`float_hard`,
+### P11.02b — The audit, and the uniform tests' fast expectations  `[x]`
+Split again (CLAUDE.md workflow): the audit showed three of the eight tests
+checking one comparison throughout, which a small expectation file covers,
+and three mixing about 160 inline checks of every kind, each needing its own
+reading; those are P11.02c.
+- [x] The audit of every strict-contract test (`float_hard`,
   `float_accuracy`, `libm_dense`, `libm_exp`, `libm_trig`, `libm_special`,
-  `fpu_math`, `float_exact`) with a `fast/` expectation file where one is
-  needed (D163): every check about the last bit or a directed result of a
-  relaxed function moves into the file, every other check (special values,
-  exceptions, ranges, symmetry) stays in the shared source; the strict
-  files unchanged in debug, release and speed. The audit's findings go into
-  `docs/research/fast-math.md`.
-- [ ] `make check` in all four build types; with no `fast/` libm file the
+  `fpu_math`, `float_exact`), its findings in `docs/research/fast-math.md`
+  §10: `fpu_math` and `float_exact` test exact functions only and need no
+  `fast/` file; `float_hard`, `float_accuracy` and `libm_dense` take one
+  expectation file each; `libm_exp`, `libm_trig` and `libm_special` go to
+  P11.02c.
+- [x] `test/unit/include/fast_contract.h`: the relaxed families and their
+  bounds, and a float result's error in ulps, shared by every `fast/` file
+  (`libm_vectors/fast/bounds.c` included).
+- [x] `float_hard`, `float_accuracy`, `libm_dense`: the strict expectation in
+  `expect.c` (the same checks as before), the fast one in `fast/expect.c`,
+  selected by each module's `subdir.mk`.
+- [x] `make check` in all four build types; with no `fast/` libm file the
   fast expectations pass as the strict ones do.
+
+### P11.02c — The inline-check tests' fast expectations  `[ ]`
+- [ ] `libm_exp`, `libm_trig`, `libm_special`: every check of a relaxed
+  function's last bit (the reference vectors' bound to nearest), of an exact
+  result F.10 does not fix (`exp2(k)`, `log2(2^k)`, `log10(10^k)`, `cbrt(27)`,
+  `rootn`, `pow`'s exact cases) or of a directed result goes through the
+  module's expectation file, with the exception set kept but for inexact
+  where the result is no longer required exact; every F.10 special value,
+  signed zero, overflow, underflow and exception check stays in the shared
+  source (`fast-math.md` §10 lists them).
+- [ ] `make check` in all four build types.
 
 ## P11.03 — Float exp, log and pow  `[ ]`
 - [ ] Research: `docs/research/libm-fast-float-exp-log.md` (a 2^(j/N) table
