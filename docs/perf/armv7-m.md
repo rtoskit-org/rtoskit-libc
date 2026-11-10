@@ -839,3 +839,13 @@ Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e). I
 | `logf` | 1,026 | 1,026 | 0 |
 | `log2f` | 247 | 247 | 0 |
 | `log10f` | 259 | 259 | 0 |
+
+## P11.03c — Fast `powf` (D170)
+
+Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e); the strict `pow` fix makes `pow` shorter in every build type (a power of two tested before the size of y). Instructions per call (throughput).
+
+| Function | build | before | after | change |
+|---|---|---:|---:|---:|
+| `pow` | release | 11,864 | 11,833 | -0.3 % |
+| `pow` | speed | 11,864 | 11,833 | -0.3 % |
+| `pow` | fast | 11,864 | 11,833 | -0.3 % |

@@ -591,7 +591,7 @@
      "rodata": 3431,
      "tbss": 0,
      "tdata": 0,
-     "text": 9569,
+     "text": 9565,
      "unwind": 0
     },
     "libgcc": {
@@ -637,7 +637,7 @@
     "rodata": 3488,
     "tbss": 0,
     "tdata": 0,
-    "text": 10112,
+    "text": 10108,
     "unwind": 0
    }
   },
@@ -661,7 +661,7 @@
      "rodata": 3991,
      "tbss": 0,
      "tdata": 0,
-     "text": 12258,
+     "text": 12254,
      "unwind": 0
     },
     "libgcc": {
@@ -707,7 +707,7 @@
     "rodata": 4112,
     "tbss": 0,
     "tdata": 0,
-    "text": 13082,
+    "text": 13078,
     "unwind": 0
    }
   }
@@ -5679,7 +5679,7 @@
     "rodata": 136,
     "tbss": 0,
     "tdata": 0,
-    "text": 1289,
+    "text": 1285,
     "unwind": 0
    },
    "powf.o": {
@@ -8677,7 +8677,7 @@
    "rodata": 17995,
    "tbss": 626,
    "tdata": 8,
-   "text": 106826,
+   "text": 106822,
    "unwind": 88
   }
  },

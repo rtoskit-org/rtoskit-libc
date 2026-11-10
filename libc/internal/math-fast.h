@@ -125,6 +125,25 @@ extern const float __libc_fast_logf_ln[32][2];
 extern const float __libc_fast_logf_log2[32][2];
 extern const float __libc_fast_logf_log10[32][2];
 
+/* z, k and i of __libc_fast_logf_reduce without its near-1 path: powf forms r and its error itself */
+static inline float __libc_fast_logf_split_z(float x, int *k, int *i)
+{
+	uint32_t bits = __libc_float_bits(x);
+	int bias = 0;
+	uint32_t offset;
+
+	if (bits < 0x00800000) {
+		bits = __libc_float_bits(x * 0x1p23f);
+		bias = 23;
+	}
+	offset = bits - 0x3f330000;
+	*i = (int)((offset >> 18) & 31);
+	/* The exponent field of the offset, signed: an exact division of a multiple of 2^23 */
+	*k = (int32_t)(offset & 0xff800000) / 0x800000 - bias;
+
+	return __libc_float_from(bits - (offset & 0xff800000));
+}
+
 static inline float __libc_fast_logf_reduce(float x, int *k, int *i)
 {
 	uint32_t bits = __libc_float_bits(x);
@@ -161,6 +180,127 @@ static inline float __libc_fast_log1pf_tail(float r)
 	q = __builtin_fmaf(r, q, -0x1.fffffep-2f);
 
 	return r * r * q;
+}
+
+/* A float's integer kind for powf: 1 odd, 0 even (every |y| from 2^24 up), -1 not an integer */
+static inline int __libc_fast_powf_kind(float y)
+{
+	if (truncf(y) != y)
+		return -1;
+	if (fabsf(y) >= 0x1p24f)
+		return 0;
+	return ((int32_t)y & 1) != 0 ? 1 : 0;
+}
+
+/*
+ * powf's special cases for every fast powf (C23 7.12.7.5, F.10.4.5): true with *result when they decide, else
+ * false with *negative, the sign of |x|^y (a negative x to an odd integer power), for the caller to compute
+ */
+static inline bool __libc_fast_powf_special(float x, float y, float *result, bool *negative)
+{
+	int kind;
+
+	if (y == 0 || x == 1.0f) {
+		*result = 1.0f;
+		return true;
+	}
+	if (isnan(x) || isnan(y)) {
+		*result = x + y;
+		return true;
+	}
+	if (isinf(y)) {
+		*result = fabsf(x) == 1.0f ? 1.0f : (fabsf(x) < 1.0f) == (y < 0) ? INFINITY :
+																		   0.0f;
+		return true;
+	}
+	kind = __libc_fast_powf_kind(y);
+	*negative = signbit(x) && kind == 1;
+	if (x == 0) {
+		/* +-infinity with divide-by-zero for a negative y: a division at run time */
+		*result = y < 0 ? (*negative ? -1.0f : 1.0f) / fabsf(x) : *negative ? -0.0f :
+																			  0.0f;
+		return true;
+	}
+	if (isinf(x)) {
+		*result = y < 0 ? 0.0f : INFINITY;
+		if (*negative)
+			*result = -*result;
+		return true;
+	}
+	if (x < 0 && kind < 0) {
+		*result = __libc_math_invalidf();
+		return true;
+	}
+	if (y == 1.0f) {
+		*result = x;
+		return true;
+	}
+	return false;
+}
+
+/* a + b as a float and its exact error (TwoSum, either order) */
+static inline float __libc_fast_two_sum(float a, float b, float *error)
+{
+	float s = a + b;
+	float bb = s - a;
+
+	*error = (a - (s - bb)) + (b - bb);
+	return s;
+}
+
+/*
+ * log2 x for a positive finite float as hi + *lo, to about 2^-35 relative (powf on the single-precision FPU
+ * cores; the note, section 10): r = z/c_i - 1 exact as (p - 1) + p_lo with p = z (1/c_i) and p_lo its error
+ * by a fused multiply-add; log1p(r) = r - r^2/2 + r^3 q3(r) with the square's error kept and q3 of degree 3
+ * (2^-37.3); the products by 1/ln2 with their errors; k + log2 c_i's high part exact; two exact sums
+ */
+static inline float __libc_fast_log2f_extended(float x, float *lo)
+{
+	int k;
+	int i;
+	float z = __libc_fast_logf_split_z(x, &k, &i);
+	const float *entry = __libc_fast_logf_log2[i];
+	float invc = __libc_fast_logf_invc[i];
+	float p = z * invc;
+	float p_lo = __builtin_fmaf(z, invc, -p);
+	float r = p - 1.0f;
+	float r2 = r * r;
+	float r2_lo = __builtin_fmaf(r, r, -r2);
+	float b = -0.5f * r2;
+	float a_hi = r * 0x1.715476p+0f;
+	float a_lo = __builtin_fmaf(r, 0x1.715476p+0f, -a_hi);
+	float b_hi = b * 0x1.715476p+0f;
+	float b_lo = __builtin_fmaf(b, 0x1.715476p+0f, -b_hi);
+	float q = __builtin_fmaf(r, -0x1.50767ep-3f, 0x1.99ae16p-3f);
+	float rest;
+	float c_hi;
+	float c_lo;
+	float e1;
+	float e2;
+	float e3;
+	float hi;
+
+	q = __builtin_fmaf(r, q, -0x1.00001cp-2f);
+	q = __builtin_fmaf(r, q, 0x1.555556p-2f);
+	/*
+	 * the terms of order r^3 and below r's rounding: p_lo/(1 + r) as p_lo (1 - r + r^2) (p_lo reaches 2^-24, and
+	 * without r^2 it left 2^-38 next to 1, 1.38 ulp of x^(2^14), measured), the square's error, r^3 q3
+	 */
+	rest = __builtin_fmaf(p_lo, __builtin_fmaf(r, r, 1.0f - r), __builtin_fmaf(-0.5f, r2_lo, r * r2 * q));
+	rest = a_lo + b_lo + __builtin_fmaf(r + b, 0x1.4ae0c0p-26f, rest * 0x1.715476p+0f);
+
+	/*
+	 * log2 c_i as a full float and its remainder (Fast2Sum of the table's parts, exact): the 2^-16 split that keeps
+	 * the logarithms' high sum exact would leave a low part up to 2^-17, and its roundings at 2^-42 cost
+	 * x near 1 to the power 2^14 up to 1.44 ulp (measured); then k and the terms by exact sums
+	 */
+	c_hi = entry[0] + entry[1];
+	c_lo = (entry[0] - c_hi) + entry[1];
+	hi = __libc_fast_two_sum((float)k, c_hi, &e1);
+	hi = __libc_fast_two_sum(hi, a_hi, &e2);
+	hi = __libc_fast_two_sum(hi, b_hi, &e3);
+	*lo = ((e1 + e2) + e3) + (c_lo + rest);
+	return hi;
 }
 
 #endif /* _MATH_FAST_H */

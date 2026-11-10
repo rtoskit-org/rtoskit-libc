@@ -767,3 +767,7 @@ budget holds.
 
 Release and speed unchanged (`size-report diff`); the fast budget holds. Fast members (code and constants, speed →
 fast, bytes): as armv7e-m: `logf.o` 164 → 312, `log2f.o` 112 → 336, `log10f.o` 164 → 356, `__libc_fast_logf_invc.o` new → 128, `__libc_fast_logf_ln.o` new → 256, `__libc_fast_logf_log2.o` new → 256, `__libc_fast_logf_log10.o` new → 256.
+
+## P11.03c — Fast `powf` (D170)
+
+Release and speed: no growth (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed → fast, bytes): `powf.o` 528 → 1,076.
