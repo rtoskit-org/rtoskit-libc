@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* The build type's expectations (strict/ or fast/, by include path: the module's makefile) */
+#include "libm_expect.h"
+
 /*
  * libm part 4 (P1.16, docs/research/libm-special.md): erf, erfc, lgamma and
  * tgamma. Reference vectors (600-bit mpmath) bound the error as for the
@@ -65,6 +68,19 @@ static void fail(int line, const char *what)
 			EXPECT(condition, flags);             \
 			fesetround(0);                        \
 		}                                         \
+	} while (false)
+
+/* EXPECT for a check of exact results through libm_exact: the fast contract allows inexact there (libm_expect.h) */
+#define EXPECT_EXACT(condition, flags)                                                        \
+	do {                                                                                      \
+		bool holds;                                                                           \
+		unsigned int raised;                                                                  \
+                                                                                              \
+		feclearexcept(FE_ALL_EXCEPT);                                                         \
+		holds = (condition);                                                                  \
+		raised = (unsigned int)fetestexcept(FE_ALL_EXCEPT) & libm_exact_flags();              \
+		if (!holds || raised != ((flags) & (unsigned int)FE_ALL_EXCEPT & libm_exact_flags())) \
+			fail(__LINE__, #condition " raising " #flags);                                    \
 	} while (false)
 
 enum function {
@@ -131,7 +147,6 @@ static double ulp_error(double got, double hi, double lo, bool single)
 static void check_vectors(void)
 {
 	/* Nearest: 1 ulp for double, correct rounding for float; directed: 2 and 1 ulp */
-	static const double bound[2][2] = { { 1.0, 0.5 + 0x1p-20 }, { 2.0, 1.0 } };
 	double worst[8] = { 0 };
 
 	for (int direction = 0; direction < 4; ++direction) {
@@ -144,7 +159,7 @@ static void check_vectors(void)
 
 			fesetround(0);
 			error = ulp_error(got, vectors[i].hi, vectors[i].lo, single);
-			if (!(error <= bound[direction != 0][single])) {
+			if (!libm_vector_within(names[vectors[i].function % 4], single, direction, error, got, vectors[i].hi)) {
 				char message[200];
 
 				snprintf(message, sizeof(message), "%s%s(%a) direction %d = %a, want %a + %a: %g ulp", names[vectors[i].function % 4], single ? "f" : "", vectors[i].x, direction, got, vectors[i].hi, vectors[i].lo, error);
@@ -167,9 +182,9 @@ static void check_special_cases(void)
 	EXPECT(erf(-0.0) == 0 && signbit(erf(-0.0)) && erf(INFINITY) == 1.0 && erf(-INFINITY) == -1.0, 0);
 	EXPECT(erfc(INFINITY) == 0 && !signbit(erfc(INFINITY)) && erfc(-INFINITY) == 2.0 && erfc(0.0) == 1.0, 0);
 	EXPECT(isnan(erf(NAN)) && isnan(erfc(NAN)) && isnan(lgamma(NAN)) && isnan(tgamma(NAN)), 0);
-	EXPECT(erf(0x1p-1070) == 0x1.2p-1070, UNDERFLOW | INEXACT);
-	EXPECT(erf(10.0) == 1.0 && erf(-10.0) == -1.0 && erfc(-10.0) == 2.0, INEXACT);
-	IN_DIRECTION(2, erf(10.0) == nextafter(1.0, 0.0), INEXACT);
+	EXPECT(libm_exact("erf", erf(0x1p-1070), 0x1.2p-1070), UNDERFLOW | INEXACT);
+	EXPECT(libm_exact("erf", erf(10.0), 1.0) && libm_exact("erf", erf(-10.0), -1.0) && erfc(-10.0) == 2.0, INEXACT);
+	IN_DIRECTION(2, libm_directed("erf", erf(10.0), nextafter(1.0, 0.0)), INEXACT);
 	IN_DIRECTION(2, erfc(-10.0) == nextafter(2.0, 0.0), INEXACT);
 	EXPECT(erfc(30.0) == 0, UNDERFLOW | INEXACT);
 	IN_DIRECTION(1, erfc(30.0) == 0x1p-1074, UNDERFLOW | INEXACT);

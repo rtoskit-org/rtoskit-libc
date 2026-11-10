@@ -256,15 +256,16 @@ Any exception needs a PLAN.md decision entry.
   step's reductions are recorded in `docs/size/<arch>.md`.
 - **Speed (phase 3, D72):** `test/bench/` holds the benchmark programs (built,
   run only by `tools/scripts/bench-runner`). `make bench` measures the release
-  (size) and speed builds of every architecture: guest instructions per operation under a qemu built with
+  (size), speed and fast builds of every architecture: guest instructions per operation under a qemu built with
   TCG plugins (`make setup-bench`, into `local/`), plus `rdtsc` cycles on x86_64
   (not gated). It fails when a case grew by more than 1 %; record a step's
   improvements with `make bench BENCH_UPDATE=1` and the tables in
   `docs/perf/<arch>.md` (`bench-runner markdown --previous <rev>`).
 - **CI (D119):** `.github/workflows/ci.yml` runs `make check` per architecture, plus the Arm size
   gates, in an `ubuntu:26.04` container on every pull request (opened, reopened, ready or updated).
-- **Per-contract expectations (D164, D165):** a test that checks the strict libm contract asks an expectation file,
-  `expect.c` (debug, release, speed) or `fast/expect.c` (fast), selected by its `subdir.mk` on `LIBC_FLAVOURS`;
+- **Per-contract expectations (D164, D165, D167):** a test that checks the strict libm contract asks an expectation
+  file, `expect.c` (debug, release, speed) or `fast/expect.c` (fast), selected by its `subdir.mk` on `LIBC_FLAVOURS`,
+  or (`libm_exp`, `libm_trig`, `libm_special`) includes `libm_expect.h` from `test/unit/include/strict/` or `fast/`;
   the fast contract's relaxed families and bounds are in `test/unit/include/fast_contract.h`.
 - Never skip, disable or weaken a test to get green. Fix the code, or record a
   justified scope exclusion that refers to PLAN.md §1.

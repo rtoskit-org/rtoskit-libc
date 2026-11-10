@@ -141,16 +141,18 @@ reading; those are P11.02c.
 - [x] `make check` in all four build types; with no `fast/` libm file the
   fast expectations pass as the strict ones do.
 
-### P11.02c — The inline-check tests' fast expectations  `[ ]`
-- [ ] `libm_exp`, `libm_trig`, `libm_special`: every check of a relaxed
+### P11.02c — The inline-check tests' fast expectations  `[x]`
+- [x] `libm_exp`, `libm_trig`, `libm_special`: every check of a relaxed
   function's last bit (the reference vectors' bound to nearest), of an exact
   result F.10 does not fix (`exp2(k)`, `log2(2^k)`, `log10(10^k)`, `cbrt(27)`,
   `rootn`, `pow`'s exact cases) or of a directed result goes through the
-  module's expectation file, with the exception set kept but for inexact
-  where the result is no longer required exact; every F.10 special value,
-  signed zero, overflow, underflow and exception check stays in the shared
-  source (`fast-math.md` §10 lists them).
-- [ ] `make check` in all four build types.
+  build type's `libm_expect.h` (`test/unit/include/strict/` or `fast/`, by
+  include path), with the exception set kept but for inexact where the
+  result is no longer required exact (`EXPECT_EXACT`); every F.10 special
+  value, signed zero, overflow, underflow, zero result and exception check
+  stays in the shared source (`fast-math.md` §11). 104 checks routed: 58 in
+  `libm_exp`, 43 in `libm_trig`, 3 in `libm_special` (only `erf` is relaxed).
+- [x] `make check` in all four build types.
 
 ## P11.03 — Float exp, log and pow  `[ ]`
 - [ ] Research: `docs/research/libm-fast-float-exp-log.md` (a 2^(j/N) table

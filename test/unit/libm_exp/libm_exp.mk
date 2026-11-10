@@ -28,6 +28,9 @@ CFLAGS += -fno-builtin
 # The tests change the rounding direction and read the exception flags
 CFLAGS += -frounding-math -fsignaling-nans
 
+# The build type's expectations, libm_expect.h: the strict contract's, or in fast the fast contract's (PLAN D167)
+CPPFLAGS += -I${PROJECT_ROOT}/test/unit/include/$(if $(filter fast,${LIBC_FLAVOURS}),fast,strict)
+
 all: ${CURDIR}/libm_exp.elf
 
 endif
