@@ -31,6 +31,7 @@ decision log D*, open questions Q*), then the active phase file
 7. Tick the checkboxes, append any new decisions to the PLAN.md decision log
    (never rewrite old entries; supersede them), and record open questions as Q*.
 8. Commit with a message prefixed by the step ID, e.g. `P1.03: string.h word-at-a-time functions`.
+   One commit per step: squash any fix-ups into it before the final push.
 
 Never mark a step `[x]` with failing builds, failing tests or missing
 research notes. If blocked, leave it `[~]`, write the blocker in the step, and
