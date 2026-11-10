@@ -46,8 +46,9 @@ TARGET_OBJ_LIBS += libc/stdlib
 # The speed flavour's replacement files (PLAN D77), in the speed and fast flavours (LIBC_FLAVOURS, D162)
 TARGET_OBJ_LIBS += $(if $(filter speed,${LIBC_FLAVOURS}),libc/stdio/speed libc/stdlib/speed)
 # libm's flavour directories, generic and per layer, for each flavour the build type lists: <layer>/speed/ in speed,
-# and those then libc/math/fast/ and <layer>/fast/ in fast (D77, D162)
-TARGET_OBJ_LIBS += $(foreach flavour,${LIBC_FLAVOURS},$(foreach dir,libc/math $(addprefix libc/math/,${LIBC_MATH_LAYERS}),$(if $(wildcard ${PROJECT_ROOT}/${dir}/${flavour}/${flavour}.mk),${dir}/${flavour})))
+# and those then libc/math/fast/ and <layer>/fast/ in fast, for the layers the arch file lists in LIBC_MATH_FAST_LAYERS
+# (D77, D162, D168)
+TARGET_OBJ_LIBS += $(foreach flavour,${LIBC_FLAVOURS},$(foreach dir,libc/math $(addprefix libc/math/,$(if $(filter fast,${flavour}),$(filter ${LIBC_MATH_FAST_LAYERS},${LIBC_MATH_LAYERS}),${LIBC_MATH_LAYERS})),$(if $(wildcard ${PROJECT_ROOT}/${dir}/${flavour}/${flavour}.mk),${dir}/${flavour})))
 TARGET_OBJ_LIBS += libc/string
 TARGET_OBJ_LIBS += $(addprefix libc/string/,${LIBC_STRING_KERNELS})
 TARGET_OBJ_LIBS += libc/strings

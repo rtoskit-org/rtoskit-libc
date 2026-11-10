@@ -11,6 +11,9 @@
 #     Author: Stephen Street (stephen@redrocketcomputing.com)
 #
 
-# The generic fast files, less those a layer's fast/ directory replaces with a file of the same name (PLAN D162)
-LIBC_MATH_FAST_LAYERED := $(foreach layer,${LIBC_MATH_LAYERS},$(basename $(notdir $(wildcard ${SOURCE_DIR}/../${layer}/fast/*.c ${SOURCE_DIR}/../${layer}/fast/*.S))))
+# The generic fast files, less those any layer of the core provides, plain, in speed/ or in fast/ (PLAN D162, D168:
+# a layer's file is the core's own, and beats a generic fast one)
+LIBC_MATH_FAST_LAYERED := $(call libc_math_layer_stems,${LIBC_MATH_LAYERS})
 SRC := $(filter-out $(foreach stem,${LIBC_MATH_FAST_LAYERED},${SOURCE_DIR}/${stem}.c ${SOURCE_DIR}/${stem}.S),$(wildcard ${SOURCE_DIR}/*.c ${SOURCE_DIR}/*.S))
+# The 2^(j/32) table only where an exponential of this directory stays
+SRC := $(if $(filter %/expf.c %/exp2f.c %/exp10f.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp2_table.c,${SRC}))

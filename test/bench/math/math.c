@@ -85,6 +85,7 @@ static const struct math_function functions[] = {
 	BINARY(hypot, -1e3, 1e3, -1e3, 1e3),
 	UNARY(exp, -10, 10),
 	UNARY(exp2, -20, 20),
+	UNARY(exp10, -10, 10),
 	UNARY(expm1, -1, 1),
 	UNARY(log, 1e-3, 1e3),
 	UNARY(log2, 1e-3, 1e3),

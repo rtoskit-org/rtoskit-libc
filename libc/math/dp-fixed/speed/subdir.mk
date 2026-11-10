@@ -12,4 +12,4 @@
 #
 
 # The speed files, less those of the fast/ directories in the fast flavour (PLAN D162, common.mk)
-SRC := $(call libc_math_fast_filter,$(wildcard ${SOURCE_DIR}/*.c))
+SRC := $(call libc_math_fast_filter,$(wildcard ${SOURCE_DIR}/*.c),dp-fixed)

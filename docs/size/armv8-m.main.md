@@ -757,3 +757,8 @@ No member, image or stack depth changed: the size and speed flavours build the s
 flavour's `libc.a` has the speed flavour's members, byte for byte but the debug sections
 (`size-report --build-type fast same --as speed`). No `libc/math/fast/` member yet. The fast flavour is budgeted
 as the speed flavour (`docs/size/budget.json`).
+
+## P11.03a — Fast `expf`, `exp2f`, `exp10f` (D168)
+
+Release and speed unchanged (`size-report diff`; the speed budget holds). Fast members: the float-only `expf.o`, `exp2f.o`, `exp10f.o` (as armv7e-m: each inlines `__libc_fast_expf_kernel`). The fast flavour's
+budget holds.
