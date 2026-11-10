@@ -769,3 +769,8 @@ as the speed flavour (`docs/size/budget.json`).
 
 Release and speed unchanged (`size-report diff`; the speed budget holds). Fast members: `expf.o` 184 → 308, `exp2f.o` 100 → 308, `exp10f.o` 192 → 348 bytes of code and constants (each file inlines `__libc_fast_expf_kernel`; the speed ones call shared float-float cores). The fast flavour's
 budget holds.
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+Release and speed unchanged (`size-report diff`); the fast budget holds. Fast members (code and constants, speed →
+fast, bytes): `logf.o` 164 → 312, `log2f.o` 112 → 336, `log10f.o` 164 → 356, `__libc_fast_logf_invc.o` new → 128, `__libc_fast_logf_ln.o` new → 256, `__libc_fast_logf_log2.o` new → 256, `__libc_fast_logf_log10.o` new → 256.

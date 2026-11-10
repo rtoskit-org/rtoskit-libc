@@ -315,10 +315,10 @@
     "insns": 160.62
    },
    "log10f/latency": {
-    "insns": 174.38
+    "insns": 84.38
    },
    "log10f/throughput": {
-    "insns": 173.31
+    "insns": 83.31
    },
    "log1p/latency": {
     "insns": 188.44
@@ -339,16 +339,16 @@
     "insns": 199.62
    },
    "log2f/latency": {
-    "insns": 204.38
+    "insns": 82.38
    },
    "log2f/throughput": {
-    "insns": 203.31
+    "insns": 81.31
    },
    "logf/latency": {
-    "insns": 163.38
+    "insns": 82.38
    },
    "logf/throughput": {
-    "insns": 162.31
+    "insns": 81.31
    },
    "pow/latency": {
     "insns": 401.88

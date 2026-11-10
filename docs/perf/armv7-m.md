@@ -829,3 +829,13 @@ the release and speed baselines with no other case changed.
 | `expf` | 125 | 125 | 0 |
 | `exp2f` | 118 | 118 | 0 |
 | `exp10f` | 5,461 | 5,461 | 0 |
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `logf` | 1,026 | 1,026 | 0 |
+| `log2f` | 247 | 247 | 0 |
+| `log10f` | 259 | 259 | 0 |

@@ -188,10 +188,15 @@ fast bench re-locked with the gains and the members recorded.
   0.5096 ulp, float path at most 0.8527), gains (`expf` 160 → 58 on
   armv7e-m, 172 → 52 on armv7e-m-dp) and members recorded.
 
-### P11.03b — `logf`, `log2f`, `log10f`  `[ ]`
-- [ ] Research (the note): an inverse table indexed by the top mantissa
-  bits and a short polynomial, in double on the double-FPU cores and in
-  float on the single-precision ones; implementation, tests, gains.
+### P11.03b — `logf`, `log2f`, `log10f`  `[x]`
+- [x] Research (the note, sections 7–9): 2 atanh in double on the
+  double-FPU cores, no table; on the single-precision FPU cores a 32-entry
+  inverse table with an exact high part, r = x − 1 within 2^-5 of 1 (the
+  first build's neighbour entry cancelled to 2.72 ulp); implementation,
+  tests (`libm_thresholds`: the logarithms, log(1) = +0 downward, the
+  double path's first bug), gains (`logf` 165 → 74 on armv7e-m, 162 → 81
+  on armv7e-m-dp, 267 → 69 on x86_64). Exhaustive: double 0.5000, float at
+  most 0.8341 ulp (D169).
 
 ### P11.03c — `powf`  `[ ]`
 - [ ] Research (the note): `powf` as 2^(y log2 x) with log2 x to about

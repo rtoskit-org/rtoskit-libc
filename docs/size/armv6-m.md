@@ -801,3 +801,8 @@ as the speed flavour (`docs/size/budget.json`).
 
 Release and speed unchanged (`size-report diff`; the speed budget holds). Fast members: none: fast is the speed flavour here (`size-report --build-type fast same --as speed`). The fast flavour's
 budget holds.
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+Release and speed unchanged (`size-report diff`); the fast budget holds. Fast members (code and constants, speed →
+fast, bytes): none: fast is the speed flavour here.
