@@ -629,3 +629,8 @@ No member, image or stack depth changed: the size and speed flavours build the s
 flavour's `libc.a` has the speed flavour's members, byte for byte but the debug sections
 (`size-report --build-type fast same --as speed`). No `libc/math/fast/` member yet. The fast flavour is budgeted
 as the speed flavour (`docs/size/budget.json`).
+
+## P11.03a — Fast `expf`, `exp2f`, `exp10f` (D168)
+
+Release and speed unchanged (`size-report diff`; the speed budget holds). Fast members: `expf.o` 16 → 288, `exp2f.o` 92 → 272, `exp10f.o` 16 → 288, and `__libc_fast_exp2_table.o` 256 (the speed `expf` and `exp10f` call the double functions). The fast flavour's
+budget holds.

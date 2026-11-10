@@ -1198,3 +1198,14 @@ baselines still predate P10.07's `threads` cost (Q52).
 P10.07 put `<threads.h>` over `<pthread.h>` (D156); the baselines, last recorded at P8.02, are re-locked for it in
 the release and speed build types alike. Instructions per operation: `mtx/plain` and `mtx/timed` 205 → 228, `mtx/recursive` 208 → 228, `mtx/trylock` 203 → 225, `mtx/nested` 275 → 312, `call_once/done` 22 → 25, `tss_get` 37 → 40. No other case changed. A direct
 uncontended path for plain mutexes is issue #144.
+
+## P11.03a — Fast `expf`, `exp2f`, `exp10f` (D168)
+
+Unchanged here: the cores without an FPU keep the speed files (the float-only `sp-nearest/fast/` files cost six software `fmaf` calls; P11.03e). Instructions per call (throughput), speed and fast; `test/bench/math` gains `exp10` and `exp10f`, recorded in
+the release and speed baselines with no other case changed.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expf` | 375 | 375 | 0 |
+| `exp2f` | 316 | 316 | 0 |
+| `exp10f` | 11,103 | 11,103 | 0 |

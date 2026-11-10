@@ -212,6 +212,18 @@
    "exp/throughput": {
     "insns": 10316.75
    },
+   "exp10/latency": {
+    "insns": 14271.56
+   },
+   "exp10/throughput": {
+    "insns": 14232.94
+   },
+   "exp10f/latency": {
+    "insns": 11099.88
+   },
+   "exp10f/throughput": {
+    "insns": 11103.38
+   },
    "exp2/latency": {
     "insns": 14169.0
    },

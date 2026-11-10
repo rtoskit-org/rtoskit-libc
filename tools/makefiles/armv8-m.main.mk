@@ -23,6 +23,8 @@ export LIBC_FENV := soft
 # soft-dp is the double-precision run-time ABI helpers in integers (D99)
 # soft-int is the conversions to 64-bit integers, in integers (D102)
 export LIBC_MATH_LAYERS := sp sp-nearest fpv5-sp soft-dp soft-int dp-fixed
+# The layers whose fast/ directory the fast flavour takes (PLAN D168): the float-only files with fused multiply-adds
+export LIBC_MATH_FAST_LAYERS := sp-nearest
 # Hand-written string kernels (libc/string/<kernels>; the first directory with a function wins)
 # per flavour: the speed build type sets LIBC_FLAVOUR (PLAN D69, D70, D73)
 LIBC_FLAVOUR ?= size

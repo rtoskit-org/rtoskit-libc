@@ -1017,3 +1017,14 @@ geometric means as a ratio to the fast build; the exit target is picolibc at or 
 P10.07 put `<threads.h>` over `<pthread.h>` (D156); the baselines, last recorded at P8.02, are re-locked for it in
 the release and speed build types alike. Instructions per operation: `mtx/plain` and `mtx/timed` 84 → 107, `mtx/recursive` 87 → 107, `mtx/trylock` 78 → 103, `mtx/nested` 147 → 184, `call_once/done` 19 → 21, `tss_get` 34 → 35. No other case changed. A direct
 uncontended path for plain mutexes is issue #144.
+
+## P11.03a — Fast `expf`, `exp2f`, `exp10f` (D168)
+
+The float-only `sp-nearest/fast/` files (`LIBC_MATH_FAST_LAYERS`, D168). Instructions per call (throughput), speed and fast; `test/bench/math` gains `exp10` and `exp10f`, recorded in
+the release and speed baselines with no other case changed.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expf` | 160 | 58 | -64 % |
+| `exp2f` | 141 | 59 | -58 % |
+| `exp10f` | 160 | 66 | -59 % |

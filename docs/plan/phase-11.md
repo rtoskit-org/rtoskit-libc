@@ -154,18 +154,58 @@ reading; those are P11.02c.
   `libm_exp`, 43 in `libm_trig`, 3 in `libm_special` (only `erf` is relaxed).
 - [x] `make check` in all four build types.
 
-## P11.03 — Float exp, log and pow  `[ ]`
-- [ ] Research: `docs/research/libm-fast-float-exp-log.md` (a 2^(j/N) table
-  and polynomial evaluated in float on the SP FPU cores and in double on the
-  DP ones, fixed point on armv6-m/armv6s-m/armv7-m where it already wins;
-  `logf` by an inverse table; `powf` with log x to about 2^-34; error
-  bounds proved per path).
-- [ ] `expf`, `exp2f`, `exp10f`, `expm1f`, `exp2m1f`, `exp10m1f`, `logf`,
-  `log2f`, `log10f`, `log1pf`, `log2p1f`, `log10p1f`, `powf`, `cbrtf` in
-  `fast/` files per layer; no hard-case tables, no float-float, no mode
-  switching.
-- [ ] Tests at the fast bounds and the special-value and threshold cases of
-  `fast-math.md` §8; gains and members recorded.
+## P11.03 — Float exp, log and pow
+
+Split (CLAUDE.md workflow): fourteen functions in three evaluations (double
+on the double-FPU cores, float on the single-precision FPU cores, fixed
+point on the cores without an FPU) are one sub-step per family.
+Research note: [`docs/research/libm-fast-float-exp-log.md`](../research/libm-fast-float-exp-log.md),
+extended by each sub-step. Every sub-step: the libm vectors at the fast
+bounds, the special-value and threshold cases of `fast-math.md` §8, an
+exhaustive host sweep of each new float evaluation (every float argument
+against the double function), `make check` in all four build types, the
+fast bench re-locked with the gains and the members recorded.
+
+### P11.03a — `expf`, `exp2f`, `exp10f` on the FPU cores  `[x]`
+- [x] Research: the note's design and error analysis for the exponentials
+  (a 2^(j/32) table and a double polynomial on the double-FPU cores; a
+  float-only reduction and polynomial on the single-precision FPU cores).
+- [x] The precedence among layers (supersedes D162's): a layer's own files,
+  `speed/` and `fast/`, beat the generic `fast/` file and every earlier
+  layer's, so a `fast/` file never displaces a later layer's faster code
+  (the fixed-point `nofp/speed` files on the cores without an FPU); and a
+  layer's `fast/` applies only where the arch file lists it in
+  `LIBC_MATH_FAST_LAYERS` (D168).
+- [x] `libc/math/fast/{expf,exp2f,exp10f}.c` (x86_64, armv7e-m-dp) and
+  `libc/math/sp-nearest/fast/{expf,exp2f,exp10f}.c` (armv7e-m,
+  armv8-m.main). On armv6-m, armv6s-m and armv7-m the float-only
+  `exp10f` measured 43 % and 25 % slower (software `fmaf`), so those cores
+  keep the speed files (P11.03e).
+- [x] The x86_64 `float_accuracy` links the `sp-nearest/fast/` files over
+  the layer's in fast, so it measures the fast float code natively.
+- [x] Tests (`test/unit/libm_thresholds`, every build type; the libm
+  vectors at the fast bounds; an exhaustive host sweep: double path at most
+  0.5096 ulp, float path at most 0.8527), gains (`expf` 160 → 58 on
+  armv7e-m, 172 → 52 on armv7e-m-dp) and members recorded.
+
+### P11.03b — `logf`, `log2f`, `log10f`  `[ ]`
+- [ ] Research (the note): an inverse table indexed by the top mantissa
+  bits and a short polynomial, in double on the double-FPU cores and in
+  float on the single-precision ones; implementation, tests, gains.
+
+### P11.03c — `powf`  `[ ]`
+- [ ] Research (the note): `powf` as 2^(y log2 x) with log2 x to about
+  2^-34 (D163: below 1 ulp); implementation, tests, gains.
+
+### P11.03d — `expm1f`, `exp2m1f`, `exp10m1f`, `log1pf`, `log2p1f`, `log10p1f`, `cbrtf`  `[ ]`
+- [ ] Research (the note), over P11.03a's and P11.03b's kernels, keeping the
+  relative accuracy near 0; implementation, tests, gains.
+
+### P11.03e — The cores without an FPU  `[ ]`
+- [ ] armv6-m, armv6s-m, armv7-m: fixed-point `nofp/fast/` variants of the
+  `nofp/speed` files where dropping the rounding test and its fallback
+  pays (the bounds allow it); the float-only files of P11.03a–d measured
+  against them on these cores; tests, gains.
 
 ## P11.04 — Float trigonometric, inverse and hyperbolic functions  `[ ]`
 - [ ] Research: `docs/research/libm-fast-float-trig.md` (Cody–Waite in float
