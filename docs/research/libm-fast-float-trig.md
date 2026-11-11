@@ -522,12 +522,10 @@ Float only, pairs to one rounding as §7 and §10.
   the result there) measured 1.23 ulp; from 1/2 the kernel's pair makes the
   subtraction cost nothing. ±0 return early: the scaled product gives +0
   for −0 (`libm_thresholds`).
-- **erfcf** (P11.04d2): the same kernel gives every float within 0.80 ulp
-  (below 1/2, 1 − erf x with 1 − (2/√π) x by a two-sum; above, the pair
-  rounded once and scaled by 2^k), but its pair is good to about 2^-26 only,
-  so a rounding test like §12's would send more than half of the arguments
-  to the float-float code. P11.04d2 makes e^(−x²) and R pair-accurate to
-  about 2^-32 first; until then `erfcf` keeps speed's code on these cores.
+- **erfcf** (P11.04d2, §15): the same kernel gives every float within
+  0.80 ulp, but its pair is good to about 2^-26 only, so a rounding test like
+  §12's would send more than half of the arguments to the float-float code;
+  §15's kernel is good to 2^-32.3.
 
 ## 14. Measured (P11.04d1)
 
@@ -540,7 +538,7 @@ sign of x):
 | Function | double path | float path |
 |---|---:|---:|
 | `erff` | 0.5002 ulp | 0.7905 ulp |
-| `erfcf` | correctly rounded (0.5000, D98's hard case) | speed's code (P11.04d2) |
+| `erfcf` | correctly rounded (0.5000, D98's hard case) | correctly rounded (P11.04d2, §15) |
 
 The double `erfcf` is correctly rounded on every argument to nearest and in
 every direction, but for D98's hard case −0x1.d93ec4p-17 rounding upward,
@@ -555,3 +553,54 @@ Instructions per call (speed → fast):
 | `erfcf` | 1458 → 117 | 796 → 123 | P11.04d2 | P11.04d2 |
 
 The cores without an FPU follow in P11.04e.
+
+## 15. erfcf on the single-precision FPU cores (P11.04d2)
+
+`erfcf` correctly rounded (D178), float only. These cores round to nearest
+only (the layer's soft `<fenv.h>`, D57), so the rounding test has one
+boundary to avoid, the halfway point. The idea is Ziv's (*Fast evaluation
+of elementary mathematical functions with correctly rounded last bit*,
+ACM TOMS 17(3), 1991): an approximation with a proven error bound, and a
+slower exact path when the bound does not decide the rounding.
+
+- **The kernel** (`__libc_fast_erfcf_accurate`), erfc a = 2^k (hi + lo) for
+  0 ≤ a < 9.2 to 2^-32.3 relative (measured over every argument against
+  `erfcl`, worst at 0x1.89181p-14):
+  - e^(−a²): a² as an exact pair; n = round(−32a²/ln2), u = −a² − n ln2/32
+    with n times ln2/32's float high part exact (its last bit at 2^-25, and
+    |u| ≤ ln2/64 needs 19 bits); e^u = 1 + u + u²/2 + u³/6 + u⁴/24 (the next
+    term 2^-39.6) with 1 + u by a two-sum; times 2^(j/32) from a 32-entry
+    table of float pairs (`__libc_fast_exp2f_table`, 256 bytes); 2^-37 or
+    better. The powers take u + u_lo, not u alone: u_lo (a²'s rounding and
+    n ln2/32's low part) reaches 4·10⁻⁵ of u, and squaring u alone measured
+    2^-29.6.
+  - R(x) = erfc(x) e^(x²) in seven degree-9 pieces
+    (`__libc_fast_erfcf_r_table`, 420 bytes): width 1/2 on [0, 3), so that
+    R covers x near 0 too and erfc = e^(−x²) R needs no 1 − erf form, and
+    above 3 x R as G(1/x²) on [1/9.2², 1/9]. The coefficients of t⁰ to t⁴ are
+    float pairs and each later one is rounded in turn with the rest refitted
+    (2^-37.0 to 2^-47.3 in exact arithmetic). c0 + c1 t + ... + c4 t⁴ is
+    formed exactly, every product's error by a fused multiply-add and every
+    sum by a two-sum, and only t⁵ Q(t), at most 2^-12.5 of R, in float: with
+    four pair coefficients the float c4 t⁴ (2^-9.7 of R) measured 2^-30.7.
+    t itself is a pair (a − 1/4 is inexact below 1/8, and 1/x² − c is formed
+    from v² + 2v v_lo), its low part entering through R′(t); rounding t cost
+    2^-27.
+  - The product e^(−a²) R with every cross term: both pairs carry large low
+    parts (2^-13 and 2^-11 of their high parts), and leaving out e_lo r_lo
+    measured 1.76 ulp.
+- **The test** (`erfcf`): f = hi + lo rounded, d its exact remainder; f is
+  the correctly rounded result unless |d| lies within 2^-31 f of the halfway
+  point (half an ulp of f, a quarter below a power of two): 2.4 times the
+  measured error. 1.5 % of the arguments in [2^-26, 9.19] fall back to the
+  layer's float-float `erfcf` (D63, kept as a static copy, since this file
+  replaces that one), as do x beyond −3.9 and 9.19 (2 within a quarter ulp,
+  and subnormal results), NaN (compared quietly) and the infinities; below
+  2^-26, 1 − x as the strict file. For x < 0, 2 − 2^k (hi + lo) by a
+  two-sum, at least 1, so erfc's error counts at most half.
+
+Every finite float (4,278,162,238 arguments) correctly rounded (0.5001 ulp
+at most, a near-halfway case).
+
+Instructions per call: `erfcf` 1224 → 233 on armv7e-m and armv8-m.main (the float-float code
+alone, for the 1.5 %, costs about as much as before).

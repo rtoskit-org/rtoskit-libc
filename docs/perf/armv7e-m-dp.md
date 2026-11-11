@@ -1020,3 +1020,7 @@ The double `fast/` files: e^(-x^2) R(x) with an exact square, R in six fitted pi
 |---|---:|---:|---:|
 | `erff` | 421 | 113 | -73 % |
 | `erfcf` | 796 | 123 | -85 % |
+
+## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
+
+Unchanged here: the double-FPU cores' `erfcf` is P11.04d1 (D179).

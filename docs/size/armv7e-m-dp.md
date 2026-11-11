@@ -680,3 +680,7 @@ speed → fast, bytes): `sinhf.o` 260 → 532, `coshf.o` 16 → 252, `tanhf.o` 2
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
 speed → fast, bytes): `erff.o` 16 → 536, `erfcf.o` 84 → 596 (the speed files call the double functions, which `erfcf` still calls for its fallback), `__libc_fast_erfc_table.o` new → 432.
+
+## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
+
+Unchanged here (`size-report diff`; the budgets hold): the double-FPU cores' `erfcf` is P11.04d1.

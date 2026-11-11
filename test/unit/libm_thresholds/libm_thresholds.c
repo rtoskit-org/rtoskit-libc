@@ -409,6 +409,13 @@ static void check_error_functions(void)
 	QUIET(within_ulps(erfcf(0x1.000002p+1f), 0x1.328f499997a6ep-8, 1) && within_ulps(erfcf(0x1.7ffffep+1f), 0x1.729e1ad1530ffp-16, 1) && within_ulps(erfcf(0x1.800002p+1f), 0x1.729dd1cf18a16p-16, 1));
 	QUIET(within_ulps(erfcf(0x1.bffffep+1f), 0x1.8ef2d6ecbe42cp-21, 1) && within_ulps(erfcf(0x1.c00002p+1f), 0x1.8ef27c5661bc5p-21, 1) && within_ulps(erfcf(-0x1.f33332p+1f), 0x1.ffffff6a91796p+0, 1));
 	QUIET(within_ulps(erfcf(-0x1.f33336p+1f), 0x1.ffffff6a919efp+0, 1));
+	/*
+	 * regression: erfcf correctly rounded (every build type's is) where the float path's first builds were not: 1.06 ulp
+	 * from rounding c1 t with the rest, 1.76 from the product's missing e_lo r_lo, and the pair's worst points before c4
+	 * became a pair (P11.04d2)
+	 */
+	QUIET(erfcf(0x1.0d79e6p-1f) == 0x1.d3a322p-2f && erfcf(0x1.ff13b2p-2f) == 0x1.ebd1d6p-2f && erfcf(0x1.042442p-9f) == 0x1.feda76p-1f && erfcf(0x1.89181p-14f) == 0x1.fff224p-1f);
+	QUIET(erfcf(0x1.015546p+3f) == 0x1.d06436p-98f && erfcf(-0x1.ff4468p-2f) == 0x1.85164p+0f && erfcf(0x1.98902ep-4f) == 0x1.c69054p-1f);
 	/* The subnormal results near 9.2 and 10 (underflow is raised, so accuracy only) */
 	CHECK(within_ulps(erfcf(0x1.266664p+3f), 0x1.cee509d8309dp-127, 1) && within_ulps(erfcf(0x1.266668p+3f), 0x1.cee0dafd0fa85p-127, 1) && within_ulps(erfcf(0x1.3ffffep+3f), 0x1.7d8c5e7556c84p-149, 1) && within_ulps(erfcf(0x1.400002p+3f), 0x1.7d889fe214adbp-149, 1));
 }

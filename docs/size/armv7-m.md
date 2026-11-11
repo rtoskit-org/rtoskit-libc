@@ -299,3 +299,7 @@ Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU 
 ## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
 
 Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU follow in P11.04e.
+
+## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
+
+Unchanged here (`size-report diff`; the budgets hold): the cores without an FPU follow in P11.04e.
