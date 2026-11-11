@@ -282,3 +282,7 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed
 → fast, bytes; speed's float-float cores, which fast no longer links for these, not counted): `log1pf.o` 336 → 894, `log2p1f.o` 368 → 1,086, `log10p1f.o` 500 → 1,138, `cbrtf.o` 592 → 324, `exp2m1f.o` 688 → 844, `exp10m1f.o` 698 → 864.
+
+## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
+
+Unchanged here (`size-report diff`; the budgets hold).

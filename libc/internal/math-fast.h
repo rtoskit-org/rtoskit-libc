@@ -426,4 +426,144 @@ static inline float __libc_fast_log1pf_reduce(float x, int *k, int *i, float *lo
 	return r;
 }
 
+/*
+ * x = k pi/2 + r for |x| < 2^20 in double (the double-FPU cores' sinf family, docs/research/libm-fast-float-trig.md
+ * section 3): k = round(x 2/pi), r = ((x - k P1) - k P2) - k P3 with P1 and P2 of 33 bits, so that k P1 and k P2 are exact
+ * for |k| < 2^20 and x - k P1 is exact too (both multiples of 2^-32 for |x| >= 2^-9, the difference below 2^21); r's error
+ * is about 2^-52 of r however close x is to a multiple of pi/2
+ */
+static inline int __libc_fast_rem_pio2(double x, double *r)
+{
+	double shifted = x * 0x1.45f306dc9c883p-1 + 0x1.8p52;
+	int k = (int)(uint32_t)__libc_double_bits(shifted);
+	double kd = shifted - 0x1.8p52;
+
+	*r = ((x - kd * 0x1.921fb544p+0) - kd * 0x1.0b4611a6p-34) - kd * 0x1.3198a2e037073p-69;
+	return k;
+}
+
+/* sin r for |r| <= pi/4 in double: r + r z S(z), z = r^2, the Taylor series to r^11 (relative error 2^-36.7) */
+static inline double __libc_fast_sin_double(double r)
+{
+	double z = r * r;
+	double p = z * -0x1.ae64567f544e4p-26 + 0x1.71de3a556c734p-19;
+
+	p = p * z - 0x1.a01a01a01a01ap-13;
+	p = p * z + 0x1.1111111111111p-7;
+	p = p * z - 0x1.5555555555555p-3;
+
+	return r + r * (z * p);
+}
+
+/* cos r for |r| <= pi/4 in double: 1 + z C(z), z = r^2, the Taylor series to r^12 (error 2^-38) */
+static inline double __libc_fast_cos_double(double r)
+{
+	double z = r * r;
+	double p = z * 0x1.1eed8eff8d898p-29 - 0x1.27e4fb7789f5cp-22;
+
+	p = p * z + 0x1.a01a01a01a01ap-16;
+	p = p * z - 0x1.6c16c16c16c17p-10;
+	p = p * z + 0x1.5555555555555p-5;
+	p = p * z - 0.5;
+
+	return 1.0 + z * p;
+}
+
+/* sin(k pi/2 + r) for |r| <= pi/4: the quadrant picks sin or cos and the sign */
+static inline double __libc_fast_sin_quadrant(int k, double r)
+{
+	double value = (k & 1) == 0 ? __libc_fast_sin_double(r) : __libc_fast_cos_double(r);
+
+	return (k & 2) == 0 ? value : -value;
+}
+
+/*
+ * x = k pi/32 + s for 2^-6 <= |x| < 64 in float (the single-precision FPU cores' sinf family; the note, section 4), a
+ * Cody-Waite reduction in four pieces: P1, P2, P3 of 14 bits, so that k P1, k P2, k P3 are exact (|k| < 2^10), x - k P1
+ * exact by a fused multiply-add (both multiples of 2^-28, the difference below 0.052), the next two by exact two-sums, and
+ * P4 rounded (k P4 below 2^-36); s as s_hi + *s_lo to about 2^-59 absolute. Near the multiples of pi/2, where sin or cos is
+ * small, |s| is at least 2^-26.3 for these floats (measured over all of them), so that is 2^-33 relative
+ */
+static inline int __libc_fast_rem_pio32f(float x, float *s_lo, float *s_hi)
+{
+	float k = __builtin_fmaf(x, 0x1.45f306p+3f, 0x1.8p23f) - 0x1.8p23f;
+	float e1;
+	float e2;
+	float hi = __libc_fast_two_sum(__builtin_fmaf(-k, 0x1.9218p-4f, x), -k * 0x1.ed5p-18f, &e1);
+	float tail;
+
+	hi = __libc_fast_two_sum(hi, -k * 0x1.10bp-34f, &e2);
+	tail = __builtin_fmaf(-k, 0x1.184698p-48f, e1 + e2);
+	*s_hi = hi + tail;
+	*s_lo = (hi - *s_hi) + tail;
+	return (int)k;
+}
+
+/* sin and cos of j pi/32 as float hi and lo, j = 0 .. 8 (libc/math/sp-nearest/fast/__libc_fast_sinf_table.c) */
+extern const float __libc_fast_sinf_table[9][4];
+
+/*
+ * sin(k pi/32 + s) for any k (taken modulo 64) and s = s_hi + s_lo with |s| <= pi/64, float only (the single-precision FPU
+ * cores, the note, section 4), as the unrounded pair return + *lo: k + 8 = 16 q + (j + 8) gives the quadrant q and the
+ * table angle a = |j| pi/32; with f and g the table's sin a and cos a (signed, swapped for odd q), the value is
+ * f + g s_hi + (f_lo + f (cos s - 1) + g (sin s - s_hi) + g_lo s_hi), the first product exact by a fused multiply-add and
+ * the leading sum by a two-sum, so only the caller's last addition rounds much; sin s - s = s^3 (-1/6 + s^2/120) and
+ * cos s - 1 = s^2 (-1/2 + s^2/24), their next terms below 2^-31 of the result
+ */
+static inline float __libc_fast_sinf_kernel(int k, float s_hi, float s_lo, float *lo)
+{
+	int quadrant = ((k + 8) & 63) >> 4;
+	int j = ((k + 8) & 15) - 8;
+	const float *t = __libc_fast_sinf_table[j < 0 ? -j : j];
+	float sign = j < 0 ? -1.0f : 1.0f;
+	float z = s_hi * s_hi;
+	float sine = __builtin_fmaf(s_hi * z, __builtin_fmaf(z, 0x1.111112p-7f, -0x1.555556p-3f), s_lo);
+	float cosine = z * __builtin_fmaf(z, 0x1.555556p-5f, -0.5f);
+	float f_hi;
+	float f_lo;
+	float g_hi;
+	float g_lo;
+	float p;
+	float hi;
+	float error;
+
+	if ((quadrant & 1) == 0) {
+		f_hi = sign * t[0];
+		f_lo = sign * t[1];
+		g_hi = t[2];
+		g_lo = t[3];
+	} else {
+		f_hi = t[2];
+		f_lo = t[3];
+		g_hi = -sign * t[0];
+		g_lo = -sign * t[1];
+	}
+	p = g_hi * s_hi;
+	hi = __libc_fast_two_sum(f_hi, p, &error);
+	*lo = error + (__builtin_fmaf(g_hi, s_hi, -p) + (f_lo + __builtin_fmaf(f_hi, cosine, __builtin_fmaf(g_hi, sine, g_lo * s_hi))));
+	if (quadrant >= 2) {
+		*lo = -*lo;
+		return -hi;
+	}
+	return hi;
+}
+
+/*
+ * (a + a_lo) / (b + b_lo) for the kernel's pairs: each normalised first by a Fast2Sum (exact, |lo| below 2^-10 of hi: the
+ * kernel's lo carries the polynomial terms, and dividing the remainder by b rather than b + b_lo cost 2^-22, 4.5 ulp of
+ * tanf, measured), then q + (a - q b + a_lo - q b_lo) / b with a - q b exact by a fused multiply-add
+ */
+static inline float __libc_fast_divide_pairs(float a, float a_lo, float b, float b_lo)
+{
+	float a_hi = a + a_lo;
+	float b_hi = b + b_lo;
+	float q;
+
+	a_lo = (a - a_hi) + a_lo;
+	b_lo = (b - b_hi) + b_lo;
+	q = a_hi / b_hi;
+
+	return q + (__builtin_fmaf(-q, b_hi, a_hi) + __builtin_fmaf(-q, b_lo, a_lo)) / b_hi;
+}
+
 #endif /* _MATH_FAST_H */

@@ -795,3 +795,8 @@ Unchanged here (`size-report diff`; the budgets hold).
 ## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
 
 Unchanged here (`size-report diff`; the budgets hold).
+
+## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed →
+fast, bytes; speed members that call the double functions or a shared core not counted): `sinf.o` 164 → 528, `cosf.o` 136 → 508, `sincosf.o` 200 → 608, `tanf.o` 248 → 632, `sinpif.o` 362 → 544, `cospif.o` 276 → 500, `tanpif.o` 520 → 708, `__libc_fast_sinf_table.o` new → 144.
