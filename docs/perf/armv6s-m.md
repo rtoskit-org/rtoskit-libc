@@ -1244,3 +1244,18 @@ Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e). I
 | `log2p1f` | 11,003 | 11,003 | 0 |
 | `log10p1f` | 13,202 | 13,202 | 0 |
 | `cbrtf` | 8,590 | 8,590 | 0 |
+
+## P11.03e — The cores without an FPU: fixed point without the test (D172)
+
+`nofp/fast/`: the fixed-point files without their rounding test, and a fixed-point `exp10f` (D172). Instructions per
+call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expf` | 375 | 368 | -2 % |
+| `exp2f` | 316 | 310 | -2 % |
+| `exp10f` | 11,103 | 367 | -97 % |
+| `logf` | 2,210 | 670 | -70 % |
+| `log2f` | 583 | 577 | -1 % |
+| `log10f` | 678 | 670 | -1 % |
+| `powf` | 1,222 | 1,216 | -0 % |

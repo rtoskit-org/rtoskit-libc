@@ -783,3 +783,7 @@ Release and speed: no growth (`size-report diff`; the strict `pow.o` 1,576 → 1
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
 speed → fast, bytes; several speed members call a shared core or the double function, not counted): `expm1f.o` 332 → 528, `exp2m1f.o` 436 → 492, `exp10m1f.o` 446 → 636, `log1pf.o` 204 → 424, `log2p1f.o` 252 → 496, `log10p1f.o` 304 → 516, `cbrtf.o` 308 → 312.
+
+## P11.03e — The cores without an FPU: fixed point without the test (D172)
+
+Unchanged here (`size-report diff`; the budgets hold): `nofp/fast/` applies to the cores without an FPU only.

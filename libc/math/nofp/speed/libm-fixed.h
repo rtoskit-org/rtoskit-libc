@@ -61,4 +61,13 @@ static inline bool __libc_fixed_round(uint32_t f, int exponent, uint32_t error, 
 	return distance > error;
 }
 
+/*
+ * The float 2^exponent (1 + f 2^-32) rounded to nearest without the test (the fast flavour, libc/math/nofp/fast/,
+ * PLAN D172): the result is within 0.5 + error/512 ulp
+ */
+static inline uint32_t __libc_fixed_nearest(uint32_t f, int exponent)
+{
+	return ((uint32_t)(exponent + 127) << 23) + (f >> 9) + ((f & 0x1ff) > 0x100);
+}
+
 #endif /* _LIBM_FIXED_H */

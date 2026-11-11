@@ -960,3 +960,7 @@ The double `libc/math/fast/` files: the series near 0, x itself as m − 1, `cbr
 | `log2p1f` | 211 | 83 | -61 % |
 | `log10p1f` | 211 | 84 | -60 % |
 | `cbrtf` | 135 | 73 | -46 % |
+
+## P11.03e — The cores without an FPU: fixed point without the test (D172)
+
+Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D172).
