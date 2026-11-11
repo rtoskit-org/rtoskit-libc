@@ -180,6 +180,23 @@ static bool near(float x, float want)
 	return fabsf(x / want - 1.0f) <= 0x1p-21f;
 }
 
+/* Within bound ulps of a double reference (near() allows 4) */
+static bool within_ulps(float x, double want, double bound)
+{
+	int e;
+
+	frexp(want, &e);
+	if (e < -125)
+		e = -125;
+	return fabs((double)x - want) < bound * ldexp(1.0, e - 24);
+}
+
+/* Below 1 ulp of a double reference: the fast contract's bound */
+static bool within_ulp(float x, double want)
+{
+	return within_ulps(x, want, 1.0);
+}
+
 static void check_minus_one(void)
 {
 	static float (*const functions[])(float) = { expm1f, exp2m1f, exp10m1f };
@@ -293,6 +310,44 @@ static void check_trigonometric(void)
 	QUIET(near(tanpif(1.75f), -1.0f) && near(tanpif(1000.125f), 0x1.a8279ap-2f) && near(tanpif(0x1p-100f), 0x1.921fb6p-99f));
 }
 
+static void check_inverse_trigonometric(void)
+{
+	/* C23 F.10.1.1-4 and the pi forms: NaN quietly, |x| > 1 invalid, +-0 kept, the exact values */
+	QUIET(isnan(asinf(NAN)) && isnan(acosf(NAN)) && isnan(atanf(NAN)) && isnan(atan2f(NAN, 1.0f)) && isnan(asinpif(NAN)) && isnan(atanpif(NAN)));
+	RAISES(isnan(asinf(1.5f)) && isnan(acosf(-0x1.000002p0f)) && isnan(asinpif(INFINITY)) && isnan(acospif(-2.0f)), FE_INVALID);
+	QUIET(is_positive_zero(asinf(0.0f)) && is_negative_zero(asinf(-0.0f)) && is_negative_zero(atanf(-0.0f)) && is_positive_zero(acosf(1.0f)) && is_negative_zero(atanpif(-0.0f)));
+	QUIET(asinpif(1.0f) == 0.5f && asinpif(-1.0f) == -0.5f && is_positive_zero(acospif(1.0f)) && acospif(-1.0f) == 1.0f && acospif(0.0f) == 0.5f);
+	QUIET(atanpif(INFINITY) == 0.5f && atanpif(-INFINITY) == -0.5f && atanpif(1.0f) == 0.25f && near(atanf(INFINITY), 0x1.921fb6p0f) && near(acosf(-1.0f), 0x1.921fb6p1f));
+	/* atan2: the signed zeros and infinities, and atan2pi's exact values */
+	QUIET(is_negative_zero(atan2f(-0.0f, 1.0f)) && near(atan2f(0.0f, -1.0f), 0x1.921fb6p1f) && near(atan2f(-0.0f, -0.0f), -0x1.921fb6p1f) && near(atan2f(1.0f, 0.0f), 0x1.921fb6p0f));
+	QUIET(near(atan2f(INFINITY, -INFINITY), 0x1.2d97c8p1f) && near(atan2f(-INFINITY, INFINITY), -0x1.921fb6p-1f) && is_negative_zero(atan2f(-1.0f, INFINITY)) && near(atan2f(1.0f, -INFINITY), 0x1.921fb6p1f));
+	QUIET(atan2pif(0.0f, -1.0f) == 1.0f && atan2pif(-1.0f, 0.0f) == -0.5f && atan2pif(INFINITY, -INFINITY) == 0.75f && atan2pif(-3.0f, 3.0f) == -0.25f && atan2pif(2.0f, -2.0f) == 0.75f);
+	/* Each side of 1/2 (asin and acos change form) and of 1 (atan inverts), near +-1, and small arguments */
+	QUIET(near(asinf(0x1.fffffep-2f), 0x1.0c1522p-1f) && near(asinf(0.5f), 0x1.0c1524p-1f) && near(asinf(0x1.000002p-1f), 0x1.0c1526p-1f) && near(asinf(-0x1.000002p-1f), -0x1.0c1526p-1f));
+	QUIET(near(asinf(0x1.fffffep-1f), 0x1.920914p+0f) && near(asinf(-0x1.fffffep-1f), -0x1.920914p+0f));
+	QUIET(near(acosf(0x1.fffffep-2f), 0x1.0c1524p+0f) && near(acosf(0x1.000002p-1f), 0x1.0c1522p+0f) && near(acosf(-0x1.000002p-1f), 0x1.0c1524p+1f) && near(acosf(0x1.fffffep-1f), 0x1.6a09e6p-12f));
+	QUIET(near(acosf(-0x1.fffffep-1f), 0x1.921464p+1f) && near(acosf(-0.25f), 0x1.d2cf5cp+0f));
+	QUIET(near(atanf(0x1.fffffep-1f), 0x1.921fb4p-1f) && near(atanf(0x1.000002p+0f), 0x1.921fb8p-1f) && near(atanf(-0x1.000002p+0f), -0x1.921fb8p-1f) && near(atanf(0x1p+24f), 0x1.921fb4p+0f) && near(atanf(0x1p-11f), 0x1.fffffep-12f));
+	QUIET(near(asinpif(0x1.000002p-1f), 0x1.555558p-3f) && near(asinpif(-0x1.fffffep-1f), -0x1.ffe330p-2f) && near(asinpif(0.125f), 0x1.46cddep-5f));
+	QUIET(near(acospif(0x1.000002p-1f), 0x1.555554p-2f) && near(acospif(-0x1.000002p-1f), 0x1.555556p-1f) && near(acospif(0x1.fffffep-1f), 0x1.ccf642p-14f));
+	QUIET(near(atanpif(0x1.000002p+0f), 0x1.000002p-2f) && near(atanpif(-100.0f), -0x1.fcbd98p-2f) && near(atanpif(0.0625f), 0x1.4586a2p-6f));
+	/* atan2 in each quadrant, both sides of |y| = |x|, and a far smaller y beside a negative x */
+	QUIET(near(atan2f(1.0f, 2.0f), 0x1.dac670p-2f) && near(atan2f(2.0f, 1.0f), 0x1.1b6e1ap+0f) && near(atan2f(1.0f, -2.0f), 0x1.56c6e8p+1f) && near(atan2f(-1.0f, -2.0f), -0x1.56c6e8p+1f));
+	QUIET(near(atan2f(3.0f, -0.5f), 0x1.bc66e4p+0f) && near(atan2f(0x1.79ca10p-67f, -1.0f), 0x1.921fb6p+1f));
+	QUIET(near(atan2pif(1.0f, 2.0f), 0x1.2e4052p-3f) && near(atan2pif(2.0f, 1.0f), 0x1.68dfd8p-2f) && near(atan2pif(1.0f, -2.0f), 0x1.b46fecp-1f) && near(atan2pif(-1.0f, -2.0f), -0x1.b46fecp-1f));
+	QUIET(near(atan2pif(3.0f, -0.5f), 0x1.1aea40p-1f) && near(atan2pif(0x1.79ca10p-67f, -1.0f), 1.0f));
+	/*
+	 * regression: the float atan kernel's j = a 8 + 1/2 rounded up just below 1/16, and a - 1/8 was then inexact (1.27
+	 * ulp); a subnormal y lost the quotient's remainder (1.43 ulp) and a subnormal pi form rounded twice (1.65, 0.999);
+	 * accuracy only: a subnormal result may raise underflow
+	 */
+	CHECK(within_ulp(atanf(0x1.fffffep-5f), 0x1.ff55b974cde0ap-5) && within_ulp(atanpif(0x1.29a8c4p-124f), 0x1.7afdd40083a1ap-126));
+	CHECK(within_ulp(atan2f(-0x1.d0f908p-128f, 0x1.cf06bep-126f), -0x1.f7bdd378a59ccp-3) && within_ulp(atan2f(-0x1.70ca9p-128f, 0x1.707228p-124f), -0x1.ffd01ada0df0bp-5));
+	/* regression: a quotient near 2^-125 had its remainder rounded to half an ulp of it (0.67 ulp; complex_float's 0.52) */
+	CHECK(within_ulps(atan2f(-0x1.f59efp-36f, 0x1.6f5952p+89f), -0x1.5d9276a8b0b88p-125, 0.52) && within_ulps(atan2f(0x1.821528p+3f, 0x1.f6b5dep+126f), 0x1.893791320e1ffp-124, 0.52));
+	CHECK(within_ulp(atan2pif(-0x1.18fe76p-125f, 0x1.f9920ap-2f), -0x1.6a52954a74b4bp-126) && within_ulp(atan2pif(-0x1.0ec7f6p-126f, 0x1.68b2d6p-119f), -0x1.e962164514f9dp-10));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -303,6 +358,7 @@ int main(void)
 	check_cube_root();
 	check_fixed_edges();
 	check_trigonometric();
+	check_inverse_trigonometric();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

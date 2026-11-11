@@ -665,3 +665,8 @@ Unchanged here (`size-report diff`; the budgets hold).
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed →
 fast, bytes; speed members that call the double functions or a shared core not counted): `sinf.o` 252 → 500, `cosf.o` 76 → 332, `sincosf.o` 352 → 612, `tanf.o` 192 → 492, `sinpif.o` 16 → 380, `cospif.o` 16 → 400, `tanpif.o` 16 → 448.
+
+## P11.04b — Fast `asinf`, `acosf`, `atanf`, `atan2f` and the π forms (D176)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed →
+fast, bytes; the speed files call the double functions): `atanf.o` 268 → 404, `atanpif.o` 92 → 252, `asinf.o` 192 → 452, `asinpif.o` 16 → 324, `acosf.o` 92 → 320, `acospif.o` 16 → 336, `atan2f.o` 140 → 392, `atan2pif.o` 20 → 336, `__libc_fast_atan_table.o` new → 72.

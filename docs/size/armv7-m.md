@@ -286,3 +286,8 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 ## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
 
 Unchanged here (`size-report diff`; the budgets hold).
+
+## P11.04b — Fast `asinf`, `acosf`, `atanf`, `atan2f` and the π forms (D176)
+
+Unchanged here (`size-report diff`; the budgets hold): the strict atan core's index fix (D176) is the same size on these
+cores. The cores without an FPU follow in P11.04f.

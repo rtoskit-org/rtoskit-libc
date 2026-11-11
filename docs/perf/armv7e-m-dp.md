@@ -987,3 +987,14 @@ build type, release and speed otherwise unchanged.
 | `sinpif` | 223 | 56 | -75 % |
 | `cospif` | 219 | 58 | -73 % |
 | `tanpif` | 257 | 75 | -71 % |
+
+## P11.04b — Fast `asinf`, `acosf`, `atanf`, `atan2f` and the π forms (D176)
+
+The double `fast/` files: one table kernel, atan(j/8) and a Taylor series to t⁹ in double (D176). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asinf` | 238 | 73 | -69 % |
+| `acosf` | 241 | 66 | -73 % |
+| `atanf` | 217 | 63 | -71 % |
+| `atan2f` | 398 | 78 | -80 % |

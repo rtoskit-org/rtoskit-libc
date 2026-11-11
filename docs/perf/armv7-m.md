@@ -909,3 +909,14 @@ The m1 forms' tiny path without a float constant costs `exp2m1f` 150 → 151, `e
 
 Unchanged here: the cores without an FPU follow in P11.04e (D175). `test/bench/math` gains `sinpi`, `cospi`, `tanpi` in every
 build type.
+
+## P11.04b — Fast `asinf`, `acosf`, `atanf`, `atan2f` and the π forms (D176)
+
+The fast files are for the FPU cores; the cores without an FPU follow in P11.04f. The strict float-float atan core's index fix (D176: k from 16t exact, one soft-float addition fewer) in every build type, instructions per call (throughput):
+
+| Function | before | after | change |
+|---|---:|---:|---:|
+| `asinf` | 11349 | 11310 | -0.3 % |
+| `acosf` | 11832 | 11794 | -0.3 % |
+| `atanf` | 8648 | 8608 | -0.5 % |
+| `atan2f` | 9033 | 8995 | -0.4 % |

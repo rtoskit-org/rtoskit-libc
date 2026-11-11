@@ -280,8 +280,16 @@ armv7e-m-dp, 575 on armv7e-m, 2,933 on armv6-m; `asinf` 505, 238, 315,
   187 → 58 on armv7e-m-dp, 337 → 63 on x86_64). Every finite
   float: double at most 0.5002 ulp, float at most 0.75 (D175).
 
-### P11.04b — `asinf`, `acosf`, `atanf`, `atan2f` and their `pi` forms on the FPU cores  `[ ]`
-- [ ] Research (the note), implementation, tests, gains.
+### P11.04b — `asinf`, `acosf`, `atanf`, `atan2f` and their `pi` forms on the FPU cores  `[x]`
+- [x] Research (the note, sections 6–8): one atan table kernel (nine
+  breakpoints j/8) in double on the double-FPU cores, asin and acos through
+  it; float pairs with the half-angle asin polynomial on the
+  single-precision ones; implementation, tests (`libm_thresholds`: the
+  special values in every quadrant, each side of 1/2 and 1, and the
+  regressions of the subnormal atan2 and π forms; `regression_atanf_sixteenth`
+  for the strict core's breakpoint index, fixed too), gains (`asinf` 315 → 64
+  on armv7e-m, 238 → 73 on armv7e-m-dp, 505 → 76 on x86_64). Every float:
+  double 0.5000 ulp, float at most 0.7512 (D176).
 
 ### P11.04c — `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` on the FPU cores  `[ ]`
 - [ ] Over the fast `expf`, `expm1f`, `logf`, `log1pf` kernels (P11.03);
