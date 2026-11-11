@@ -1068,3 +1068,7 @@ The float-only `sp-nearest/fast/` files: the m1 kernel with exact leading terms,
 ## P11.03e — The cores without an FPU: fixed point without the test (D172)
 
 Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D172).
+
+## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
+
+Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D173).

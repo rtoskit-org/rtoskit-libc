@@ -239,10 +239,13 @@ and p1 forms and `cbrtf` are float-float on soft-float, 8,600–13,200
 instructions on armv6-m against `expf`'s 375, so new fixed-point code is
 where the gain is, one family per sub-step.
 
-### P11.03f — The cores without an FPU: the m1 forms  `[ ]`
-- [ ] Fixed-point `expm1f`, `exp2m1f`, `exp10m1f` over the exp2 core, with
-  the relative accuracy near 0 (a series below the cancellation); tests,
-  gains.
+### P11.03f — The cores without an FPU: the m1 forms  `[x]`
+- [x] Fixed-point `expm1f`, `exp2m1f`, `exp10m1f` over the exp2 core, with
+  the relative accuracy near 0 (a series below the cancellation); tests
+  (`libm_thresholds`: each side of the series' end, the core's 2^30 and the
+  hand-off), gains (`expm1f` 12,310 → 461 on
+  armv6-m, 6,065 → 151 on armv7-m). Every argument on the host: at most 0.7328
+  ulp (D173).
 
 ### P11.03g — The cores without an FPU: the p1 forms and `cbrtf`  `[ ]`
 - [ ] Fixed-point `log1pf`, `log2p1f`, `log10p1f` over the log2 core (1 + x

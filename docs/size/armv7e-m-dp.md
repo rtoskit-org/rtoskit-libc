@@ -652,3 +652,7 @@ speed → fast, bytes; several speed members call a shared core or the double fu
 ## P11.03e — The cores without an FPU: fixed point without the test (D172)
 
 Unchanged here (`size-report diff`; the budgets hold): `nofp/fast/` applies to the cores without an FPU only.
+
+## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
+
+Unchanged here (`size-report diff`; the budgets hold).
