@@ -241,12 +241,19 @@ static void check_cube_root(void)
 	QUIET(near(cbrtf(FLT_MAX), 0x1.965feap+42f) && near(cbrtf(FLT_MIN), 0x1p-42f) && near(cbrtf(-0x1.fffffep-127f), -0x1p-42f));
 }
 
-/* Each side of where the cores without an FPU leave the fixed-point path for float-float (|x| = 87, 126, 37.5; P11.03e) */
+/* Each side of where the cores without an FPU change path (P11.03e: |x| = 87, 126, 37.5 for float-float) */
 static void check_fixed_edges(void)
 {
 	QUIET(near(expf(0x1.5bfffep+6f), 0x1.6daf5ap+125f) && near(expf(0x1.5c0002p+6f), 0x1.6db0c8p+125f) && near(expf(-0x1.5bfffep+6f), 0x1.666dc0p-126f));
 	QUIET(near(exp2f(0x1.f7fffep+6f), 0x1.ffff4ep+125f) && near(exp2f(0x1.f80002p+6f), 0x1.000058p+126f));
 	QUIET(near(exp10f(0x1.2bfffep+5f), 0x1.7ca45ap+124f) && near(exp10f(0x1.2c0002p+5f), 0x1.7ca610p+124f) && near(exp10f(-0x1.2c0002p+5f), 0x1.5856aap-125f));
+	/* The m1 forms (P11.03f): each side of the series' end (|x ln b| = 1/8), the exp2 core's 2^30 and the hand-off above */
+	QUIET(near(expm1f(0x1.fffffep-4f), 0x1.10b022p-3f) && near(expm1f(0x1p-3f), 0x1.10b022p-3f) && near(expm1f(-0x1.fffffep-4f), -0x1.e14aecp-4f) && near(expm1f(-0x1p-3f), -0x1.e14aeep-4f));
+	QUIET(near(expm1f(0x1.ep+4f), 0x1.370470p+43f) && near(expm1f(0x1.5bfffep+6f), 0x1.6daf5ap+125f) && near(expm1f(0x1.5cp+6f), 0x1.6db012p+125f));
+	QUIET(near(exp2m1f(0x1.6ffffep-3f), 0x1.0fa4c8p-3f) && near(exp2m1f(0x1.7p-3f), 0x1.0fa4c8p-3f) && near(exp2m1f(-0x1.7p-3f), -0x1.dfaa50p-4f) && near(exp2m1f(0x1.fp+4f), 0x1p+31f));
+	QUIET(near(exp2m1f(0x1.f7fffep+6f), 0x1.ffff4ep+125f) && near(exp2m1f(-0x1.ap+4f), -1.0f));
+	QUIET(near(exp10m1f(0x1.bbfffep-5f), 0x1.103852p-3f) && near(exp10m1f(0x1.bcp-5f), 0x1.103854p-3f) && near(exp10m1f(-0x1.bcp-5f), -0x1.e09046p-4f) && near(exp10m1f(0x1.2p+3f), 0x1.dcd650p+29f));
+	QUIET(near(exp10m1f(0x1.2bfffep+5f), 0x1.7ca45ap+124f) && near(exp10m1f(0x1.2cp+5f), 0x1.7ca534p+124f) && near(exp10m1f(-0x1p+3f), -1.0f));
 }
 
 int main(void)

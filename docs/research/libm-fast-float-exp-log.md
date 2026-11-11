@@ -523,3 +523,52 @@ Instructions per call (speed → fast):
 | `log2f` | 583 → 577 | 247 → 240 |
 | `log10f` | 678 → 670 | 259 → 253 |
 | `powf` | 1,222 → 1,216 | 374 → 368 |
+
+## 16. The cores without an FPU: the m1 forms (P11.03f)
+
+`expm1f`, `exp2m1f`, `exp10m1f` were float-float on soft-float here
+(4,979–12,406 instructions). `nofp/fast/` computes them in 32- and 64-bit
+integers over the exp2 core of section 15 (`nofp/fast/fixed-m1.h`):
+
+- **Near 0** (|u| < 1/8 with u = x ln b): e^u − 1 = u(1 + u p(u)), p the
+  Taylor series of (e^u − 1 − u)/u² to u⁵ (the next term below 2^-33
+  relative) by Horner's rule in signed Q31 with u in Q34; then the 32-bit
+  significand of u times (1 + u p) as a 64-bit product, normalised by its
+  leading zeros and rounded once (`__libc_expm1f_series_fixed`). u is x
+  itself for `expm1f`, and x's significand times ln 2 or ln 10 to 64 bits
+  (0xb17217f7d1cf79ac 2^-64, 0x935d8dddaaa8ac17 2^-62), kept to 32, for the
+  others: the relative error stays about 2^-30 however small u is. Below
+  2^-60 the result is x, or x times the float constant rounded once (the
+  subnormal results included). The first build normalised the product by
+  one bit: (1 + u p) < 1 with u's significand near 2^31 leaves it below
+  2^62, and the sweep found 256,767 ulp at u = −2^-4.
+- **Elsewhere** (`__libc_exp2m1f_fixed`): t = x log2 b in units of 2^-37 as
+  `expf`, `exp2f`, `exp10f` (sections 15 and the speed files); the core
+  gives 2^n(1 + f 2^-32) within 6 units of f; for |n| ≤ 30, (2^n − 1) +
+  2^n f 2^-32 is exact in 64 bits (units of 2^-32, or of 2^(n−32) below 1),
+  normalised and rounded once. Its relative error is at most
+  6·2^(n−32)/|2^t − 1|, below 2^-28.4 since |t| ≥ 0.18 here. From n = 31
+  the 1 is below 2^-30 of the result: the exp2 result itself.
+- **Beyond:** −1 below −18, −26 and −8 (as the other build types); above
+  87, 126 and 37.5, `expf`, `exp2f` or `exp10f` itself (the 1 far below the
+  result's ulp), with their overflow.
+
+Measured on the host (the cores compiled natively), every argument from
+the −1 threshold to where `expf` and the like take over:
+
+| Function | Arguments | max ulp |
+|---|---:|---:|
+| `expm1f` | 2,219,691,215 | 0.5361 |
+| `exp2m1f` | 2,228,473,039 | 0.5460 |
+| `exp10m1f` | 2,200,279,452 | 0.7328 |
+
+`exp10m1f`'s worst is below 2^-62, x times ln 10 as a float (relative
+error 2^-26.5) rounded once; elsewhere it is below 0.55 ulp.
+
+Instructions per call (speed → fast):
+
+| Function | armv6-m, armv6s-m | armv7-m |
+|---|---:|---:|
+| `expm1f` | 12,310 → 461 | 6,065 → 151 |
+| `exp2m1f` | 10,068 → 429 | 4,979 → 150 |
+| `exp10m1f` | 12,406 → 463 | 6,135 → 152 |

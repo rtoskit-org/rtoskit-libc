@@ -1259,3 +1259,14 @@ call (throughput), speed and fast; release and speed unchanged.
 | `log2f` | 583 | 577 | -1 % |
 | `log10f` | 678 | 670 | -1 % |
 | `powf` | 1,222 | 1,216 | -0 % |
+
+## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
+
+`nofp/fast/`: fixed-point m1 forms over the exp2 core (D173). Instructions per call (throughput), speed and fast;
+release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expm1f` | 12,310 | 461 | -96 % |
+| `exp2m1f` | 10,068 | 429 | -96 % |
+| `exp10m1f` | 12,406 | 463 | -96 % |

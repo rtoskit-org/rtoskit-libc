@@ -272,3 +272,8 @@ speed → fast, bytes; several speed members call a shared core or the double fu
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed
 → fast, bytes; the speed files' float-float fallback and its cores, which fast leaves out of the logarithms, not
 counted): `expf.o` 448 → 432, `exp2f.o` 232 → 212, `exp10f.o` 312 → 408, `logf.o` 452 → 196, `log2f.o` 212 → 152, `log10f.o` 452 → 196, `powf.o` 978 → 954.
+
+## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed
+→ fast, bytes; speed's float-float cores, which fast no longer links for these, not counted): `expm1f.o` 592 → 580, `exp2m1f.o` 688 → 592, `exp10m1f.o` 698 → 616.
