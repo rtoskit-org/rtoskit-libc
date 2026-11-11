@@ -844,3 +844,7 @@ cores. The cores without an FPU follow in P11.04f.
 ## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
 
 Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU follow in P11.04g.
+
+## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
+
+Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU follow in P11.04e.

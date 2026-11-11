@@ -1011,3 +1011,12 @@ The double `fast/` files over the P11.03 exponential and logarithm kernels, one 
 | `asinhf` | 308 | 92 | -70 % |
 | `acoshf` | 259 | 74 | -71 % |
 | `atanhf` | 234 | 86 | -63 % |
+
+## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
+
+The double `fast/` files: e^(-x^2) R(x) with an exact square, R in six fitted pieces; `erfcf` behind a rounding test that leaves about 0.8 % of arguments to the strict code (D178). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erff` | 421 | 113 | -73 % |
+| `erfcf` | 796 | 123 | -85 % |

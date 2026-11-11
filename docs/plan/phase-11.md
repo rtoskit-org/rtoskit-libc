@@ -300,8 +300,28 @@ armv7e-m-dp, 575 on armv7e-m, 2,933 on armv6-m; `asinf` 505, 238, 315,
   90 on armv7e-m, 223 → 68 on armv7e-m-dp, 334 → 66 on x86_64). Every finite
   float: double at most 0.5383 ulp, float at most 0.8440 (D177).
 
-### P11.04d — `erff`, `erfcf` on the FPU cores  `[ ]`
-- [ ] Research, implementation, tests, gains.
+### P11.04d — `erff`, `erfcf` on the FPU cores
+
+Split (CLAUDE.md workflow): the fast contract keeps `erfcf` strict (fast-math.md
+§4, D163), and the maintainer chose a fast `erfcf` that stays correctly rounded
+(D178): the fast result where a rounding test proves it, the strict code
+otherwise. In double that test is cheap; the float path first needs pairs good
+to about 2^-32 for it to pay, a sub-step of its own.
+
+### P11.04d1 — `erff` on the FPU cores, `erfcf` on the double-FPU cores  `[x]`
+- [x] Research (the note, sections 12–14): R(x) = erfc(x) e^(x²) in fitted
+  pieces with e^(-x²) from an exact square, the series below 1/2; `erfcf`
+  behind a rounding test with the strict code as the fallback (0.8 % of
+  arguments); implementation, tests (`libm_thresholds`: the special values,
+  underflow, each side of every edge), gains (`erff` 1383 → 123 on armv7e-m,
+  421 → 113 on armv7e-m-dp, 511 → 108 on x86_64; `erfcf` 1458 → 117 on
+  x86_64, 796 → 123 on armv7e-m-dp). Every float: `erff` at most 0.7905
+  ulp; `erfcf` correctly rounded in every direction (D178).
+
+### P11.04d2 — `erfcf` on the single-precision FPU cores  `[ ]`
+- [ ] A pair-accurate e^(-x^2) and R(x) (about 2^-32) for a rounding test with
+  the float-float code as the fallback; research, implementation, tests
+  (every float in every rounding direction correctly rounded), gains.
 
 ### P11.04e — The cores without an FPU: the trigonometric functions and `erff`  `[ ]`
 - [ ] `nofp/fast/` variants of `nofp/speed`'s fixed-point `sinf`, `cosf`,

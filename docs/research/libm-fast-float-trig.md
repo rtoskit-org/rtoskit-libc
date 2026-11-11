@@ -434,3 +434,124 @@ Instructions per call (speed → fast):
 | `atanhf` | 407 → 87 | 234 → 86 | 205 → 111 | 205 → 110 |
 
 The cores without an FPU follow in P11.04g.
+
+## 12. The error functions on the double-FPU cores: `libc/math/fast/` (P11.04d)
+
+Sources (ideas only, read 2026-11-11 through summaries): §12.1. The fast
+bound is 1.5 ulp for `erff`. `erfcf` is not relaxed: the contract keeps it
+strict, correctly rounded in every direction (fast-math.md §4), and the
+maintainer chose a fast `erfcf` that stays so (D178). The first build
+measured 0.80 ulp on the float path and failed `libm_dense`,
+`float_accuracy`, `libm_vectors` and `libm_special` there.
+
+- **One function of the two:** R(x) = erfc(x) e^(x²), smooth and slowly
+  varying, gives erfc x = e^(−x²) R(x), erf x = 1 − e^(−x²) R(|x|) and
+  erfc(−x) = 2 − e^(−x²) R(x). For a float x, x² is exact in double, so the
+  exponential (`__libc_fast_exp_double`, 2^-30.5) keeps erfc's relative
+  accuracy out to its underflow at 10.05.
+- **R** (`__libc_fast_erfc_table`, `__libc_fast_erfc_double`): five
+  pieces of width 1/2 on [1/2, 3) in t = x − c, and above 3 x R(x) as a
+  function G of w = 1/x² on [1/10.1², 1/9] (R = v G(v²), v = 1/x, one
+  division), all of degree 8, fitted here by Chebyshev interpolation at 60
+  digits: 2^-34.9 to 2^-42.4 relative (432 bytes). The degree hardly falls
+  with narrower pieces (6–8 at width 1/2, measured), so six rows of one
+  degree keep the code a single loop.
+- **Near 0:** erf x = x P(x²) with P of degree 5 on [0, 1/4] (2^-36.3); erfc
+  x = 1 − x P(x²) there, the subtraction exact enough in double.
+- **The exponential:** `__libc_fast_exp2` is good to 2^-30.5 only;
+  `__libc_fast_exp2_accurate` takes 2^r's Taylor polynomial to degree 5
+  (2^-48.7 for |r| ≤ 1/64, 2^-46 with t = −x² log2 e rounded), so the result
+  is good to about 2^-34 relative, R's pieces dominating.
+- **erfcf's rounding test:** the double result keeps 29 bits below the
+  float's. Within 2^20 of a float (0 or 2^29) or of the halfway point (2^28)
+  the 2^-34 error could cross a rounding boundary in some direction, and the
+  other build types' double `erfc` decides (with D98's hard case); that is
+  2^22 of 2^29 patterns, about 0.8 % of arguments. Beyond −3.9 (within a
+  quarter ulp of 2) and 9.19 (subnormal results, fewer bits) the strict
+  code decides as well, NaN compared quietly (`isgreaterequal`: the first
+  build's ordered comparison raised invalid, `libm_vectors`).
+- **The ends:** `erff` is ±1 from 3.92 (erfc below a quarter ulp of 1), as
+  the strict files.
+
+### 12.1 Sources
+
+- **FreeBSD `s_erff.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_erff.c>),
+  float throughout: the linear term below about 2^-14; up to 0.84 a rational
+  in x²; to 1.25 a rational in |x| − 1 offset from a constant; beyond, an
+  asymptotic form exp(−x²) times a rational in 1/x², with the exponential
+  split as the product of two (x truncated to 12 bits so that its square is
+  exact, and the remainder (z − x)(z + x) separately); ±1 from 6 (erf) and
+  the underflowing product from 11 (erfc). Error bounds of the fits around
+  2^-28 to 2^-31; no ulp bound stated.
+- **Arm Optimized Routines `erff.c`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/erff.c>),
+  float with fused multiply-adds: below 0.875 x + x P(x²) of degree 5; up
+  to 4 erf = 1 − e^(−r(x)) with r a polynomial of degree about 6 in |x|
+  (one float `expf`); ±1 beyond; 1.09 ulp stated at its worst point. Its
+  scalar `erfcf` paths were not found (404); CORE-MATH's `erff` and `erfcf`
+  were behind an access block and were not read.
+
+What we take: the factor e^(−x²) with an exact square (FreeBSD's split, here
+free in double and an exact pair in float) and a slowly varying factor
+fitted in pieces; the series near 0. Unlike AOR's 1 − e^(−r), erfc keeps
+its own relative accuracy, which `erfcf` needs.
+
+## 13. The error functions on the single-precision FPU cores: `libc/math/sp-nearest/fast/` (P11.04d)
+
+Float only, pairs to one rounding as §7 and §10.
+
+- **e^(−x²)** (`__libc_fast_expf_pair_lo`): x² as an exact pair (a fused
+  multiply-add for its error) and the exponential pair of §10 with the
+  argument's low part; −x² − k ln2_hi is exact (k ln2_hi has 29 bits, the
+  difference 19), so the pair keeps 2^-30 down to k = −146.
+- **R** (`__libc_fast_erfcf_table`, `__libc_fast_erfcf_kernel`): the same
+  six pieces at degree 7 in float: the constant term as a pair, then each
+  coefficient rounded in turn and the rest refitted to the residual by
+  relative least squares (rounding a Chebyshev fit's coefficients at once
+  measured 2^-27.1; refitted, 2^-29.6 to 2^-33.9). c0 + c1 t is formed
+  exactly (a fused multiply-add and a two-sum): c1 t reaches a third of R,
+  and rounding it with the rest measured 1.06 ulp of `erfcf` near 0.53.
+  Above 3, v = 1/x with its remainder. The product e^(−x²) R by a fused
+  multiply-add for the leading error.
+- **erff:** below 1/2, (2/√π) x + x³ Q(x²) with 2/√π as a pair (Q of degree
+  5 in z, fitted the same way, 2^-31.2), and below 2^-13 the linear term
+  with x scaled by 2^64 so that neither the low product nor a subnormal
+  result rounds twice; above, 1 − 2^k (hi + lo), k ≥ −23. The first build
+  took the series up to 0.875 as AOR does, and its float tail (a quarter of
+  the result there) measured 1.23 ulp; from 1/2 the kernel's pair makes the
+  subtraction cost nothing. ±0 return early: the scaled product gives +0
+  for −0 (`libm_thresholds`).
+- **erfcf** (P11.04d2): the same kernel gives every float within 0.80 ulp
+  (below 1/2, 1 − erf x with 1 − (2/√π) x by a two-sum; above, the pair
+  rounded once and scaled by 2^k), but its pair is good to about 2^-26 only,
+  so a rounding test like §12's would send more than half of the arguments
+  to the float-float code. P11.04d2 makes e^(−x²) and R pair-accurate to
+  about 2^-32 first; until then `erfcf` keeps speed's code on these cores.
+
+## 14. Measured (P11.04d1)
+
+Every finite float (4,278,162,238 arguments) against glibc's long double
+`erfl` and `erfcl`; `erfcf` also in the three directed modes over every
+float of [−4, 9.2] (2,173,907,765 arguments each, the reference bracketed
+from `erfcl`, and below |x| = 2^-64, where `erfcl` rounds to 1, from the
+sign of x):
+
+| Function | double path | float path |
+|---|---:|---:|
+| `erff` | 0.5002 ulp | 0.7905 ulp |
+| `erfcf` | correctly rounded (0.5000, D98's hard case) | speed's code (P11.04d2) |
+
+The double `erfcf` is correctly rounded on every argument to nearest and in
+every direction, but for D98's hard case −0x1.d93ec4p-17 rounding upward,
+where the strict code's table gives its to-nearest result in every mode, as
+the other build types do. The float `erfcf` of §13 measured 0.8018 ulp.
+
+Instructions per call (speed → fast):
+
+| Function | x86_64 | armv7e-m-dp | armv7e-m | armv8-m.main |
+|---|---:|---:|---:|---:|
+| `erff` | 511 → 108 | 421 → 113 | 1383 → 123 | 1383 → 123 |
+| `erfcf` | 1458 → 117 | 796 → 123 | P11.04d2 | P11.04d2 |
+
+The cores without an FPU follow in P11.04e.

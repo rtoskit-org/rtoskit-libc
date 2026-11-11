@@ -811,3 +811,8 @@ in libc.a for the complex functions): `atanf.o` 144 → 388, `atanpif.o` 336 →
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. The release baselines take P11.04b's 4-byte `__libc_atan2f_core.o` (`size-report report`). Fast members (code and constants,
 speed → fast, bytes): `sinhf.o` 440 → 524, `coshf.o` 180 → 412, `tanhf.o` 658 → 668, `asinhf.o` 104 → 688, `acoshf.o` 478 → 652, `atanhf.o` 534 → 452 (the speed files share `__libc_sinhcoshf_core.o` 636 and `__libc_asinhf_core.o` 568, which stay in libc.a for the complex functions).
+
+## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
+speed → fast, bytes): `erff.o` 220 → 784 (the speed file shares `__libc_erff_core.o` 378, which stays for `erfcf`), `__libc_fast_erfcf_table.o` new → 216; `erfcf.o` unchanged.

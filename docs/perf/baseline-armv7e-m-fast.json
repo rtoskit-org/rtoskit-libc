@@ -213,10 +213,10 @@
     "insns": 1224.31
    },
    "erff/latency": {
-    "insns": 1384.12
+    "insns": 123.69
    },
    "erff/throughput": {
-    "insns": 1383.06
+    "insns": 122.62
    },
    "exp/latency": {
     "insns": 3805.25

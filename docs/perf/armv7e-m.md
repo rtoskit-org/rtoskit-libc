@@ -1115,3 +1115,11 @@ The float-only `sp-nearest/fast/` files: an exponential pair, the m1 kernel's le
 | `asinhf` | 288 | 135 | -53 % |
 | `acoshf` | 266 | 125 | -53 % |
 | `atanhf` | 205 | 111 | -46 % |
+
+## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
+
+The float-only `sp-nearest/fast/erff.c` over a pair e^(-x^2) R(x) kernel (D178); `erfcf` keeps speed's code until P11.04d2. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erff` | 1383 | 123 | -91 % |
