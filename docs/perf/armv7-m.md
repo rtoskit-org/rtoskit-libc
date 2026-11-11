@@ -946,3 +946,11 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `sinpif` | 8812 | 369 | -96 % |
 | `cospif` | 8578 | 347 | -96 % |
 | `tanpif` | 17671 | 563 | -97 % |
+
+## P11.04e2 — The cores without an FPU: fast `erff` (D181)
+
+`nofp/fast/erff.c`: erf directly in seven pieces of degree 7 in Q31 from 1/2 to 3.92 (no exponential), x (2/√π + u q(u)) below; rounded to nearest once, no test (D181). Instructions per call (throughput), speed and fast; release and speed unchanged, `erfcf` too (D178).
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erff` | 1122 | 184 | -84 % |

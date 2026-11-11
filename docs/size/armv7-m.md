@@ -310,3 +310,7 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 figures included once the reduction and the kernel's combination moved out of line (inline in each caller, `math-mix`'s
 `sinf` and `cosf` took 604 bytes over the locked figure on armv6-m). Fast members (code and constants, speed → fast, bytes):
 `sinf.o` 288 → 358, `cosf.o` 268 → 350, `sincosf.o` 412 → 488, `tanf.o` 652 → 726, `sinpif.o` 508 → 822, `cospif.o` 388 → 602, `tanpif.o` 716 → 1098, `__libc_fixed_trig_reduce.o` new → 284, `__libc_fixed_trig_combine.o` new → 520.
+
+## P11.04e2 — The cores without an FPU: fast `erff` (D181)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls `erff`). Fast members (code and constants, speed → fast, bytes): `erff.o` 396 → 694; it no longer pulls `__libc_erff_fixed.o` (2238) or `__libc_erff_core.o` (732), which stay for `erfcf`, so a program calling `erff` alone takes 3366 → 694.

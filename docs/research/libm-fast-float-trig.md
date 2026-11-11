@@ -676,5 +676,71 @@ Instructions per call (speed → fast):
 | `cospif` | 17172 → 900 | 8578 → 347 |
 | `tanpif` | 35613 → 2015 | 17671 → 563 |
 
-`erff` follows in P11.04e2.
+## 17. erff on the cores without an FPU: `libc/math/nofp/fast/` (P11.04e2)
 
+armv6-m, armv6s-m and armv7-m, in integers; `erfcf` keeps speed's code, as
+D178 requires. The speed flavour's `erff` (D88) already runs in fixed point,
+but as Taylor steps from the ODE recurrences: twelve terms of three products
+each about the nearest node i/8, then a rounding test and the float-float
+series behind it (2961 instructions on armv6-m, 1114 on armv7-m). Dropping
+the test alone would leave the steps.
+
+### 17.1 Sources
+
+- **CORE-MATH `erff.c`**
+  (<https://gitlab.inria.fr/core-math/core-math/-/raw/master/src/binary32/erf/erff.c>,
+  read this time; §12.1 could not reach it), correctly rounded in double:
+  below 0.4375 x times an even polynomial of degree 14 (eight terms in x²);
+  up to 0x1.f5a888p+1, where erf rounds to 1, erf itself from 56 pieces of
+  width 1/16, a degree-7 polynomial each in the offset from the piece's
+  middle; ±1 beyond. No exponential: above about 1/2 erf is far from 0, so
+  an absolute error suffices, and a direct fit of erf is as good as
+  1 − e^(−x²) R(x).
+- **picolibc `sf_erf.c`**
+  (<https://raw.githubusercontent.com/picolibc/picolibc/main/libm/math/sf_erf.c>):
+  the Sun float translation, FreeBSD's intervals (§12.1).
+- §12.1's FreeBSD and Arm Optimized Routines files.
+
+What we take is CORE-MATH's observation, scaled to the fast bound and to
+32-bit integers: an absolute error of 2^-30 is 1/64 of erf's ulp above 1/2,
+so wide pieces of low degree suffice.
+
+### 17.2 The method
+
+- **From 1/2 to 3.92**: seven pieces of width 1/2 (from 1/2, 1, ... 7/2);
+  in each erf(c + s/2) = a0 + a1 s + ... + a7 s^7 with c the middle and
+  |s| ≤ 1/2, fitted here (Chebyshev, 256-bit arithmetic) and rounded to
+  signed Q31. |x| is exact in units of 2^-28 (below 2^30); t = 4(|x| − c)
+  in Q31 is exact, and the high half of t·p is p·s, so Horner's rule takes
+  seven 32 × 32 → 64 products. Fit degrees measured (worst absolute error
+  over the seven pieces, rounded coefficients): degree 7, 2^-29.9; degree 8,
+  2^-31.7; width 1/4 at degree 6, 2^-32.7 but twice the table. Degree 7
+  (224 bytes) is the cheaper and is well inside the bound. The result p is
+  in [0.52, 1) in Q31: its 32 bits below the leading one are rounded to
+  nearest by `__libc_fixed_nearest` (a carry gives 1).
+- **Below 1/2**: erf x = x (2/√π + u q(u)), u = x² in Q32 (0 below 2^-16,
+  where u·q is below 2^-33 relative), q of degree 4 fitted here (2^-33.5
+  relative) in signed Q31, 2/√π in unsigned Q31 (0x906eba82, as D88); the
+  sum times x's significand normalised (`__libc_fixed_significand`, so
+  subnormal arguments too) is one 64-bit product, rounded once by
+  `__libc_fixed_product_float` (subnormal results included). Relative
+  error about 2^-31 however small x.
+- **Beyond 3.92**, ±1, as speed (erf rounds to 1 from 0x1.f5a888p+1); NaN
+  through x + x, ±0 itself.
+
+### 17.3 Measured (P11.04e2)
+
+Every float on the host (the file compiled with the library's headers and
+nofp/speed's `umull` helpers; the products are exact, so armv6-m's `muls`
+helpers give the same bits), against `erfl`: at most **0.5223 ulp**
+(0x1.7acf48p+0), 1,761,288 of 2^32 not correctly rounded; the bound is
+1.5. Instructions per call (speed → fast, the bench's plugin):
+
+| | armv6-m | armv7-m |
+| --- | ---: | ---: |
+| `erff` | 2961 → 414 | 1114 → 177 |
+
+Test vectors (`libm_thresholds`): each side of 1/2, 1, 3/2, 2, 5/2, 3,
+7/2 and 3.92, of 2^-16 and 2^-13, subnormal arguments (2^-149 and
+−0x1.3p-140) and a normal result from one (0x1.fffffcp-127), and the
+sweep's worst point, within 1.5 ulp.

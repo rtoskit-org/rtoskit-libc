@@ -348,9 +348,11 @@ speed's code, rounding test included: D178 keeps it correctly rounded.
   (`sinf` 2933 → 1090 on armv6-m, 842 → 379 on armv7-m; `sinpif` 17,579 →
   920 and 8812 → 369). Every finite float at most 0.5094 ulp (D180).
 
-### P11.04e2 — The cores without an FPU: `erff`  `[ ]`
-- [ ] A fixed-point erf for the fast bound (R(x) pieces over the fixed exp2
+### P11.04e2 — The cores without an FPU: `erff`  `[x]`
+- [x] A fixed-point erf for the fast bound (R(x) pieces over the fixed exp2
   core, as P11.04d's float path); research, implementation, tests, gains.
+  Done as erf itself in seven pieces with no exponential (D181): above 1/2
+  an absolute error suffices. 0.5223 ulp; 2961 → 414 instructions on armv6-m.
 
 ### P11.04f — The cores without an FPU: the inverse trigonometric functions  `[ ]`
 - [ ] Fixed-point `asinf`, `acosf`, `atanf`, `atan2f` and their `pi` forms
