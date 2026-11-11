@@ -263,6 +263,16 @@ static void regression_pow_minus_one(void)
 #endif
 }
 
+/*
+ * atan of the float just below 1/16 picked the breakpoint 1/8, as t 8 + 1/2 rounds up to 1 there, and t - 1/8 was
+ * inexact: 1.27 ulp on the float-float cores, in every build type (P11.04b)
+ */
+static void regression_atanf_sixteenth(void)
+{
+	CHECK(fabs((double)atanf(0x1.fffffep-5f) - 0x1.ff55b974cde0ap-5) < 0x1p-28 && fabs((double)atanf(-0x1.fffffep-5f) + 0x1.ff55b974cde0ap-5) < 0x1p-28);
+	CHECK(fabs((double)atan2f(0x1.fffffep-5f, 1.0f) - 0x1.ff55b974cde0ap-5) < 0x1p-28 && fabs((double)atan2f(0x1.fffffep-1f, 0x1p4f) - 0x1.ff55b974cde0ap-5) < 0x1p-28);
+}
+
 /* functional/strtod, strtod_long, strtod_simple, strtold: exact rounding at the boundaries, very long input, round trips */
 static void functional_strtod(void)
 {
@@ -587,6 +597,7 @@ int main(void)
 	regression_nan_conversion_sign();
 	regression_directed_rounding();
 	regression_pow_minus_one();
+	regression_atanf_sixteenth();
 
 	functional_strtod();
 	functional_strtol();

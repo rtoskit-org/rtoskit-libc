@@ -19,6 +19,7 @@
  * the fast contract's bounds to nearest, no correction of the last bit, no rounding-mode switching.
  */
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "internal/math.h"
@@ -564,6 +565,115 @@ static inline float __libc_fast_divide_pairs(float a, float a_lo, float b, float
 	q = a_hi / b_hi;
 
 	return q + (__builtin_fmaf(-q, b_hi, a_hi) + __builtin_fmaf(-q, b_lo, a_lo)) / b_hi;
+}
+
+/* atan(j/8) for j = 0 .. 8, correctly rounded doubles (libc/math/fast/__libc_fast_atan_table.c) */
+extern const double __libc_fast_atan_table[9];
+
+/*
+ * atan a for a >= 0 (or +infinity) in double (the double-FPU cores' inverse trigonometric functions; the trigonometric note,
+ * section 6): above 1, pi/2 - atan(1/a); then a = c + d against the nearest c = j/8, t = (a - c)/(1 + a c) with a - c exact
+ * (Sterbenz), |t| <= 1/16, atan a = atan c + atan t with atan t = t (1 - t^2/3 + ... + t^8/9), relative error 2^-43.5;
+ * t = a itself for j = 0, so the relative accuracy holds near 0
+ */
+static inline double __libc_fast_atan_double(double a)
+{
+	bool invert = a > 1.0;
+	int j;
+	double c;
+	double t;
+	double z;
+	double r;
+
+	if (invert)
+		a = 1.0 / a;
+	/*
+	 * a 8 + 1/2 rounds up to 1 only within 2^-57 below 1/16, where a - 1/8 is then inexact by 2^-53 of it: harmless here,
+	 * unlike the float kernel below
+	 */
+	j = (int)(a * 8.0 + 0.5);
+	c = (double)j * 0.125;
+	t = (a - c) / (1.0 + a * c);
+	z = t * t;
+	r = __libc_fast_atan_table[j] + (t + t * (z * (-0x1.5555555555555p-2 + z * (0x1.999999999999ap-3 + z * (-0x1.2492492492492p-3 + z * 0x1.c71c71c71c71cp-4)))));
+
+	return invert ? 0x1.921fb54442d18p+0 - r : r;
+}
+
+/* atan(j/8) as float and remainder, j = 0 .. 8 (libc/math/sp-nearest/fast/__libc_fast_atanf_table.c) */
+extern const float __libc_fast_atanf_table[9][2];
+
+/*
+ * atan(a + a_lo) for 0 <= a <= 1 in float (the single-precision FPU cores' inverse trigonometric functions; the
+ * trigonometric note, section 7), as the unrounded pair return + *lo: a = c + d against the nearest c = j/8,
+ * t = (a - c + a_lo)/(1 + a c) as q + q_lo (a - c exact by Sterbenz, as c/2 <= a <= 2c for j >= 1, the denominator's rounding error by a fused multiply-add, the
+ * quotient's remainder by another), atan t = t - t^3/3 + t^5/5 - t^7/7 (|t| <= 1/16, relative error 2^-35), and
+ * atan c + q by a two-sum, so only the caller's last addition rounds much; for j = 0, t is a itself
+ */
+static inline float __libc_fast_atanf_kernel(float a, float a_lo, float *lo)
+{
+	/* The nearest j/8 from a 16 (exact) truncated: a * 8 + 0.5 rounds up to 1 just below 1/16, and a - 1/8 is then inexact */
+	int j = ((int)(a * 16.0f) + 1) >> 1;
+	float c = (float)j * 0.125f;
+	float n = a - c;
+	float d = __builtin_fmaf(a, c, 1.0f);
+	float d_lo = __builtin_fmaf(a, c, 1.0f - d) + a_lo * c;
+	float q = n / d;
+	float q_lo = (__builtin_fmaf(-q, d, n) + __builtin_fmaf(-q, d_lo, a_lo)) / d;
+	float z = q * q;
+	float tail = q * z * __builtin_fmaf(z, __builtin_fmaf(z, -0x1.24924ap-3f, 0x1.99999ap-3f), -0x1.555556p-2f);
+	float error;
+	float hi = __libc_fast_two_sum(__libc_fast_atanf_table[j][0], q, &error);
+
+	*lo = error + (__libc_fast_atanf_table[j][1] + (q_lo + tail));
+	return hi;
+}
+
+/* (c_hi + c_lo) - (hi + lo) as an unrounded pair, the leading difference by a two-sum */
+static inline float __libc_fast_pair_from(float c_hi, float c_lo, float hi, float lo, float *out_lo)
+{
+	float error;
+	float sum = __libc_fast_two_sum(c_hi, -hi, &error);
+
+	*out_lo = error + (c_lo - lo);
+	return sum;
+}
+
+/* (hi + lo) / pi rounded: the product by 1/pi as float and remainder, the leading product's error by a fused multiply-add */
+static inline float __libc_fast_pair_over_pi(float hi, float lo)
+{
+	float p = hi * 0x1.45f306p-2f;
+
+	return p + (__builtin_fmaf(hi, 0x1.45f306p-2f, -p) + __builtin_fmaf(hi, 0x1.b93910p-27f, lo * 0x1.45f306p-2f));
+}
+
+/*
+ * asin(x) for |x| <= 1/2 as x + x^3 P(x^2), the unrounded pair x + *lo: P of degree 6 fitted here by Chebyshev
+ * interpolation on [0, 0.25] (relative error 2^-29.9 on asin); with s from sqrt((1 - |x|)/2) the same gives the half-angle
+ * forms of asin and acos above 1/2
+ */
+static inline float __libc_fast_asinf_small(float x, float x_lo, float *lo)
+{
+	float z = x * x;
+	float p = __builtin_fmaf(z, 0x1.fbaa70p-6f, 0x1.5a41fcp-7f);
+
+	p = __builtin_fmaf(z, p, 0x1.82e318p-6f);
+	p = __builtin_fmaf(z, p, 0x1.efed0cp-6f);
+	p = __builtin_fmaf(z, p, 0x1.6dc0f6p-5f);
+	p = __builtin_fmaf(z, p, 0x1.33331ep-4f);
+	p = __builtin_fmaf(z, p, 0x1.555556p-3f);
+	*lo = __builtin_fmaf(x * z, p, x_lo);
+	return x;
+}
+
+/* sqrt((1 - a)/2) for 1/2 < a <= 1 as s + *lo: 1 - a and the halving exact, the square root's remainder by a fused multiply-add */
+static inline float __libc_fast_half_angle(float a, float *lo)
+{
+	float z = (1.0f - a) * 0.5f;
+	float s = __builtin_sqrtf(z);
+
+	*lo = s > 0 ? __builtin_fmaf(-s, s, z) / (2.0f * s) : 0.0f;
+	return s;
 }
 
 #endif /* _MATH_FAST_H */

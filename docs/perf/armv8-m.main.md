@@ -1079,3 +1079,14 @@ build type, release and speed otherwise unchanged.
 | `sinpif` | 261 | 112 | -57 % |
 | `cospif` | 254 | 109 | -57 % |
 | `tanpif` | 479 | 203 | -58 % |
+
+## P11.04b — Fast `asinf`, `acosf`, `atanf`, `atan2f` and the π forms (D176)
+
+The float-only `sp-nearest/fast/` files: the j/8 table kernel and the half-angle asin polynomial as unrounded pairs (D176). Instructions per call (throughput), speed and fast; release and speed unchanged (the strict atan core's index fix, D176, keeps their counts).
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asinf` | 309 | 64 | -79 % |
+| `acosf` | 319 | 63 | -80 % |
+| `atanf` | 278 | 92 | -67 % |
+| `atan2f` | 402 | 118 | -71 % |
