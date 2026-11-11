@@ -416,6 +416,13 @@ static void check_error_functions(void)
 	QUIET(within_ulps(erff(0x1.000002p+1f), 0x1.fd9ae16cccd0bp-1, 1.5) && within_ulps(erff(0x1.3ffffep+1f), 0x1.ffcaa8f053b22p-1, 1.5) && within_ulps(erff(0x1.400002p+1f), 0x1.ffcaa8f93fcadp-1, 1.5));
 	QUIET(within_ulps(erff(0x1.7ffffep+1f), 0x1.fffd1ac3ca5d6p-1, 1.5) && within_ulps(erff(0x1.800002p+1f), 0x1.fffd1ac45c61dp-1, 1.5) && within_ulps(erff(0x1.f5c28ep+1f), 0x1.ffffff01a3185p-1, 1.5));
 	QUIET(within_ulps(erff(0x1.f5c292p+1f), 0x1.ffffff01a3588p-1, 1.5) && within_ulps(erff(-0x1.bffffep-1f), -0x1.917248450d998p-1, 1.5) && within_ulps(erff(-0x1.c00002p-1f), -0x1.91724a5e645d6p-1, 1.5));
+	/*
+	 * The cores without an FPU (P11.04e2): their last piece at 3.5, the series' u = 0 at 2^-16, subnormal arguments and
+	 * results, and the sweep's worst point (0.5223 ulp)
+	 */
+	QUIET(within_ulps(erff(0x1.bffffep+1f), 0x1.ffffe710d2913p-1, 1.5) && within_ulps(erff(0x1.c00002p+1f), 0x1.ffffe710d83aap-1, 1.5) && within_ulps(erff(0x1.fffffep-17f), 0x1.20dd73e2ebf80p-16, 1.5));
+	QUIET(within_ulps(erff(0x1.000002p-16f), 0x1.20dd774584570p-16, 1.5) && within_ulps(erff(0x1.7acf48p+0f), 0x1.ed5f850b67f38p-1, 1.5));
+	CHECK(within_ulps(erff(0x1.fffffcp-127f), 0x1.20dd72c26eccdp-126, 1.5) && within_ulps(erff(0x1p-149f), 0x1.20dd750429b6dp-149, 1.5) && within_ulps(erff(-0x1.3p-140f), -0x1.5706faf4f1892p-140, 1.5));
 	QUIET(within_ulps(erfcf(0x1.fffffep-27f), 0x1.ffffff6f91461p-1, 1) && within_ulps(erfcf(0x1.000002p-26f), 0x1.ffffff6f91446p-1, 1) && within_ulps(erfcf(0x1.fffffep-2f), 0x1.eb02163ed2107p-2, 1));
 	QUIET(within_ulps(erfcf(0x1.000002p-1f), 0x1.eb0210f902b2fp-2, 1) && within_ulps(erfcf(-0x1.fffffep-2f), 0x1.853f7a704b7bep+0, 1) && within_ulps(erfcf(-0x1.000002p-1f), 0x1.853f7bc1bf534p+0, 1));
 	QUIET(within_ulps(erfcf(0x1.fffffep-1f), 0x1.42261981e1c1dp-3, 1) && within_ulps(erfcf(0x1.000002p+0f), 0x1.42260f8b76284p-3, 1) && within_ulps(erfcf(0x1.fffffep+0f), 0x1.328f69582e052p-8, 1));

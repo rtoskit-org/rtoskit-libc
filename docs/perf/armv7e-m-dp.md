@@ -1028,3 +1028,7 @@ Unchanged here: the double-FPU cores' `erfcf` is P11.04d1 (D179).
 ## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
 
 Unchanged here: the FPU cores' trigonometric functions are P11.04a (D180).
+
+## P11.04e2 — The cores without an FPU: fast `erff` (D181)
+
+Unchanged here: the FPU cores' `erff` is P11.04d1 (D178, D181).
