@@ -138,6 +138,25 @@ static inline double __libc_fast_log_split(double d, int *e)
 	return __libc_double_from(bits);
 }
 
+/*
+ * log d for a positive normal double (the double-FPU cores' hyperbolic functions; docs/research/libm-fast-float-trig.md
+ * section 9): e ln2 + log m from __libc_fast_log_split, absolute error about 2^-52 beside e ln2's rounding
+ */
+static inline double __libc_fast_log_positive(double d)
+{
+	int e;
+	double m = __libc_fast_log_split(d, &e);
+	double l = __libc_fast_log_double(m);
+
+	return e == 0 ? l : (double)e * 0x1.62e42fefa39efp-1 + l;
+}
+
+/* e^a in double for |a| below 709 by __libc_fast_exp2 (relative error 2^-30.5) */
+static inline double __libc_fast_exp_double(double a)
+{
+	return __libc_fast_exp2(a * 0x1.71547652b82fep+0);
+}
+
 /* A positive finite float as 2^e m, m in [sqrt(1/2), sqrt(2)), in double (subnormals first scaled by 2^23) */
 static inline double __libc_fast_logf_split(float x, int *e)
 {
@@ -349,6 +368,32 @@ static inline float __libc_fast_log2f_extended(float x, float *lo)
 }
 
 /*
+ * e^(u_hi + u_lo) 2^k - 1 for |k| <= 24 as the unrounded pair return + *lo, with q3 = __libc_fast_expf_q3(u): the
+ * leading terms of __libc_fast_expm1f_kernel by exact two-sums (its comment below), so that only the caller's last
+ * addition rounds much (tanhf near 0)
+ */
+static inline float __libc_fast_expm1f_pair(float u_hi, float u_lo, int k, float q3, float *lo)
+{
+	float square = u_hi * u_hi;
+	float rest = __builtin_fmaf(square * u_hi, q3, __builtin_fmaf(u_lo, 1.0f + u_hi, 0.5f * __builtin_fmaf(u_hi, u_hi, -square)));
+	float s;
+	float hi;
+	float error;
+	float error2;
+
+	if (k == 0) {
+		hi = __libc_fast_two_sum(u_hi, 0.5f * square, &error);
+		*lo = error + rest;
+		return hi;
+	}
+	s = __libc_float_from((uint32_t)(k + 127) << 23);
+	hi = __libc_fast_two_sum(s - 1.0f, s * u_hi, &error);
+	hi = __libc_fast_two_sum(hi, s * (0.5f * square), &error2);
+	*lo = (error + error2) + s * rest;
+	return hi;
+}
+
+/*
  * e^(u_hi + u_lo) 2^k - 1 in float (the single-precision FPU cores' expm1f, exp2m1f, exp10m1f), with the
  * arguments of __libc_fast_expf_kernel and -27 <= k <= 130 and the kernel's polynomial: for |k| <= 24 the leading
  * terms by exact two-sums (below); for k < -24, 2^k e^u is below 2^-24 beside -1; above 2^24, the 1 joins the tail
@@ -373,7 +418,8 @@ static inline float __libc_fast_expm1f_kernel(float u_hi, float u_lo, int k)
 		 * (a fused multiply-add for its error): squaring u rounded cost a quarter ulp of a result near 0.24 and the
 		 * whole tail rounded at once 2^k times its rounding, 1.12 ulp in all (exp2m1f, measured). For k = 0 that is
 		 * the result, accurate relative to |u| however small; otherwise 2^k e^u - 1 = (2^k - 1) + 2^k u_hi +
-		 * 2^k u_hi^2/2 by exact two-sums, then 2^k times the rest
+		 * 2^k u_hi^2/2 by exact two-sums, then 2^k times the rest. __libc_fast_expm1f_pair is the same as a pair; the
+		 * kernel keeps its own copy, as sharing it cost the m1 forms 0.8 % (P11.04c, measured)
 		 */
 		square = u_hi * u_hi;
 		rest = __builtin_fmaf(square * u_hi, q3, __builtin_fmaf(u_lo, 1.0f + u_hi, 0.5f * __builtin_fmaf(u_hi, u_hi, -square)));
@@ -673,6 +719,74 @@ static inline float __libc_fast_half_angle(float a, float *lo)
 	float s = __builtin_sqrtf(z);
 
 	*lo = s > 0 ? __builtin_fmaf(-s, s, z) / (2.0f * s) : 0.0f;
+	return s;
+}
+
+/*
+ * e^a = 2^k (return + *lo) for 0 <= a <= 90 in float (the single-precision FPU cores' hyperbolic functions; the
+ * trigonometric note, section 10): a = k ln2 + u as expf (u_hi by a fused multiply-add, u_lo = k times ln2's low part),
+ * and e^u = 1 + u_hi + (u_lo + u^2 q(u)) with 1 + u_hi by a two-sum, then normalised by a Fast2Sum (the tail reaches
+ * 0.06, and a reciprocal 1/hi - lo/hi^2 of the raw pair measured 5e-4): an unrounded pair in [0.7, 1.42] to about 2^-30
+ */
+static inline float __libc_fast_expf_pair(float a, int *k, float *lo)
+{
+	float kf = __builtin_fmaf(a, 0x1.715476p+0f, 0x1.8p23f) - 0x1.8p23f;
+	float u_hi = __builtin_fmaf(-kf, 0x1.62e430p-1f, a);
+	float u_lo = kf * 0x1.05c610p-29f;
+	float u = u_hi + u_lo;
+	float error;
+	float hi = __libc_fast_two_sum(1.0f, u_hi, &error);
+
+	float tail = error + __builtin_fmaf(u * u, __libc_fast_expf_q(u), u_lo);
+	float sum = hi + tail;
+
+	*k = (int)kf;
+	*lo = tail - (sum - hi);
+	return sum;
+}
+
+/*
+ * log1p(u + u_lo) for u > -1 and |u_lo| at most half an ulp of u, rounded once (the single-precision FPU cores' asinhf,
+ * acoshf, atanhf; the note, section 10): the log1pf reduction of u, with u_lo/(1 + u) beside its own correction
+ */
+static inline float __libc_fast_log1pf_pair(float u, float u_lo)
+{
+	const float *entry;
+	float kf;
+	float r;
+	float lo;
+	int k;
+	int i;
+
+	r = __libc_fast_log1pf_reduce(u, &k, &i, &lo);
+	entry = __libc_fast_logf_ln[i];
+	kf = (float)k;
+
+	return __builtin_fmaf(kf, 0x1.62e400p-1f, entry[0]) + (r + (__builtin_fmaf(kf, 0x1.7f7d1cp-20f, entry[1]) + (__libc_fast_log1pf_tail(r) + (lo + u_lo / (1.0f + u)))));
+}
+
+/* log 2a for a finite a from 2 up, rounded once: the logf reduction of a with k + 1 (asinhf and acoshf above 2^12) */
+static inline float __libc_fast_logf_twice(float a)
+{
+	const float *entry;
+	float kf;
+	float r;
+	int k;
+	int i;
+
+	r = __libc_fast_logf_reduce(a, &k, &i);
+	entry = __libc_fast_logf_ln[i];
+	kf = (float)(k + 1);
+
+	return __builtin_fmaf(kf, 0x1.62e400p-1f, entry[0]) + (r + (__builtin_fmaf(kf, 0x1.7f7d1cp-20f, entry[1]) + __libc_fast_log1pf_tail(r)));
+}
+
+/* sqrt(w + w_lo) for w > 0 as the pair return + *lo, the square root's remainder by a fused multiply-add */
+static inline float __libc_fast_sqrtf_pair(float w, float w_lo, float *lo)
+{
+	float s = __builtin_sqrtf(w);
+
+	*lo = (__builtin_fmaf(-s, s, w) + w_lo) / (2.0f * s);
 	return s;
 }
 

@@ -1090,3 +1090,16 @@ The float-only `sp-nearest/fast/` files: the j/8 table kernel and the half-angle
 | `acosf` | 319 | 63 | -80 % |
 | `atanf` | 278 | 92 | -67 % |
 | `atan2f` | 402 | 118 | -71 % |
+
+## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+The float-only `sp-nearest/fast/` files: an exponential pair, the m1 kernel's leading terms and the log1pf reduction with a pair argument (D177). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinhf` | 267 | 90 | -66 % |
+| `coshf` | 241 | 84 | -65 % |
+| `tanhf` | 253 | 104 | -59 % |
+| `asinhf` | 287 | 136 | -53 % |
+| `acoshf` | 266 | 126 | -52 % |
+| `atanhf` | 205 | 110 | -46 % |

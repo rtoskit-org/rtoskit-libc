@@ -291,9 +291,14 @@ armv7e-m-dp, 575 on armv7e-m, 2,933 on armv6-m; `asinf` 505, 238, 315,
   on armv7e-m, 238 → 73 on armv7e-m-dp, 505 → 76 on x86_64). Every float:
   double 0.5000 ulp, float at most 0.7512 (D176).
 
-### P11.04c — `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` on the FPU cores  `[ ]`
-- [ ] Over the fast `expf`, `expm1f`, `logf`, `log1pf` kernels (P11.03);
-  research, implementation, tests, gains.
+### P11.04c — `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` on the FPU cores  `[x]`
+- [x] Over the fast `expf`, `expm1f`, `logf`, `log1pf` kernels (P11.03);
+  research (the note, sections 9–11), implementation (in double over the
+  exp2 and log kernels; float pairs over an exponential pair and the log1pf
+  reduction with a pair argument), tests (`libm_thresholds`: the special
+  values, the poles, overflow, each side of every edge), gains (`sinhf` 267 →
+  90 on armv7e-m, 223 → 68 on armv7e-m-dp, 334 → 66 on x86_64). Every finite
+  float: double at most 0.5383 ulp, float at most 0.8440 (D177).
 
 ### P11.04d — `erff`, `erfcf` on the FPU cores  `[ ]`
 - [ ] Research, implementation, tests, gains.

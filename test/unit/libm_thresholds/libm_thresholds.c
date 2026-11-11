@@ -348,6 +348,45 @@ static void check_inverse_trigonometric(void)
 	CHECK(within_ulp(atan2pif(-0x1.18fe76p-125f, 0x1.f9920ap-2f), -0x1.6a52954a74b4bp-126) && within_ulp(atan2pif(-0x1.0ec7f6p-126f, 0x1.68b2d6p-119f), -0x1.e962164514f9dp-10));
 }
 
+static void check_hyperbolic(void)
+{
+	/* C23 F.10.2: the zeros with their signs, the infinities, NaN quietly, the poles and the domain errors */
+	QUIET(is_positive_zero(sinhf(0.0f)) && is_negative_zero(sinhf(-0.0f)) && sinhf(INFINITY) == INFINITY && sinhf(-INFINITY) == -INFINITY && isnan(sinhf(NAN)));
+	QUIET(coshf(0.0f) == 1.0f && coshf(-0.0f) == 1.0f && coshf(-INFINITY) == INFINITY && isnan(coshf(NAN)));
+	QUIET(is_negative_zero(tanhf(-0.0f)) && tanhf(INFINITY) == 1.0f && tanhf(-INFINITY) == -1.0f && tanhf(9.2f) == 1.0f && tanhf(-20.0f) == -1.0f && isnan(tanhf(NAN)));
+	QUIET(is_negative_zero(asinhf(-0.0f)) && asinhf(-INFINITY) == -INFINITY && isnan(asinhf(NAN)));
+	QUIET(is_positive_zero(acoshf(1.0f)) && acoshf(INFINITY) == INFINITY && isnan(acoshf(NAN)) && is_negative_zero(atanhf(-0.0f)) && isnan(atanhf(NAN)));
+	RAISES(isnan(acoshf(0.5f)) && isnan(acoshf(-INFINITY)) && isnan(atanhf(1.5f)) && isnan(atanhf(-INFINITY)), FE_INVALID);
+	RAISES(atanhf(1.0f) == INFINITY && atanhf(-1.0f) == -INFINITY, FE_DIVBYZERO);
+	RAISES(sinhf(89.5f) == INFINITY && sinhf(-90.0f) == -INFINITY && coshf(89.5f) == INFINITY && coshf(-200.0f) == INFINITY, FE_OVERFLOW);
+	/*
+	 * Each side of every edge (the tiny paths at 2^-30 and 2^-12; the series and the exponential at 1/2 and 1 for sinhf,
+	 * 1/4 and 9 for coshf; 1/16, 1 and 9.1 for tanhf; 1/4 and 2^12 for asinhf, 2 and 2^12 for acoshf, 1/8, 1/2 and 1 for
+	 * atanhf), within the fast contract's 1.5 ulp
+	 */
+	QUIET(within_ulps(sinhf(0x1.fffffep-13f), 0x1.fffffe5555546p-13, 1.5) && within_ulps(sinhf(0x1.000002p-12f), 0x1.0000022aaaabbp-12, 1.5) && within_ulps(sinhf(0x1.fffffep-31f), 0x1.fffffep-31, 1.5));
+	QUIET(within_ulps(sinhf(0x1.000002p-30f), 0x1.000002p-30, 1.5) && within_ulps(sinhf(0x1.fffffep-2f), 0x1.0accffddb7a13p-1, 1.5) && within_ulps(sinhf(0x1.000002p-1f), 0x1.0acd033fbbeabp-1, 1.5));
+	QUIET(within_ulps(sinhf(0x1.fffffep-1f), 0x1.2cd9fab9e443ap+0, 1.5) && within_ulps(sinhf(0x1.000002p+0f), 0x1.2cd9ff5afa44cp+0, 1.5) && within_ulps(sinhf(0x1.1ffffep+3f), 0x1.fa71379bf4dfdp+11, 1.5));
+	QUIET(within_ulps(sinhf(0x1.200002p+3f), 0x1.fa7176ea1fe89p+11, 1.5) && within_ulps(sinhf(0x1.659998p+6f), 0x1.f7e08458f02b2p+127, 1.5) && within_ulps(sinhf(0x1.65999cp+6f), 0x1.f7e27c3a7074bp+127, 1.5));
+	QUIET(within_ulps(sinhf(-0x1.7ffffep+1f), -0x1.40926967eb7efp+3, 1.5));
+	QUIET(within_ulps(coshf(0x1.fffffep-13f), 0x1.0000007fffff1p+0, 1.5) && within_ulps(coshf(0x1.000002p-12f), 0x1.0000008000021p+0, 1.5) && within_ulps(coshf(0x1.fffffep-3f), 0x1.080ab04c7b479p+0, 1.5));
+	QUIET(within_ulps(coshf(0x1.000002p-2f), 0x1.080ab07cfbae3p+0, 1.5) && within_ulps(coshf(0x1.1ffffep+3f), 0x1.fa71389ec4125p+11, 1.5) && within_ulps(coshf(0x1.200002p+3f), 0x1.fa7177eceefabp+11, 1.5));
+	QUIET(within_ulps(coshf(0x1.659998p+6f), 0x1.f7e08458f02b2p+127, 1.5) && within_ulps(coshf(0x1.65999cp+6f), 0x1.f7e27c3a7074bp+127, 1.5) && within_ulps(coshf(-0x1.fffffep-1f), 0x1.8b0753f0c5598p+0, 1.5));
+	QUIET(within_ulps(tanhf(0x1.fffffep-13f), 0x1.fffffd555557ap-13, 1.5) && within_ulps(tanhf(0x1.000002p-12f), 0x1.000001aaaaa8dp-12, 1.5) && within_ulps(tanhf(0x1.fffffep-31f), 0x1.fffffep-31, 1.5));
+	QUIET(within_ulps(tanhf(0x1.000002p-30f), 0x1.000002p-30, 1.5) && within_ulps(tanhf(0x1.fffffep-5f), 0x1.ff55978001b8ep-5, 1.5) && within_ulps(tanhf(0x1.000002p-4f), 0x1.ff559d7a05b69p-5, 1.5));
+	QUIET(within_ulps(tanhf(0x1.fffffep-1f), 0x1.85efaa7a48582p-1, 1.5) && within_ulps(tanhf(0x1.000002p+0f), 0x1.85efacff5cf7bp-1, 1.5) && within_ulps(tanhf(0x1.233332p+3f), 0x1.ffffff29c7959p-1, 1.5));
+	QUIET(within_ulps(tanhf(0x1.233336p+3f), 0x1.ffffff29c7cb2p-1, 1.5) && within_ulps(tanhf(-0x1.fffffep-2f), -0x1.d9353be2bf67ep-2, 1.5));
+	QUIET(within_ulps(asinhf(0x1.fffffep-13f), 0x1.fffffdaaaaabdp-13, 1.5) && within_ulps(asinhf(0x1.000002p-12f), 0x1.000001d555547p-12, 1.5) && within_ulps(asinhf(0x1.fffffep-31f), 0x1.fffffep-31, 1.5));
+	QUIET(within_ulps(asinhf(0x1.000002p-30f), 0x1.000002p-30, 1.5) && within_ulps(asinhf(0x1.fffffep-3f), 0x1.facfb048e7dedp-3, 1.5) && within_ulps(asinhf(0x1.000002p-2f), 0x1.facfb61b0b6c5p-3, 1.5));
+	QUIET(within_ulps(asinhf(0x1.fffffep+11f), 0x1.205966dab4f12p+3, 1.5) && within_ulps(asinhf(0x1.000002p+12f), 0x1.2059673ab4f0cp+3, 1.5) && within_ulps(asinhf(-0x1.bffffep+2f), -0x1.52728c00e52efp+1, 1.5));
+	QUIET(within_ulps(acoshf(0x1.000002p+0f), 0x1.ffffffaaaaaadp-12, 1.5) && within_ulps(acoshf(0x1.fffffep+11f), 0x1.205966cab4f1p+3, 1.5) && within_ulps(acoshf(0x1.000002p+12f), 0x1.2059672ab4f1p+3, 1.5));
+	QUIET(within_ulps(acoshf(0x1.fffffep+0f), 0x1.512425f1e5ce3p+0, 1.5) && within_ulps(acoshf(0x1.000002p+1f), 0x1.51242968b528ep+0, 1.5));
+	QUIET(within_ulps(atanhf(0x1.fffffep-1f), 0x1.1542456b37d43p+3, 1.5) && within_ulps(atanhf(-0x1.fffffep-1f), -0x1.1542456b37d43p+3, 1.5) && within_ulps(atanhf(0x1.fffffep-13f), 0x1.fffffeaaaaa91p-13, 1.5));
+	QUIET(within_ulps(atanhf(0x1.000002p-12f), 0x1.0000025555579p-12, 1.5) && within_ulps(atanhf(0x1.fffffep-31f), 0x1.fffffep-31, 1.5) && within_ulps(atanhf(0x1.000002p-30f), 0x1.000002p-30, 1.5));
+	QUIET(within_ulps(atanhf(0x1.fffffep-4f), 0x1.015890c5daae7p-3, 1.5) && within_ulps(atanhf(0x1.000002p-3f), 0x1.015893d20b719p-3, 1.5) && within_ulps(atanhf(0x1.fffffep-2f), 0x1.193ea6557adbcp-1, 1.5));
+	QUIET(within_ulps(atanhf(0x1.000002p-1f), 0x1.193eaa557add2p-1, 1.5));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -359,6 +398,7 @@ int main(void)
 	check_fixed_edges();
 	check_trigonometric();
 	check_inverse_trigonometric();
+	check_hyperbolic();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

@@ -998,3 +998,16 @@ The double `fast/` files: one table kernel, atan(j/8) and a Taylor series to t‚Å
 | `acosf` | 241 | 66 | -73 % |
 | `atanf` | 217 | 63 | -71 % |
 | `atan2f` | 398 | 78 | -80 % |
+
+## P11.04c ‚Äî Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+The double `fast/` files over the P11.03 exponential and logarithm kernels, one rounding (D177). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinhf` | 223 | 68 | -69 % |
+| `coshf` | 196 | 55 | -72 % |
+| `tanhf` | 218 | 72 | -67 % |
+| `asinhf` | 308 | 92 | -70 % |
+| `acoshf` | 259 | 74 | -71 % |
+| `atanhf` | 234 | 86 | -63 % |
