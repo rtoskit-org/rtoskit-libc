@@ -1072,3 +1072,7 @@ Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D172).
 ## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
 
 Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D173).
+
+## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
+
+Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D174).

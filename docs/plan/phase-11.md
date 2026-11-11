@@ -247,10 +247,14 @@ where the gain is, one family per sub-step.
   armv6-m, 6,065 → 151 on armv7-m). Every argument on the host: at most 0.7328
   ulp (D173).
 
-### P11.03g — The cores without an FPU: the p1 forms and `cbrtf`  `[ ]`
-- [ ] Fixed-point `log1pf`, `log2p1f`, `log10p1f` over the log2 core (1 + x
-  exact as an integer, a series near 0) and an integer `cbrtf`; tests,
-  gains.
+### P11.03g — The cores without an FPU: the p1 forms and `cbrtf`  `[x]`
+- [x] Fixed-point `log1pf`, `log2p1f`, `log10p1f` over the log2 core (1 + x
+  exact as an integer, a series near 0) and an integer `cbrtf`; the m1 and
+  p1 forms' tiny paths through the series too (no float constant); tests
+  (`libm_thresholds`: each side of 2^-5 and 2^24, near −1, `cbrtf`'s
+  powers), gains (`log1pf` 12,789 → 699, `cbrtf`
+  8,590 → 630 on armv6-m; `log1pf` 6,386 → 254 on armv7-m). Every argument on the host: at most 0.5779
+  ulp (D174).
 
 ## P11.04 — Float trigonometric, inverse and hyperbolic functions  `[ ]`
 - [ ] Research: `docs/research/libm-fast-float-trig.md` (Cody–Waite in float

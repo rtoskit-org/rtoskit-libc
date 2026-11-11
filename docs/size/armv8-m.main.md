@@ -784,3 +784,7 @@ Unchanged here (`size-report diff`; the budgets hold): `nofp/fast/` applies to t
 ## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
 
 Unchanged here (`size-report diff`; the budgets hold).
+
+## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
+
+Unchanged here (`size-report diff`; the budgets hold).

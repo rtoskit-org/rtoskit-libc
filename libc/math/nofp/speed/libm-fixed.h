@@ -14,7 +14,11 @@
 #ifndef _LIBM_FIXED_H
 #define _LIBM_FIXED_H
 
+#include <stdbit.h>
+#include <stdbool.h>
 #include <stdint.h>
+
+#include "fixed.h"
 
 /*
  * The speed flavour's fixed-point float functions on the cores without an
@@ -68,6 +72,62 @@ static inline bool __libc_fixed_round(uint32_t f, int exponent, uint32_t error, 
 static inline uint32_t __libc_fixed_nearest(uint32_t f, int exponent)
 {
 	return ((uint32_t)(exponent + 127) << 23) + (f >> 9) + ((f & 0x1ff) > 0x100);
+}
+
+/*
+ * The log2 core of __libc_log2f_fixed (libc/math/nofp/speed/__libc_log2f_fixed.c, whose comment it follows and whose
+ * arithmetic it repeats step for step) from 2^e m with m in [sqrt(1/2), sqrt(2)) as an unsigned Q31 number, for the fast
+ * flavour's log1pf family (PLAN D174), which feeds it 1 + x exactly with up to 30 significant bits: r = m / c' - 1 is still
+ * an exact Q62 product less 1. The speed file keeps its own copy, which inlining this one would reorder (one
+ * instruction more on armv7-m, against the locked speed figures)
+ */
+static inline uint64_t __libc_log2_fixed_core(uint32_t m, int e, int *exponent, bool *negative)
+{
+	uint64_t magnitude;
+	uint64_t product;
+	int64_t r;
+	int32_t r36;
+	int32_t h;
+	uint32_t q;
+	int scale;
+	int shift;
+	int j;
+
+	/* j = round(32 (m - 1)), in -9 .. 13 */
+	j = ((int32_t)(m - 0x80000000u) + (1 << 25)) >> 26;
+	r = (int64_t)(__libc_fixed_wide(m, __libc_log2f_inverse[j + 9]) - (UINT64_C(1) << 62));
+	if (r == 0 && e == 0 && j == 0)
+		return 0;
+
+	r36 = (int32_t)((r + (1 << 25)) >> 26);
+	h = -516360668;
+	h = 619632802 + ((__libc_fixed_high_signed(r36, h) + 8) >> 4);
+	h = -774541002 + ((__libc_fixed_high_signed(r36, h) + 8) >> 4);
+	h = 1032721336 + ((__libc_fixed_high_signed(r36, h) + 8) >> 4);
+	h = -1549082005 + ((__libc_fixed_high_signed(r36, h) + 8) >> 4);
+	q = 0xb8aa3b29u + (uint32_t)((__libc_fixed_high_signed(r36, h) + 8) >> 4);
+
+	/* |r| Q = product 2^(-61 - shift) */
+	magnitude = r < 0 ? -(uint64_t)r : (uint64_t)r;
+	shift = magnitude != 0 ? (int)stdc_leading_zeros(magnitude) : 0;
+	product = __libc_fixed_wide((uint32_t)((magnitude << shift) >> 32), q);
+
+	if (e == 0 && j == 0) {
+		*negative = r < 0;
+		scale = -61 - shift;
+	} else {
+		int64_t sum = ((int64_t)e << 55) + __libc_log2f_logarithm[j + 9];
+		int64_t term = 6 + shift < 64 ? (int64_t)(product >> (6 + shift)) : 0;
+
+		sum += r < 0 ? -term : term;
+		*negative = sum < 0;
+		product = sum < 0 ? -(uint64_t)sum : (uint64_t)sum;
+		scale = -55;
+	}
+
+	shift = (int)stdc_leading_zeros(product);
+	*exponent = 63 + scale - shift;
+	return product << shift;
 }
 
 #endif /* _LIBM_FIXED_H */

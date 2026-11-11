@@ -254,6 +254,16 @@ static void check_fixed_edges(void)
 	QUIET(near(exp2m1f(0x1.f7fffep+6f), 0x1.ffff4ep+125f) && near(exp2m1f(-0x1.ap+4f), -1.0f));
 	QUIET(near(exp10m1f(0x1.bbfffep-5f), 0x1.103852p-3f) && near(exp10m1f(0x1.bcp-5f), 0x1.103854p-3f) && near(exp10m1f(-0x1.bcp-5f), -0x1.e09046p-4f) && near(exp10m1f(0x1.2p+3f), 0x1.dcd650p+29f));
 	QUIET(near(exp10m1f(0x1.2bfffep+5f), 0x1.7ca45ap+124f) && near(exp10m1f(0x1.2cp+5f), 0x1.7ca534p+124f) && near(exp10m1f(-0x1p+3f), -1.0f));
+	/* The p1 forms (P11.03g): each side of the series' end (|x| = 2^-5), of 2^24 (where 1 + x stops being formed) and near -1 */
+	QUIET(near(log1pf(0x1.fffffep-6f), 0x1.f829aep-6f) && near(log1pf(0x1p-5f), 0x1.f829b0p-6f) && near(log1pf(-0x1.fffffep-6f), -0x1.0415d8p-5f) && near(log1pf(-0x1p-5f), -0x1.0415d8p-5f));
+	QUIET(near(log1pf(0x1.fffffep+22f), 0x1.fe2806p+3f) && near(log1pf(0x1p+23f), 0x1.fe2806p+3f) && near(log1pf(0x1p+24f), 0x1.0a2b24p+4f) && near(log1pf(-0x1.fffffep-1f), -0x1.0a2b24p+4f));
+	QUIET(near(log2p1f(0x1.fffffep-6f), 0x1.6bad36p-5f) && near(log2p1f(0x1p-5f), 0x1.6bad38p-5f) && near(log2p1f(-0x1.fffffep-6f), -0x1.77394cp-5f) && near(log2p1f(-0x1p-5f), -0x1.77394cp-5f));
+	QUIET(near(log2p1f(0x1.fffffep+22f), 23.0f) && near(log2p1f(0x1p+23f), 23.0f) && near(log2p1f(0x1p+24f), 24.0f) && near(log2p1f(-0x1.fffffep-1f), -24.0f));
+	QUIET(near(log10p1f(0x1.fffffep-6f), 0x1.b5e908p-7f) && near(log10p1f(0x1p-5f), 0x1.b5e908p-7f) && near(log10p1f(-0x1.fffffep-6f), -0x1.c3d082p-7f) && near(log10p1f(-0x1p-5f), -0x1.c3d084p-7f));
+	QUIET(near(log10p1f(0x1.fffffep+22f), 0x1.bb1dbcp+2f) && near(log10p1f(0x1p+23f), 0x1.bb1dbcp+2f) && near(log10p1f(0x1p+24f), 0x1.ce61d0p+2f) && near(log10p1f(-0x1.fffffep-1f), -0x1.ce61d0p+2f));
+	/* cbrtf (P11.03g): each side of the powers 2^(3q + j) where j changes, and subnormals */
+	QUIET(near(cbrtf(0x1.fffffep-1f), 1.0f) && near(cbrtf(2.0f), 0x1.428a30p+0f) && near(cbrtf(0x1.fffffep+0f), 0x1.428a30p+0f) && near(cbrtf(4.0f), 0x1.965feap+0f));
+	QUIET(near(cbrtf(0x1.fffffep+2f), 2.0f) && near(cbrtf(8.0f), 2.0f) && near(cbrtf(0x1.8p-148f), 0x1.d12ed0p-50f) && near(cbrtf(0x1.fffffcp-127f), 0x1.fffffep-43f) && near(cbrtf(-0x1p-149f), -0x1.428a30p-50f));
 }
 
 int main(void)

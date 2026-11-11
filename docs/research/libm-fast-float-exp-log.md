@@ -572,3 +572,67 @@ Instructions per call (speed → fast):
 | `expm1f` | 12,310 → 461 | 6,065 → 151 |
 | `exp2m1f` | 10,068 → 429 | 4,979 → 150 |
 | `exp10m1f` | 12,406 → 463 | 6,135 → 152 |
+
+## 17. The cores without an FPU: the p1 forms and `cbrtf` (P11.03g)
+
+`log1pf`, `log2p1f`, `log10p1f` and `cbrtf` were float-float on soft-float
+here (3,545–13,202 instructions). `nofp/fast/` computes them in integers:
+
+- **p1 near 0** (|x| < 2^-5): log(1 + x) = x(1 + x p(x)) with p = −1/2 +
+  x/3 − … + x⁵/7 (the next term below 2^-33 relative), the whole scaled by
+  1, 1/ln 2 or 1/ln 10 (the leading constant and the coefficients in Q31),
+  by section 16's series helper, now general (`__libc_fixed_series`: any
+  six coefficients and leading constant).
+- **p1 from 2^-5 up:** 1 + x exactly (`__libc_fixed_one_plus`): x's ulp is
+  at least 2^-28 there, so up to 2^23 the sum is an integer in units of
+  x's ulp below 2^29 (at most 30 significant bits); beyond 2^23 the 1 is
+  below x's ulp and log(1 + x) − log x < 1/x is below 2^-28 of log x, so x
+  itself. Normalised into [√½, √2) as a Q31 number, it goes through the
+  log2 core of `__libc_log2f_fixed` (`__libc_log2_fixed_core` in
+  `libm-fixed.h`: the core's arithmetic for a 32-bit m, r = m/c' − 1 still
+  an exact Q62 product less 1), then the base as `logf`, `log2f`,
+  `log10f`, rounded to nearest without a test. Inlining that helper into
+  the speed file itself reordered its registers (one instruction more on
+  armv7-m, against the locked speed figures), so the speed file keeps its
+  own copy, unchanged.
+- **Tiny arguments:** the first build returned x times a float constant
+  below 2^-60 (`log2p1f`, `log10p1f`, and section 16's `exp2m1f`,
+  `exp10m1f`): the constant's own rounding, up to 2^-25, cost up to 0.89
+  ulp. There the result is now x's significand (subnormals normalised,
+  `__libc_fixed_significand`) times the constant to 64 bits, rounded once
+  with subnormal results (`__libc_fixed_tiny`, `__libc_fixed_product_float`,
+  `__libc_fixed_float_subnormal`). Two attempts cost the m1 forms' common
+  paths: one rounding helper for normal and subnormal results was no longer
+  inlined (3–5 % slower), and the tiny path inline in the callers 1–2 %.
+  Kept apart and out of line, `expm1f` is unchanged and `exp2m1f`,
+  `exp10m1f` are 3 instructions (0.7 %) above P11.03f, inside the bench
+  gate, for 0.733 → 0.536 ulp.
+- **`cbrtf`** in integers: |x| = 2^(3q + j) f, j in {0, 1, 2}, q =
+  floor(e/3) as (e + 150)·21846/2^16 − 50 (no division: Armv6-M has none);
+  M = 2^j f in Q28; w ≈ M^(-1/3) from a degree 2 polynomial in f (2^-8.9,
+  fitted here) times 2^(-j/3), two Newton steps w += w(1 − M w³)/3 with
+  multiplications only, then cbrt M = M w² as a 64-bit product, normalised
+  and rounded once.
+
+Measured on the host, every argument (the p1 forms from just above −1 to
+FLT_MAX, `cbrtf` every finite float); with them, section 16's m1 forms
+again after the tiny-path change:
+
+| Function | Arguments | max ulp |
+|---|---:|---:|
+| `log1pf` | 3,204,434,335 | 0.5330 |
+| `log2p1f` | 3,204,434,335 | 0.5470 |
+| `log10p1f` | 3,204,434,335 | 0.5561 |
+| `cbrtf` | 4,278,162,238 | 0.5779 |
+| `expm1f` | 2,219,691,215 | 0.5361 |
+| `exp2m1f` | 2,228,473,039 | 0.5366 |
+| `exp10m1f` | 2,200,279,452 | 0.5362 |
+
+Instructions per call (speed → fast):
+
+| Function | armv6-m, armv6s-m | armv7-m |
+|---|---:|---:|
+| `log1pf` | 12,789 → 699 | 6,386 → 254 |
+| `log2p1f` | 11,003 → 608 | 5,545 → 242 |
+| `log10p1f` | 13,202 → 699 | 6,619 → 255 |
+| `cbrtf` | 8,590 → 630 | 3,545 → 162 |
