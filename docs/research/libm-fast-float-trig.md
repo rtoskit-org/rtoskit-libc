@@ -604,3 +604,77 @@ at most, a near-halfway case).
 
 Instructions per call: `erfcf` 1224 → 233 on armv7e-m and armv8-m.main (the float-float code
 alone, for the 1.5 %, costs about as much as before).
+
+## 16. The trigonometric functions on the cores without an FPU: `libc/math/nofp/fast/` (P11.04e1)
+
+armv6-m, armv6s-m and armv7-m, in integers. The speed flavour's `sinf`,
+`cosf`, `sincosf` and `tanf` run D136's double-precision kernel (`sinf`
+2933 instructions on armv6-m, 842 on armv7-m) and their rounding test fails
+about once in 2^35, so dropping the test, as P11.03e did, gains almost
+nothing; the π forms have no fixed-point path at all and run the
+float-float code on soft float (`sinpif` 17,579 and 8812). What costs is the
+precision: a float result needs about 32 bits, and D87's kernel
+(`__libc_sinf_fixed`, nofp/speed) has them (1.29 units of 2^-32, measured
+over every float), at 720 instructions on armv6-m and 270 on armv7-m
+(measured with the bench's plugin). D87 fed it from the float-float
+reduction (`__libc_rem_pio2f`), which is what made it slow on soft float.
+
+- **The reduction** (`__libc_fixed_trig_reduce`, 2^-6 ≤ |x| < 2^20): x =
+  m 2^(e−23); x·32/π = m T 2^(e−147) with T = ⌊32/π 2^124⌋ (four words,
+  computed here), a 152-bit product from four 32 × 32 → 64 products; the
+  integer part k from bit 147 − e (modulo 64), the signed fraction to 2^-64
+  below it (a fraction of 1/2 or more rounds k up and is taken negative), and
+  s = f·π/32 to 64 bits, in the kernel's units of 2^-48 (error below one
+  unit). Below 2^-6, s = x exactly; below 2^-12, x itself (sin, tan) or 1.
+- **The kernel** (`__libc_fixed_trig_terms`, `__libc_fixed_trig_combine`):
+  D87's, copied into nofp/fast/fixed-fast.h with s as an integer rather than
+  a float pair (the speed file keeps its own, so the locked speed objects do
+  not change): cos s − 1 and sin s/s − 1 in Q-format from u = s², and the
+  9-entry table of sin and cos of jπ/32 in units of 2^-62. The terms depend
+  on s only, so `sincosf`, `tanf` and `tanpif` form them once for both
+  results. It declines (0) in a sine quadrant with a = 0 and |s| < 2^-14,
+  where s would need more than 48 bits.
+- **Rounding:** the top 32 bits below the leading one rounded to nearest
+  (`__libc_fixed_nearest`, as P11.03e), with no test.
+- **The fallbacks:** where the kernel declines, within 2^-14 of a multiple of
+  π for sin (of π/2 for cos), and from 2^20, the strict layer's exact
+  reduction and float-float core (`__libc_rem_pio2f`, `__libc_sinf_core`),
+  not speed's file: both are correct for every argument, and the fallback is
+  rare enough that its cost does not matter.
+- **tanf:** sine over cosine as nofp/speed's `tanf` divides them (the
+  quotient by the cosine's top 32 bits and a correction for its low half);
+  either declining sends it to the float-float quotient.
+- **The π forms** (`sinpif`, `cospif`, `tanpif`): 32x = K + r 2^-shift
+  exactly from the bits (`__libc_fixed_pi_split`; K the nearest integer,
+  |r| 2^-shift ≤ 1/2), s = r·π/32 2^-shift from one 32 × 64-bit product
+  (`__libc_fixed_pi_s`), the kernel at K (K + 16 for cos); where it
+  declines, at sinpi's zeros, ±s itself from that product, relative however
+  small (`__libc_fixed_pi_small`; s²/6 is below 2^-30.6 there). So the π
+  forms never fall back. The exact cases as the strict files (the multiples
+  of 1/2, every float from 2^23 up, divide-by-zero at tanpi's poles), and
+  below 2^-90 πx rounded once, as they do.
+- **Size:** the reduction and the kernel's combination are out of line
+  (`__libc_fixed_trig_reduce.c`, `__libc_fixed_trig_combine.c`): inlined in
+  each caller, `math-mix`'s `sinf` and `cosf` took 604 bytes over armv6-m's
+  locked fast figure (432 on armv7-m); the two calls cost 23 instructions on
+  armv7-m and 38 on armv6-m.
+
+Measured on the host over every finite float (the files built with the
+`umull` product, a plain 64-bit multiplication): `sinf` 0.5024 ulp, `cosf`
+0.5024, `tanf` 0.5022, `sinpif` 0.5084, `cospif` 0.5051, `tanpif` 0.5094;
+`sincosf` equal to `sinf` and `cosf`, bit for bit, on every finite float.
+
+Instructions per call (speed → fast):
+
+| Function | armv6-m, armv6s-m | armv7-m |
+|---|---:|---:|
+| `sinf` | 2933 → 1090 | 842 → 379 |
+| `cosf` | 2887 → 1100 | 810 → 379 |
+| `sincosf` | 4418 → 1696 | 1160 → 654 |
+| `tanf` | 5065 → 2178 | 1083 → 568 |
+| `sinpif` | 17579 → 920 | 8812 → 369 |
+| `cospif` | 17172 → 900 | 8578 → 347 |
+| `tanpif` | 35613 → 2015 | 17671 → 563 |
+
+`erff` follows in P11.04e2.
+

@@ -196,4 +196,182 @@ static inline uint32_t __libc_fixed_one_plus(uint32_t bits, int *e)
 	return m;
 }
 
+/*
+ * The fast trigonometric functions of the cores without an FPU (PLAN D180; docs/research/libm-fast-float-trig.md section
+ * 16): a fixed-point reduction to k pi/32 + s with s in units of 2^-48, nofp/speed's sine kernel (PLAN D87) on that s, and
+ * the result rounded to nearest. pi/32 in units of 2^-67, rounded, computed here
+ */
+#define __LIBC_FIXED_PI_32 0xc90fdaa22168c235ULL
+
+/* Bits [position, position + 32) of a little-endian array of words, position >= 0 */
+static inline uint32_t __libc_fixed_word_at(const uint32_t *words, int position)
+{
+	int index = position / 32;
+	int shift = position % 32;
+
+	if (shift == 0)
+		return words[index];
+	return (words[index] >> shift) | (words[index + 1] << (32 - shift));
+}
+
+/* The high 64 bits of a 32 x 64-bit product, the low word's carry included */
+static inline uint64_t __libc_fixed_wide_high(uint32_t a, uint64_t b, uint32_t *low)
+{
+	uint64_t lo = __libc_fixed_wide(a, (uint32_t)b);
+	uint64_t hi = __libc_fixed_wide(a, (uint32_t)(b >> 32)) + (lo >> 32);
+
+	*low = (uint32_t)lo;
+	return hi;
+}
+
+/*
+ * |x| = (k + f) pi/32 for 2^-6 <= |x| < 2^20, |f| <= 1/2: x = m 2^(e - 23) with m the 24-bit significand, and x 32/pi =
+ * m T 2^(e - 147) with T = floor(32/pi 2^124), a 152-bit product whose integer part starts at bit 147 - e; T's truncation
+ * adds below 2^-100 to the fraction. The nearest integer k (the kernel takes it modulo 64) and the signed fraction to 2^-64,
+ * times pi/32 to 64 bits: s in units of 2^-48, its error below one unit; the sign of x on both (out of line in
+ * __libc_fixed_trig_reduce.c, which sinf and cosf share in one program)
+ */
+int __libc_fixed_trig_reduce(uint32_t bits, int64_t *s);
+
+/*
+ * cos s - 1 and sin s/s - 1 for |s| <= pi/64 + 2^-40 in units of 2^-48, as nofp/speed's __libc_sinf_fixed forms them (its
+ * comment, D87): u = s^2 in units of 2^-38, cos s - 1 = u (-1/2 + u/24 - u^2/720) and sin s/s - 1 = u (-1/6 + u/120) in
+ * units of 2^-37. They do not depend on k, so sin and cos of one s share them
+ */
+static inline void __libc_fixed_trig_terms(int64_t s, int32_t *cosine_m1, int32_t *g)
+{
+	int32_t s35 = (int32_t)(s >> 13);
+	int32_t u = __libc_fixed_high_signed(s35, s35);
+	int32_t h = 89478485 - (int32_t)(__libc_fixed_high((uint32_t)u, 2982616) >> 6);
+
+	h = -(1 << 30) + (__libc_fixed_high_signed(u, h) >> 6);
+	*cosine_m1 = __libc_fixed_high_signed(u, h);
+	*g = -357913941 + (int32_t)(__libc_fixed_high((uint32_t)u, 17895697) >> 6);
+	*g = __libc_fixed_high_signed(u, *g);
+}
+
+/*
+ * sin(k pi/32 + s) for any k (modulo 64) from s and its terms, nofp/speed's __libc_sinf_fixed (D87) on s itself rather than
+ * a float pair, the speed file keeping its own copy: k + 8 = 16 q + (j + 8) gives the quadrant q and the table angle
+ * a = |j| pi/32, and the value first (1 + (cos s - 1)) + second sin s with first and second the signed sin a or cos a, in
+ * units of 2^-62. The result v 2^(*exponent - 63) with bit 63 of v set; 0 when |s| < 2^-14 in a sine quadrant with a = 0,
+ * where the result needs s to more bits (out of line in __libc_fixed_trig_combine.c: inlined in each caller, sinf and cosf
+ * together exceeded math-mix's locked fast figure by 604 bytes on armv6-m)
+ */
+uint64_t __libc_fixed_trig_combine(int k, int64_t s, int32_t cosine_m1, int32_t g, int *exponent, bool *negative);
+
+/* sin(k pi/32 + s): the terms and the combination */
+static inline uint64_t __libc_fixed_trig_kernel(int k, int64_t s, int *exponent, bool *negative)
+{
+	int32_t cosine_m1;
+	int32_t g;
+
+	__libc_fixed_trig_terms(s, &cosine_m1, &g);
+	return __libc_fixed_trig_combine(k, s, cosine_m1, g, exponent, negative);
+}
+
+/*
+ * The pi forms' s = r 2^-shift pi/32 in units of 2^-48 for |r| 2^-shift <= 1/2, r below 2^24, shift >= 0: r times pi/32 to
+ * 64 bits, the 96-bit product kept in high:low for __libc_fixed_pi_small
+ */
+static inline int64_t __libc_fixed_pi_s(int32_t r, int shift, uint64_t *high, uint32_t *low)
+{
+	uint32_t magnitude = r < 0 ? -(uint32_t)r : (uint32_t)r;
+	int64_t s = 0;
+
+	*high = __libc_fixed_wide_high(magnitude, __LIBC_FIXED_PI_32, low);
+	/* r Pi 2^-67 2^-shift 2^48 = (high:low) >> (19 + shift) */
+	if (shift + 19 < 32)
+		s = (int64_t)((*high << (13 - shift)) | (*low >> (19 + shift)));
+	else if (shift + 19 < 96)
+		s = (int64_t)(*high >> (shift + 19 - 32));
+	return r < 0 ? -s : s;
+}
+
+/*
+ * Where the kernel declines (a sine quadrant with a = 0 and |s| < 2^-14): +-sin s = +-s (1 - s^2/6) with s from r times
+ * pi/32 to 64 bits (high:low), relative however small; s^2/6 is below 2^-30.6 there and left out
+ */
+static inline uint64_t __libc_fixed_pi_small(int k, int32_t r, int shift, uint64_t high, uint32_t low, int *exponent, bool *negative)
+{
+	int zeros = (int)stdc_leading_zeros(high);
+	uint64_t v = zeros == 0 ? high : (high << zeros) | ((uint64_t)low >> (32 - zeros));
+
+	/* r Pi = v 2^(32 - zeros) (its leading one at bit 95 - zeros); the value r Pi 2^(-67 - shift) is v 2^(exponent - 63) */
+	*exponent = 28 - zeros - shift;
+	*negative = (r < 0) != ((k & 32) != 0);
+	return v;
+}
+
+/* sin((k + r 2^-shift) pi/32) for the pi forms: the kernel, or __libc_fixed_pi_small where it declines */
+static inline uint64_t __libc_fixed_sinpi(int k, int32_t r, int shift, int *exponent, bool *negative)
+{
+	uint64_t high;
+	uint32_t low;
+	int64_t s = __libc_fixed_pi_s(r, shift, &high, &low);
+	uint64_t v = __libc_fixed_trig_kernel(k, s, exponent, negative);
+
+	return v != 0 ? v : __libc_fixed_pi_small(k, r, shift, high, low, exponent, negative);
+}
+
+/*
+ * 32x = K + r 2^-shift exactly for 2^-90 <= |x| < 2^23, K the nearest integer (ties up in magnitude) and |r| 2^-shift <= 1/2,
+ * r below 2^24: x = m 2^(e - 23), 32x = m 2^(e - 18), from the bits; both signed as x. *r is 0 from 2^18 up
+ */
+static inline int __libc_fixed_pi_split(uint32_t bits, int32_t *r, int *shift)
+{
+	int32_t m = (int32_t)((bits & 0x007fffff) | 0x00800000);
+	int e = (int)((bits >> 23) & 0xff) - 127;
+	int32_t k;
+
+	*shift = 18 - e;
+	if (*shift <= 0) {
+		k = m << -*shift;
+		*r = 0;
+		*shift = 0;
+	} else if (*shift > 24) {
+		k = 0;
+		*r = m;
+	} else {
+		k = (m + (1 << (*shift - 1))) >> *shift;
+		*r = m - (k << *shift);
+	}
+	if ((bits >> 31) != 0) {
+		k = -k;
+		*r = -*r;
+	}
+	return k;
+}
+
+/* The kernel's result rounded to nearest (a normal float): its 32 bits below the leading one, as __libc_fixed_nearest */
+static inline float __libc_fixed_trig_float(uint64_t v, int exponent, bool negative)
+{
+	return __libc_float_from(__libc_fixed_nearest((uint32_t)(v >> 31), exponent) | (negative ? 0x80000000u : 0));
+}
+
+/*
+ * sine / cosine from two kernel results rounded to nearest, as nofp/speed's tanf divides them (its comment, D87): the
+ * quotient by the cosine's top 32 bits, one more bit from the remainder, less q times the cosine's low half
+ */
+static inline float __libc_fixed_trig_divide(uint64_t sine, int sine_exponent, bool sine_negative, uint64_t cosine, int cosine_exponent, bool cosine_negative)
+{
+	uint32_t top = (uint32_t)(cosine >> 32);
+	uint32_t low = (uint32_t)cosine;
+	uint64_t quotient = sine / top;
+	uint64_t remainder = sine - quotient * top;
+	uint64_t correction;
+	int exponent = sine_exponent - cosine_exponent;
+
+	if ((quotient >> 32) == 0) {
+		quotient = (quotient << 1) | ((remainder << 1) >= top);
+		--exponent;
+	}
+	correction = low + (uint64_t)__libc_fixed_high((uint32_t)quotient, low);
+	while (correction >= top) {
+		correction -= top;
+		--quotient;
+	}
+	return __libc_float_from(__libc_fixed_nearest((uint32_t)quotient, exponent) | (sine_negative != cosine_negative ? 0x80000000u : 0));
+}
+
 #endif /* _FIXED_FAST_H */

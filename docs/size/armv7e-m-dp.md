@@ -684,3 +684,7 @@ speed → fast, bytes): `erff.o` 16 → 536, `erfcf.o` 84 → 596 (the speed fil
 ## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
 
 Unchanged here (`size-report diff`; the budgets hold): the double-FPU cores' `erfcf` is P11.04d1.
+
+## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
+
+Unchanged here (`size-report diff`; the budgets hold).

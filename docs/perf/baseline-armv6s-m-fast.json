@@ -165,10 +165,10 @@
     "insns": 3662.88
    },
    "cosf/latency": {
-    "insns": 2874.75
+    "insns": 1087.12
    },
    "cosf/throughput": {
-    "insns": 2887.44
+    "insns": 1099.81
    },
    "cosh/latency": {
     "insns": 16741.19
@@ -189,10 +189,10 @@
     "insns": 16791.5
    },
    "cospif/latency": {
-    "insns": 17161.31
+    "insns": 889.0
    },
    "cospif/throughput": {
-    "insns": 17172.31
+    "insns": 900.0
    },
    "erf/latency": {
     "insns": 40693.06
@@ -447,16 +447,16 @@
     "insns": 5176.88
    },
    "sincosf/latency": {
-    "insns": 4408.88
+    "insns": 1686.81
    },
    "sincosf/throughput": {
-    "insns": 4418.0
+    "insns": 1695.94
    },
    "sinf/latency": {
-    "insns": 2930.38
+    "insns": 1086.56
    },
    "sinf/throughput": {
-    "insns": 2933.38
+    "insns": 1089.56
    },
    "sinh/latency": {
     "insns": 17881.19
@@ -477,10 +477,10 @@
     "insns": 16829.0
    },
    "sinpif/latency": {
-    "insns": 17573.56
+    "insns": 914.0
    },
    "sinpif/throughput": {
-    "insns": 17579.25
+    "insns": 919.69
    },
    "sqrt/latency": {
     "insns": 4212.12
@@ -501,10 +501,10 @@
     "insns": 4969.88
    },
    "tanf/latency": {
-    "insns": 5062.94
+    "insns": 2175.12
    },
    "tanf/throughput": {
-    "insns": 5065.31
+    "insns": 2177.5
    },
    "tanh/latency": {
     "insns": 20188.75
@@ -525,10 +525,10 @@
     "insns": 34136.38
    },
    "tanpif/latency": {
-    "insns": 35609.44
+    "insns": 2011.38
    },
    "tanpif/throughput": {
-    "insns": 35612.94
+    "insns": 2014.88
    },
    "tgamma/latency": {
     "insns": 64740.88

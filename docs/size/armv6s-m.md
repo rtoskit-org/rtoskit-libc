@@ -852,3 +852,10 @@ Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU 
 ## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
 
 Unchanged here (`size-report diff`; the budgets hold): the cores without an FPU follow in P11.04e.
+
+## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold, armv6-m's, armv6s-m's and armv7-m's own fast
+figures included once the reduction and the kernel's combination moved out of line (inline in each caller, `math-mix`'s
+`sinf` and `cosf` took 604 bytes over the locked figure on armv6-m). Fast members (code and constants, speed → fast, bytes):
+`sinf.o` 300 → 374, `cosf.o` 280 → 366, `sincosf.o` 448 → 502, `tanf.o` 720 → 806, `sinpif.o` 508 → 830, `cospif.o` 384 → 614, `tanpif.o` 712 → 1186, `__libc_fixed_trig_reduce.o` new → 356, `__libc_fixed_trig_combine.o` new → 548.

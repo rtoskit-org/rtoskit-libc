@@ -328,10 +328,29 @@ to about 2^-32 for it to pay, a sub-step of its own.
   (`erfcf` 1224 → 233 on armv7e-m and armv8-m.main). Every float correctly
   rounded (these cores round to nearest only, D57) (D179).
 
-### P11.04e — The cores without an FPU: the trigonometric functions and `erff`  `[ ]`
-- [ ] `nofp/fast/` variants of `nofp/speed`'s fixed-point `sinf`, `cosf`,
-  `sincosf`, `tanf`, `erff`, `erfcf` without the rounding test (as
-  P11.03e), and the `pi` forms; tests, gains.
+### P11.04e — The cores without an FPU: the trigonometric functions and `erff`
+
+Split (CLAUDE.md workflow): the step's text took `nofp/speed`'s files
+without their rounding test, as P11.03e did, but that test is not where the
+time goes. `sinf` runs D136's double-precision kernel (2933 instructions on
+armv6-m), the π forms have no fixed-point path at all (`sinpif` 17,579),
+and the test fails about once in 2^35. A float-precision path needs its
+own reduction, and `erff` its own kernel: two sub-steps. `erfcf` keeps
+speed's code, rounding test included: D178 keeps it correctly rounded.
+
+### P11.04e1 — The cores without an FPU: `sinf`, `cosf`, `sincosf`, `tanf` and the `pi` forms  `[x]`
+- [x] D87's fixed-point kernel (`__libc_sinf_fixed`, 720 instructions on
+  armv6-m, 270 on armv7-m, measured) fed by a fixed-point reduction (32/pi to
+  128 bits for |x| < 2^20; the pi forms' exact 32x), rounded to nearest
+  without the rounding test; the kernel's declines and |x| >= 2^20 to the
+  strict float-float code; research (the note, section 16), implementation,
+  tests (`libm_thresholds`: each side of the fixed paths' edges), gains
+  (`sinf` 2933 → 1090 on armv6-m, 842 → 379 on armv7-m; `sinpif` 17,579 →
+  920 and 8812 → 369). Every finite float at most 0.5094 ulp (D180).
+
+### P11.04e2 — The cores without an FPU: `erff`  `[ ]`
+- [ ] A fixed-point erf for the fast bound (R(x) pieces over the fixed exp2
+  core, as P11.04d's float path); research, implementation, tests, gains.
 
 ### P11.04f — The cores without an FPU: the inverse trigonometric functions  `[ ]`
 - [ ] Fixed-point `asinf`, `acosf`, `atanf`, `atan2f` and their `pi` forms

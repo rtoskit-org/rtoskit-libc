@@ -932,3 +932,17 @@ Unchanged here: the cores without an FPU follow in P11.04e (D178).
 ## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
 
 Unchanged here: the cores without an FPU follow in P11.04e (D179).
+
+## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
+
+`nofp/fast/`: a fixed-point reduction to kπ/32 + s, D87's kernel on that s, rounded to nearest; the π forms from an exact split of 32x (D180). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinf` | 842 | 379 | -55 % |
+| `cosf` | 810 | 379 | -53 % |
+| `sincosf` | 1160 | 654 | -44 % |
+| `tanf` | 1083 | 568 | -48 % |
+| `sinpif` | 8812 | 369 | -96 % |
+| `cospif` | 8578 | 347 | -96 % |
+| `tanpif` | 17671 | 563 | -97 % |
