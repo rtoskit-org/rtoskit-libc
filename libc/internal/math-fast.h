@@ -45,6 +45,23 @@ static inline double __libc_fast_exp2(double t)
 	return __libc_double_from(scale) * p;
 }
 
+/*
+ * 2^t in double as __libc_fast_exp2 with the Taylor polynomial of 2^r to degree 5 (|r| <= 1/64: relative error 2^-48.7,
+ * 2^-46 with t's rounding), for results that a rounding test must decide (erfcf; docs/research/libm-fast-float-trig.md
+ * section 12)
+ */
+static inline double __libc_fast_exp2_accurate(double t)
+{
+	double shifted = t * 32.0 + 0x1.8p52;
+	int32_t n = (int32_t)(uint32_t)__libc_double_bits(shifted);
+	double r = t - (shifted - 0x1.8p52) * 0x1p-5;
+	int32_t j = n & 31;
+	uint64_t scale = __libc_fast_exp2_table[j] + ((uint64_t)(int64_t)((n - j) / 32) << 52);
+	double p = 1.0 + r * (0x1.62e42fefa39efp-1 + r * (0x1.ebfbdff82c58fp-3 + r * (0x1.c6b08d704a0c0p-5 + r * (0x1.3b2ab6fba4e77p-7 + r * 0x1.5d87fe78a6731p-10))));
+
+	return __libc_double_from(scale) * p;
+}
+
 /* q3(u) ~ (e^u - 1 - u - u^2/2)/u^3 of degree 4 for |u| <= ln2/2: the upper part of __libc_fast_expf_q */
 static inline float __libc_fast_expf_q3(float u)
 {
@@ -155,6 +172,47 @@ static inline double __libc_fast_log_positive(double d)
 static inline double __libc_fast_exp_double(double a)
 {
 	return __libc_fast_exp2(a * 0x1.71547652b82fep+0);
+}
+
+/* R(x) = erfc(x) e^(x^2) as degree-8 pieces (libc/math/fast/__libc_fast_erfc_table.c) */
+extern const double __libc_fast_erfc_table[6][9];
+
+/*
+ * erfc a for 1/2 <= a <= 10.1 in double (the double-FPU cores' erff and erfcf; docs/research/libm-fast-float-trig.md
+ * section 12): e^(-a^2) R(a), a^2 exact for a float a and the exponential relative to 2^-46
+ * (__libc_fast_exp2_accurate), R from the table's pieces of width 1/2 below 3 and as v G(v^2) with v = 1/a above, each
+ * to 2^-34.9: about 2^-34.5 in all
+ */
+static inline double __libc_fast_erfc_double(double a)
+{
+	const double *c;
+	double t;
+	double v = 1.0;
+	double r;
+	int i;
+
+	if (a < 3.0) {
+		i = (int)(2.0 * a) - 1;
+		t = a - (0.75 + 0.5 * (double)i);
+	} else {
+		i = 5;
+		v = 1.0 / a;
+		t = v * v - 0x1.ef4397f2ba2b9p-5;
+	}
+	c = __libc_fast_erfc_table[i];
+	r = c[8];
+	for (int j = 7; j >= 0; --j)
+		r = r * t + c[j];
+
+	return __libc_fast_exp2_accurate(-(a * a) * 0x1.71547652b82fep+0) * (r * v);
+}
+
+/* erf x for |x| < 1/2 as x P(x^2), P of degree 5 fitted here (relative error 2^-36.3) */
+static inline double __libc_fast_erf_small(double x)
+{
+	double z = x * x;
+
+	return x * (0x1.20dd75041b4eap+0 + z * (-0x1.8127466f5b8a1p-2 + z * (0x1.ce2ef239ee029p-4 + z * (-0x1.b8203032a45abp-6 + z * (0x1.54d076df271bdp-8 + z * -0x1.936a4a7830bd8p-11)))));
 }
 
 /* A positive finite float as 2^e m, m in [sqrt(1/2), sqrt(2)), in double (subnormals first scaled by 2^23) */
@@ -788,6 +846,93 @@ static inline float __libc_fast_sqrtf_pair(float w, float w_lo, float *lo)
 
 	*lo = (__builtin_fmaf(-s, s, w) + w_lo) / (2.0f * s);
 	return s;
+}
+
+/* e^(a + a_lo) = 2^k (return + *lo) for -104 <= a <= 90 and |a_lo| at most half an ulp of a: __libc_fast_expf_pair with the argument's low part */
+static inline float __libc_fast_expf_pair_lo(float a, float a_lo, int *k, float *lo)
+{
+	float kf = __builtin_fmaf(a, 0x1.715476p+0f, 0x1.8p23f) - 0x1.8p23f;
+	float u_hi = __builtin_fmaf(-kf, 0x1.62e430p-1f, a);
+	float u_lo = __builtin_fmaf(kf, 0x1.05c610p-29f, a_lo);
+	float u = u_hi + u_lo;
+	float error;
+	float hi = __libc_fast_two_sum(1.0f, u_hi, &error);
+	float tail = error + __builtin_fmaf(u * u, __libc_fast_expf_q(u), u_lo);
+	float sum = hi + tail;
+
+	*k = (int)kf;
+	*lo = tail - (sum - hi);
+	return sum;
+}
+
+/* R(x) = erfc(x) e^(x^2) as degree-7 float pieces (libc/math/sp-nearest/fast/__libc_fast_erfcf_table.c) */
+extern const float __libc_fast_erfcf_table[6][9];
+
+/*
+ * erfc a = 2^k (return + *lo) for 1/2 <= a <= 10.1 in float (the single-precision FPU cores' erff and erfcf; the
+ * trigonometric note, section 13): e^(-a^2) from a^2 as an exact pair (__libc_fast_expf_pair_lo; -a^2 - k ln2 is exact,
+ * k ln2's high part having 21 bits), R from the table as c0 + c1 t + t^2 Q(t) with c0 a pair and c0 + c1 t exact, above 3
+ * as v G(v^2) with v = 1/a and its remainder; the two pairs multiplied with the leading product's error by a fused
+ * multiply-add
+ */
+static inline float __libc_fast_erfcf_kernel(float a, int *k, float *lo)
+{
+	float z = a * a;
+	float z_lo = __builtin_fmaf(a, a, -z);
+	float e_lo;
+	float e = __libc_fast_expf_pair_lo(-z, -z_lo, k, &e_lo);
+	const float *c;
+	float t;
+	float q;
+	float r;
+	float r_lo;
+	float v = 1.0f;
+	float v_lo;
+	float m;
+	int i;
+
+	if (a < 3.0f) {
+		i = (int)(2.0f * a) - 1;
+		t = a - (0.75f + 0.5f * (float)i);
+	} else {
+		i = 5;
+		v = 1.0f / a;
+		t = v * v - 0x1.ef4398p-5f;
+	}
+	c = __libc_fast_erfcf_table[i];
+	q = __builtin_fmaf(c[8], t, c[7]);
+	q = __builtin_fmaf(q, t, c[6]);
+	q = __builtin_fmaf(q, t, c[5]);
+	q = __builtin_fmaf(q, t, c[4]);
+	q = __builtin_fmaf(q, t, c[3]);
+	/*
+	 * c0 + c1 t exactly (the product's error by a fused multiply-add, the sum by a two-sum): c1 t reaches a third of R,
+	 * and rounding it with the rest measured 1.06 ulp of erfcf; t^2 Q is below a tenth of R
+	 */
+	m = c[2] * t;
+	r = __libc_fast_two_sum(c[0], m, &r_lo);
+	r_lo = r_lo + (c[1] + __builtin_fmaf(c[2], t, -m) + t * t * q);
+	if (i == 5) {
+		/* R = v G(w), v's remainder by a fused multiply-add */
+		v_lo = __builtin_fmaf(-v, a, 1.0f) / a;
+		m = v * r;
+		r_lo = __builtin_fmaf(v, r, -m) + __builtin_fmaf(v, r_lo, v_lo * r);
+		r = m;
+	}
+	m = e * r;
+	*lo = __builtin_fmaf(e, r, -m) + __builtin_fmaf(e, r_lo, e_lo * r);
+	return m;
+}
+
+/* erf x / x - 2/sqrt(pi) over x^2 for |x| < 0.875, degree 5 in z = x^2 fitted here (the series' relative error 2^-31.2) */
+static inline float __libc_fast_erff_tail(float z)
+{
+	float q = __builtin_fmaf(z, 0x1.67e2bap-14f, -0x1.ad4c58p-11f);
+
+	q = __builtin_fmaf(z, q, 0x1.5517b4p-8f);
+	q = __builtin_fmaf(z, q, -0x1.b815eep-6f);
+	q = __builtin_fmaf(z, q, 0x1.ce2e56p-4f);
+	return __builtin_fmaf(z, q, -0x1.812744p-2f);
 }
 
 #endif /* _MATH_FAST_H */

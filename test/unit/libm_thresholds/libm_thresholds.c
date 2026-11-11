@@ -387,6 +387,32 @@ static void check_hyperbolic(void)
 	QUIET(within_ulps(atanhf(0x1.000002p-1f), 0x1.193eaa557add2p-1, 1.5));
 }
 
+static void check_error_functions(void)
+{
+	/* C23 F.10.5: the zeros with their signs, the infinities, NaN quietly, 1 and 2 beyond the ends, underflow */
+	QUIET(is_positive_zero(erff(0.0f)) && is_negative_zero(erff(-0.0f)) && erff(INFINITY) == 1.0f && erff(-INFINITY) == -1.0f && erff(4.0f) == 1.0f && erff(-10.0f) == -1.0f && isnan(erff(NAN)));
+	QUIET(erfcf(0.0f) == 1.0f && erfcf(-0.0f) == 1.0f && is_positive_zero(erfcf(INFINITY)) && erfcf(-INFINITY) == 2.0f && erfcf(-4.0f) == 2.0f && isnan(erfcf(NAN)));
+	RAISES(is_positive_zero(erfcf(10.5f)) && is_positive_zero(erfcf(100.0f)), FE_UNDERFLOW);
+	/*
+	 * Each side of every edge (erff's series at 2^-13 and 1/2, the pieces at 1, 1.5, 2, 2.5, 3 and the end at 3.92; erfcf's
+	 * at 2^-26, +-1/2, the pieces, 3 and -3.9), within the fast contract's bounds (1.5 ulp for erff, 1 for erfcf)
+	 */
+	QUIET(within_ulps(erff(0x1.fffffep-14f), 0x1.20dd73cb39cdbp-13, 1.5) && within_ulps(erff(0x1.000002p-13f), 0x1.20dd772dd22bep-13, 1.5) && within_ulps(erff(0x1.fffffep-2f), 0x1.0a7ef4e096f7cp-1, 1.5));
+	QUIET(within_ulps(erff(0x1.000002p-1f), 0x1.0a7ef7837ea69p-1, 1.5) && within_ulps(erff(0x1.fffffep-1f), 0x1.af76799f878f9p-1, 1.5) && within_ulps(erff(0x1.000002p+0f), 0x1.af767c1d2275fp-1, 1.5));
+	QUIET(within_ulps(erff(0x1.7ffffep+0f), 0x1.eea554f76ecffp-1, 1.5) && within_ulps(erff(0x1.800002p+0f), 0x1.eea555eb00893p-1, 1.5) && within_ulps(erff(0x1.fffffep+0f), 0x1.fd9ae12d4fa3fp-1, 1.5));
+	QUIET(within_ulps(erff(0x1.000002p+1f), 0x1.fd9ae16cccd0bp-1, 1.5) && within_ulps(erff(0x1.3ffffep+1f), 0x1.ffcaa8f053b22p-1, 1.5) && within_ulps(erff(0x1.400002p+1f), 0x1.ffcaa8f93fcadp-1, 1.5));
+	QUIET(within_ulps(erff(0x1.7ffffep+1f), 0x1.fffd1ac3ca5d6p-1, 1.5) && within_ulps(erff(0x1.800002p+1f), 0x1.fffd1ac45c61dp-1, 1.5) && within_ulps(erff(0x1.f5c28ep+1f), 0x1.ffffff01a3185p-1, 1.5));
+	QUIET(within_ulps(erff(0x1.f5c292p+1f), 0x1.ffffff01a3588p-1, 1.5) && within_ulps(erff(-0x1.bffffep-1f), -0x1.917248450d998p-1, 1.5) && within_ulps(erff(-0x1.c00002p-1f), -0x1.91724a5e645d6p-1, 1.5));
+	QUIET(within_ulps(erfcf(0x1.fffffep-27f), 0x1.ffffff6f91461p-1, 1) && within_ulps(erfcf(0x1.000002p-26f), 0x1.ffffff6f91446p-1, 1) && within_ulps(erfcf(0x1.fffffep-2f), 0x1.eb02163ed2107p-2, 1));
+	QUIET(within_ulps(erfcf(0x1.000002p-1f), 0x1.eb0210f902b2fp-2, 1) && within_ulps(erfcf(-0x1.fffffep-2f), 0x1.853f7a704b7bep+0, 1) && within_ulps(erfcf(-0x1.000002p-1f), 0x1.853f7bc1bf534p+0, 1));
+	QUIET(within_ulps(erfcf(0x1.fffffep-1f), 0x1.42261981e1c1dp-3, 1) && within_ulps(erfcf(0x1.000002p+0f), 0x1.42260f8b76284p-3, 1) && within_ulps(erfcf(0x1.fffffep+0f), 0x1.328f69582e052p-8, 1));
+	QUIET(within_ulps(erfcf(0x1.000002p+1f), 0x1.328f499997a6ep-8, 1) && within_ulps(erfcf(0x1.7ffffep+1f), 0x1.729e1ad1530ffp-16, 1) && within_ulps(erfcf(0x1.800002p+1f), 0x1.729dd1cf18a16p-16, 1));
+	QUIET(within_ulps(erfcf(0x1.bffffep+1f), 0x1.8ef2d6ecbe42cp-21, 1) && within_ulps(erfcf(0x1.c00002p+1f), 0x1.8ef27c5661bc5p-21, 1) && within_ulps(erfcf(-0x1.f33332p+1f), 0x1.ffffff6a91796p+0, 1));
+	QUIET(within_ulps(erfcf(-0x1.f33336p+1f), 0x1.ffffff6a919efp+0, 1));
+	/* The subnormal results near 9.2 and 10 (underflow is raised, so accuracy only) */
+	CHECK(within_ulps(erfcf(0x1.266664p+3f), 0x1.cee509d8309dp-127, 1) && within_ulps(erfcf(0x1.266668p+3f), 0x1.cee0dafd0fa85p-127, 1) && within_ulps(erfcf(0x1.3ffffep+3f), 0x1.7d8c5e7556c84p-149, 1) && within_ulps(erfcf(0x1.400002p+3f), 0x1.7d889fe214adbp-149, 1));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -399,6 +425,7 @@ int main(void)
 	check_trigonometric();
 	check_inverse_trigonometric();
 	check_hyperbolic();
+	check_error_functions();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

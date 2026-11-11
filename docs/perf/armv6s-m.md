@@ -1304,3 +1304,7 @@ The fast files are for the FPU cores; the cores without an FPU follow in P11.04f
 ## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
 
 Unchanged here: the cores without an FPU follow in P11.04g (D177).
+
+## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
+
+Unchanged here: the cores without an FPU follow in P11.04e (D178).
