@@ -1123,3 +1123,11 @@ The float-only `sp-nearest/fast/erff.c` over a pair e^(-x^2) R(x) kernel (D178);
 | Function | speed | fast | change |
 |---|---:|---:|---:|
 | `erff` | 1383 | 123 | -91 % |
+
+## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
+
+The float-only `sp-nearest/fast/erfcf.c`: a pair kernel good to 2^-32.3 and a rounding test that leaves 1.5 % of arguments to the float-float code, so every result stays correctly rounded (D179). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erfcf` | 1224 | 233 | -81 % |

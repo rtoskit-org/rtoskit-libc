@@ -318,10 +318,15 @@ to about 2^-32 for it to pay, a sub-step of its own.
   x86_64, 796 → 123 on armv7e-m-dp). Every float: `erff` at most 0.7905
   ulp; `erfcf` correctly rounded in every direction (D178).
 
-### P11.04d2 — `erfcf` on the single-precision FPU cores  `[ ]`
-- [ ] A pair-accurate e^(-x^2) and R(x) (about 2^-32) for a rounding test with
-  the float-float code as the fallback; research, implementation, tests
-  (every float in every rounding direction correctly rounded), gains.
+### P11.04d2 — `erfcf` on the single-precision FPU cores  `[x]`
+- [x] A pair-accurate e^(-x^2) and R(x) for a rounding test with the
+  float-float code as the fallback; research (the note, section 15):
+  e^(-x^2) from a 2^(j/32) pair table, R in degree-9 pieces with five pair
+  coefficients, every term and cross term exact (2^-32.3 over every
+  argument), the test at 2^-31 (1.5 % fall back); implementation, tests
+  (`libm_thresholds`: the regressions the sweeps found, exactly), gains
+  (`erfcf` 1224 → 233 on armv7e-m and armv8-m.main). Every float correctly
+  rounded (these cores round to nearest only, D57) (D179).
 
 ### P11.04e — The cores without an FPU: the trigonometric functions and `erff`  `[ ]`
 - [ ] `nofp/fast/` variants of `nofp/speed`'s fixed-point `sinf`, `cosf`,

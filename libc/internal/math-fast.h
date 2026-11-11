@@ -935,4 +935,112 @@ static inline float __libc_fast_erff_tail(float z)
 	return __builtin_fmaf(z, q, -0x1.812744p-2f);
 }
 
+/* 2^(j/32) as float pairs, and R(x) = erfc(x) e^(x^2) as degree-9 pieces (libc/math/sp-nearest/fast/) */
+extern const float __libc_fast_exp2f_table[32][2];
+extern const float __libc_fast_erfcf_r_table[7][15];
+
+/* r + p as a pair, the sum's error and p's product error e added to *r_lo: one term of the accurate R below */
+static inline float __libc_fast_add_term(float r, float *r_lo, float p, float e)
+{
+	float error;
+	float sum = __libc_fast_two_sum(r, p, &error);
+
+	*r_lo += error + e;
+	return sum;
+}
+
+/*
+ * erfc a = 2^k (return + *lo) for 0 <= a < 9.2 in float, to about 2^-32 relative, for a rounding test (the
+ * single-precision FPU cores' erfcf; the trigonometric note, section 15). e^(-a^2): a^2 as an exact pair, n = round(-a^2
+ * 32/ln2), u = -a^2 - n ln2/32 with the high product exact (ln2/32's float has its last bit at 2^-25, |u| <= ln2/64), and
+ * e^u = 1 + u + u^2/2 + u^3/6 + u^4/24 (the next term 2^-39.6) times 2^(j/32) from the table as pairs, 2^((n - j)/32) =
+ * 2^k. R from the table: c0 + c1 t + ... + c4 t^4 with each coefficient a pair, each term's product error by a fused
+ * multiply-add and each sum by a two-sum (c4 t^4 reaches 2^-9.7 of R, and rounding it with the rest measured 2^-30.7),
+ * then t^5 Q(t) in float (2^-12.5 of R); above 3, R =
+ * v G(v^2) with v = 1/a and its remainder. The two pairs multiplied with the leading product's error by a fused
+ * multiply-add and every cross term.
+ */
+static inline float __libc_fast_erfcf_accurate(float a, int *k, float *lo)
+{
+	float z = a * a;
+	float z_lo = __builtin_fmaf(a, a, -z);
+	float nf = __builtin_fmaf(-z, 0x1.715476p+5f, 0x1.8p23f) - 0x1.8p23f;
+	float u = __builtin_fmaf(-nf, 0x1.62e430p-6f, -z);
+	float u_lo = __builtin_fmaf(-nf, -0x1.05c610p-34f, -z_lo);
+	int n = (int)nf;
+	const float *table = __libc_fast_exp2f_table[n & 31];
+	const float *c;
+	float error;
+	float p = __libc_fast_two_sum(1.0f, u, &error);
+	/* The powers from u + u_lo: u_lo (a^2's rounding and n ln2/32's low part) reaches 4e-5 of u, and u_hi^2 alone cost 2^-29.6 */
+	float w_u = u + u_lo;
+	float tail = error + __builtin_fmaf(w_u * w_u, __builtin_fmaf(w_u, __builtin_fmaf(w_u, 0x1.555556p-5f, 0x1.555556p-3f), 0.5f), u_lo);
+	float e = table[0] * p;
+	float e_lo = __builtin_fmaf(table[0], p, -e) + __builtin_fmaf(table[0], tail, table[1] * p);
+	float t;
+	float t_lo;
+	float tt;
+	float tt_lo;
+	float t3;
+	float t3_lo;
+	float t4;
+	float t4_lo;
+	float q;
+	float r;
+	float r_lo;
+	float v = 1.0f;
+	float v_lo = 0.0f;
+	float w;
+	float m;
+	int i;
+
+	/* (n - j)/32 exactly, n being negative or zero */
+	*k = (n - (n & 31)) / 32;
+	/*
+	 * t = a - c, or w - c with w = 1/a^2, as a pair by a two-sum: a - 1/4 is inexact below 1/8 (no Sterbenz), and w is a
+	 * pair itself (v^2 + 2 v v_lo); rounding t cost 2^-27 of R (measured); t_lo enters through R'(t) below
+	 */
+	if (a < 3.0f) {
+		i = (int)(2.0f * a);
+		t = __libc_fast_two_sum(a, -(0.25f + 0.5f * (float)i), &t_lo);
+	} else {
+		i = 6;
+		v = 1.0f / a;
+		v_lo = __builtin_fmaf(-v, a, 1.0f) / a;
+		w = v * v;
+		t = __libc_fast_two_sum(w, -0x1.f7811ap-5f, &t_lo);
+		t_lo += __builtin_fmaf(v, v, -w) + 2.0f * v * v_lo;
+	}
+	c = __libc_fast_erfcf_r_table[i];
+	q = __builtin_fmaf(c[14], t, c[13]);
+	q = __builtin_fmaf(q, t, c[12]);
+	q = __builtin_fmaf(q, t, c[11]);
+	q = __builtin_fmaf(q, t, c[10]);
+	tt = t * t;
+	tt_lo = __builtin_fmaf(t, t, -tt);
+	t3 = tt * t;
+	t3_lo = __builtin_fmaf(tt, t, -t3) + tt_lo * t;
+	t4 = tt * tt;
+	t4_lo = __builtin_fmaf(tt, tt, -t4) + 2.0f * tt * tt_lo;
+	r_lo = c[1] + __builtin_fmaf(t4 * t, q, t_lo * __builtin_fmaf(t, __builtin_fmaf(t, 3.0f * c[6], 2.0f * c[4]), c[2]));
+	m = c[2] * t;
+	r = __libc_fast_add_term(c[0], &r_lo, m, __builtin_fmaf(c[2], t, -m) + c[3] * t);
+	m = c[4] * tt;
+	r = __libc_fast_add_term(r, &r_lo, m, __builtin_fmaf(c[4], tt, -m) + __builtin_fmaf(c[4], tt_lo, c[5] * tt));
+	m = c[6] * t3;
+	r = __libc_fast_add_term(r, &r_lo, m, __builtin_fmaf(c[6], t3, -m) + __builtin_fmaf(c[6], t3_lo, c[7] * t3));
+	m = c[8] * t4;
+	r = __libc_fast_add_term(r, &r_lo, m, __builtin_fmaf(c[8], t4, -m) + __builtin_fmaf(c[8], t4_lo, c[9] * t4));
+	if (i == 6) {
+		/* R = v G(w), with v's remainder */
+		m = v * r;
+		r_lo = __builtin_fmaf(v, r, -m) + __builtin_fmaf(v, r_lo, v_lo * r);
+		r = m;
+	}
+	/* Both pairs are unnormalised (e_lo carries e^u's u^2/2, r_lo R's t^4 Q, 2^-13 and 2^-11 of them): e_lo r_lo counts too */
+	m = e * r;
+	*lo = __builtin_fmaf(e, r, -m) + __builtin_fmaf(e, r_lo, __builtin_fmaf(e_lo, r, e_lo * r_lo));
+	return m;
+}
+
 #endif /* _MATH_FAST_H */
