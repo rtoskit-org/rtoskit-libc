@@ -1064,3 +1064,18 @@ Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D173).
 ## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
 
 Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D174).
+
+## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
+
+The float-only `sp-nearest/fast/` files: Cody–Waite below 64, a π/32 table kernel (D175). Instructions per call (throughput), speed and fast; `test/bench/math` gains `sinpi`, `cospi`, `tanpi` in every
+build type, release and speed otherwise unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinf` | 574 | 126 | -78 % |
+| `cosf` | 566 | 121 | -79 % |
+| `sincosf` | 784 | 208 | -73 % |
+| `tanf` | 792 | 212 | -73 % |
+| `sinpif` | 261 | 112 | -57 % |
+| `cospif` | 254 | 109 | -57 % |
+| `tanpif` | 479 | 203 | -58 % |

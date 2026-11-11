@@ -904,3 +904,8 @@ release and speed unchanged.
 | `cbrtf` | 3,545 | 162 | -95 % |
 
 The m1 forms' tiny path without a float constant costs `exp2m1f` 150 → 151, `exp10m1f` 152 → 153 (fast, P11.03f → P11.03g, within the 1 % gate).
+
+## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
+
+Unchanged here: the cores without an FPU follow in P11.04e (D175). `test/bench/math` gains `sinpi`, `cospi`, `tanpi` in every
+build type.

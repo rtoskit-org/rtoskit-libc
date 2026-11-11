@@ -256,15 +256,53 @@ where the gain is, one family per sub-step.
   8,590 → 630 on armv6-m; `log1pf` 6,386 → 254 on armv7-m). Every argument on the host: at most 0.5779
   ulp (D174).
 
-## P11.04 — Float trigonometric, inverse and hyperbolic functions  `[ ]`
-- [ ] Research: `docs/research/libm-fast-float-trig.md` (Cody–Waite in float
-  or double per core for small |x|, the D136 integer reduction above,
-  polynomial degrees for 1 ulp; `atanf`/`atan2f`/`asinf`/`acosf`;
-  hyperbolic functions over the fast `expf`/`log1pf`; `erff`).
-- [ ] `sinf`, `cosf`, `sincosf`, `tanf`, the `pi` forms, `asinf`, `acosf`,
-  `atanf`, `atan2f`, `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`,
-  `atanhf`, `erff`.
-- [ ] Tests, gains and members recorded.
+## P11.04 — Float trigonometric, inverse and hyperbolic functions
+
+Split (CLAUDE.md workflow), as P11.03: sixteen functions and their `pi`
+forms in three evaluations (double, float, fixed point), one family per
+sub-step, the cores without an FPU last. Research note:
+`docs/research/libm-fast-float-trig.md`, extended by each sub-step (Cody–Waite
+in float or double per core for small |x|, the D136 integer reduction above,
+polynomial degrees for the fast bounds). Every sub-step: the libm vectors at
+the fast bounds, the special-value and threshold cases (`libm_thresholds`),
+an exhaustive host sweep of each new evaluation, `make check` in all four
+build types, the fast bench re-locked with the gains and the members
+recorded. Speed today (instructions per call): `sinf` 337 on x86_64, 187 on
+armv7e-m-dp, 575 on armv7e-m, 2,933 on armv6-m; `asinf` 505, 238, 315,
+23,011; `sinhf` 334, 223, 267, 15,310.
+
+### P11.04a — `sinf`, `cosf`, `sincosf`, `tanf`, `sinpif`, `cospif`, `tanpif` on the FPU cores  `[x]`
+- [x] Research (the note, sections 1–5): Cody–Waite in double below 2^20 on
+  the double-FPU cores, the strict integer reduction and a float table
+  kernel on the single-precision ones; implementation, tests
+  (`libm_thresholds`: special values, the π forms' exact cases and poles,
+  each side of the reductions' edges), gains (`sinf` 575 → 128 on armv7e-m,
+  187 → 58 on armv7e-m-dp, 337 → 63 on x86_64). Every finite
+  float: double at most 0.5002 ulp, float at most 0.75 (D175).
+
+### P11.04b — `asinf`, `acosf`, `atanf`, `atan2f` and their `pi` forms on the FPU cores  `[ ]`
+- [ ] Research (the note), implementation, tests, gains.
+
+### P11.04c — `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` on the FPU cores  `[ ]`
+- [ ] Over the fast `expf`, `expm1f`, `logf`, `log1pf` kernels (P11.03);
+  research, implementation, tests, gains.
+
+### P11.04d — `erff`, `erfcf` on the FPU cores  `[ ]`
+- [ ] Research, implementation, tests, gains.
+
+### P11.04e — The cores without an FPU: the trigonometric functions and `erff`  `[ ]`
+- [ ] `nofp/fast/` variants of `nofp/speed`'s fixed-point `sinf`, `cosf`,
+  `sincosf`, `tanf`, `erff`, `erfcf` without the rounding test (as
+  P11.03e), and the `pi` forms; tests, gains.
+
+### P11.04f — The cores without an FPU: the inverse trigonometric functions  `[ ]`
+- [ ] Fixed-point `asinf`, `acosf`, `atanf`, `atan2f` and their `pi` forms
+  (float-float on soft-float today, 17,750–23,828 instructions on
+  armv6-m); tests, gains.
+
+### P11.04g — The cores without an FPU: the hyperbolic functions  `[ ]`
+- [ ] Over P11.03e–g's fixed-point exp, m1, log and p1 cores (15,181–19,926
+  instructions on armv6-m today); tests, gains.
 
 ## P11.05 — Double functions  `[ ]`
 - [ ] Research: `docs/research/libm-fast-double.md`: on the soft-double cores

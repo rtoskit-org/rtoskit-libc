@@ -972,3 +972,18 @@ Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D173).
 ## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
 
 Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D174).
+
+## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
+
+The double `libc/math/fast/` files: Cody–Waite by π/2 in double, Taylor polynomials, one rounding (D175). Instructions per call (throughput), speed and fast; `test/bench/math` gains `sinpi`, `cospi`, `tanpi` in every
+build type, release and speed otherwise unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinf` | 187 | 58 | -69 % |
+| `cosf` | 180 | 51 | -72 % |
+| `sincosf` | 270 | 86 | -68 % |
+| `tanf` | 225 | 69 | -69 % |
+| `sinpif` | 223 | 56 | -75 % |
+| `cospif` | 219 | 58 | -73 % |
+| `tanpif` | 257 | 75 | -71 % |

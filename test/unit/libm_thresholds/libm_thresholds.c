@@ -266,6 +266,33 @@ static void check_fixed_edges(void)
 	QUIET(near(cbrtf(0x1.fffffep+2f), 2.0f) && near(cbrtf(8.0f), 2.0f) && near(cbrtf(0x1.8p-148f), 0x1.d12ed0p-50f) && near(cbrtf(0x1.fffffcp-127f), 0x1.fffffep-43f) && near(cbrtf(-0x1p-149f), -0x1.428a30p-50f));
 }
 
+static void check_trigonometric(void)
+{
+	/* C23 F.10.1.6, .5, .7 and the pi forms: NaN quietly, +-infinity invalid, +-0 kept by sin and tan, cos(+-0) = 1 */
+	QUIET(isnan(sinf(NAN)) && isnan(cosf(NAN)) && isnan(tanf(NAN)) && isnan(sinpif(NAN)) && isnan(cospif(NAN)) && isnan(tanpif(NAN)));
+	RAISES(isnan(sinf(INFINITY)) && isnan(cosf(-INFINITY)) && isnan(tanf(INFINITY)) && isnan(sinpif(-INFINITY)) && isnan(cospif(INFINITY)) && isnan(tanpif(INFINITY)), FE_INVALID);
+	QUIET(is_positive_zero(sinf(0.0f)) && is_negative_zero(sinf(-0.0f)) && is_one(cosf(0.0f)) && is_one(cosf(-0.0f)) && is_negative_zero(tanf(-0.0f)));
+	QUIET(is_positive_zero(sinpif(0.0f)) && is_negative_zero(sinpif(-0.0f)) && is_one(cospif(-0.0f)) && is_negative_zero(tanpif(-0.0f)));
+	/* The pi forms' exact cases: the multiples of 1/2, and every float from 2^23 up (an integer) */
+	QUIET(is_positive_zero(sinpif(1.0f)) && is_negative_zero(sinpif(-1.0f)) && sinpif(0.5f) == 1.0f && sinpif(-0.5f) == -1.0f && sinpif(2.5f) == 1.0f);
+	QUIET(is_positive_zero(sinpif(0x1p23f)) && is_negative_zero(sinpif(-0x1.000002p23f)) && is_positive_zero(cospif(0.5f)) && cospif(1.0f) == -1.0f);
+	QUIET(cospif(0x1p24f) == 1.0f && cospif(0x1.000002p23f) == -1.0f && is_positive_zero(tanpif(2.0f)) && is_negative_zero(tanpif(1.0f)));
+	RAISES(tanpif(0.5f) == INFINITY && tanpif(1.5f) == -INFINITY && tanpif(-0.5f) == -INFINITY, FE_DIVBYZERO);
+	/* Each side of the reductions' edges (2^20 for the double cores' Cody-Waite, 2^-12 and 2^-6 for the float cores), pi itself, and beyond 2^24 */
+	QUIET(near(sinf(0x1.fffffep+19f), 0x1.156658p-2f) && near(sinf(0x1p+20f), 0x1.526cccp-2f) && near(sinf(0x1.fffffep-7f), 0x1.fffaa8p-7f) && near(sinf(0x1p-6f), 0x1.fffaaap-7f));
+	QUIET(near(sinf(0x1.fffffep-13f), 0x1.fffffep-13f) && near(sinf(0x1p-12f), 0x1p-12f) && near(sinf(0x1.921fb6p+1f), -0x1.777a5cp-24f) && near(sinf(0x1.921fb6p+0f), 1.0f) && near(sinf(0x1.000002p+24f), 0x1.c9b0c8p-1f));
+	QUIET(near(cosf(0x1.fffffep+19f), 0x1.ecdaf4p-1f) && near(cosf(0x1p+20f), 0x1.e33adap-1f) && near(cosf(0x1.fffffep-7f), 0x1.fff000p-1f) && near(cosf(0x1p-6f), 0x1.fff000p-1f));
+	QUIET(near(cosf(0x1.921fb6p+1f), -1.0f) && near(cosf(0x1.921fb6p+0f), -0x1.777a5cp-25f) && near(cosf(0x1.000002p+24f), 0x1.caf854p-2f));
+	QUIET(near(tanf(0x1.fffffep+19f), 0x1.202cdcp-2f) && near(tanf(0x1p+20f), 0x1.6692e6p-2f) && near(tanf(0x1.fffffep-7f), 0x1.000554p-6f) && near(tanf(0x1p-6f), 0x1.000556p-6f));
+	/* Each side of 64, where the float cores' Cody-Waite reduction hands over, and its closest float to a multiple of pi/2 */
+	QUIET(near(sinf(0x1.fffffep+5f), 0x1.d70d74p-1f) && near(cosf(0x1.fffffep+5f), 0x1.9143f2p-2f) && near(sinf(0x1.000000p+6f), 0x1.d70da8p-1f) && near(cosf(0x1.000000p+6f), 0x1.914306p-2f) && near(sinf(0x1.2d97c8p+2f), -0x1.000000p+0f) && near(cosf(0x1.2d97c8p+2f), 0x1.99bc5cp-27f));
+	QUIET(near(tanf(0x1.921fb6p+1f), 0x1.777a5cp-24f) && near(tanf(0x1.921fb6p+0f), -0x1.5d1494p+24f) && near(tanf(0x1.000002p+24f), 0x1.fe929cp+0f));
+	QUIET(near(sinpif(0.25f), 0x1.6a09e6p-1f) && near(sinpif(0x1.99999ap-4f), 0x1.3c6ef4p-2f) && near(sinpif(-0x1.333334p-2f), -0x1.9e377ap-1f) && near(sinpif(1.75f), -0x1.6a09e6p-1f));
+	QUIET(near(sinpif(1000.125f), 0x1.87de2ap-2f) && near(sinpif(0x1p-100f), 0x1.921fb6p-99f) && near(cospif(0x1.99999ap-4f), 0x1.e6f0e2p-1f) && near(cospif(-0x1.333334p-2f), 0x1.2cf230p-1f));
+	QUIET(near(cospif(1000.125f), 0x1.d906bcp-1f) && near(tanpif(0.25f), 1.0f) && near(tanpif(0x1.99999ap-4f), 0x1.4cb7c0p-2f) && near(tanpif(-0x1.333334p-2f), -0x1.605a92p+0f));
+	QUIET(near(tanpif(1.75f), -1.0f) && near(tanpif(1000.125f), 0x1.a8279ap-2f) && near(tanpif(0x1p-100f), 0x1.921fb6p-99f));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -275,6 +302,7 @@ int main(void)
 	check_plus_one();
 	check_cube_root();
 	check_fixed_edges();
+	check_trigonometric();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");
