@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "fixed-m1.h"
+#include "fixed-fast.h"
 
 /*
  * The fast expm1f of the cores without an FPU (PLAN D162, D173): below 1/8 the fixed-point series on x itself (its

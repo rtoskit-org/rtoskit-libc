@@ -890,3 +890,17 @@ release and speed unchanged.
 | `expm1f` | 6,065 | 151 | -98 % |
 | `exp2m1f` | 4,979 | 150 | -97 % |
 | `exp10m1f` | 6,135 | 152 | -98 % |
+
+## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
+
+`nofp/fast/`: fixed-point p1 forms over the log2 core and an integer `cbrtf` (D174). Instructions per call
+(throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `log1pf` | 6,386 | 254 | -96 % |
+| `log2p1f` | 5,545 | 242 | -96 % |
+| `log10p1f` | 6,619 | 255 | -96 % |
+| `cbrtf` | 3,545 | 162 | -95 % |
+
+The m1 forms' tiny path without a float constant costs `exp2m1f` 150 → 151, `exp10m1f` 152 → 153 (fast, P11.03f → P11.03g, within the 1 % gate).

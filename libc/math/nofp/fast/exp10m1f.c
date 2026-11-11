@@ -15,7 +15,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "fixed-m1.h"
+#include "fixed-fast.h"
 
 /*
  * The fast exp10m1f of the cores without an FPU (PLAN D162, D173): below 0.054, the fixed-point series on u = x ln 10
@@ -34,9 +34,15 @@ float exp10m1f(float x)
 	if (magnitude < 0x3d5e0000) {
 		uint64_t product;
 
-		/* Below 2^-62, x ln 10 rounded once, +-0 and the subnormal results included */
-		if (magnitude < 0x20800000)
-			return x * 0x1.26bb1cp+1f;
+		/*
+		 * Below 2^-62, e^u - 1 is u = x ln 10 to far below an ulp: x's significand (subnormals normalised) times
+		 * ln 10 to 64 bits, rounded once, subnormal results included; +-0 keeps its sign
+		 */
+		if (magnitude < 0x20800000) {
+			if (magnitude == 0)
+				return x;
+			return __libc_fixed_tiny(magnitude, negative, 0x935d8ddd, 0xaaa8ac17, -61);
+		}
 		/* u = significand ln 10 2^-32 2^(exponent - 180), the product in [2^54, 2^56) */
 		product = __libc_fixed_wide(significand, 0x935d8ddd) + (__libc_fixed_wide(significand, 0xaaa8ac17) >> 32);
 		if ((product >> 55) != 0)
