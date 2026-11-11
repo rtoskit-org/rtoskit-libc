@@ -266,3 +266,9 @@ Release and speed: no growth (`size-report diff`); the speed and fast budgets ho
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
 speed → fast, bytes; several speed members call a shared core or the double function, not counted): none: fast is the speed flavour here.
+
+## P11.03e — The cores without an FPU: fixed point without the test (D172)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed
+→ fast, bytes; the speed files' float-float fallback and its cores, which fast leaves out of the logarithms, not
+counted): `expf.o` 448 → 432, `exp2f.o` 232 → 212, `exp10f.o` 312 → 408, `logf.o` 452 → 196, `log2f.o` 212 → 152, `log10f.o` 452 → 196, `powf.o` 978 → 954.

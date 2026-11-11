@@ -460,3 +460,66 @@ Instructions per call (speed → fast):
 | `cbrtf` | 150 → 71 | 135 → 73 | 149 → 81 |
 
 On armv8-m.main `cbrtf` is 78. The cores without an FPU keep the speed files (D168, P11.03e).
+
+## 15. The cores without an FPU: the fixed-point files without their test (P11.03e)
+
+On armv6-m, armv6s-m and armv7-m the speed flavour's `expf`, `exp2f`,
+`logf`, `log2f`, `log10f` and `powf` are already fixed point
+(`nofp/speed/`, `docs/research/libm-fixed.md`, PLAN D86, D115): the exp2 and
+log2 cores give the result with 9 guard bits, within 6 (exp2) or 8 (log2)
+units of 2^-9 ulp, and a rounding test sends the results within that
+distance of a halfway point to the float-float path. The fast contract
+needs no correct rounding, so `nofp/fast/` takes the same paths and rounds
+to nearest without the test (`__libc_fixed_nearest`): at most 0.5 + 8/512
+ulp. The logarithms' fixed path then covers every positive finite x, and
+their float-float code goes; the exponentials keep it for the arguments the
+fixed path does not cover (subnormal results, beside the overflow), and
+`powf` for those and the carry into the infinities.
+
+`exp10f` was float-float on soft-float on these cores (11,103 instructions
+on armv6-m against `expf`'s 375): `nofp/fast/exp10f.c` is `expf`'s fixed
+path with log2 10 for 1/ln2 (0xd49a784bcd1b8afe 2^-62, the product below
+2^56 as before), for |x| < 37.5 (|t| < 125, a normal result).
+
+The arch files list `nofp` in `LIBC_MATH_FAST_LAYERS` (D168); `sp-nearest`
+stays off, measured: with the float-only files of P11.03a–d (their fused
+multiply-adds are software `fmaf` calls here) against speed's float-float,
+
+| Function | armv6-m | armv7-m |
+|---|---:|---:|
+| `expm1f` | 12,310 → 14,544 | 6,065 → 6,396 |
+| `exp2m1f` | 10,068 → 14,220 | 4,979 → 6,229 |
+| `exp10m1f` | 12,406 → 18,424 | 6,135 → 8,111 |
+| `log1pf` | 12,789 → 10,690 | 6,386 → 4,761 |
+| `log2p1f` | 11,003 → 11,284 | 5,545 → 4,992 |
+| `log10p1f` | 13,202 → 13,883 | 6,619 → 6,095 |
+| `cbrtf` | 8,590 → 7,985 | 3,545 → 3,243 |
+
+slower for the m1 forms, a few percent to a quarter faster for the others:
+too little to take a layer for, and P11.03f and P11.03g write fixed-point
+ones (the fixed-point `exp10f` is 30 to 47 times faster than either).
+
+Measured on the host (the cores compiled natively, the multiply in C as
+on armv7-m), every argument of the fixed path:
+
+| Function | Arguments | max ulp |
+|---|---:|---:|
+| `expf` | 2,237,399,042 (|x| < 87) | 0.5051 |
+| `exp2f` | 2,247,596,444 (|x| < 125.9) | 0.5050 |
+| `exp10f` | 2,217,423,670 (|x| < 37.4) | 0.5051 |
+| `logf` | every positive float | 0.5062 |
+| `log2f` | every positive float | 0.5060 |
+| `log10f` | every positive float | 0.5062 |
+| `powf` | 1.6 billion samples (section 11's groups) | 0.5052 |
+
+Instructions per call (speed → fast):
+
+| Function | armv6-m, armv6s-m | armv7-m |
+|---|---:|---:|
+| `expf` | 375 → 368 | 125 → 119 |
+| `exp2f` | 316 → 310 | 118 → 112 |
+| `exp10f` | 11,103 → 367 | 5,461 → 117 |
+| `logf` | 2,210 → 670 | 1,026 → 253 |
+| `log2f` | 583 → 577 | 247 → 240 |
+| `log10f` | 678 → 670 | 259 → 253 |
+| `powf` | 1,222 → 1,216 | 374 → 368 |

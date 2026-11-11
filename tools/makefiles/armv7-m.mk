@@ -26,6 +26,8 @@ export LIBC_FENV := soft
 # soft-dp is the double-precision run-time ABI helpers in integers (D99), soft-dp-nodsp its multiplication
 # without UMAAL (D108); soft-int is the conversions to 64-bit integers, in integers (D102)
 export LIBC_MATH_LAYERS := sp sp-nearest nofp soft-sp soft-dp soft-dp-nodsp soft-int dp-fixed
+# The layers whose fast/ directory applies in the fast build type (PLAN D168, D172): the fixed-point nofp files
+export LIBC_MATH_FAST_LAYERS := nofp
 # Hand-written string kernels (libc/string/<kernels>; the first directory with a function wins)
 # per flavour: the speed build type sets LIBC_FLAVOUR (PLAN D69, D70, D73); no thumb2-dsp (D108)
 LIBC_FLAVOUR ?= size

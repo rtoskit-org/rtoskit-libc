@@ -221,11 +221,33 @@ fast bench re-locked with the gains and the members recorded.
   197 → 96, `cbrtf` 149 → 81 on armv7e-m; `expm1f` 264 → 61 on x86_64). Every float:
   double at most 0.5473 ulp, float at most 0.8472 (D171).
 
-### P11.03e — The cores without an FPU  `[ ]`
-- [ ] armv6-m, armv6s-m, armv7-m: fixed-point `nofp/fast/` variants of the
-  `nofp/speed` files where dropping the rounding test and its fallback
-  pays (the bounds allow it); the float-only files of P11.03a–d measured
-  against them on these cores; tests, gains.
+### P11.03e — The cores without an FPU: the fixed-point files without their test  `[x]`
+- [x] armv6-m, armv6s-m, armv7-m: `nofp/fast/` variants of `nofp/speed`'s
+  `expf`, `exp2f`, `logf`, `log2f`, `log10f`, `powf` without the rounding
+  test and its float-float fallback (the fast bounds allow the fixed
+  point's 0.5 + 8/512 ulp; the fallback stays only for what the fixed
+  point does not cover), and a fixed-point `exp10f` over the same exp2
+  core; the float-only files of P11.03a–d measured against them on these
+  cores (the m1 forms slower, the others at most a quarter faster: the
+  layer stays off); tests (`libm_thresholds`: each side of the fixed
+  paths' edges), gains (`exp10f` 11,103 → 367 on
+  armv6-m, 5,461 → 117 on armv7-m; `logf` 2,210 → 670, 1,026 → 253). Every argument of the fixed paths on the
+  host: at most 0.5062 ulp (D172).
+
+Split from one step (P11.03e): on these cores the speed `exp10f`, the m1
+and p1 forms and `cbrtf` are float-float on soft-float, 8,600–13,200
+instructions on armv6-m against `expf`'s 375, so new fixed-point code is
+where the gain is, one family per sub-step.
+
+### P11.03f — The cores without an FPU: the m1 forms  `[ ]`
+- [ ] Fixed-point `expm1f`, `exp2m1f`, `exp10m1f` over the exp2 core, with
+  the relative accuracy near 0 (a series below the cancellation); tests,
+  gains.
+
+### P11.03g — The cores without an FPU: the p1 forms and `cbrtf`  `[ ]`
+- [ ] Fixed-point `log1pf`, `log2p1f`, `log10p1f` over the log2 core (1 + x
+  exact as an integer, a series near 0) and an integer `cbrtf`; tests,
+  gains.
 
 ## P11.04 — Float trigonometric, inverse and hyperbolic functions  `[ ]`
 - [ ] Research: `docs/research/libm-fast-float-trig.md` (Cody–Waite in float

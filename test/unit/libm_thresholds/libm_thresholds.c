@@ -174,9 +174,10 @@ static void check_powers(void)
 	RAISES(is_positive_zero(powf(FLT_MIN, 2.0f)) && is_positive_zero(powf(0x1p-149f, 1.5f)) && is_positive_zero(powf(1.0001f, -1e7f)), FE_UNDERFLOW);
 }
 
+/* x within 2^-21 of a nonzero want, relatively: a ratio, so that no step underflows near FLT_MIN */
 static bool near(float x, float want)
 {
-	return fabsf(x - want) <= 0x1p-21f * fabsf(want);
+	return fabsf(x / want - 1.0f) <= 0x1p-21f;
 }
 
 static void check_minus_one(void)
@@ -240,6 +241,14 @@ static void check_cube_root(void)
 	QUIET(near(cbrtf(FLT_MAX), 0x1.965feap+42f) && near(cbrtf(FLT_MIN), 0x1p-42f) && near(cbrtf(-0x1.fffffep-127f), -0x1p-42f));
 }
 
+/* Each side of where the cores without an FPU leave the fixed-point path for float-float (|x| = 87, 126, 37.5; P11.03e) */
+static void check_fixed_edges(void)
+{
+	QUIET(near(expf(0x1.5bfffep+6f), 0x1.6daf5ap+125f) && near(expf(0x1.5c0002p+6f), 0x1.6db0c8p+125f) && near(expf(-0x1.5bfffep+6f), 0x1.666dc0p-126f));
+	QUIET(near(exp2f(0x1.f7fffep+6f), 0x1.ffff4ep+125f) && near(exp2f(0x1.f80002p+6f), 0x1.000058p+126f));
+	QUIET(near(exp10f(0x1.2bfffep+5f), 0x1.7ca45ap+124f) && near(exp10f(0x1.2c0002p+5f), 0x1.7ca610p+124f) && near(exp10f(-0x1.2c0002p+5f), 0x1.5856aap-125f));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -248,6 +257,7 @@ int main(void)
 	check_minus_one();
 	check_plus_one();
 	check_cube_root();
+	check_fixed_edges();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

@@ -1064,3 +1064,7 @@ The float-only `sp-nearest/fast/` files: the m1 kernel with exact leading terms,
 | `log2p1f` | 186 | 101 | -46 % |
 | `log10p1f` | 197 | 104 | -47 % |
 | `cbrtf` | 149 | 81 | -46 % |
+
+## P11.03e — The cores without an FPU: fixed point without the test (D172)
+
+Unchanged here: `nofp/fast/` applies to the cores without an FPU only (D172).
