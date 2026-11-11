@@ -1119,3 +1119,7 @@ The float-only `sp-nearest/fast/erfcf.c`: a pair kernel good to 2^-32.3 and a ro
 | Function | speed | fast | change |
 |---|---:|---:|---:|
 | `erfcf` | 1224 | 233 | -81 % |
+
+## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
+
+Unchanged here: the FPU cores' trigonometric functions are P11.04a (D180).

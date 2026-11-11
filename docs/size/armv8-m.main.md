@@ -814,3 +814,7 @@ speed → fast, bytes): `erff.o` 220 → 784 (the speed file shares `__libc_erff
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
 speed → fast, bytes): `erfcf.o` 598 → 1678 (with its own copy of the float-float code as the fallback; `__libc_erff_core.o` 378 stays), `__libc_fast_erfcf_r_table.o` new → 420, `__libc_fast_exp2f_table.o` new → 256.
+
+## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
+
+Unchanged here (`size-report diff`; the budgets hold).

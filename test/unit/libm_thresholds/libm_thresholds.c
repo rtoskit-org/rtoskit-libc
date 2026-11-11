@@ -308,6 +308,19 @@ static void check_trigonometric(void)
 	QUIET(near(sinpif(1000.125f), 0x1.87de2ap-2f) && near(sinpif(0x1p-100f), 0x1.921fb6p-99f) && near(cospif(0x1.99999ap-4f), 0x1.e6f0e2p-1f) && near(cospif(-0x1.333334p-2f), 0x1.2cf230p-1f));
 	QUIET(near(cospif(1000.125f), 0x1.d906bcp-1f) && near(tanpif(0.25f), 1.0f) && near(tanpif(0x1.99999ap-4f), 0x1.4cb7c0p-2f) && near(tanpif(-0x1.333334p-2f), -0x1.605a92p+0f));
 	QUIET(near(tanpif(1.75f), -1.0f) && near(tanpif(1000.125f), 0x1.a8279ap-2f) && near(tanpif(0x1p-100f), 0x1.921fb6p-99f));
+	/*
+	 * The fixed-point paths of the cores without an FPU, within 1 ulp: the pi forms each side of 2^-90 (pi x) and 2^18 (32x an
+	 * integer), cospif of 2^-15 (1), next to integers and half-integers (the small-angle path where the kernel declines), and
+	 * sinf and cosf next to multiples of pi and pi/2 (the float-float core)
+	 */
+	QUIET(within_ulp(sinpif(0x1.fffffep-91f), 0x1.921fb3b2231c4p-89) && within_ulp(sinpif(0x1.000002p-90f), 0x1.921fb868823c1p-89) && within_ulp(tanpif(0x1.fffffep-91f), 0x1.921fb3b2231c4p-89) && within_ulp(tanpif(0x1.000002p-90f), 0x1.921fb868823c1p-89));
+	QUIET(within_ulp(sinpif(0x1.fffffep+17f), -0x1.91f65f10dd814p-5) && within_ulp(sinpif(0x1.000002p+18f), 0x1.917a6bc29b42cp-4) && within_ulp(tanpif(0x1.fffffep+17f), -0x1.927278a3b1162p-5) && within_ulp(tanpif(0x1.000002p+18f), 0x1.936bb8c5b2da2p-4));
+	QUIET(within_ulp(cospif(0x1.fffffep-16f), 0x1.ffffffd88586cp-1) && within_ulp(cospif(0x1.000002p-15f), 0x1.ffffffd88585dp-1) && within_ulp(cospif(0x1.fffffep+17f), 0x1.ff621e3796d7ep-1) && within_ulp(cospif(0x1.000002p+18f), 0x1.fd88da3d12526p-1));
+	QUIET(within_ulp(sinpif(0x1.000008p+0f), -0x1.921fb54442297p-20) && within_ulp(cospif(0x1.000008p+0f), -0x1.fffffffffd886p-1) && within_ulp(tanpif(0x1.000008p+0f), 0x1.921fb544441c4p-20) && within_ulp(sinpif(0x1.fffff8p+1f), -0x1.921fb544401bcp-19));
+	QUIET(within_ulp(cospif(0x1.fffff8p+1f), 0x1.fffffffff6216p-1) && within_ulp(tanpif(0x1.fffff8p+1f), -0x1.921fb54448039p-19) && within_ulp(sinpif(0x1.000004p-1f), 0x1.ffffffffffd88p-1) && within_ulp(cospif(0x1.000004p-1f), -0x1.921fb54443134p-22));
+	QUIET(within_ulp(tanpif(0x1.000004p-1f), -0x1.45f306dc9c39cp+21) && within_ulp(sinpif(0x1.7ffffcp+0f), -0x1.ffffffffff621p-1) && within_ulp(cospif(0x1.7ffffcp+0f), -0x1.921fb544426a4p-21) && within_ulp(tanpif(0x1.7ffffcp+0f), 0x1.45f306dc9c5f6p+20));
+	QUIET(within_ulp(sinf(0x1.921fb6p+1f), -0x1.777a5cf72cec6p-24) && within_ulp(cosf(0x1.921fb6p+1f), -0x1.fffffffffffdep-1) && within_ulp(sinf(0x1.921fb6p+2f), 0x1.777a5cf72ceadp-23) && within_ulp(cosf(0x1.921fb6p+2f), 0x1.fffffffffff76p-1));
+	QUIET(within_ulp(sinf(0x1.2d97c8p+2f), -0x1.fffffffffffffp-1) && within_ulp(cosf(0x1.2d97c8p+2f), 0x1.99bc5b961b1adp-27) && within_ulp(sinf(0x1.f6a7a2p+3f), 0x1.2aa70bcb07d3ap-22) && within_ulp(cosf(0x1.f6a7a2p+3f), -0x1.ffffffffffea4p-1));
 }
 
 static void check_inverse_trigonometric(void)
