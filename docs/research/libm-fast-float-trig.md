@@ -307,3 +307,130 @@ Instructions per call (speed → fast):
 | `atan2f` | 599 → 82 | 398 → 78 | 410 → 118 | 402 → 118 |
 
 The cores without an FPU follow in P11.04f.
+
+## 9. The hyperbolic functions on the double-FPU cores: `libc/math/fast/` (P11.04c)
+
+Sources (ideas only, read 2026-11-11 through summaries): §9.1. The fast
+bound is 1.5 ulp for all six (fast-math.md §4); in double they are
+evaluated much better than that, over the P11.03 kernels, and rounded once.
+
+- **sinhf:** below 1/2 the odd Taylor series to x¹¹ (the next term below
+  2^-44 of the result); above, (E − 1/E)/2 with E = e^|x| from
+  `__libc_fast_exp2` (2^-30.5; E − 1/E loses at most a factor 2.2 from 1/2
+  up). From 89.5, and for the infinities, the double `sinh` (overflow).
+- **coshf:** (E + 1/E)/2, a sum of positive terms everywhere.
+- **tanhf:** m/(m + 2) with m = e^(2|x|) − 1: the m1 series below 2|x| =
+  1/8, E − 1 above (from e^(1/8) the subtraction loses three bits of
+  2^-30.5); from 9.5, and the infinities, the double `tanh`.
+- **asinhf:** below 1/4 log1p(|x| + x²/(1 + √(1 + x²))) by
+  `__libc_fast_log1p_double` (the argument's relative accuracy is the double
+  operations'), above log(|x| + √(x² + 1)) by the new
+  `__libc_fast_log_positive` (e ln2 + log m of the split double; x² cannot
+  overflow a double), whose absolute error 2^-52 is far below the result.
+- **acoshf:** log(x + √((x − 1)(x + 1))), both factors exact in double: the
+  sum's rounding is 2^-53 absolute against a result of at least 2^-11.5
+  (x = 1 + 2^-23), so one form serves; x = 1 returns +0 directly.
+- **atanhf:** below 1/8 log1p(2|x|/(1 − |x|))/2 (the relative accuracy
+  holds near 0), above log((1 + |x|)/(1 − |x|))/2, both terms exact.
+  |x| ≥ 1 and NaN go to the double `atanh` (divide-by-zero, invalid).
+- The tiny arguments of `sinhf`, `tanhf`, `asinhf` and `atanhf` (|x| below
+  2^-30) as the other build types (`__libc_math_tinyf`, with the sign of the
+  neglected term).
+
+### 9.1 Sources
+
+- **FreeBSD `e_sinhf.c`, `e_coshf.c`, `s_tanhf.c`, `s_asinhf.c`,
+  `e_acoshf.c`, `e_atanhf.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/e_sinhf.c>
+  and the others in the same directory), float throughout over the float
+  library: sinh by expm1-based forms below 9, half of e^|x| to ln FLT_MAX and
+  an exponential scaled by 1/2 to the overflow threshold; cosh by
+  1 + t²/(2(1 + t)) with t = expm1|x| below ln2/2, (E + 1/E)/2 to 9, then
+  as sinh; tanh by −t/(t + 2) with t = expm1(−2|x|) below 1 and 1 − 2/(t + 2)
+  to 9, then ±1; asinh by log1p(|x| + x²/(1 + √(1 + x²))) below 2, the log of
+  2|x| + 1/(√(x² + 1) + |x|) to 2^28, log|x| + ln2 above; acosh by
+  log1p(t + √(2t + t²)) with t = x − 1 below 2, log(2x − 1/(x + √(x² − 1))) to
+  2^28, log x + ln2 above; atanh by log1p of 2x + 2x²/(1 − x) below 1/2 and of
+  2x/(1 − x) above, halved. No ulp bounds stated.
+- **Arm Optimized Routines**, the Advanced SIMD `sinhf`, `tanhf`, `asinhf`
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/sinhf.c>
+  and the others in that directory): sinh as t + t/(t + 1) over t =
+  expm1|x| (2.26 ulp stated), tanh as q/(q + 2) with q = e^(2x) − 1 from its
+  own reduction (2.08 + 0.5 ulp), asinh as log1p(x + x²/(1 + √(x² + 1)))
+  with log(2x) above 2^64 (2.59 ulp stated); their last steps are not
+  compensated.
+
+What we take: the log1p forms near 0 and log 2|x| far out, m/(m + 2) for
+tanh, and the half-exponential beyond 9; the float path below carries the
+pairs that let it stay near half an ulp where AOR's forms reach 2.
+
+## 10. The hyperbolic functions on the single-precision FPU cores: `libc/math/sp-nearest/fast/` (P11.04c)
+
+Float only, so as in §7 each result is a pair rounded once.
+
+- **The exponential pair** (`__libc_fast_expf_pair`, 0 ≤ a ≤ 90): a = k ln2
+  + u as `expf` reduces it, e^u = 1 + u_hi + (u_lo + u² q(u)) with 1 + u_hi
+  by a two-sum, then normalised by a Fast2Sum. The first build left the pair
+  raw (its tail reaches 0.06), and the reciprocal 1/hi − lo/hi² of `coshf`
+  and `sinhf` was off by lo²/hi³: 5·10⁻⁴ at 0.3 (a spot check before the
+  sweep).
+- **sinhf:** below 1 the odd series x + x z S(z) to x¹¹ (x¹³/13! is 2^-32.5
+  of the result at 1), one rounding; up to 9, H − 1/(4H) with H = 2^(k−1) P
+  and 1/(4H) = 2^(−k−1)/P as a pair (the quotient's remainder by a fused
+  multiply-add), the leading difference by a two-sum; beyond 9 H alone
+  (e^-2|x| below 2^-26), scaled in two exact steps since k reaches 130, so
+  the overflow from 89.42 is the product's.
+- **coshf:** H + 1/(4H) the same way from 2^-12 up; below, 1 + x² (1,
+  inexact but for 0).
+- **tanhf:** below 1, m/(m + 2) with m = e^(2|x|) − 1 as a pair from the m1
+  kernel's leading terms (`__libc_fast_expm1f_pair`, k ≤ 3; the kernel
+  keeps its own copy, as sharing it cost the m1 forms 0.8 % on these cores)
+  and the pairs divided
+  (`__libc_fast_divide_pairs`); up to 9.1, 1 − 2/(E + 1) with E = e^(2|x|) as
+  a scaled pair (k ≤ 27, so m1's two-sums against 2^k − 1 would not be
+  exact), 2/(E + 1) ≤ 0.24 with its remainder; beyond, ±(1 − 2^-30/|x|),
+  which rounds to ±1 and raises inexact at run time.
+- **asinhf:** up to 2^12, log1p(|x| + t) with z = x² exactly as a pair,
+  w = 1 + z, s = √w with its remainder (`__libc_fast_sqrtf_pair`) and
+  t = s − 1 (exact up to s = 2, else a two-sum): the argument to about
+  2^-48, and `__libc_fast_log1pf_pair` adds u_lo/(1 + u) beside the log1pf
+  reduction's own correction. Beyond 2^12, log 2|x| by the logf reduction
+  with k + 1 (`__libc_fast_logf_twice`; the next term 1/(4x²) is 2^-26).
+- **acoshf:** up to 2^12, log1p(t + √(t (t + 2))) with t = x − 1 exact, t + 2
+  by a two-sum and the product's error by a fused multiply-add; beyond,
+  log 2x.
+- **atanhf:** log1p(2|x|/(1 − |x|))/2 with 1 − |x| by a two-sum and the
+  quotient's remainder; ±1 divides at run time (divide-by-zero).
+
+## 11. Measured (P11.04c)
+
+Every finite float of the domain (4,278,162,238 arguments; `acoshf` from 1,
+`atanhf` in [−1, 1]) against glibc's long double functions:
+
+| Function | double path | float path |
+|---|---:|---:|
+| `sinhf` | 0.5131 ulp | 0.8440 ulp |
+| `coshf` | 0.5092 | 0.7525 |
+| `tanhf` | 0.5383 | 0.5641 |
+| `asinhf` | 0.5000 | 0.7550 |
+| `acoshf` | 0.5000 | 0.7416 |
+| `atanhf` | 0.5000 | 0.7538 |
+
+All within the 1.5 ulp bound and, but for the float `sinhf` near 0.87
+(the series' x z S tail rounded in float, up to a seventh of the result),
+within the 0.76 the P11.03 float logarithms reach, which the float
+log1p-based forms inherit. The double `tanhf` 0.54 is just above 2|x| = 1/8,
+where E − 1 loses three bits of the exponential's 2^-30.5.
+
+Instructions per call (speed → fast):
+
+| Function | x86_64 | armv7e-m-dp | armv7e-m | armv8-m.main |
+|---|---:|---:|---:|---:|
+| `sinhf` | 334 → 66 | 223 → 68 | 267 → 90 | 267 → 90 |
+| `coshf` | 291 → 52 | 196 → 55 | 241 → 84 | 241 → 84 |
+| `tanhf` | 355 → 68 | 218 → 72 | 253 → 104 | 253 → 104 |
+| `asinhf` | 578 → 90 | 308 → 92 | 288 → 135 | 287 → 136 |
+| `acoshf` | 494 → 71 | 259 → 74 | 266 → 125 | 266 → 126 |
+| `atanhf` | 407 → 87 | 234 → 86 | 205 → 111 | 205 → 110 |
+
+The cores without an FPU follow in P11.04g.

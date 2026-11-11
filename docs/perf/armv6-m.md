@@ -1300,3 +1300,7 @@ The fast files are for the FPU cores; the cores without an FPU follow in P11.04f
 | `acosf` | 23828 | 23761 | -0.3 % |
 | `atanf` | 17750 | 17683 | -0.4 % |
 | `atan2f` | 18422 | 18355 | -0.4 % |
+
+## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+Unchanged here: the cores without an FPU follow in P11.04g (D177).

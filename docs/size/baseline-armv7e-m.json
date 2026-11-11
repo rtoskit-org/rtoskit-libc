@@ -1161,7 +1161,7 @@
     "rodata": 72,
     "tbss": 0,
     "tdata": 0,
-    "text": 668,
+    "text": 664,
     "unwind": 0
    },
    "__libc_atexit_run.o": {
@@ -9190,7 +9190,7 @@
    "rodata": 10215,
    "tbss": 362,
    "tdata": 8,
-   "text": 152396,
+   "text": 152392,
    "unwind": 36
   }
  },

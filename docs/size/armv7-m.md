@@ -291,3 +291,7 @@ Unchanged here (`size-report diff`; the budgets hold).
 
 Unchanged here (`size-report diff`; the budgets hold): the strict atan core's index fix (D176) is the same size on these
 cores. The cores without an FPU follow in P11.04f.
+
+## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU follow in P11.04g.

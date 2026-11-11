@@ -670,3 +670,8 @@ fast, bytes; speed members that call the double functions or a shared core not c
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed →
 fast, bytes; the speed files call the double functions): `atanf.o` 268 → 404, `atanpif.o` 92 → 252, `asinf.o` 192 → 452, `asinpif.o` 16 → 324, `acosf.o` 92 → 320, `acospif.o` 16 → 336, `atan2f.o` 140 → 392, `atan2pif.o` 20 → 336, `__libc_fast_atan_table.o` new → 72.
+
+## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
+speed → fast, bytes): `sinhf.o` 260 → 532, `coshf.o` 16 → 252, `tanhf.o` 200 → 532, `asinhf.o` 300 → 524, `acoshf.o` 92 → 312, `atanhf.o` 192 → 512 (the speed `coshf` and `acoshf` call the double functions).

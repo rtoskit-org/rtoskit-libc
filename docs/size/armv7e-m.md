@@ -806,3 +806,8 @@ fast, bytes; speed members that call the double functions or a shared core not c
 Release and speed: `__libc_atan2f_core.o` 740 → 736 (the strict index fix, D176; `size-report diff`); the speed and fast budgets
 hold. Fast members (code and constants, speed → fast, bytes; the speed files share the 736-byte float-float core, which stays
 in libc.a for the complex functions): `atanf.o` 144 → 388, `atanpif.o` 336 → 464, `asinf.o` 292 → 340, `asinpif.o` 530 → 416, `acosf.o` 268 → 360, `acospif.o` 356 → 400, `atan2f.o` 556 → 696, `atan2pif.o` 668 → 828, `__libc_fast_atanf_table.o` new → 72.
+
+## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. The release baselines take P11.04b's 4-byte `__libc_atan2f_core.o` (`size-report report`). Fast members (code and constants,
+speed → fast, bytes): `sinhf.o` 440 → 524, `coshf.o` 180 → 412, `tanhf.o` 658 → 668, `asinhf.o` 104 → 688, `acoshf.o` 478 → 652, `atanhf.o` 534 → 452 (the speed files share `__libc_sinhcoshf_core.o` 636 and `__libc_asinhf_core.o` 568, which stay in libc.a for the complex functions).
