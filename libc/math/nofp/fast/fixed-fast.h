@@ -374,4 +374,78 @@ static inline float __libc_fixed_trig_divide(uint64_t sine, int sine_exponent, b
 	return __libc_float_from(__libc_fixed_nearest((uint32_t)quotient, exponent) | (sine_negative != cosine_negative ? 0x80000000u : 0));
 }
 
+/* pi and pi/2 in units of 2^-62, and 2^33/pi, rounded (computed here) */
+#define __LIBC_FIXED_PI_62 0xc90fdaa22168c235ULL
+#define __LIBC_FIXED_HALF_PI_62 0x6487ed5110b4611aULL
+#define __LIBC_FIXED_INVERSE_PI_33 0xa2f9836eU
+
+/*
+ * n/d in Q32 for significands with bit 31 set and n < d (a quotient in [1/2, 1)): 1/d from the linear seed 24/17 - 8/17 d
+ * (2^-4.1 relative for d in [1, 2)) and two Newton steps r + r (1 - d r) (2^-16), then the quotient n r corrected once
+ * by its exact remainder, (n - q d) r, rounded (2^-31). No division instruction, which Armv6-M lacks (a 64-bit division by the
+ * library call costs about 900 instructions there). d = 1 is exact.
+ */
+static inline uint32_t __libc_fixed_quotient(uint32_t n, uint32_t d)
+{
+	uint64_t remainder;
+	uint32_t magnitude;
+	uint32_t q;
+	uint32_t r;
+	int32_t e;
+
+	if (d == 0x80000000u)
+		return n << 1;
+
+	r = (uint32_t)(UINT64_C(6063483241) - __libc_fixed_high(d, 4042322161u));
+	for (int i = 0; i < 2; ++i) {
+		/* 1 - d r in Q32, at most 1/17; the step never takes r above 1/d */
+		e = (int32_t)((int64_t)((UINT64_C(1) << 63) - __libc_fixed_wide(d, r)) >> 31);
+		r = e >= 0 ? r + __libc_fixed_high(r, (uint32_t)e) : r - __libc_fixed_high(r, -(uint32_t)e);
+	}
+
+	/* q = n r in Q32; n - q d in units of 2^-63 is below 2^48, and (n - q d) r its correction */
+	q = (uint32_t)(__libc_fixed_wide(n, r) >> 31);
+	remainder = ((uint64_t)n << 32) - __libc_fixed_wide(q, d);
+	if ((int64_t)remainder >= 0) {
+		magnitude = (uint32_t)(remainder >> 17);
+		return q + ((__libc_fixed_high(magnitude, r) + (1 << 13)) >> 14);
+	}
+	magnitude = (uint32_t)(-remainder >> 17);
+	q -= (__libc_fixed_high(magnitude, r) + (1 << 13)) >> 14;
+
+	/* The quotient is at least 1/2: a unit below (n = d/2 exactly) would take the caller below its range */
+	return q < 0x80000000u ? 0x80000000u : q;
+}
+
+/*
+ * atan(a/b) for float magnitudes 0 < a <= b < infinity as their bits (subnormals included): v 2^(*exponent - 63) with
+ * bit 63 of v set, relative error about 2^-31 however small a/b (out of line in __libc_fixed_atan.c, which atanf, atan2f
+ * and their pi forms share)
+ */
+uint64_t __libc_fixed_atan(uint32_t a, uint32_t b, int *exponent);
+
+/* theta/pi for theta = v 2^(*exponent - 63), bit 63 of v set: its top 32 bits times 2^33/pi, normalised */
+static inline uint64_t __libc_fixed_inverse_pi(uint64_t v, int *exponent)
+{
+	uint64_t w = __libc_fixed_wide((uint32_t)(v >> 32), __LIBC_FIXED_INVERSE_PI_33);
+	int k = (int)stdc_leading_zeros(w);
+
+	*exponent -= 1 + k;
+	return w << k;
+}
+
+/*
+ * offset - theta or offset + theta rounded to nearest, theta = v 2^(exponent - 63) below 1 and offset (pi, pi/2, 1 or 1/2)
+ * in units of 2^-62: the result is at least 1/4, so theta below 2^-62 counts for nothing
+ */
+static inline float __libc_fixed_offset_float(uint64_t offset, uint64_t v, int exponent, bool subtract, bool negative)
+{
+	int shift = 1 - exponent;
+	uint64_t theta = shift < 64 ? v >> shift : 0;
+	uint64_t r = subtract ? offset - theta : offset + theta;
+	int k = (int)stdc_leading_zeros(r);
+
+	return __libc_fixed_float(r << k, 1 - k, negative);
+}
+
 #endif /* _FIXED_FAST_H */

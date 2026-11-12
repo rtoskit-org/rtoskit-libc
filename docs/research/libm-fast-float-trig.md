@@ -744,3 +744,90 @@ Test vectors (`libm_thresholds`): each side of 1/2, 1, 3/2, 2, 5/2, 3,
 7/2 and 3.92, of 2^-16 and 2^-13, subnormal arguments (2^-149 and
 −0x1.3p-140) and a normal result from one (0x1.fffffcp-127), and the
 sweep's worst point, within 1.5 ulp.
+
+## 18. atanf, atan2f and their π forms on the cores without an FPU: `libc/math/nofp/fast/` (P11.04f1)
+
+armv6-m, armv6s-m and armv7-m, in integers. These functions had no
+fixed-point path: speed runs the strict layer's float-float core
+(`__libc_atan2f_core`) on soft float, 17,683 (`atanf`) and 18,355
+(`atan2f`) instructions on armv6-m. P11.04f was split into f1 (here) and f2
+(`asinf`, `acosf` and their π forms), as each needs its own fixed-point
+building block: a division here, a square root there.
+
+### 18.1 Sources
+
+- **CMSIS-DSP `arm_atan2_q31.c`**
+  (<https://raw.githubusercontent.com/ARM-software/CMSIS-DSP/main/Source/FastMathFunctions/arm_atan2_q31.c>):
+  Q31 in and out; the smaller magnitude over the larger by `arm_divide_q31`,
+  then one polynomial of degree 12 on [0, 1] in Q31 (absolute), π/2 − atan
+  when |y| > |x|, ±π by the quadrant. Absolute accuracy only: a float result
+  needs relative accuracy as the ratio goes to 0.
+- **libfixmath `fix16_trig.c`**
+  (<https://raw.githubusercontent.com/PetteriAimonen/libfixmath/master/libfixmath/fix16_trig.c>):
+  Q16.16, r = (x − |y|)/(x + |y|) and a cubic in r about π/4 (or 3π/4),
+  with a result cache; far below float accuracy.
+- **Qfplib** (<https://www.quinapalus.com/qfplib.html>): soft float for
+  Cortex-M0 and M3 with an arctangent of high accuracy (CORDIC, by its
+  documentation; the sources were not read).
+- **Arm Optimized Routines, vector `atan2f`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/atan2f.c>):
+  the quotient by a hardware division, then atan(z) = z + z P(z²) on
+  [0, 1]; §6's notes for the scalar files.
+
+CORDIC needs no division but gives an absolute angle; near 0 a float needs
+the quotient anyway. What we take: the reduction to a ratio in [0, 1] and
+the quadrant offsets (all four), a polynomial in pieces where atan is far
+from 0 (as §17 for erf), and the series in q² where it is not.
+
+### 18.2 The method
+
+- **The quotient** (`__libc_fixed_quotient`, fixed-fast.h): n/d for 24-bit
+  significands normalised to bit 31, n < d (n is halved first when its
+  significand is the larger: exact, as it has 24 significant bits), so the
+  quotient is in [1/2, 1). 1/d from the linear seed 24/17 − 8/17·d
+  (2^-4.1 for d in [1, 2)) and two Newton steps r + r(1 − dr) (2^-16), then
+  q = n·r corrected once by its exact remainder, q + (n − q·d)·r, rounded
+  (2^-31; eight 32 × 32 → 64 products). Armv6-M has no divide instruction,
+  and the 64-bit division by the library call cost `tanf` about 900
+  instructions there (P11.04e1). d = 1 is a shift. The quotient is clamped
+  to 1/2: rounded down, an exact 1/2 (n = d/2) came out a unit below and
+  took the piece index below its range (found by the `atan2f` sweep: 5411
+  ulp).
+- **The kernel** (`__libc_fixed_atan(a, b)`, a ≤ b, out of line, shared by
+  the four files): a/b = q·2^k. Below 1/8, atan(a/b) = (a/b)(1 + u p(u)),
+  u = (a/b)² in Q32 (0 below 2^-16), p of degree 2 fitted here (2^-32.2),
+  so relative however small the ratio, subnormal ratios included. From 1/8
+  to 1, a/b in Q32 and seven pieces of width 1/8, atan(c + s/8) of degree 5
+  in s (Chebyshev fits in 256-bit arithmetic: a0 in unsigned Q32, the rest
+  in signed Q31; within 2^-31.3, measured with the rounded coefficients;
+  degree 6 gave only 2^-31.6, Q31's floor). a = b gives π/4. The result is a
+  64-bit significand and an exponent.
+- **The functions**: `atanf` is atan(|x|/1) up to 1 (the quotient is then
+  a shift) and π/2 − atan(1/|x|) above; x itself below 2^-12, π/2 from 2^26.
+  `atan2f` takes the smaller magnitude over the larger: θ, π − θ,
+  π/2 − θ or π/2 + θ by the quadrant, with the strict file's special cases.
+  The offsets are in units of 2^-62, so θ below 2^-62 counts for nothing.
+  The π forms multiply θ by 2^33/π and use the offsets 1 and 1/2. One
+  rounding to nearest; subnormal results through
+  `__libc_fixed_product_float`.
+
+### 18.3 Measured (P11.04f1)
+
+On the host (the files compiled with the library's headers and nofp/speed's
+`umull` helpers; the products are exact, so armv6-m's `muls` gives the same
+bits): `atanf` over every float at most **0.5746 ulp** (0x1.00418cp-3, just
+above the series' end), `atanpif` **0.5396**; `atan2f` and `atan2pif` on 2
+billion pairs (half of them with nearby exponents) **0.5687** and
+**0.5499**, and on 40 million edge pairs (exact power-of-two ratios, their
+neighbours, subnormal y, exponent gaps to ±150) 0.5395 and 0.5362. The
+bound is 1. Instructions per call (speed → fast, the bench's plugin; the π
+forms have no bench case):
+
+| | armv6-m, armv6s-m | armv7-m |
+| --- | ---: | ---: |
+| `atanf` | 17,683 → 751 | 8608 → 245 |
+| `atan2f` | 18,355 → 812 | 8995 → 261 |
+
+Test vectors (`libm_thresholds`): each side of 1/8 and of the 2^26 and
+2^27 ends, the sweeps' worst points, tiny ratios to a subnormal and to zero,
+and the exact-1/8 regression, within 1 ulp.
