@@ -455,4 +455,62 @@ static inline float __libc_fixed_offset_float(uint64_t offset, uint64_t v, int e
  */
 uint64_t __libc_fixed_asin(uint32_t magnitude, int *exponent, bool *outer);
 
+/*
+ * x K(x^2) for a float magnitude |x| <= 1/2 (nonzero) as its bits, K(u) = 1 + u p(u) with p of the given degree in signed
+ * Q31 and K in (1/2, 2): x's normalised significand times K as v 2^(*exponent - 63), bit 63 of v set; x^2 in Q32 is 0 below
+ * 2^-16 (the odd series of sinh and tanh near 0)
+ */
+static inline uint64_t __libc_fixed_odd_series(uint32_t magnitude, const int32_t *coefficients, int degree, int *exponent)
+{
+	int e;
+	uint32_t m = __libc_fixed_significand(magnitude, &e);
+	int shift = -2 - 2 * e;
+	uint32_t u = shift < 32 ? __libc_fixed_high(m, m) >> shift : 0;
+	int32_t p = coefficients[degree];
+	int32_t up;
+	uint64_t v;
+	int z;
+
+	for (int i = degree - 1; i >= 0; --i)
+		p = coefficients[i] + __libc_fixed_high_signed((int32_t)u, p);
+	up = (int32_t)(__libc_fixed_wide_signed((int32_t)u, p) >> 31);
+
+	/* m K in units of 2^-31 of m */
+	v = (uint64_t)m << 31;
+	v = up >= 0 ? v + (__libc_fixed_wide(m, (uint32_t)up) >> 1) : v - (__libc_fixed_wide(m, -(uint32_t)up) >> 1);
+	z = (int)stdc_leading_zeros(v);
+	*exponent = e + 1 - z;
+	return v << z;
+}
+
+/* |x| log2(e) in units of 2^-37 for a float magnitude below 2^16 as its bits, as expf forms it (0 far below 1) */
+static inline int64_t __libc_fixed_log2e(uint32_t magnitude)
+{
+	int shift = 143 - (int)(magnitude >> 23);
+	uint32_t significand = (magnitude & __LIBC_FLOAT_FRACTION) | 0x00800000;
+
+	if (shift >= 56)
+		return 0;
+	return (int64_t)((__libc_fixed_wide(significand, 0x5c551d94) + (__libc_fixed_wide(significand, 0xae0bf85e) >> 32)) >> shift);
+}
+
+/*
+ * e^a/2 + e^-a/2 or e^a/2 - e^-a/2 for z = a log2(e) 2^37 with a < 11 (a >= 1/2 for the difference), rounded to nearest: the
+ * exp2 core twice, 2^(n - 62) (1 + f 2^-32) 2^30 for each in the first one's units, exact in 64 bits (within 6 units of
+ * 2^-32 of each)
+ */
+static inline float __libc_fixed_cosh_sinh(int64_t z, bool subtract, bool negative)
+{
+	int n;
+	int m;
+	uint32_t f = __libc_exp2f_fixed(z - (INT64_C(1) << 37), &n);
+	uint32_t g = __libc_exp2f_fixed(-z - (INT64_C(1) << 37), &m);
+	uint64_t high = ((UINT64_C(1) << 32) + f) << 30;
+	uint64_t low = (((UINT64_C(1) << 32) + g) << 30) >> (n - m);
+	uint64_t r = subtract ? high - low : high + low;
+	int k = (int)stdc_leading_zeros(r);
+
+	return __libc_fixed_float(r << k, n + 1 - k, negative);
+}
+
 #endif /* _FIXED_FAST_H */

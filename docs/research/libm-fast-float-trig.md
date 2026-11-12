@@ -900,3 +900,62 @@ no bench case):
 Test vectors (`libm_thresholds`): each side of 2^-12, 2^-16 and 2^-26, a
 subnormal `asinpif`, the sweeps' worst points, and the square root's
 regression, within 1 ulp.
+
+## 20. sinhf, coshf and tanhf on the cores without an FPU: `libc/math/nofp/fast/` (P11.04g1)
+
+armv6-m, armv6s-m and armv7-m, in integers. Speed runs the float-float
+functions on soft float (15,181–15,977 instructions on armv6-m). P11.04g was
+split into g1 (here, over the exponential) and g2 (`asinhf`, `acoshf`,
+`atanhf`, over the logarithm).
+
+### 20.1 Sources
+
+- **musl `sinhf.c`, `coshf.c`, `tanhf.c`**
+  (<https://git.musl-libc.org/cgit/musl/plain/src/math/sinhf.c>,
+  <https://git.musl-libc.org/cgit/musl/plain/src/math/coshf.c>,
+  <https://git.musl-libc.org/cgit/musl/plain/src/math/tanhf.c>): every
+  path through `expm1f` (t + t/(t + 1) for sinh below log(FLT_MAX), 1 +
+  t²/(2(1 + t)) for cosh below log 2, and tanh from expm1(±2x) in three
+  bands); `__expo2f` scales e^x/2 by two steps near the overflow.
+- §10's float-pair forms (P11.04c) on the FPU cores: H ± 1/(4H) and
+  1 − 2/(E + 1).
+
+What we take: the plain forms (E ± 1/E)/2 and 1 − 2/(e^2x + 1), which in
+fixed point need no expm1: both exponentials come from the exp2 core to 6
+units of 2^-32, and their difference loses at most two bits from 1/2 up.
+
+### 20.2 The method
+
+- **The odd series** (`__libc_fixed_odd_series`, fixed-fast.h): x K(x²)
+  with K = 1 + u p(u) in (1/2, 2) for |x| ≤ 1/2, u = x² in Q32 (0 below
+  2^-16), relative however small x. sinh: p of degree 3 (2^-34.4); tanh:
+  degree 5 (2^-33.6), as the series converges at half the rate (its
+  radius is π/2).
+- **sinh and cosh** (`__libc_fixed_cosh_sinh`): z = |x| log2(e) in units
+  of 2^-37 as expf forms it, then 2^(z−1) and 2^(−z−1) by the exp2 core,
+  each (2^32 + f) 2^30 in units of 2^(n − 62), the second shifted to the
+  first's units: their sum or difference is exact in 64 bits, normalised
+  and rounded once. From 1/2 the difference is at least 0.52 (one bit lost
+  at most). From 11, e^-2|x| is below 2^-31 and e^|x|/2 = 2^(z−1) alone is
+  rounded; it stays finite to 0x1.65a9f8p+6 (the exponent 127), and the next
+  float overflows. Below 2^-12, sinh x = x and cosh x = 1.
+- **tanh** from 1/2 to 9.1: e^2|x| = 2^n(1 + f) with n in 1 .. 27, D =
+  e^2|x| + 1 exact in 64 bits, 2/D by §18's quotient on D's top 32 bits
+  (exactly 1 at a power of two), and 1 − 2/D in units of 2^-62: at least
+  0.46, so the absolute 2^-30 is 1/32 of its ulp. From 9.1, ±1.
+
+### 20.3 Measured (P11.04g1)
+
+Every float on the host (as §18): `sinhf` at most **0.5082 ulp**, `coshf`
+**0.5083**, `tanhf` **0.5057**; the bound is 1.5. Instructions per call
+(speed → fast, the bench's plugin):
+
+| | armv6-m, armv6s-m | armv7-m |
+| --- | ---: | ---: |
+| `sinhf` | 15,310 → 627 | 7396 → 171 |
+| `coshf` | 15,181 → 622 | 7302 → 162 |
+| `tanhf` | 15,977 → 742 | 7763 → 203 |
+
+Test vectors (`libm_thresholds`): each side of 1/2, 11 and 9.1, the largest
+finite sinh and cosh and the first overflow, and the sweeps' worst points,
+within 1.5 ulp.

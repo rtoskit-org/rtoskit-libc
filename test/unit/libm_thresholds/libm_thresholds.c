@@ -421,6 +421,16 @@ static void check_hyperbolic(void)
 	QUIET(within_ulps(atanhf(0x1.000002p-12f), 0x1.0000025555579p-12, 1.5) && within_ulps(atanhf(0x1.fffffep-31f), 0x1.fffffep-31, 1.5) && within_ulps(atanhf(0x1.000002p-30f), 0x1.000002p-30, 1.5));
 	QUIET(within_ulps(atanhf(0x1.fffffep-4f), 0x1.015890c5daae7p-3, 1.5) && within_ulps(atanhf(0x1.000002p-3f), 0x1.015893d20b719p-3, 1.5) && within_ulps(atanhf(0x1.fffffep-2f), 0x1.193ea6557adbcp-1, 1.5));
 	QUIET(within_ulps(atanhf(0x1.000002p-1f), 0x1.193eaa557add2p-1, 1.5));
+	/*
+	 * The cores without an FPU (P11.04g1): each side of the series' end at 1/2, of the second exponential's at 11 and of tanh's
+	 * end at 9.1, the largest finite sinh and cosh and the first overflow, and the sweeps' worst points
+	 */
+	QUIET(within_ulps(sinhf(0x1.fffffep-2f), 0x1.0accffddb7a13p-1, 1.5) && within_ulps(sinhf(0x1.000002p-1f), 0x1.0acd033fbbeabp-1, 1.5) && within_ulps(sinhf(0x1.5ffffep+3f), 0x1.d3c42b5070ee4p+14, 1.5));
+	QUIET(within_ulps(sinhf(0x1.600002p+3f), 0x1.d3c465c8fa006p+14, 1.5) && within_ulps(sinhf(-0x1.65a9f8p+6f), -0x1.ffffd83e8e728p+127, 1.5) && within_ulps(sinhf(0x1.aae622p-1f), 0x1.de1c470438762p-1, 1.5));
+	QUIET(within_ulps(coshf(0x1.000002p-12f), 0x1.0000008000021p+0, 1.5) && within_ulps(coshf(0x1.5ffffep+3f), 0x1.d3c42b54d1c39p+14, 1.5) && within_ulps(coshf(0x1.600002p+3f), 0x1.d3c465cd5ad52p+14, 1.5));
+	QUIET(within_ulps(coshf(0x1.65a9f8p+6f), 0x1.ffffd83e8e728p+127, 1.5) && within_ulps(coshf(0x1.6215d2p+3f), 0x1.f3435f0442a2ap+14, 1.5) && within_ulps(tanhf(0x1.fffffep-2f), 0x1.d9353be2bf67ep-2, 1.5));
+	QUIET(within_ulps(tanhf(0x1.000002p-1f), 0x1.d935409abb3bbp-2, 1.5) && within_ulps(tanhf(0x1.233332p+3f), 0x1.ffffff29c7959p-1, 1.5) && within_ulps(tanhf(-0x1.18f70cp-1f), -0x1.ff948efd0fd25p-2, 1.5));
+	RAISES(sinhf(0x1.65a9fap+6f) == INFINITY && coshf(-0x1.65a9fap+6f) == INFINITY, FE_OVERFLOW);
 }
 
 static void check_error_functions(void)
