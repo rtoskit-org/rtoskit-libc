@@ -506,6 +506,16 @@ static void check_double_exponentials(void)
 	QUIET(near_double(exp10(0x1.34413509f79fep+8), 0x1.ffffffffffba1p+1023) && near_double(expm1(0x1.62f0eeacb7p-7), 0x1.64ded6012030ap-7) && near_double(expm1(-0x1.64aaac4f09a7ep-7), -0x1.62bb8d795fbfap-7));
 	QUIET(near_double(expm1(0x1.00ce25a05127p+9), 0x1.fa20715abe035p+740) && near_double(expm1(0x1.6232bdd7abcd2p-7), 0x1.641e9377fffb7p-7));
 	RAISES(exp(710.0) == INFINITY && exp2(1024.0) == INFINITY && exp10(309.0) == INFINITY && expm1(710.0) == INFINITY, FE_OVERFLOW);
+	/*
+	 * P11.05c1 (the soft-double cores' fixed-point kernel, D188): the rounding's carry into the exponent just below 2, each
+	 * side of the fraction's shifts at 2^-12 and of the common path's ends at 2^-54 and 512 (256 for exp10), and the
+	 * sweeps' worst points
+	 */
+	QUIET(near_double(exp2(0x1.fffffffffffffp-1), 0x1.fffffffffffffp+0) && near_double(exp2(-0x1.fffffffffffffp-1), 0x1p-1) && exp2(0x1p-54) == 1.0);
+	QUIET(near_double(exp2(0x1.0000000000001p-13), 0x1.00058ba01fba0p+0) && near_double(exp2(0x1.fffffffffffffp-13), 0x1.000b175effdc7p+0) && near_double(exp2(0x1.fffffffffffffp+8), 0x1.ffffffffffe9dp+511));
+	QUIET(near_double(exp2(-0x1.fffffffffffffp+8), 0x1.00000000000b1p-512) && near_double(exp(0x1.fffffffffffffp+8), 0x1.9476504ba839ap+738) && near_double(exp(-0x1.fffffffffffffp+8), 0x1.44109edb20a75p-739));
+	QUIET(exp(0x1p-54) == 1.0 && near_double(exp(-0x1.b7f4d3965907fp-49), 0x1.fffffffffffe5p-1) && near_double(exp(0x1.62e42fefa39efp-1), 2.0) && exp10(1.0) == 10.0);
+	QUIET(near_double(exp10(0x1.fffffffffffffp+7), 0x1.54fdd7f73bdb3p+850) && near_double(exp10(-0x1.fffffffffffffp+7), 0x1.8062864ac70fep-851) && near_double(exp10(0x1.29b7640c6aae2p+8), 0x1.fd4d1534d970dp+988));
 }
 
 int main(void)

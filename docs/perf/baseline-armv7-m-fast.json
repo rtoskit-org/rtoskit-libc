@@ -219,16 +219,16 @@
     "insns": 183.88
    },
    "exp/latency": {
-    "insns": 1183.5
+    "insns": 303.06
    },
    "exp/throughput": {
-    "insns": 1197.94
+    "insns": 317.5
    },
    "exp10/latency": {
-    "insns": 1224.5
+    "insns": 305.06
    },
    "exp10/throughput": {
-    "insns": 1236.44
+    "insns": 317.0
    },
    "exp10f/latency": {
     "insns": 108.88
@@ -249,10 +249,10 @@
     "insns": 152.94
    },
    "exp2/latency": {
-    "insns": 1044.56
+    "insns": 266.81
    },
    "exp2/throughput": {
-    "insns": 1059.62
+    "insns": 281.88
    },
    "exp2f/latency": {
     "insns": 100.88

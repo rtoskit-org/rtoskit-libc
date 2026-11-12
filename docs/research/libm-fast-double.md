@@ -313,3 +313,73 @@ growth, and P11.06 re-locks them all with the final figures. This step
 re-locked armv6-m, armv6s-m, armv7-m and armv7e-m-dp (`size-report --flavour
 fast --lock`). armv7e-m-dp now has its own fast figures, as the cores without
 an FPU do.
+
+## 7. exp, exp2 and exp10 on the soft-double cores (P11.05c1)
+
+`libc/math/dp-fixed/fast/`, listed in the soft-double cores' arch files
+(`LIBC_MATH_FAST_LAYERS`: armv6-m, armv6s-m and armv7-m add it to nofp,
+armv7e-m and armv8-m.main to sp-nearest). As a later layer it shadows §6's
+double-FPU files there. P11.05c was split: expm1 (c2) needs relative
+accuracy where 2^(k/64) − 1 and the polynomial cancel, which the kernel's
+absolute 2^-62 does not give.
+
+### 7.1 The method
+
+- **No soft-double operation on the common path.** Everything is done on
+  x's bits, the 53-bit significand m and the exponent e, with the speed
+  files' 32 × 32 → 64 product (`__libc_trig_wide`: `UMULL` inline on the
+  Thumb-2 cores, four 16-bit products out of line on Armv6-M) and its
+  high-64 product (D136).
+- **t = |x|·c as n + f·2^-64** (`__libc_dp_fixed_scaled`): c is log2(e) or
+  log2(10) to 128 bits, in two 64-bit words (log2(e) in Q63, log2(10) in
+  Q62). m·c_hi is exact in 117 bits (four products), plus the high part of
+  m·c_lo (one product: below a unit of what the shift keeps). The shift by
+  51 − e (50 − e) leaves n, below 2^10, and the 64-bit fraction; the dropped
+  bits are below 2^-64. For x < 0, n + f is negated. exp2's t is x itself: m
+  shifted, no product.
+- **The kernel** (`__libc_dp_fixed_exp2`, out of line and shared by the
+  three functions): 2^f = 2^(j/64)·2^r with j the top 6 bits of f.
+  - 2^(j/64) comes from a table in Q63 (`__libc_dp_fixed_exp2_table`, 512
+    bytes).
+  - For r in [0, 1/64), 2^r − 1 is its Taylor polynomial in u = 64r, Q64,
+    to degree 7 (the eighth term is below 0.09 units of 2^-64). All the
+    coefficients are positive, so Horner's rule runs unsigned, and the three
+    highest coefficients fit in 32 bits, so their products take two partial
+    products rather than four.
+  - y = T + T·P in Q63, in [2^63, 2^64), is rounded to 53 bits by its 54th
+    bit straight into the double's bits: ((n + 1022) << 52) + (y >> 11) +
+    the round bit. The implicit bit adds the last 1 to the exponent, and a
+    carry from rounding goes into it too.
+  - The error before that rounding is a few units of 2^-63 (the table's half
+    unit, the products' floors): below 2^-9 of an ulp.
+- **The common path** (2^-54 ≤ |x| < 512, 256 for exp10, `__libc_fast_exp_outside`)
+  keeps every result normal. The slow path is §6's, moved into
+  its own hidden functions in `libc/math/fast/` (`__libc_fast_exp_special.c`,
+  `__libc_fast_exp2_special.c`, `__libc_fast_exp10_special.c`) so that both
+  layers share it: the strict file's double-double core, which `pow` shares.
+  As `static` functions in `math-fast.h` they were emitted at -O0 into every
+  file that includes it, and the float-only sp-nearest layer's check refused
+  their double helpers on armv6-m debug (`inline` with `noinline` is a GCC
+  warning, so the out-of-line form is a separate file, D6).
+
+### 7.2 Measured (P11.05c1)
+
+On the host (the files compiled with the library's headers and the speed
+files' `umull` product; armv6-m's `muls` product gives the same bits), against
+long double: 2·10^8 samples per function and every binade's 2^16
+significands.
+
+| Function | sampled worst | every binade |
+| --- | ---: | ---: |
+| `exp` | 0.5029 | 0.5020 |
+| `exp2` | 0.5063 (slow path) | 0.5024 |
+| `exp10` | 0.5073 | 0.5039 |
+
+Instructions per call (speed → fast; §6's double-FPU files on the soft
+helpers were in between, see the PR):
+
+| Function | armv7e-m, armv8-m.main | armv7-m | armv6-m, armv6s-m |
+| --- | ---: | ---: | ---: |
+| `exp` | 3813 → 317 (AOR 1090) | 3874 → 318 | 10,317 → 1410 (AOR 3954) |
+| `exp2` | 5235 → 281 (AOR 934) | 5320 → 282 | 14,133 → 1210 (AOR 3335) |
+| `exp10` | 5252 → 316 | 5334 → 317 | 14,233 → 1412 |
