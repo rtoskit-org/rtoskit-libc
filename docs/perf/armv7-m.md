@@ -1003,3 +1003,13 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `exp2` | 5320 | 1060 | -80 % |
 | `exp10` | 5334 | 1236 | -77 % |
 | `expm1` | 4128 | 3603 | -13 % |
+
+## P11.05c1 — Fast `exp`, `exp2` and `exp10` in 64-bit fixed point (D188)
+
+`libc/math/dp-fixed/fast/`: x·log2(e) from x's significand in 64-bit fixed point, a 64-entry Q63 table of 2^(j/64), a degree-7 polynomial in Q64 and one rounding into the result's bits; no soft-double operation on the common path. Instructions per call (throughput): speed, P11.05b's fast (D187's double file on the soft-double helpers) and now; release and speed unchanged. `expm1` is P11.05c2.
+
+| Function | speed | P11.05b | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `exp` | 3874 | 1198 | 318 | -92 % |
+| `exp2` | 5320 | 1060 | 282 | -95 % |
+| `exp10` | 5334 | 1236 | 317 | -94 % |

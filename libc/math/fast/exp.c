@@ -20,30 +20,6 @@
  * (ln 2/64 in two parts, the first of 33 bits so that k times it is exact and the subtraction too), e^u - 1 by a polynomial
  * and 2^(k/64) from the table with its tail (__libc_fast_exp_scale). Overflow, underflow and the special values as C23 7.12.6.1, F.10.3.1.
  */
-/*
- * The slow path: tiny arguments, the ends, the infinities and NaN, by the strict file's double-double core (rare, and the
- * core is shared with pow, so in a program that calls both it costs no code); out of line, so that the common path saves
- * nothing
- */
-[[gnu::noinline]] static double exp_special(double x)
-{
-	struct __libc_dd value;
-	int exponent;
-
-	if (isnan(x))
-		return x + x;
-	/* e^x rounds as 1 + x, with inexact unless x is 0 */
-	if (__builtin_fabs(x) < 0x1p-54)
-		return 1.0 + x;
-	if (x > 0x1.62e42fefa39efp+9)
-		return isinf(x) ? x : __libc_math_overflow(1.0);
-	/* Below ln 2^-1075 the result rounds to zero (2^-1074 upward), with underflow; e^-inf is +0 exactly */
-	if (x < -0x1.74910d52d3051p+9)
-		return isinf(x) ? 0.0 : __libc_math_underflow(1.0);
-	value = __libc_exp_core(x, 0.0, &exponent);
-	return __libc_exp_scale(value, exponent);
-}
-
 double exp(double x)
 {
 	const uint64_t *entry;
@@ -54,7 +30,7 @@ double exp(double x)
 
 	/* 2^-54 <= |x| < 512: the result is normal and needs no test of the ends */
 	if (__libc_fast_exp_outside(x, 0x3c9, 0x408))
-		return exp_special(x);
+		return __libc_fast_exp_special(x);
 
 	k = __libc_fast_exp_index(x * 0x1.71547652b82fep+6, &kd);
 	u = (x - kd * 0x1.62e42fee00000p-7) - kd * 0x1.a39ef35793c76p-39;

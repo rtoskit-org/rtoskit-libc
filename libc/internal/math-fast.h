@@ -1137,4 +1137,14 @@ static inline double __libc_fast_exp_scale(int32_t k, double p)
 	return scale + scale * tmp;
 }
 
+/*
+ * The slow paths of the fast exp, exp2 and exp10 (libc/math/fast/ and libc/math/dp-fixed/fast/, PLAN D187, D188): tiny
+ * arguments, the ends, the infinities and NaN, by the strict file's double-double core (rare, and the core is shared with
+ * pow, so in a program that calls both it costs no code). Out of line, in their own files, so that the common path saves
+ * nothing and the float-only layers, which include this header, carry no double code (their check refuses it at -O0)
+ */
+double __libc_fast_exp_special(double x);
+double __libc_fast_exp2_special(double x);
+double __libc_fast_exp10_special(double x);
+
 #endif /* _MATH_FAST_H */

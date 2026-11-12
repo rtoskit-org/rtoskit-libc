@@ -408,9 +408,17 @@ the gains and the members recorded.
   `exp` 169 → 53, `exp2` 183 → 51 on armv7e-m-dp; at most 0.553 ulp. The fast
   size figures may grow through P11.05 (the maintainer's decision, D187).
 
-### P11.05c — `exp`, `exp2`, `exp10`, `expm1` on the soft-double cores  `[ ]`
-- [ ] A 64-bit fixed-point exp2 kernel, one rounding (AOR: `exp` 1090 on
-  armv7e-m, 3954 on armv6-m); tests, gains.
+### P11.05c1 — `exp`, `exp2`, `exp10` on the soft-double cores  `[x]`
+- [x] A 64-bit fixed-point exp2 kernel, one rounding (AOR: `exp` 1090 on
+  armv7e-m, 3954 on armv6-m); tests, gains. Done (D188): `exp` 3813 → 317 on
+  armv7e-m and 10,317 → 1410 on armv6-m; at most 0.5073 ulp.
+
+### P11.05c2 — `expm1` on the soft-double cores  `[ ]`
+- [ ] Over c1's kernel, with the relative accuracy near 0 and where its terms
+  cancel; tests, gains.
+
+P11.05c was split into c1 and c2 (CLAUDE.md workflow): expm1 needs more than
+the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
 
 ### P11.05d — `log`, `log2`, `log10`, `log1p` on the double-FPU cores  `[ ]`
 - [ ] 1/c and log c from a table and a short polynomial in double (AOR: `log`

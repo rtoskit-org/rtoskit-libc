@@ -883,3 +883,7 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 ## P11.05b — Fast `exp`, `exp2`, `exp10` and `expm1` in double (D187)
 
 Release and speed unchanged (`size-report diff`). `math-mix` (exp and pow) grows from 41340 to 42552 bytes of code in fast: the fast `exp` and its 1 KiB table on top of the strict core that pow still uses. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187); `math-float` is re-locked smaller with them (P11.04's float steps took it below its speed figure).
+
+## P11.05c1 — Fast `exp`, `exp2` and `exp10` in 64-bit fixed point (D188)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (exp and pow) shrinks from 42552 to 42460 bytes of code (41340 in speed): the fixed-point `exp`, its kernel and its 512-byte table replace D187's double file and its 1 KiB table, and the slow path stays the strict core that pow shares. Smaller than the locked fast figure, so it is not re-locked (P11.06 re-locks every core, D187).
