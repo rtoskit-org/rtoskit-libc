@@ -370,9 +370,18 @@ P11.04f was split into f1 and f2 (CLAUDE.md workflow): each needs its own
 fixed-point building block, a division for the arctangent and a square root
 for the half-angle forms.
 
-### P11.04g — The cores without an FPU: the hyperbolic functions  `[ ]`
-- [ ] Over P11.03e–g's fixed-point exp, m1, log and p1 cores (15,181–19,926
+### P11.04g1 — The cores without an FPU: `sinhf`, `coshf`, `tanhf`  `[x]`
+- [x] Over the fixed-point exp2 core (15,181–15,977 instructions on armv6-m
+  today), with the odd series near 0 and a fixed-point quotient for tanh;
+  tests, gains. Done (D184): at most 0.5083 ulp; `sinhf` 15,310 → 627
+  instructions on armv6-m.
+
+### P11.04g2 — The cores without an FPU: `asinhf`, `acoshf`, `atanhf`  `[ ]`
+- [ ] Over the fixed-point log2 core, square root and quotient (15,868–19,926
   instructions on armv6-m today); tests, gains.
+
+P11.04g was split into g1 and g2 (CLAUDE.md workflow): the first three rest
+on the exponential, the last three on the logarithm.
 
 ## P11.05 — Double functions  `[ ]`
 - [ ] Research: `docs/research/libm-fast-double.md`: on the soft-double cores

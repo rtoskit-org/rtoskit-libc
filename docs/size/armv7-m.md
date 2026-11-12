@@ -322,3 +322,7 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 ## P11.04f2 — The cores without an FPU: fast `asinf`, `acosf` and their π forms (D183)
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `asinf.o` 594 → 216, `acosf.o` 596 → 308, `asinpif.o` 800 → 444, `acospif.o` 716 → 424, `__libc_fixed_asin.o` new → 476; no real inverse function pulls `__libc_atan2f_core.o` or the float-float square root any more (the complex functions still do).
+
+## P11.04g1 — The cores without an FPU: fast `sinhf`, `coshf` and `tanhf` (D184)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `sinhf.o` 768 → 600, `coshf.o` 212 → 372, `tanhf.o` 990 → 732; they no longer pull the float-float exponential cores (speed's `coshf` is smaller only because those cores sit in other members).

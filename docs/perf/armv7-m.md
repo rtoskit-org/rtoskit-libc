@@ -972,3 +972,13 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 |---|---:|---:|---:|
 | `asinf` | 11311 | 239 | -98 % |
 | `acosf` | 11794 | 244 | -98 % |
+
+## P11.04g1 — The cores without an FPU: fast `sinhf`, `coshf` and `tanhf` (D184)
+
+`nofp/fast/`: the odd series near 0, the exp2 core twice for sinh and cosh, and 1 − 2/(e^2x + 1) by the fixed-point quotient for tanh, rounded to nearest once (D184). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinhf` | 7396 | 171 | -98 % |
+| `coshf` | 7302 | 162 | -98 % |
+| `tanhf` | 7763 | 203 | -97 % |
