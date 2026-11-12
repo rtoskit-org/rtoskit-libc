@@ -1395,3 +1395,11 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `exp10` | 14233 | 3917 | 1412 | -90 % |
 
 AOR on this core: `exp` 3954, `exp2` 3335.
+
+## P11.05c2 — Fast `expm1` in 64-bit fixed point (D189)
+
+`libc/math/dp-fixed/fast/expm1.c`: a Q64 series below 1/16, relative however small x is; from 1/16, P11.05c1's kernel result in Q63 minus 1 exactly in integers. Instructions per call (throughput): speed, P11.05b's fast (D187's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05b | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `expm1` | 10938 | 9720 | 1468 | -87 % |

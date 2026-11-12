@@ -279,10 +279,10 @@
     "insns": 368.44
    },
    "expm1/latency": {
-    "insns": 9757.25
+    "insns": 1504.81
    },
    "expm1/throughput": {
-    "insns": 9720.44
+    "insns": 1468.0
    },
    "expm1f/latency": {
     "insns": 454.88

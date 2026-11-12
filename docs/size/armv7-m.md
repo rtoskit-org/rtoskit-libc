@@ -338,3 +338,7 @@ Release and speed unchanged (`size-report diff`). `math-mix` (exp and pow) grows
 ## P11.05c1 — Fast `exp`, `exp2` and `exp10` in 64-bit fixed point (D188)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` (exp and pow) shrinks from 37552 to 37304 bytes of code (36376 in speed): the fixed-point `exp`, its kernel and its 512-byte table replace D187's double file and its 1 KiB table, and the slow path stays the strict core that pow shares. Smaller than the locked fast figure, so it is not re-locked (P11.06 re-locks every core, D187).
+
+## P11.05c2 — Fast `expm1` in 64-bit fixed point (D189)
+
+Release and speed unchanged (`size-report diff`); the fast budgets hold. No size program calls `expm1`, and `math-mix` loses 8 bytes in fast (the kernel's polynomial as an inline).

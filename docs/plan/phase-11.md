@@ -413,9 +413,10 @@ the gains and the members recorded.
   armv7e-m, 3954 on armv6-m); tests, gains. Done (D188): `exp` 3813 → 317 on
   armv7e-m and 10,317 → 1410 on armv6-m; at most 0.5073 ulp.
 
-### P11.05c2 — `expm1` on the soft-double cores  `[ ]`
-- [ ] Over c1's kernel, with the relative accuracy near 0 and where its terms
-  cancel; tests, gains.
+### P11.05c2 — `expm1` on the soft-double cores  `[x]`
+- [x] Over c1's kernel, with the relative accuracy near 0 and where its terms
+  cancel; tests, gains. Done (D189): 4075 → 346 on armv7e-m and 10,938 → 1468
+  on armv6-m; at most 0.5254 ulp.
 
 P11.05c was split into c1 and c2 (CLAUDE.md workflow): expm1 needs more than
 the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.

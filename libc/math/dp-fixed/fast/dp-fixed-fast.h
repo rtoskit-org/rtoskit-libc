@@ -37,6 +37,37 @@ extern const uint64_t __libc_dp_fixed_exp2_table[64];
 double __libc_dp_fixed_exp2(int32_t n, uint64_t f);
 
 /*
+ * 2^(f 2^-64) in Q63, in [2^63, 2^64), its error a few units (the table's half unit, the products' floors): 2^(j/64) from
+ * the table for the top 6 bits of f, times 1 + P with P = 2^r - 1 for r in [0, 1/64). P is the sum of (r ln 2)^k/k!: with
+ * u = 64 r in Q64, the terms' coefficients (ln 2/64)^k/k! in Q64, k = 1..7 (the eighth is below 0.09 units of 2^-64). All
+ * positive, so Horner's rule runs unsigned; the three highest fit in 32 bits, so their products take two partial products,
+ * not four. The kernel's (__libc_dp_fixed_exp2) and expm1's, which subtracts 1 from it in integers.
+ */
+static inline uint64_t __libc_dp_fixed_exp2_fraction(uint64_t f)
+{
+	constexpr uint64_t a1 = 0x02c5c85fdf473de7ull;
+	constexpr uint64_t a2 = 0x0003d7f7bff058b2ull;
+	constexpr uint64_t a3 = 0x0000038d611ae094ull;
+	constexpr uint64_t a4 = 0x0000000276556df7ull;
+	constexpr uint64_t a5 = 0x00000000015d87feull;
+	constexpr uint64_t a6 = 0x000000000000a185ull;
+	constexpr uint64_t a7 = 0x0000000000000040ull;
+	uint64_t t = __libc_dp_fixed_exp2_table[f >> 58];
+	uint64_t u = f << 6;
+	uint64_t p;
+
+	p = a6 + __libc_trig_high64(u, a7);
+	p = a5 + __libc_trig_high64(u, p);
+	p = a4 + __libc_trig_high64(u, p);
+	p = a3 + __libc_trig_high64(u, p);
+	p = a2 + __libc_trig_high64(u, p);
+	p = a1 + __libc_trig_high64(u, p);
+	p = __libc_trig_high64(u, p);
+
+	return t + __libc_trig_high64(t, p);
+}
+
+/*
  * |x| c as n + f 2^-64 for |x| = m 2^(e - 52) (m the 53-bit significand) and c = (c_hi + c_lo 2^-64) 2^-point, c_hi with
  * bit 63 set: m c_hi exactly in 117 bits plus the high part of m c_lo, which is |x| c 2^(52 - e + point), then shifted
  * by 52 - e + point - 64; below 2^-64 the bits are dropped (the error is below 2^-63 of the result)
