@@ -367,6 +367,18 @@ static void check_inverse_trigonometric(void)
 	QUIET(within_ulp(atanf(0x1.fffffep+25f), 0x1.921fb50442d14p+0) && within_ulp(atanf(0x1.000002p+26f), 0x1.921fb50442d20p+0) && within_ulp(atanpif(0x1.0087a2p-3f), 0x1.44ee7cebb95b4p-5));
 	QUIET(within_ulp(atanpif(0x1.fffffep+26f), 0x1.ffffffd7419f0p-2) && within_ulp(atan2f(-0x1.11ba3cp+72f, 0x1.1118eap+75f), -0x1.fe8570dcce5fcp-4));
 	CHECK(within_ulp(atanpif(0x1p-149f), 0x1.45f306dc9c883p-151) && within_ulp(atan2pif(-0x1.17ae5p-113f, 0x1.721ed8p-111f), -0x1.e6de531990acfp-5) && is_positive_zero(atan2f(0x1p-149f, 0x1p+127f)));
+	/*
+	 * The cores without an FPU (P11.04f2): each side of asinf's 2^-12, of acosf's and acospif's 2^-26 and of the series'
+	 * u = 0 at 2^-16, a subnormal asinpif, and the sweeps' worst points
+	 */
+	QUIET(within_ulp(asinf(0x1.fffffep-13f), 0x1.fffffe5555548p-13) && within_ulp(asinf(0x1.000002p-12f), 0x1.0000022aaaabcp-12) && within_ulp(asinf(0x1.000002p-16f), 0x1.000002002aaabp-16));
+	QUIET(within_ulp(acosf(0x1.fffffep-27f), 0x1.921fb50442d1cp+0) && within_ulp(acosf(-0x1.000002p-26f), 0x1.921fb58442d20p+0) && within_ulp(acospif(-0x1.000002p-26f), 0x1.00000028be613p-1));
+	QUIET(within_ulp(asinf(0x1.2a5388p-1f), 0x1.3e77e0fbbd716p-1) && within_ulp(acosf(0x1.2acdcap-1f), 0x1.e5310b046f730p-1) && within_ulp(asinpif(0x1.011c9p-1f), 0x1.56f800f3bb1bbp-3));
+	QUIET(within_ulp(acospif(0x1.d96ec8p-1f), 0x1.fd49ed079f8d6p-4));
+	CHECK(within_ulp(asinpif(0x1p-149f), 0x1.45f306dc9c883p-151));
+	/* regression: the square root's remainder taken as positive where the last Newton step rounded r up (216-322 ulp, P11.04f2) */
+	QUIET(within_ulp(asinf(0x1.acde6ap-1f), 0x1.fc625c7f784d4p-1) && within_ulp(acosf(0x1.bcaffep-1f), 0x1.0981a42ab7d50p-1) && within_ulp(acosf(-0x1.bcaffep-1f), 0x1.4fbf4c3994dc4p+1));
+	QUIET(within_ulp(asinpif(0x1.658ca6p-1f), 0x1.f7f73deff3a8cp-3) && within_ulp(acospif(0x1.bcaf8p-1f), 0x1.520ee644c50d6p-3));
 	/* regression: an exact ratio of 1/8 gave a quotient a unit below 1/2 and the piece below the first (5411 ulp, P11.04f1) */
 	QUIET(within_ulp(atan2f(-0x1.2d625cp-59f, -0x1.2d625cp-62f), -0x1.b1f56fdeef00fp+0) && within_ulp(atan2f(0x1.2d625cp-62f, 0x1.2d625cp-59f), 0x1.fd5ba9aac2f6ep-4));
 	QUIET(within_ulp(atan2pif(-0x1.2d625cp-59f, -0x1.2d625cp-62f), -0x1.1444475077767p-1));

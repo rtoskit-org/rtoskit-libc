@@ -360,10 +360,11 @@ speed's code, rounding test included: D178 keeps it correctly rounded.
   division and an atan kernel; tests, gains. Done (D182): at most 0.5746
   ulp; `atanf` 17,683 → 751 instructions on armv6-m.
 
-### P11.04f2 — The cores without an FPU: `asinf`, `acosf` and their π forms  `[ ]`
-- [ ] Fixed-point `asinf`, `acosf`, `asinpif` and `acospif` (22,944–23,828
+### P11.04f2 — The cores without an FPU: `asinf`, `acosf` and their π forms  `[x]`
+- [x] Fixed-point `asinf`, `acosf`, `asinpif` and `acospif` (22,944–23,828
   instructions on armv6-m): a fixed-point square root and the asin series;
-  tests, gains.
+  tests, gains. Done (D183): at most 0.5240 ulp; `asinf` 22,944 → 730
+  instructions on armv6-m.
 
 P11.04f was split into f1 and f2 (CLAUDE.md workflow): each needs its own
 fixed-point building block, a division for the arctangent and a square root

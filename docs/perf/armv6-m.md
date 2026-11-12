@@ -1343,3 +1343,12 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 |---|---:|---:|---:|
 | `atanf` | 17683 | 751 | -96 % |
 | `atan2f` | 18355 | 812 | -96 % |
+
+## P11.04f2 — The cores without an FPU: fast `asinf`, `acosf` and their π forms (D183)
+
+`nofp/fast/`: one arcsine kernel (the series in x² up to 1/2, the half-angle form with a fixed-point square root above), rounded to nearest once (D183). Instructions per call (throughput), speed and fast; release and speed unchanged. The π forms have no bench case.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asinf` | 22944 | 730 | -97 % |
+| `acosf` | 23761 | 749 | -97 % |

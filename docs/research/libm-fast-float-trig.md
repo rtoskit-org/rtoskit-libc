@@ -831,3 +831,72 @@ forms have no bench case):
 Test vectors (`libm_thresholds`): each side of 1/8 and of the 2^26 and
 2^27 ends, the sweeps' worst points, tiny ratios to a subnormal and to zero,
 and the exact-1/8 regression, within 1 ulp.
+
+## 19. asinf, acosf and their π forms on the cores without an FPU: `libc/math/nofp/fast/` (P11.04f2)
+
+armv6-m, armv6s-m and armv7-m, in integers: the second half of P11.04f. As
+§18's functions, these had no fixed-point path (`asinf` 22,944 and `acosf`
+23,761 instructions on armv6-m, the float-float core over a float-float
+square root).
+
+### 19.1 Sources
+
+- **Arm Optimized Routines, vector `asinf`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/asinf.c>):
+  below 1/2, asin x = x + x³ P(x²); above, the half-angle form
+  asin |x| = π/2 − 2(y + y z P(z)) with z = (1 − |x|)/2 and y = √z, one
+  polynomial P for both intervals (z is at most 1/4 as x² is).
+- **FreeBSD `e_asinf.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/e_asinf.c>):
+  a rational approximation in x² from 2^-12 to 1/2 (2^-30.1), x itself
+  below 2^-12, and the same half-angle form above with a float `sqrtf`.
+- **CMSIS-DSP `arm_sqrt_q31.c`**
+  (<https://raw.githubusercontent.com/ARM-software/CMSIS-DSP/main/Source/FastMathFunctions/arm_sqrt_q31.c>):
+  a fixed-point square root by Newton steps on 1/√x,
+  r(3 − x r²)/2, from a start value (three steps), then x·r.
+
+What we take: AOR's one polynomial for both intervals, and the square root
+by Newton steps on its reciprocal, as CMSIS-DSP, with a seed table and a
+final correction by the exact remainder.
+
+### 19.2 The method
+
+- **The series** K(u) = 1 + u p(u) = asin(√u)/√u for u ≤ 1/4: p of degree
+  6 in signed Q31 (u p within 2^-33.7, fitted here); degree 5 gave only
+  2^-29.8, as the series converges slowly at u = 1/4.
+- **Up to 1/2**: asin |x| = |x| K(x²), x² in Q32 (0 below 2^-16), times
+  x's normalised significand: relative however small x (the π forms reach
+  subnormal results).
+- **Above 1/2**: z = (1 − |x|)/2 is exact in integers: |x| = m 2^-24 makes
+  z = w 2^-25 with w = 2^24 − m, so u = z in Q32 is exact as well. √z =
+  √(2w)·2^-13: 2w shifted by an even count into [2^30, 2^32) as t in Q32,
+  then √t (`square_root`): 1/√t from a 24-entry table of 16-bit seeds over
+  [1/4, 1) (2^-5.1, computed here), two Newton steps r + r(1 − t r²)/2
+  (2^-18.6), s = t r, and s corrected once by its exact remainder,
+  s + (t − s²) r/2, within a unit of 2^-32 (measured over every 997th t).
+  The remainder may be negative: the last step can round r up by a unit,
+  which the first build missed (taken as positive, 216–322 ulp in the
+  sweeps, near x = 0.8). 2√z·K(z) then gives π/2 minus it (asin), itself
+  (acos, x > 1/2) or π minus it (acos, x < −1/2).
+- **The kernel** `__libc_fixed_asin` (out of line, shared by the four files)
+  returns the product as a normalised 64-bit significand and an exponent,
+  and whether it is the half-angle form; the callers add §18's offsets
+  (π/2, π; 1/2, 1 for the π forms, which first scale by 2^33/π). x itself
+  below 2^-12 (asin), π/2 and 1/2 below 2^-26 (acos, acospi), +0 at 1; the
+  domain errors as the strict files.
+
+### 19.3 Measured (P11.04f2)
+
+Every float on the host (as §18): `asinf` at most **0.5083 ulp**, `acosf`
+**0.5087**, `asinpif` **0.5240**, `acospif` **0.5149**; the bound is 1.
+Instructions per call (speed → fast, the bench's plugin; the π forms have
+no bench case):
+
+| | armv6-m, armv6s-m | armv7-m |
+| --- | ---: | ---: |
+| `asinf` | 22,944 → 730 | 11,311 → 239 |
+| `acosf` | 23,761 → 749 | 11,794 → 244 |
+
+Test vectors (`libm_thresholds`): each side of 2^-12, 2^-16 and 2^-26, a
+subnormal `asinpif`, the sweeps' worst points, and the square root's
+regression, within 1 ulp.

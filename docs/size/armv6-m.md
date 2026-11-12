@@ -867,3 +867,7 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 ## P11.04f1 — The cores without an FPU: fast `atanf`, `atan2f` and their π forms (D182)
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `atanf.o` 108 → 200, `atan2f.o` 780 → 460, `atanpif.o` 508 → 368, `atan2pif.o` 884 → 508, `__libc_fixed_atan.o` new → 824; they no longer pull `__libc_atan2f_core.o` (1260) or the float-float helpers, which stay for `asinf` and `acosf` until P11.04f2.
+
+## P11.04f2 — The cores without an FPU: fast `asinf`, `acosf` and their π forms (D183)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `asinf.o` 592 → 188, `acosf.o` 590 → 272, `asinpif.o` 792 → 336, `acospif.o` 708 → 316, `__libc_fixed_asin.o` new → 574; no real inverse function pulls `__libc_atan2f_core.o` or the float-float square root any more (the complex functions still do).
