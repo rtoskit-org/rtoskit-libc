@@ -688,3 +688,10 @@ Unchanged here (`size-report diff`; the budgets hold): the double-FPU cores' `er
 ## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
 
 Unchanged here (`size-report diff`; the budgets hold).
+
+## P11.05b — Fast `exp`, `exp2`, `exp10` and `expm1` in double (D187)
+
+Release and speed unchanged (`size-report diff`). `math-mix` (exp and pow) is 15,478 bytes of code in fast against 12,302 in
+speed (+25.8 %, over the +20 % budget): the fast `exp` and its 1 KiB table on top of the strict core that pow still uses.
+As the maintainer decided for P11.05 (D187), armv7e-m-dp's fast figures are locked from this build (`size-report --flavour
+fast --lock`), as the cores without an FPU's are; P11.06 re-locks them with the final figures.

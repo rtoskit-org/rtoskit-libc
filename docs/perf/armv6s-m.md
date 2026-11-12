@@ -1372,3 +1372,14 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `asinhf` | 19353 | 1152 | -94 % |
 | `acoshf` | 19926 | 1182 | -94 % |
 | `atanhf` | 15868 | 877 | -94 % |
+
+## P11.05b — Fast `exp`, `exp2`, `exp10` and `expm1` in double (D187)
+
+`libc/math/fast/`: a 64-entry table of 2^(j/64) and its tail, degree-3 polynomials by Horner's rule, one rounding; the strict core for the slow path (D187). This core runs them on its soft-double helpers until P11.05c gives it fixed-point kernels. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `exp` | 10317 | 3648 | -65 % |
+| `exp2` | 14133 | 3233 | -77 % |
+| `exp10` | 14233 | 3917 | -72 % |
+| `expm1` | 10938 | 9720 | -11 % |

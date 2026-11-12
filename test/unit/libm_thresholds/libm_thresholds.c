@@ -484,6 +484,30 @@ static void check_error_functions(void)
 	CHECK(within_ulps(erfcf(0x1.266664p+3f), 0x1.cee509d8309dp-127, 1) && within_ulps(erfcf(0x1.266668p+3f), 0x1.cee0dafd0fa85p-127, 1) && within_ulps(erfcf(0x1.3ffffep+3f), 0x1.7d8c5e7556c84p-149, 1) && within_ulps(erfcf(0x1.400002p+3f), 0x1.7d889fe214adbp-149, 1));
 }
 
+/* x is want, the correctly rounded double, or a neighbour of it: within 1 ulp of it (the double fast bound) */
+static bool near_double(double x, double want)
+{
+	return x == want || x == nextafter(want, INFINITY) || x == nextafter(want, -INFINITY);
+}
+
+static void check_double_exponentials(void)
+{
+	/*
+	 * P11.05b (the double-FPU cores' double-only exp family, D187; the strict files elsewhere): the special values, each side
+	 * of the subnormal scaling from 2^-1014 and of the ends, exp10's exact powers, and the sweeps' regressions: the unscaled
+	 * product went subnormal near 2^-1020 (0.76 ulp), exp10's end was log10 2^-1074 (1 ulp), and expm1's terms cancelled
+	 * near ln 2/64 (2.1 ulp)
+	 */
+	QUIET(exp(0.0) == 1.0 && exp(-INFINITY) == 0.0 && exp(INFINITY) == INFINITY && isnan(exp(NAN)) && exp2(-1074.0) == 0x1p-1074 && exp2(1023.0) == 0x1p1023 && exp10(22.0) == 1e22);
+	QUIET(exp2(-INFINITY) == 0.0 && exp10(-INFINITY) == 0.0 && expm1(-INFINITY) == -1.0 && is_negative_zero((float)expm1(-0.0)) && exp10(3.0) == 1000.0);
+	CHECK(near_double(exp(-0x1.62552039fe9f2p+9), 0x0.c3b18d96dcfa3p-1022) && near_double(exp(-0x1.6232bdd7abcd2p+9), 0x1.000000000007cp-1022) && exp(-0x1.74910d52d3051p+9) <= 0x1p-1074);
+	QUIET(near_double(exp(0x1.62e42fefa39efp+9), 0x1.fffffffffff2ap+1023) && near_double(exp2(-0x1.fe00000000001p+9), 0x1.ffffffffffd3ap-1021) && near_double(exp2(0x1.fffffffffffffp+9), 0x1.ffffffffffd3ap+1023));
+	CHECK(near_double(exp2(-0x1.ff2593ac77001p+9), 0x0.d0dd95bcd370fp-1022) && exp10(-0x1.439b746e36b52p+8) == 0x1p-1074 && exp10(-0x1.434e642d0efc8p+8) == 0x1p-1074);
+	QUIET(near_double(exp10(0x1.34413509f79fep+8), 0x1.ffffffffffba1p+1023) && near_double(expm1(0x1.62f0eeacb7p-7), 0x1.64ded6012030ap-7) && near_double(expm1(-0x1.64aaac4f09a7ep-7), -0x1.62bb8d795fbfap-7));
+	QUIET(near_double(expm1(0x1.00ce25a05127p+9), 0x1.fa20715abe035p+740) && near_double(expm1(0x1.6232bdd7abcd2p-7), 0x1.641e9377fffb7p-7));
+	RAISES(exp(710.0) == INFINITY && exp2(1024.0) == INFINITY && exp10(309.0) == INFINITY && expm1(710.0) == INFINITY, FE_OVERFLOW);
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -497,6 +521,7 @@ int main(void)
 	check_inverse_trigonometric();
 	check_hyperbolic();
 	check_error_functions();
+	check_double_exponentials();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

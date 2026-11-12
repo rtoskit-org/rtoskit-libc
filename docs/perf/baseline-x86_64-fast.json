@@ -5,1563 +5,1563 @@
  "programs": {
   "malloc": {
    "batch/churn": {
-    "cycles": 37.3,
+    "cycles": 42.16,
     "insns": 110.38
    },
    "batch/fifo": {
-    "cycles": 36.81,
+    "cycles": 41.81,
     "insns": 85.08
    },
    "batch/lifo": {
-    "cycles": 36.68,
+    "cycles": 40.84,
     "insns": 80.16
    },
    "batch/shuffled": {
-    "cycles": 36.95,
+    "cycles": 42.32,
     "insns": 101.8
    },
    "calloc/256": {
-    "cycles": 40.46,
+    "cycles": 46.24,
     "insns": 124.5
    },
    "fixed/16": {
-    "cycles": 36.57,
+    "cycles": 41.63,
     "insns": 84.0
    },
    "fixed/256": {
-    "cycles": 36.57,
+    "cycles": 41.6,
     "insns": 84.0
    },
    "fixed/4096": {
-    "cycles": 36.56,
+    "cycles": 41.61,
     "insns": 84.0
    },
    "realloc/grow": {
-    "cycles": 34.07,
+    "cycles": 39.57,
     "insns": 93.55
    }
   },
   "malloc-tiny": {
    "batch/churn": {
-    "cycles": 89.27,
+    "cycles": 103.75,
     "insns": 215.07
    },
    "batch/fifo": {
-    "cycles": 87.42,
+    "cycles": 99.08,
     "insns": 198.91
    },
    "batch/lifo": {
-    "cycles": 87.45,
+    "cycles": 100.33,
     "insns": 198.91
    },
    "batch/shuffled": {
-    "cycles": 87.6,
+    "cycles": 99.51,
     "insns": 199.41
    },
    "calloc/256": {
-    "cycles": 40.17,
+    "cycles": 45.92,
     "insns": 133.0
    },
    "fixed/16": {
-    "cycles": 36.56,
+    "cycles": 42.57,
     "insns": 92.5
    },
    "fixed/256": {
-    "cycles": 36.55,
+    "cycles": 41.26,
     "insns": 92.5
    },
    "fixed/4096": {
-    "cycles": 36.55,
+    "cycles": 42.52,
     "insns": 92.5
    },
    "realloc/grow": {
-    "cycles": 34.18,
+    "cycles": 39.21,
     "insns": 93.64
    }
   },
   "math": {
    "acos/latency": {
-    "cycles": 273.3,
+    "cycles": 314.77,
     "insns": 502.94
    },
    "acos/throughput": {
-    "cycles": 197.62,
+    "cycles": 251.0,
     "insns": 503.94
    },
    "acosf/latency": {
-    "cycles": 87.28,
+    "cycles": 101.0,
     "insns": 71.94
    },
    "acosf/throughput": {
-    "cycles": 52.51,
+    "cycles": 66.5,
     "insns": 72.94
    },
    "acosh/latency": {
-    "cycles": 229.14,
+    "cycles": 261.72,
     "insns": 477.69
    },
    "acosh/throughput": {
-    "cycles": 184.49,
+    "cycles": 223.3,
     "insns": 478.69
    },
    "acoshf/latency": {
-    "cycles": 75.52,
+    "cycles": 86.06,
     "insns": 69.56
    },
    "acoshf/throughput": {
-    "cycles": 44.35,
+    "cycles": 50.69,
     "insns": 70.56
    },
    "asin/latency": {
-    "cycles": 293.4,
+    "cycles": 310.65,
     "insns": 480.44
    },
    "asin/throughput": {
-    "cycles": 187.56,
+    "cycles": 230.02,
     "insns": 481.44
    },
    "asinf/latency": {
-    "cycles": 87.81,
+    "cycles": 100.66,
     "insns": 75.44
    },
    "asinf/throughput": {
-    "cycles": 20.45,
+    "cycles": 35.12,
     "insns": 76.44
    },
    "asinh/latency": {
-    "cycles": 290.81,
+    "cycles": 343.44,
     "insns": 548.19
    },
    "asinh/throughput": {
-    "cycles": 245.86,
+    "cycles": 290.35,
     "insns": 549.19
    },
    "asinhf/latency": {
-    "cycles": 75.49,
+    "cycles": 84.8,
     "insns": 89.19
    },
    "asinhf/throughput": {
-    "cycles": 18.15,
+    "cycles": 33.61,
     "insns": 90.19
    },
    "atan/latency": {
-    "cycles": 204.24,
+    "cycles": 239.35,
     "insns": 376.56
    },
    "atan/throughput": {
-    "cycles": 125.29,
+    "cycles": 169.96,
     "insns": 377.56
    },
    "atan2/latency": {
-    "cycles": 229.74,
+    "cycles": 280.69,
     "insns": 557.12
    },
    "atan2/throughput": {
-    "cycles": 162.65,
+    "cycles": 267.4,
     "insns": 558.12
    },
    "atan2f/latency": {
-    "cycles": 68.16,
+    "cycles": 77.55,
     "insns": 80.62
    },
    "atan2f/throughput": {
-    "cycles": 17.28,
+    "cycles": 30.31,
     "insns": 81.62
    },
    "atanf/latency": {
-    "cycles": 68.47,
+    "cycles": 73.13,
     "insns": 63.44
    },
    "atanf/throughput": {
-    "cycles": 13.84,
+    "cycles": 23.93,
     "insns": 64.44
    },
    "atanh/latency": {
-    "cycles": 174.39,
+    "cycles": 200.84,
     "insns": 382.19
    },
    "atanh/throughput": {
-    "cycles": 125.26,
+    "cycles": 156.81,
     "insns": 383.19
    },
    "atanhf/latency": {
-    "cycles": 71.24,
+    "cycles": 82.83,
     "insns": 85.62
    },
    "atanhf/throughput": {
-    "cycles": 17.16,
+    "cycles": 29.01,
     "insns": 86.62
    },
    "cbrt/latency": {
-    "cycles": 169.93,
+    "cycles": 163.46,
     "insns": 142.19
    },
    "cbrt/throughput": {
-    "cycles": 49.13,
+    "cycles": 71.96,
     "insns": 143.19
    },
    "cbrtf/latency": {
-    "cycles": 59.04,
+    "cycles": 57.74,
     "insns": 70.19
    },
    "cbrtf/throughput": {
-    "cycles": 13.96,
+    "cycles": 14.28,
     "insns": 71.19
    },
    "cos/latency": {
-    "cycles": 131.64,
+    "cycles": 134.47,
     "insns": 311.88
    },
    "cos/throughput": {
-    "cycles": 73.05,
+    "cycles": 96.46,
     "insns": 312.88
    },
    "cosf/latency": {
-    "cycles": 45.63,
+    "cycles": 52.3,
     "insns": 55.62
    },
    "cosf/throughput": {
-    "cycles": 10.45,
+    "cycles": 12.58,
     "insns": 56.62
    },
    "cosh/latency": {
-    "cycles": 121.21,
+    "cycles": 138.54,
     "insns": 283.44
    },
    "cosh/throughput": {
-    "cycles": 54.39,
+    "cycles": 90.39,
     "insns": 284.44
    },
    "coshf/latency": {
-    "cycles": 49.37,
+    "cycles": 51.91,
     "insns": 50.69
    },
    "coshf/throughput": {
-    "cycles": 10.22,
+    "cycles": 16.66,
     "insns": 51.69
    },
    "cospi/latency": {
-    "cycles": 125.1,
+    "cycles": 133.73,
     "insns": 353.44
    },
    "cospi/throughput": {
-    "cycles": 60.92,
+    "cycles": 100.51,
     "insns": 354.44
    },
    "cospif/latency": {
-    "cycles": 48.43,
+    "cycles": 54.89,
     "insns": 60.69
    },
    "cospif/throughput": {
-    "cycles": 15.12,
+    "cycles": 18.5,
     "insns": 61.69
    },
    "erf/latency": {
-    "cycles": 425.06,
+    "cycles": 484.73,
     "insns": 503.06
    },
    "erf/throughput": {
-    "cycles": 371.21,
+    "cycles": 443.59,
     "insns": 504.06
    },
    "erfc/latency": {
-    "cycles": 1028.83,
+    "cycles": 1175.82,
     "insns": 1441.88
    },
    "erfc/throughput": {
-    "cycles": 970.48,
+    "cycles": 1094.78,
     "insns": 1442.88
    },
    "erfcf/latency": {
-    "cycles": 67.81,
+    "cycles": 73.22,
     "insns": 115.69
    },
    "erfcf/throughput": {
-    "cycles": 21.8,
+    "cycles": 34.34,
     "insns": 116.69
    },
    "erff/latency": {
-    "cycles": 60.4,
+    "cycles": 71.27,
     "insns": 107.5
    },
    "erff/throughput": {
-    "cycles": 19.06,
+    "cycles": 32.15,
     "insns": 108.5
    },
    "exp/latency": {
-    "cycles": 77.8,
-    "insns": 229.19
+    "cycles": 41.31,
+    "insns": 49.69
    },
    "exp/throughput": {
-    "cycles": 41.42,
-    "insns": 230.19
+    "cycles": 12.66,
+    "insns": 50.69
    },
    "exp10/latency": {
-    "cycles": 96.85,
-    "insns": 275.69
+    "cycles": 44.7,
+    "insns": 50.69
    },
    "exp10/throughput": {
-    "cycles": 56.42,
-    "insns": 276.69
+    "cycles": 13.24,
+    "insns": 51.69
    },
    "exp10f/latency": {
-    "cycles": 36.31,
+    "cycles": 36.63,
     "insns": 46.69
    },
    "exp10f/throughput": {
-    "cycles": 12.71,
+    "cycles": 8.76,
     "insns": 47.69
    },
    "exp10m1/latency": {
-    "cycles": 101.23,
+    "cycles": 115.9,
     "insns": 277.0
    },
    "exp10m1/throughput": {
-    "cycles": 53.06,
+    "cycles": 81.28,
     "insns": 278.0
    },
    "exp10m1f/latency": {
-    "cycles": 36.88,
+    "cycles": 39.31,
     "insns": 55.94
    },
    "exp10m1f/throughput": {
-    "cycles": 9.87,
+    "cycles": 9.84,
     "insns": 56.94
    },
    "exp2/latency": {
-    "cycles": 96.6,
-    "insns": 286.19
+    "cycles": 39.39,
+    "insns": 45.69
    },
    "exp2/throughput": {
-    "cycles": 62.63,
-    "insns": 287.19
+    "cycles": 11.48,
+    "insns": 46.69
    },
    "exp2f/latency": {
-    "cycles": 34.63,
+    "cycles": 35.25,
     "insns": 45.69
    },
    "exp2f/throughput": {
-    "cycles": 13.29,
+    "cycles": 8.3,
     "insns": 46.69
    },
    "exp2m1/latency": {
-    "cycles": 97.65,
+    "cycles": 111.89,
     "insns": 266.69
    },
    "exp2m1/throughput": {
-    "cycles": 52.41,
+    "cycles": 76.1,
     "insns": 267.69
    },
    "exp2m1f/latency": {
-    "cycles": 36.76,
+    "cycles": 39.31,
     "insns": 55.25
    },
    "exp2m1f/throughput": {
-    "cycles": 8.73,
+    "cycles": 9.03,
     "insns": 56.25
    },
    "expf/latency": {
-    "cycles": 39.73,
+    "cycles": 36.66,
     "insns": 46.69
    },
    "expf/throughput": {
-    "cycles": 14.36,
+    "cycles": 9.04,
     "insns": 47.69
    },
    "expm1/latency": {
-    "cycles": 91.36,
-    "insns": 240.56
+    "cycles": 51.79,
+    "insns": 132.69
    },
    "expm1/throughput": {
-    "cycles": 45.41,
-    "insns": 241.56
+    "cycles": 30.79,
+    "insns": 133.69
    },
    "expm1f/latency": {
-    "cycles": 38.53,
+    "cycles": 38.97,
     "insns": 59.94
    },
    "expm1f/throughput": {
-    "cycles": 16.9,
+    "cycles": 9.98,
     "insns": 60.94
    },
    "floor/latency": {
-    "cycles": 7.49,
+    "cycles": 10.98,
     "insns": 30.19
    },
    "floor/throughput": {
-    "cycles": 5.1,
+    "cycles": 8.48,
     "insns": 31.19
    },
    "floorf/latency": {
-    "cycles": 14.56,
+    "cycles": 17.07,
     "insns": 37.19
    },
    "floorf/throughput": {
-    "cycles": 8.73,
+    "cycles": 9.5,
     "insns": 38.19
    },
    "fmod/latency": {
-    "cycles": 30.69,
+    "cycles": 44.57,
     "insns": 157.25
    },
    "fmod/throughput": {
-    "cycles": 29.96,
+    "cycles": 44.76,
     "insns": 158.25
    },
    "fmodf/latency": {
-    "cycles": 37.58,
+    "cycles": 44.81,
     "insns": 163.25
    },
    "fmodf/throughput": {
-    "cycles": 38.22,
+    "cycles": 42.96,
     "insns": 164.25
    },
    "hypot/latency": {
-    "cycles": 99.47,
+    "cycles": 108.41,
     "insns": 247.12
    },
    "hypot/throughput": {
-    "cycles": 45.95,
+    "cycles": 75.43,
     "insns": 248.12
    },
    "hypotf/latency": {
-    "cycles": 20.96,
+    "cycles": 18.16,
     "insns": 36.62
    },
    "hypotf/throughput": {
-    "cycles": 9.77,
+    "cycles": 6.52,
     "insns": 37.62
    },
    "lgamma/latency": {
-    "cycles": 273.84,
+    "cycles": 326.53,
     "insns": 814.69
    },
    "lgamma/throughput": {
-    "cycles": 212.93,
+    "cycles": 292.87,
     "insns": 815.69
    },
    "lgammaf/latency": {
-    "cycles": 308.98,
+    "cycles": 333.29,
     "insns": 829.69
    },
    "lgammaf/throughput": {
-    "cycles": 232.52,
+    "cycles": 309.32,
     "insns": 830.69
    },
    "log/latency": {
-    "cycles": 108.46,
+    "cycles": 120.51,
     "insns": 250.69
    },
    "log/throughput": {
-    "cycles": 63.1,
+    "cycles": 86.17,
     "insns": 251.69
    },
    "log10/latency": {
-    "cycles": 133.84,
+    "cycles": 141.75,
     "insns": 286.69
    },
    "log10/throughput": {
-    "cycles": 98.28,
+    "cycles": 105.81,
     "insns": 287.69
    },
    "log10f/latency": {
-    "cycles": 61.08,
+    "cycles": 66.08,
     "insns": 70.69
    },
    "log10f/throughput": {
-    "cycles": 13.3,
+    "cycles": 15.62,
     "insns": 71.69
    },
    "log10p1/latency": {
-    "cycles": 152.86,
+    "cycles": 151.3,
     "insns": 352.69
    },
    "log10p1/throughput": {
-    "cycles": 110.52,
+    "cycles": 112.89,
     "insns": 353.69
    },
    "log10p1f/latency": {
-    "cycles": 64.4,
+    "cycles": 66.15,
     "insns": 75.06
    },
    "log10p1f/throughput": {
-    "cycles": 14.84,
+    "cycles": 14.74,
     "insns": 76.06
    },
    "log1p/latency": {
-    "cycles": 129.33,
+    "cycles": 138.5,
     "insns": 314.69
    },
    "log1p/throughput": {
-    "cycles": 83.97,
+    "cycles": 104.57,
     "insns": 315.69
    },
    "log1pf/latency": {
-    "cycles": 60.97,
+    "cycles": 63.03,
     "insns": 79.06
    },
    "log1pf/throughput": {
-    "cycles": 12.88,
+    "cycles": 14.13,
     "insns": 80.06
    },
    "log2/latency": {
-    "cycles": 134.09,
+    "cycles": 144.73,
     "insns": 328.69
    },
    "log2/throughput": {
-    "cycles": 88.96,
+    "cycles": 112.25,
     "insns": 329.69
    },
    "log2f/latency": {
-    "cycles": 59.7,
+    "cycles": 67.41,
     "insns": 69.69
    },
    "log2f/throughput": {
-    "cycles": 12.77,
+    "cycles": 14.69,
     "insns": 70.69
    },
    "log2p1/latency": {
-    "cycles": 152.86,
+    "cycles": 154.64,
     "insns": 352.69
    },
    "log2p1/throughput": {
-    "cycles": 98.46,
+    "cycles": 118.93,
     "insns": 353.69
    },
    "log2p1f/latency": {
-    "cycles": 63.87,
+    "cycles": 66.0,
     "insns": 74.19
    },
    "log2p1f/throughput": {
-    "cycles": 14.14,
+    "cycles": 14.71,
     "insns": 75.19
    },
    "logf/latency": {
-    "cycles": 57.21,
+    "cycles": 62.23,
     "insns": 67.69
    },
    "logf/throughput": {
-    "cycles": 13.79,
+    "cycles": 13.65,
     "insns": 68.69
    },
    "pow/latency": {
-    "cycles": 208.51,
+    "cycles": 250.88,
     "insns": 624.0
    },
    "pow/throughput": {
-    "cycles": 186.56,
+    "cycles": 225.23,
     "insns": 625.0
    },
    "powf/latency": {
-    "cycles": 97.83,
+    "cycles": 112.1,
     "insns": 179.75
    },
    "powf/throughput": {
-    "cycles": 40.91,
+    "cycles": 42.29,
     "insns": 180.75
    },
    "round/latency": {
-    "cycles": 8.6,
+    "cycles": 11.3,
     "insns": 28.69
    },
    "round/throughput": {
-    "cycles": 4.52,
+    "cycles": 7.54,
     "insns": 29.69
    },
    "roundf/latency": {
-    "cycles": 15.78,
+    "cycles": 18.42,
     "insns": 35.69
    },
    "roundf/throughput": {
-    "cycles": 6.77,
+    "cycles": 9.16,
     "insns": 36.69
    },
    "sin/latency": {
-    "cycles": 128.51,
+    "cycles": 135.23,
     "insns": 307.06
    },
    "sin/throughput": {
-    "cycles": 63.46,
+    "cycles": 95.07,
     "insns": 308.06
    },
    "sincos/latency": {
-    "cycles": 157.68,
+    "cycles": 163.64,
     "insns": 444.88
    },
    "sincos/throughput": {
-    "cycles": 106.21,
+    "cycles": 135.54,
     "insns": 445.88
    },
    "sincosf/latency": {
-    "cycles": 70.86,
+    "cycles": 69.45,
     "insns": 109.94
    },
    "sincosf/throughput": {
-    "cycles": 26.94,
+    "cycles": 38.39,
     "insns": 110.94
    },
    "sinf/latency": {
-    "cycles": 43.64,
+    "cycles": 51.59,
     "insns": 61.75
    },
    "sinf/throughput": {
-    "cycles": 10.8,
+    "cycles": 10.83,
     "insns": 62.75
    },
    "sinh/latency": {
-    "cycles": 123.14,
+    "cycles": 139.6,
     "insns": 303.94
    },
    "sinh/throughput": {
-    "cycles": 66.91,
+    "cycles": 100.04,
     "insns": 304.94
    },
    "sinhf/latency": {
-    "cycles": 50.68,
+    "cycles": 52.21,
     "insns": 65.06
    },
    "sinhf/throughput": {
-    "cycles": 11.59,
+    "cycles": 18.69,
     "insns": 66.06
    },
    "sinpi/latency": {
-    "cycles": 117.9,
+    "cycles": 125.79,
     "insns": 356.19
    },
    "sinpi/throughput": {
-    "cycles": 65.84,
+    "cycles": 101.49,
     "insns": 357.19
    },
    "sinpif/latency": {
-    "cycles": 48.6,
+    "cycles": 55.97,
     "insns": 63.69
    },
    "sinpif/throughput": {
-    "cycles": 15.16,
+    "cycles": 18.45,
     "insns": 64.69
    },
    "sqrt/latency": {
-    "cycles": 6.14,
+    "cycles": 9.45,
     "insns": 12.69
    },
    "sqrt/throughput": {
-    "cycles": 4.1,
+    "cycles": 4.73,
     "insns": 13.69
    },
    "sqrtf/latency": {
-    "cycles": 4.99,
+    "cycles": 5.33,
     "insns": 12.69
    },
    "sqrtf/throughput": {
-    "cycles": 2.89,
+    "cycles": 3.0,
     "insns": 13.69
    },
    "tan/latency": {
-    "cycles": 180.89,
+    "cycles": 187.91,
     "insns": 425.94
    },
    "tan/throughput": {
-    "cycles": 108.18,
+    "cycles": 142.42,
     "insns": 426.94
    },
    "tanf/latency": {
-    "cycles": 68.86,
+    "cycles": 79.32,
     "insns": 77.69
    },
    "tanf/throughput": {
-    "cycles": 59.73,
+    "cycles": 66.13,
     "insns": 78.69
    },
    "tanh/latency": {
-    "cycles": 139.96,
+    "cycles": 158.28,
     "insns": 329.81
    },
    "tanh/throughput": {
-    "cycles": 71.19,
+    "cycles": 113.12,
     "insns": 330.81
    },
    "tanhf/latency": {
-    "cycles": 52.39,
+    "cycles": 62.18,
     "insns": 67.19
    },
    "tanhf/throughput": {
-    "cycles": 18.43,
+    "cycles": 21.01,
     "insns": 68.19
    },
    "tanpi/latency": {
-    "cycles": 180.54,
+    "cycles": 202.35,
     "insns": 486.94
    },
    "tanpi/throughput": {
-    "cycles": 120.61,
+    "cycles": 166.56,
     "insns": 487.94
    },
    "tanpif/latency": {
-    "cycles": 54.84,
+    "cycles": 64.58,
     "insns": 75.69
    },
    "tanpif/throughput": {
-    "cycles": 51.65,
+    "cycles": 59.72,
     "insns": 76.69
    },
    "tgamma/latency": {
-    "cycles": 372.55,
+    "cycles": 445.54,
     "insns": 1140.38
    },
    "tgamma/throughput": {
-    "cycles": 332.23,
+    "cycles": 452.74,
     "insns": 1141.38
    },
    "tgammaf/latency": {
-    "cycles": 431.88,
+    "cycles": 452.34,
     "insns": 1155.38
    },
    "tgammaf/throughput": {
-    "cycles": 335.58,
+    "cycles": 451.45,
     "insns": 1156.38
    }
   },
   "qsort": {
    "bsearch/1024": {
-    "cycles": 29.51,
+    "cycles": 30.84,
     "insns": 170.25
    },
    "qsort/equal/1024": {
-    "cycles": 4.12,
+    "cycles": 4.15,
     "insns": 25.07
    },
    "qsort/random/1024": {
-    "cycles": 126.53,
+    "cycles": 139.26,
     "insns": 352.95
    },
    "qsort/random/16": {
-    "cycles": 40.72,
+    "cycles": 46.81,
     "insns": 168.75
    },
    "qsort/random/256": {
-    "cycles": 71.81,
+    "cycles": 103.24,
     "insns": 281.46
    },
    "qsort/reversed/1024": {
-    "cycles": 11.76,
+    "cycles": 11.31,
     "insns": 50.07
    },
    "qsort/sorted/1024": {
-    "cycles": 4.12,
+    "cycles": 4.41,
     "insns": 25.07
    },
    "qsort/strings/256": {
-    "cycles": 68.69,
+    "cycles": 75.31,
     "insns": 273.6
    }
   },
   "softfloat": {
    "d2f": {
-    "cycles": 0.87,
+    "cycles": 0.99,
     "insns": 6.62
    },
    "d2i": {
-    "cycles": 1.29,
+    "cycles": 1.5,
     "insns": 9.62
    },
    "d2l": {
-    "cycles": 1.44,
+    "cycles": 1.5,
     "insns": 8.62
    },
    "dadd": {
-    "cycles": 1.38,
+    "cycles": 2.42,
     "insns": 10.62
    },
    "dcmp": {
-    "cycles": 1.29,
+    "cycles": 1.44,
     "insns": 8.62
    },
    "ddiv": {
-    "cycles": 2.47,
+    "cycles": 2.72,
     "insns": 10.62
    },
    "dmul": {
-    "cycles": 1.24,
+    "cycles": 2.03,
     "insns": 10.62
    },
    "dsub": {
-    "cycles": 1.27,
+    "cycles": 2.06,
     "insns": 10.62
    },
    "f2d": {
-    "cycles": 2.77,
+    "cycles": 2.92,
     "insns": 9.62
    },
    "f2i": {
-    "cycles": 1.25,
+    "cycles": 1.42,
     "insns": 9.62
    },
    "f2l": {
-    "cycles": 1.48,
+    "cycles": 1.45,
     "insns": 8.62
    },
    "fadd": {
-    "cycles": 0.7,
+    "cycles": 1.38,
     "insns": 7.62
    },
    "fcmp": {
-    "cycles": 1.38,
+    "cycles": 2.54,
     "insns": 8.62
    },
    "fdiv": {
-    "cycles": 1.85,
+    "cycles": 2.1,
     "insns": 7.62
    },
    "fmul": {
-    "cycles": 0.89,
+    "cycles": 1.12,
     "insns": 7.62
    },
    "fsub": {
-    "cycles": 0.7,
+    "cycles": 1.36,
     "insns": 7.62
    },
    "i2d": {
-    "cycles": 2.58,
+    "cycles": 2.92,
     "insns": 9.62
    },
    "i2f": {
-    "cycles": 2.75,
+    "cycles": 2.84,
     "insns": 6.62
    },
    "l2d": {
-    "cycles": 2.95,
+    "cycles": 2.96,
     "insns": 9.62
    },
    "l2f": {
-    "cycles": 1.01,
+    "cycles": 1.09,
     "insns": 6.62
    }
   },
   "stdio": {
    "fprintf/mix": {
-    "cycles": 436.95,
+    "cycles": 513.03,
     "insns": 2363.0
    },
    "fputs/line": {
-    "cycles": 75.09,
+    "cycles": 87.71,
     "insns": 198.0
    },
    "snprintf/%-20s": {
-    "cycles": 129.7,
+    "cycles": 126.01,
     "insns": 642.0
    },
    "snprintf/%.17g": {
-    "cycles": 570.42,
+    "cycles": 636.29,
     "insns": 2758.0
    },
    "snprintf/%.3f": {
-    "cycles": 508.24,
+    "cycles": 571.79,
     "insns": 2478.0
    },
    "snprintf/%08x": {
-    "cycles": 83.25,
+    "cycles": 93.5,
     "insns": 518.0
    },
    "snprintf/%a": {
-    "cycles": 191.39,
+    "cycles": 226.16,
     "insns": 943.0
    },
    "snprintf/%c": {
-    "cycles": 45.4,
+    "cycles": 45.43,
     "insns": 301.0
    },
    "snprintf/%d": {
-    "cycles": 90.92,
+    "cycles": 108.56,
     "insns": 516.0
    },
    "snprintf/%e": {
-    "cycles": 448.89,
+    "cycles": 504.01,
     "insns": 1749.0
    },
    "snprintf/%f": {
-    "cycles": 541.28,
+    "cycles": 602.82,
     "insns": 2580.0
    },
    "snprintf/%g": {
-    "cycles": 724.91,
+    "cycles": 828.58,
     "insns": 3506.0
    },
    "snprintf/%lld": {
-    "cycles": 104.8,
+    "cycles": 109.58,
     "insns": 624.0
    },
    "snprintf/%p": {
-    "cycles": 89.93,
+    "cycles": 91.62,
     "insns": 492.0
    },
    "snprintf/%s": {
-    "cycles": 83.1,
+    "cycles": 79.8,
     "insns": 433.0
    },
    "snprintf/%u-small": {
-    "cycles": 72.62,
+    "cycles": 71.55,
     "insns": 391.0
    },
    "snprintf/%x": {
-    "cycles": 84.73,
+    "cycles": 94.11,
     "insns": 506.0
    },
    "snprintf/literal": {
-    "cycles": 64.58,
+    "cycles": 70.99,
     "insns": 479.0
    },
    "snprintf/mix": {
-    "cycles": 351.09,
+    "cycles": 402.25,
     "insns": 2034.0
    },
    "sscanf/%d": {
-    "cycles": 45.72,
+    "cycles": 53.99,
     "insns": 395.0
    },
    "sscanf/%lf": {
-    "cycles": 268.65,
+    "cycles": 294.62,
     "insns": 1812.0
    },
    "sscanf/%x": {
-    "cycles": 52.31,
+    "cycles": 51.75,
     "insns": 473.0
    },
    "sscanf/mix": {
-    "cycles": 208.85,
+    "cycles": 244.73,
     "insns": 1672.0
    }
   },
   "string": {
    "memchr/0/0": {
-    "cycles": 3.61,
+    "cycles": 3.41,
     "insns": 37.0
    },
    "memchr/0/1": {
-    "cycles": 2.55,
+    "cycles": 3.1,
     "insns": 37.0
    },
    "memchr/0/2": {
-    "cycles": 2.5,
+    "cycles": 2.93,
     "insns": 37.0
    },
    "memchr/0/3": {
-    "cycles": 2.72,
+    "cycles": 3.17,
     "insns": 37.0
    },
    "memchr/1/0": {
-    "cycles": 5.17,
+    "cycles": 5.03,
     "insns": 42.0
    },
    "memchr/1/1": {
-    "cycles": 3.1,
+    "cycles": 3.55,
     "insns": 36.0
    },
    "memchr/1/2": {
-    "cycles": 3.1,
+    "cycles": 3.53,
     "insns": 36.0
    },
    "memchr/1/3": {
-    "cycles": 3.1,
+    "cycles": 3.54,
     "insns": 36.0
    },
    "memchr/1024/0": {
-    "cycles": 170.11,
+    "cycles": 188.93,
     "insns": 1486.0
    },
    "memchr/1024/1": {
-    "cycles": 191.67,
+    "cycles": 195.46,
     "insns": 1508.0
    },
    "memchr/1024/2": {
-    "cycles": 200.06,
+    "cycles": 190.1,
     "insns": 1504.0
    },
    "memchr/1024/3": {
-    "cycles": 189.5,
+    "cycles": 193.85,
     "insns": 1500.0
    },
    "memchr/128/0": {
-    "cycles": 27.18,
+    "cycles": 30.49,
     "insns": 254.0
    },
    "memchr/128/1": {
-    "cycles": 39.18,
+    "cycles": 41.3,
     "insns": 276.0
    },
    "memchr/128/2": {
-    "cycles": 40.16,
+    "cycles": 44.14,
     "insns": 272.0
    },
    "memchr/128/3": {
-    "cycles": 38.34,
+    "cycles": 43.73,
     "insns": 268.0
    },
    "memchr/15/0": {
-    "cycles": 11.87,
+    "cycles": 17.8,
     "insns": 89.0
    },
    "memchr/15/1": {
-    "cycles": 24.71,
+    "cycles": 37.54,
     "insns": 152.0
    },
    "memchr/15/2": {
-    "cycles": 18.69,
+    "cycles": 27.68,
     "insns": 113.0
    },
    "memchr/15/3": {
-    "cycles": 19.75,
+    "cycles": 27.37,
     "insns": 109.0
    },
    "memchr/16/0": {
-    "cycles": 18.92,
+    "cycles": 25.54,
     "insns": 100.0
    },
    "memchr/16/1": {
-    "cycles": 19.59,
+    "cycles": 33.92,
     "insns": 122.0
    },
    "memchr/16/2": {
-    "cycles": 18.78,
+    "cycles": 33.37,
     "insns": 118.0
    },
    "memchr/16/3": {
-    "cycles": 18.73,
+    "cycles": 32.36,
     "insns": 114.0
    },
    "memchr/2/0": {
-    "cycles": 7.02,
+    "cycles": 7.22,
     "insns": 47.0
    },
    "memchr/2/1": {
-    "cycles": 5.88,
+    "cycles": 6.46,
     "insns": 45.0
    },
    "memchr/2/2": {
-    "cycles": 5.89,
+    "cycles": 6.68,
     "insns": 45.0
    },
    "memchr/2/3": {
-    "cycles": 5.89,
+    "cycles": 6.95,
     "insns": 45.0
    },
    "memchr/256/0": {
-    "cycles": 50.2,
+    "cycles": 60.9,
     "insns": 430.0
    },
    "memchr/256/1": {
-    "cycles": 55.75,
+    "cycles": 66.73,
     "insns": 452.0
    },
    "memchr/256/2": {
-    "cycles": 60.91,
+    "cycles": 65.93,
     "insns": 448.0
    },
    "memchr/256/3": {
-    "cycles": 57.66,
+    "cycles": 62.67,
     "insns": 444.0
    },
    "memchr/3/0": {
-    "cycles": 8.03,
+    "cycles": 8.38,
     "insns": 52.0
    },
    "memchr/3/1": {
-    "cycles": 6.51,
+    "cycles": 7.58,
     "insns": 54.0
    },
    "memchr/3/2": {
-    "cycles": 6.51,
+    "cycles": 7.11,
     "insns": 54.0
    },
    "memchr/3/3": {
-    "cycles": 6.56,
+    "cycles": 9.72,
     "insns": 54.0
    },
    "memchr/31/0": {
-    "cycles": 16.07,
+    "cycles": 29.86,
     "insns": 111.0
    },
    "memchr/31/1": {
-    "cycles": 29.91,
+    "cycles": 51.31,
     "insns": 174.0
    },
    "memchr/31/2": {
-    "cycles": 20.22,
+    "cycles": 35.75,
     "insns": 135.0
    },
    "memchr/31/3": {
-    "cycles": 21.36,
+    "cycles": 38.65,
     "insns": 131.0
    },
    "memchr/32/0": {
-    "cycles": 22.35,
+    "cycles": 33.02,
     "insns": 122.0
    },
    "memchr/32/1": {
-    "cycles": 22.07,
+    "cycles": 41.81,
     "insns": 144.0
    },
    "memchr/32/2": {
-    "cycles": 24.47,
+    "cycles": 40.83,
     "insns": 140.0
    },
    "memchr/32/3": {
-    "cycles": 22.23,
+    "cycles": 41.1,
     "insns": 136.0
    },
    "memchr/4/0": {
-    "cycles": 11.78,
+    "cycles": 14.15,
     "insns": 57.0
    },
    "memchr/4/1": {
-    "cycles": 8.65,
+    "cycles": 13.08,
     "insns": 63.0
    },
    "memchr/4/2": {
-    "cycles": 8.65,
+    "cycles": 13.74,
     "insns": 63.0
    },
    "memchr/4/3": {
-    "cycles": 8.65,
+    "cycles": 13.63,
     "insns": 63.0
    },
    "memchr/64/0": {
-    "cycles": 23.96,
+    "cycles": 26.75,
     "insns": 166.0
    },
    "memchr/64/1": {
-    "cycles": 30.26,
+    "cycles": 49.26,
     "insns": 188.0
    },
    "memchr/64/2": {
-    "cycles": 30.26,
+    "cycles": 33.16,
     "insns": 184.0
    },
    "memchr/64/3": {
-    "cycles": 30.26,
+    "cycles": 32.51,
     "insns": 180.0
    },
    "memchr/7/0": {
-    "cycles": 9.26,
+    "cycles": 14.39,
     "insns": 72.0
    },
    "memchr/7/1": {
-    "cycles": 12.39,
+    "cycles": 18.55,
     "insns": 90.0
    },
    "memchr/7/2": {
-    "cycles": 14.9,
+    "cycles": 21.24,
     "insns": 96.0
    },
    "memchr/7/3": {
-    "cycles": 14.94,
+    "cycles": 22.52,
     "insns": 92.0
    },
    "memchr/8/0": {
-    "cycles": 14.21,
+    "cycles": 21.56,
     "insns": 89.0
    },
    "memchr/8/1": {
-    "cycles": 17.48,
+    "cycles": 24.48,
     "insns": 105.0
    },
    "memchr/8/2": {
-    "cycles": 18.94,
+    "cycles": 24.23,
     "insns": 101.0
    },
    "memchr/8/3": {
-    "cycles": 16.68,
+    "cycles": 23.9,
     "insns": 97.0
    },
    "memcmp/0/0:0": {
-    "cycles": 3.1,
+    "cycles": 3.68,
     "insns": 34.0
    },
    "memcmp/0/0:1": {
-    "cycles": 3.11,
+    "cycles": 4.69,
     "insns": 34.0
    },
    "memcmp/0/1:1": {
-    "cycles": 3.1,
+    "cycles": 4.62,
     "insns": 34.0
    },
    "memcmp/0/3:2": {
-    "cycles": 2.67,
+    "cycles": 4.28,
     "insns": 34.0
    },
    "memcmp/1/0:0": {
-    "cycles": 4.32,
+    "cycles": 6.56,
     "insns": 41.0
    },
    "memcmp/1/0:1": {
-    "cycles": 4.32,
+    "cycles": 6.25,
     "insns": 41.0
    },
    "memcmp/1/1:1": {
-    "cycles": 4.9,
+    "cycles": 6.3,
     "insns": 41.0
    },
    "memcmp/1/3:2": {
-    "cycles": 4.32,
+    "cycles": 4.94,
     "insns": 41.0
    },
    "memcmp/1024/0:0": {
-    "cycles": 1833.84,
+    "cycles": 831.27,
     "insns": 7202.0
    },
    "memcmp/1024/0:1": {
-    "cycles": 1779.42,
+    "cycles": 754.44,
     "insns": 7202.0
    },
    "memcmp/1024/1:1": {
-    "cycles": 2056.61,
+    "cycles": 782.37,
     "insns": 7202.0
    },
    "memcmp/1024/3:2": {
-    "cycles": 1475.3,
+    "cycles": 799.44,
     "insns": 7202.0
    },
    "memcmp/128/0:0": {
-    "cycles": 162.72,
+    "cycles": 184.47,
     "insns": 930.0
    },
    "memcmp/128/0:1": {
-    "cycles": 222.98,
+    "cycles": 185.65,
     "insns": 930.0
    },
    "memcmp/128/1:1": {
-    "cycles": 175.24,
+    "cycles": 184.29,
     "insns": 930.0
    },
    "memcmp/128/3:2": {
-    "cycles": 306.91,
+    "cycles": 185.04,
     "insns": 930.0
    },
    "memcmp/15/0:0": {
-    "cycles": 25.68,
+    "cycles": 27.64,
     "insns": 139.0
    },
    "memcmp/15/0:1": {
-    "cycles": 25.16,
+    "cycles": 26.66,
     "insns": 139.0
    },
    "memcmp/15/1:1": {
-    "cycles": 27.15,
+    "cycles": 27.85,
     "insns": 139.0
    },
    "memcmp/15/3:2": {
-    "cycles": 22.93,
+    "cycles": 25.9,
     "insns": 139.0
    },
    "memcmp/16/0:0": {
-    "cycles": 24.18,
+    "cycles": 27.87,
     "insns": 146.0
    },
    "memcmp/16/0:1": {
-    "cycles": 24.37,
+    "cycles": 27.47,
     "insns": 146.0
    },
    "memcmp/16/1:1": {
-    "cycles": 26.5,
+    "cycles": 26.75,
     "insns": 146.0
    },
    "memcmp/16/3:2": {
-    "cycles": 24.17,
+    "cycles": 28.65,
     "insns": 146.0
    },
    "memcmp/2/0:0": {
-    "cycles": 6.09,
+    "cycles": 7.36,
     "insns": 48.0
    },
    "memcmp/2/0:1": {
-    "cycles": 6.21,
+    "cycles": 7.43,
     "insns": 48.0
    },
    "memcmp/2/1:1": {
-    "cycles": 7.81,
+    "cycles": 7.25,
     "insns": 48.0
    },
    "memcmp/2/3:2": {
-    "cycles": 6.27,
+    "cycles": 6.81,
     "insns": 48.0
    },
    "memcmp/256/0:0": {
-    "cycles": 410.92,
+    "cycles": 217.68,
     "insns": 1826.0
    },
    "memcmp/256/0:1": {
-    "cycles": 463.13,
+    "cycles": 260.5,
     "insns": 1826.0
    },
    "memcmp/256/1:1": {
-    "cycles": 218.07,
+    "cycles": 218.08,
     "insns": 1826.0
    },
    "memcmp/256/3:2": {
-    "cycles": 258.3,
+    "cycles": 218.09,
     "insns": 1826.0
    },
    "memcmp/3/0:0": {
-    "cycles": 10.42,
+    "cycles": 9.98,
     "insns": 55.0
    },
    "memcmp/3/0:1": {
-    "cycles": 10.06,
+    "cycles": 9.8,
     "insns": 55.0
    },
    "memcmp/3/1:1": {
-    "cycles": 11.01,
+    "cycles": 9.53,
     "insns": 55.0
    },
    "memcmp/3/3:2": {
-    "cycles": 8.83,
+    "cycles": 9.48,
     "insns": 55.0
    },
    "memcmp/31/0:0": {
-    "cycles": 46.9,
+    "cycles": 52.26,
     "insns": 251.0
    },
    "memcmp/31/0:1": {
-    "cycles": 42.61,
+    "cycles": 48.5,
     "insns": 251.0
    },
    "memcmp/31/1:1": {
-    "cycles": 43.7,
+    "cycles": 51.6,
     "insns": 251.0
    },
    "memcmp/31/3:2": {
-    "cycles": 42.79,
+    "cycles": 48.61,
     "insns": 251.0
    },
    "memcmp/32/0:0": {
-    "cycles": 44.01,
+    "cycles": 50.48,
     "insns": 258.0
    },
    "memcmp/32/0:1": {
-    "cycles": 44.0,
+    "cycles": 51.43,
     "insns": 258.0
    },
    "memcmp/32/1:1": {
-    "cycles": 44.0,
+    "cycles": 49.89,
     "insns": 258.0
    },
    "memcmp/32/3:2": {
-    "cycles": 48.26,
+    "cycles": 51.24,
     "insns": 258.0
    },
    "memcmp/4/0:0": {
-    "cycles": 9.88,
+    "cycles": 10.88,
     "insns": 62.0
    },
    "memcmp/4/0:1": {
-    "cycles": 9.89,
+    "cycles": 11.66,
     "insns": 62.0
    },
    "memcmp/4/1:1": {
-    "cycles": 9.88,
+    "cycles": 11.02,
     "insns": 62.0
    },
    "memcmp/4/3:2": {
-    "cycles": 9.89,
+    "cycles": 11.25,
     "insns": 62.0
    },
    "memcmp/64/0:0": {
-    "cycles": 94.87,
+    "cycles": 98.17,
     "insns": 482.0
    },
    "memcmp/64/0:1": {
-    "cycles": 94.85,
+    "cycles": 94.83,
     "insns": 482.0
    },
    "memcmp/64/1:1": {
-    "cycles": 91.78,
+    "cycles": 94.49,
     "insns": 482.0
    },
    "memcmp/64/3:2": {
-    "cycles": 83.75,
+    "cycles": 94.95,
     "insns": 482.0
    },
    "memcmp/7/0:0": {
-    "cycles": 13.48,
+    "cycles": 14.7,
     "insns": 83.0
    },
    "memcmp/7/0:1": {
-    "cycles": 13.75,
+    "cycles": 15.43,
     "insns": 83.0
    },
    "memcmp/7/1:1": {
-    "cycles": 13.63,
+    "cycles": 15.48,
     "insns": 83.0
    },
    "memcmp/7/3:2": {
-    "cycles": 13.64,
+    "cycles": 15.01,
     "insns": 83.0
    },
    "memcmp/8/0:0": {
-    "cycles": 14.88,
+    "cycles": 17.31,
     "insns": 90.0
    },
    "memcmp/8/0:1": {
-    "cycles": 16.35,
+    "cycles": 17.64,
     "insns": 90.0
    },
    "memcmp/8/1:1": {
-    "cycles": 15.01,
+    "cycles": 18.24,
     "insns": 90.0
    },
    "memcmp/8/3:2": {
-    "cycles": 16.9,
+    "cycles": 17.32,
     "insns": 90.0
    },
    "memcpy/0/0:0": {
-    "cycles": 5.58,
+    "cycles": 6.3,
     "insns": 36.0
    },
    "memcpy/0/0:1": {
-    "cycles": 5.62,
+    "cycles": 6.1,
     "insns": 36.0
    },
    "memcpy/0/1:1": {
-    "cycles": 5.58,
+    "cycles": 7.03,
     "insns": 36.0
    },
    "memcpy/0/3:2": {
-    "cycles": 5.45,
+    "cycles": 6.48,
     "insns": 36.0
    },
    "memcpy/1/0:0": {
-    "cycles": 6.37,
+    "cycles": 6.76,
     "insns": 41.0
    },
    "memcpy/1/0:1": {
-    "cycles": 5.6,
+    "cycles": 6.68,
     "insns": 41.0
    },
    "memcpy/1/1:1": {
-    "cycles": 5.53,
+    "cycles": 6.48,
     "insns": 41.0
    },
    "memcpy/1/3:2": {
-    "cycles": 6.01,
+    "cycles": 6.3,
     "insns": 41.0
    },
    "memcpy/1024/0:0": {
-    "cycles": 28.61,
+    "cycles": 34.45,
     "insns": 296.0
    },
    "memcpy/1024/0:1": {
-    "cycles": 38.82,
+    "cycles": 49.11,
     "insns": 303.0
    },
    "memcpy/1024/1:1": {
-    "cycles": 45.05,
+    "cycles": 39.08,
     "insns": 303.0
    },
    "memcpy/1024/3:2": {
-    "cycles": 34.89,
+    "cycles": 50.18,
     "insns": 303.0
    },
    "memcpy/128/0:0": {
-    "cycles": 8.51,
+    "cycles": 9.8,
     "insns": 72.0
    },
    "memcpy/128/0:1": {
-    "cycles": 9.06,
+    "cycles": 10.33,
     "insns": 79.0
    },
    "memcpy/128/1:1": {
-    "cycles": 9.56,
+    "cycles": 10.39,
     "insns": 79.0
    },
    "memcpy/128/3:2": {
-    "cycles": 8.22,
+    "cycles": 10.83,
     "insns": 79.0
    },
    "memcpy/15/0:0": {
-    "cycles": 2.12,
+    "cycles": 2.74,
     "insns": 36.0
    },
    "memcpy/15/0:1": {
-    "cycles": 2.78,
+    "cycles": 3.5,
     "insns": 36.0
    },
    "memcpy/15/1:1": {
-    "cycles": 2.49,
+    "cycles": 3.3,
     "insns": 36.0
    },
    "memcpy/15/3:2": {
-    "cycles": 2.71,
+    "cycles": 3.52,
     "insns": 36.0
    },
    "memcpy/16/0:0": {
-    "cycles": 2.47,
+    "cycles": 2.29,
     "insns": 36.0
    },
    "memcpy/16/0:1": {
-    "cycles": 2.63,
+    "cycles": 2.78,
     "insns": 36.0
    },
    "memcpy/16/1:1": {
-    "cycles": 2.49,
+    "cycles": 2.82,
     "insns": 36.0
    },
    "memcpy/16/3:2": {
-    "cycles": 2.91,
+    "cycles": 2.75,
     "insns": 36.0
    },
    "memcpy/2/0:0": {
-    "cycles": 5.21,
+    "cycles": 5.53,
     "insns": 44.0
    },
    "memcpy/2/0:1": {
-    "cycles": 4.32,
+    "cycles": 5.8,
     "insns": 44.0
    },
    "memcpy/2/1:1": {
-    "cycles": 4.82,
+    "cycles": 5.01,
     "insns": 44.0
    },
    "memcpy/2/3:2": {
-    "cycles": 5.17,
+    "cycles": 5.64,
     "insns": 44.0
    },
    "memcpy/256/0:0": {
-    "cycles": 14.48,
+    "cycles": 15.19,
     "insns": 104.0
    },
    "memcpy/256/0:1": {
-    "cycles": 12.87,
+    "cycles": 14.7,
     "insns": 111.0
    },
    "memcpy/256/1:1": {
-    "cycles": 13.55,
+    "cycles": 14.78,
     "insns": 111.0
    },
    "memcpy/256/3:2": {
-    "cycles": 15.73,
+    "cycles": 15.58,
     "insns": 111.0
    },
    "memcpy/3/0:0": {
-    "cycles": 4.96,
+    "cycles": 6.04,
     "insns": 44.0
    },
    "memcpy/3/0:1": {
-    "cycles": 4.32,
+    "cycles": 5.62,
     "insns": 44.0
    },
    "memcpy/3/1:1": {
-    "cycles": 5.13,
+    "cycles": 5.6,
     "insns": 44.0
    },
    "memcpy/3/3:2": {
-    "cycles": 4.96,
+    "cycles": 5.98,
     "insns": 44.0
    },
    "memcpy/31/0:0": {
-    "cycles": 2.81,
+    "cycles": 2.72,
     "insns": 36.0
    },
    "memcpy/31/0:1": {
-    "cycles": 2.81,
+    "cycles": 2.73,
     "insns": 36.0
    },
    "memcpy/31/1:1": {
@@ -1569,1027 +1569,1027 @@
     "insns": 36.0
    },
    "memcpy/31/3:2": {
-    "cycles": 2.51,
+    "cycles": 2.88,
     "insns": 36.0
    },
    "memcpy/32/0:0": {
-    "cycles": 2.48,
+    "cycles": 2.81,
     "insns": 36.0
    },
    "memcpy/32/0:1": {
-    "cycles": 2.47,
+    "cycles": 2.81,
     "insns": 36.0
    },
    "memcpy/32/1:1": {
-    "cycles": 2.48,
+    "cycles": 2.77,
     "insns": 36.0
    },
    "memcpy/32/3:2": {
-    "cycles": 2.48,
+    "cycles": 2.72,
     "insns": 36.0
    },
    "memcpy/4/0:0": {
-    "cycles": 4.32,
+    "cycles": 4.9,
     "insns": 38.0
    },
    "memcpy/4/0:1": {
-    "cycles": 4.32,
+    "cycles": 4.67,
     "insns": 38.0
    },
    "memcpy/4/1:1": {
-    "cycles": 3.71,
+    "cycles": 4.93,
     "insns": 38.0
    },
    "memcpy/4/3:2": {
-    "cycles": 4.34,
+    "cycles": 5.08,
     "insns": 38.0
    },
    "memcpy/64/0:0": {
-    "cycles": 4.49,
+    "cycles": 5.1,
     "insns": 56.0
    },
    "memcpy/64/0:1": {
-    "cycles": 5.43,
+    "cycles": 6.42,
     "insns": 63.0
    },
    "memcpy/64/1:1": {
-    "cycles": 4.98,
+    "cycles": 6.01,
     "insns": 63.0
    },
    "memcpy/64/3:2": {
-    "cycles": 5.99,
+    "cycles": 5.98,
     "insns": 63.0
    },
    "memcpy/7/0:0": {
-    "cycles": 4.29,
+    "cycles": 5.07,
     "insns": 38.0
    },
    "memcpy/7/0:1": {
-    "cycles": 4.33,
+    "cycles": 5.06,
     "insns": 38.0
    },
    "memcpy/7/1:1": {
-    "cycles": 4.32,
+    "cycles": 4.9,
     "insns": 38.0
    },
    "memcpy/7/3:2": {
-    "cycles": 4.32,
+    "cycles": 5.02,
     "insns": 38.0
    },
    "memcpy/8/0:0": {
-    "cycles": 2.73,
+    "cycles": 3.43,
     "insns": 36.0
    },
    "memcpy/8/0:1": {
-    "cycles": 2.66,
+    "cycles": 3.18,
     "insns": 36.0
    },
    "memcpy/8/1:1": {
-    "cycles": 2.49,
+    "cycles": 3.1,
     "insns": 36.0
    },
    "memcpy/8/3:2": {
-    "cycles": 2.69,
+    "cycles": 2.81,
     "insns": 36.0
    },
    "memmove-down/0/0:0": {
-    "cycles": 7.01,
+    "cycles": 7.43,
     "insns": 40.0
    },
    "memmove-down/0/0:1": {
-    "cycles": 7.14,
+    "cycles": 6.97,
     "insns": 40.0
    },
    "memmove-down/0/1:1": {
-    "cycles": 6.29,
+    "cycles": 7.0,
     "insns": 40.0
    },
    "memmove-down/0/3:2": {
-    "cycles": 7.68,
+    "cycles": 7.0,
     "insns": 40.0
    },
    "memmove-down/1/0:0": {
-    "cycles": 7.06,
+    "cycles": 7.07,
     "insns": 45.0
    },
    "memmove-down/1/0:1": {
-    "cycles": 7.37,
+    "cycles": 7.94,
     "insns": 45.0
    },
    "memmove-down/1/1:1": {
-    "cycles": 7.04,
+    "cycles": 7.13,
     "insns": 45.0
    },
    "memmove-down/1/3:2": {
-    "cycles": 6.82,
+    "cycles": 6.17,
     "insns": 45.0
    },
    "memmove-down/1024/0:0": {
-    "cycles": 44.73,
+    "cycles": 44.44,
     "insns": 307.0
    },
    "memmove-down/1024/0:1": {
-    "cycles": 40.2,
+    "cycles": 50.97,
     "insns": 307.0
    },
    "memmove-down/1024/1:1": {
-    "cycles": 46.26,
+    "cycles": 53.64,
     "insns": 307.0
    },
    "memmove-down/1024/3:2": {
-    "cycles": 38.29,
+    "cycles": 52.13,
     "insns": 307.0
    },
    "memmove-down/128/0:0": {
-    "cycles": 16.9,
+    "cycles": 16.24,
     "insns": 83.0
    },
    "memmove-down/128/0:1": {
-    "cycles": 16.7,
+    "cycles": 18.02,
     "insns": 83.0
    },
    "memmove-down/128/1:1": {
-    "cycles": 18.03,
+    "cycles": 18.61,
     "insns": 83.0
    },
    "memmove-down/128/3:2": {
-    "cycles": 18.15,
+    "cycles": 18.49,
     "insns": 83.0
    },
    "memmove-down/15/0:0": {
-    "cycles": 11.78,
+    "cycles": 13.98,
     "insns": 40.0
    },
    "memmove-down/15/0:1": {
-    "cycles": 12.08,
+    "cycles": 13.31,
     "insns": 40.0
    },
    "memmove-down/15/1:1": {
-    "cycles": 12.51,
+    "cycles": 13.32,
     "insns": 40.0
    },
    "memmove-down/15/3:2": {
-    "cycles": 12.92,
+    "cycles": 13.07,
     "insns": 40.0
    },
    "memmove-down/16/0:0": {
-    "cycles": 13.01,
+    "cycles": 14.94,
     "insns": 40.0
    },
    "memmove-down/16/0:1": {
-    "cycles": 14.12,
+    "cycles": 15.69,
     "insns": 40.0
    },
    "memmove-down/16/1:1": {
-    "cycles": 13.01,
+    "cycles": 15.07,
     "insns": 40.0
    },
    "memmove-down/16/3:2": {
-    "cycles": 13.17,
+    "cycles": 15.83,
     "insns": 40.0
    },
    "memmove-down/2/0:0": {
-    "cycles": 5.9,
+    "cycles": 5.87,
     "insns": 48.0
    },
    "memmove-down/2/0:1": {
-    "cycles": 5.79,
+    "cycles": 6.51,
     "insns": 48.0
    },
    "memmove-down/2/1:1": {
-    "cycles": 6.13,
+    "cycles": 5.01,
     "insns": 48.0
    },
    "memmove-down/2/3:2": {
-    "cycles": 6.15,
+    "cycles": 5.79,
     "insns": 48.0
    },
    "memmove-down/256/0:0": {
-    "cycles": 17.92,
+    "cycles": 19.04,
     "insns": 115.0
    },
    "memmove-down/256/0:1": {
-    "cycles": 26.2,
+    "cycles": 21.72,
     "insns": 115.0
    },
    "memmove-down/256/1:1": {
-    "cycles": 19.03,
+    "cycles": 20.78,
     "insns": 115.0
    },
    "memmove-down/256/3:2": {
-    "cycles": 18.1,
+    "cycles": 21.25,
     "insns": 115.0
    },
    "memmove-down/3/0:0": {
-    "cycles": 6.04,
+    "cycles": 6.53,
     "insns": 48.0
    },
    "memmove-down/3/0:1": {
-    "cycles": 5.62,
+    "cycles": 6.51,
     "insns": 48.0
    },
    "memmove-down/3/1:1": {
-    "cycles": 6.31,
+    "cycles": 5.82,
     "insns": 48.0
    },
    "memmove-down/3/3:2": {
-    "cycles": 5.31,
+    "cycles": 6.51,
     "insns": 48.0
    },
    "memmove-down/31/0:0": {
-    "cycles": 14.24,
+    "cycles": 14.16,
     "insns": 40.0
    },
    "memmove-down/31/0:1": {
-    "cycles": 13.81,
+    "cycles": 14.3,
     "insns": 40.0
    },
    "memmove-down/31/1:1": {
-    "cycles": 14.28,
+    "cycles": 14.23,
     "insns": 40.0
    },
    "memmove-down/31/3:2": {
-    "cycles": 12.53,
+    "cycles": 13.6,
     "insns": 40.0
    },
    "memmove-down/32/0:0": {
-    "cycles": 12.42,
+    "cycles": 14.04,
     "insns": 40.0
    },
    "memmove-down/32/0:1": {
-    "cycles": 12.4,
+    "cycles": 13.6,
     "insns": 40.0
    },
    "memmove-down/32/1:1": {
-    "cycles": 12.61,
+    "cycles": 13.99,
     "insns": 40.0
    },
    "memmove-down/32/3:2": {
-    "cycles": 12.66,
+    "cycles": 14.12,
     "insns": 40.0
    },
    "memmove-down/4/0:0": {
-    "cycles": 5.44,
+    "cycles": 5.3,
     "insns": 42.0
    },
    "memmove-down/4/0:1": {
-    "cycles": 5.17,
+    "cycles": 5.6,
     "insns": 42.0
    },
    "memmove-down/4/1:1": {
-    "cycles": 5.43,
+    "cycles": 5.45,
     "insns": 42.0
    },
    "memmove-down/4/3:2": {
-    "cycles": 4.94,
+    "cycles": 5.5,
     "insns": 42.0
    },
    "memmove-down/64/0:0": {
-    "cycles": 12.4,
+    "cycles": 14.02,
     "insns": 67.0
    },
    "memmove-down/64/0:1": {
-    "cycles": 15.01,
+    "cycles": 14.92,
     "insns": 67.0
    },
    "memmove-down/64/1:1": {
-    "cycles": 15.61,
+    "cycles": 16.39,
     "insns": 67.0
    },
    "memmove-down/64/3:2": {
-    "cycles": 15.24,
+    "cycles": 15.89,
     "insns": 67.0
    },
    "memmove-down/7/0:0": {
-    "cycles": 4.97,
+    "cycles": 5.5,
     "insns": 42.0
    },
    "memmove-down/7/0:1": {
-    "cycles": 4.94,
+    "cycles": 5.86,
     "insns": 42.0
    },
    "memmove-down/7/1:1": {
-    "cycles": 4.97,
-    "insns": 42.0
-   },
-   "memmove-down/7/3:2": {
-    "cycles": 4.94,
-    "insns": 42.0
-   },
-   "memmove-down/8/0:0": {
-    "cycles": 3.72,
-    "insns": 40.0
-   },
-   "memmove-down/8/0:1": {
-    "cycles": 12.51,
-    "insns": 40.0
-   },
-   "memmove-down/8/1:1": {
-    "cycles": 3.9,
-    "insns": 40.0
-   },
-   "memmove-down/8/3:2": {
-    "cycles": 3.75,
-    "insns": 40.0
-   },
-   "memmove-up/0/0:0": {
-    "cycles": 7.34,
-    "insns": 40.0
-   },
-   "memmove-up/0/0:1": {
-    "cycles": 7.22,
-    "insns": 40.0
-   },
-   "memmove-up/0/1:1": {
-    "cycles": 7.38,
-    "insns": 40.0
-   },
-   "memmove-up/0/3:2": {
-    "cycles": 7.41,
-    "insns": 40.0
-   },
-   "memmove-up/1/0:0": {
-    "cycles": 6.79,
-    "insns": 45.0
-   },
-   "memmove-up/1/0:1": {
-    "cycles": 6.26,
-    "insns": 45.0
-   },
-   "memmove-up/1/1:1": {
-    "cycles": 6.32,
-    "insns": 45.0
-   },
-   "memmove-up/1/3:2": {
-    "cycles": 6.19,
-    "insns": 45.0
-   },
-   "memmove-up/1024/0:0": {
-    "cycles": 44.47,
-    "insns": 336.0
-   },
-   "memmove-up/1024/0:1": {
-    "cycles": 44.61,
-    "insns": 336.0
-   },
-   "memmove-up/1024/1:1": {
-    "cycles": 44.66,
-    "insns": 336.0
-   },
-   "memmove-up/1024/3:2": {
-    "cycles": 44.71,
-    "insns": 336.0
-   },
-   "memmove-up/128/0:0": {
-    "cycles": 14.29,
-    "insns": 84.0
-   },
-   "memmove-up/128/0:1": {
-    "cycles": 14.86,
-    "insns": 84.0
-   },
-   "memmove-up/128/1:1": {
-    "cycles": 15.39,
-    "insns": 84.0
-   },
-   "memmove-up/128/3:2": {
-    "cycles": 15.47,
-    "insns": 84.0
-   },
-   "memmove-up/15/0:0": {
-    "cycles": 9.27,
-    "insns": 42.0
-   },
-   "memmove-up/15/0:1": {
-    "cycles": 9.26,
-    "insns": 42.0
-   },
-   "memmove-up/15/1:1": {
-    "cycles": 9.28,
-    "insns": 42.0
-   },
-   "memmove-up/15/3:2": {
-    "cycles": 11.77,
-    "insns": 42.0
-   },
-   "memmove-up/16/0:0": {
-    "cycles": 12.39,
-    "insns": 42.0
-   },
-   "memmove-up/16/0:1": {
-    "cycles": 12.4,
-    "insns": 42.0
-   },
-   "memmove-up/16/1:1": {
-    "cycles": 12.1,
-    "insns": 42.0
-   },
-   "memmove-up/16/3:2": {
-    "cycles": 12.41,
-    "insns": 42.0
-   },
-   "memmove-up/2/0:0": {
-    "cycles": 5.39,
-    "insns": 48.0
-   },
-   "memmove-up/2/0:1": {
-    "cycles": 6.01,
-    "insns": 48.0
-   },
-   "memmove-up/2/1:1": {
-    "cycles": 5.14,
-    "insns": 48.0
-   },
-   "memmove-up/2/3:2": {
-    "cycles": 5.53,
-    "insns": 48.0
-   },
-   "memmove-up/256/0:0": {
-    "cycles": 16.74,
-    "insns": 120.0
-   },
-   "memmove-up/256/0:1": {
-    "cycles": 17.07,
-    "insns": 120.0
-   },
-   "memmove-up/256/1:1": {
-    "cycles": 17.1,
-    "insns": 120.0
-   },
-   "memmove-up/256/3:2": {
-    "cycles": 17.81,
-    "insns": 120.0
-   },
-   "memmove-up/3/0:0": {
-    "cycles": 5.38,
-    "insns": 48.0
-   },
-   "memmove-up/3/0:1": {
-    "cycles": 5.08,
-    "insns": 48.0
-   },
-   "memmove-up/3/1:1": {
-    "cycles": 5.1,
-    "insns": 48.0
-   },
-   "memmove-up/3/3:2": {
-    "cycles": 5.44,
-    "insns": 48.0
-   },
-   "memmove-up/31/0:0": {
-    "cycles": 11.78,
-    "insns": 42.0
-   },
-   "memmove-up/31/0:1": {
-    "cycles": 11.79,
-    "insns": 42.0
-   },
-   "memmove-up/31/1:1": {
-    "cycles": 11.89,
-    "insns": 42.0
-   },
-   "memmove-up/31/3:2": {
-    "cycles": 11.78,
-    "insns": 42.0
-   },
-   "memmove-up/32/0:0": {
-    "cycles": 11.74,
-    "insns": 42.0
-   },
-   "memmove-up/32/0:1": {
-    "cycles": 11.84,
-    "insns": 42.0
-   },
-   "memmove-up/32/1:1": {
-    "cycles": 11.78,
-    "insns": 42.0
-   },
-   "memmove-up/32/3:2": {
-    "cycles": 11.78,
-    "insns": 42.0
-   },
-   "memmove-up/4/0:0": {
-    "cycles": 4.96,
-    "insns": 42.0
-   },
-   "memmove-up/4/0:1": {
-    "cycles": 4.94,
-    "insns": 42.0
-   },
-   "memmove-up/4/1:1": {
-    "cycles": 4.95,
-    "insns": 42.0
-   },
-   "memmove-up/4/3:2": {
-    "cycles": 4.95,
-    "insns": 42.0
-   },
-   "memmove-up/64/0:0": {
-    "cycles": 12.39,
-    "insns": 66.0
-   },
-   "memmove-up/64/0:1": {
-    "cycles": 14.38,
-    "insns": 66.0
-   },
-   "memmove-up/64/1:1": {
-    "cycles": 14.9,
-    "insns": 66.0
-   },
-   "memmove-up/64/3:2": {
-    "cycles": 14.83,
-    "insns": 66.0
-   },
-   "memmove-up/7/0:0": {
     "cycles": 5.42,
     "insns": 42.0
    },
+   "memmove-down/7/3:2": {
+    "cycles": 5.88,
+    "insns": 42.0
+   },
+   "memmove-down/8/0:0": {
+    "cycles": 4.23,
+    "insns": 40.0
+   },
+   "memmove-down/8/0:1": {
+    "cycles": 14.07,
+    "insns": 40.0
+   },
+   "memmove-down/8/1:1": {
+    "cycles": 4.42,
+    "insns": 40.0
+   },
+   "memmove-down/8/3:2": {
+    "cycles": 3.85,
+    "insns": 40.0
+   },
+   "memmove-up/0/0:0": {
+    "cycles": 6.1,
+    "insns": 40.0
+   },
+   "memmove-up/0/0:1": {
+    "cycles": 6.5,
+    "insns": 40.0
+   },
+   "memmove-up/0/1:1": {
+    "cycles": 6.84,
+    "insns": 40.0
+   },
+   "memmove-up/0/3:2": {
+    "cycles": 7.0,
+    "insns": 40.0
+   },
+   "memmove-up/1/0:0": {
+    "cycles": 7.46,
+    "insns": 45.0
+   },
+   "memmove-up/1/0:1": {
+    "cycles": 7.05,
+    "insns": 45.0
+   },
+   "memmove-up/1/1:1": {
+    "cycles": 6.91,
+    "insns": 45.0
+   },
+   "memmove-up/1/3:2": {
+    "cycles": 6.79,
+    "insns": 45.0
+   },
+   "memmove-up/1024/0:0": {
+    "cycles": 52.27,
+    "insns": 336.0
+   },
+   "memmove-up/1024/0:1": {
+    "cycles": 52.31,
+    "insns": 336.0
+   },
+   "memmove-up/1024/1:1": {
+    "cycles": 52.31,
+    "insns": 336.0
+   },
+   "memmove-up/1024/3:2": {
+    "cycles": 50.44,
+    "insns": 336.0
+   },
+   "memmove-up/128/0:0": {
+    "cycles": 16.17,
+    "insns": 84.0
+   },
+   "memmove-up/128/0:1": {
+    "cycles": 16.77,
+    "insns": 84.0
+   },
+   "memmove-up/128/1:1": {
+    "cycles": 17.23,
+    "insns": 84.0
+   },
+   "memmove-up/128/3:2": {
+    "cycles": 17.39,
+    "insns": 84.0
+   },
+   "memmove-up/15/0:0": {
+    "cycles": 10.32,
+    "insns": 42.0
+   },
+   "memmove-up/15/0:1": {
+    "cycles": 10.44,
+    "insns": 42.0
+   },
+   "memmove-up/15/1:1": {
+    "cycles": 10.39,
+    "insns": 42.0
+   },
+   "memmove-up/15/3:2": {
+    "cycles": 13.35,
+    "insns": 42.0
+   },
+   "memmove-up/16/0:0": {
+    "cycles": 13.92,
+    "insns": 42.0
+   },
+   "memmove-up/16/0:1": {
+    "cycles": 14.23,
+    "insns": 42.0
+   },
+   "memmove-up/16/1:1": {
+    "cycles": 13.94,
+    "insns": 42.0
+   },
+   "memmove-up/16/3:2": {
+    "cycles": 14.39,
+    "insns": 42.0
+   },
+   "memmove-up/2/0:0": {
+    "cycles": 6.45,
+    "insns": 48.0
+   },
+   "memmove-up/2/0:1": {
+    "cycles": 6.28,
+    "insns": 48.0
+   },
+   "memmove-up/2/1:1": {
+    "cycles": 6.35,
+    "insns": 48.0
+   },
+   "memmove-up/2/3:2": {
+    "cycles": 6.17,
+    "insns": 48.0
+   },
+   "memmove-up/256/0:0": {
+    "cycles": 19.01,
+    "insns": 120.0
+   },
+   "memmove-up/256/0:1": {
+    "cycles": 19.46,
+    "insns": 120.0
+   },
+   "memmove-up/256/1:1": {
+    "cycles": 19.95,
+    "insns": 120.0
+   },
+   "memmove-up/256/3:2": {
+    "cycles": 20.7,
+    "insns": 120.0
+   },
+   "memmove-up/3/0:0": {
+    "cycles": 6.61,
+    "insns": 48.0
+   },
+   "memmove-up/3/0:1": {
+    "cycles": 6.58,
+    "insns": 48.0
+   },
+   "memmove-up/3/1:1": {
+    "cycles": 6.4,
+    "insns": 48.0
+   },
+   "memmove-up/3/3:2": {
+    "cycles": 6.1,
+    "insns": 48.0
+   },
+   "memmove-up/31/0:0": {
+    "cycles": 14.25,
+    "insns": 42.0
+   },
+   "memmove-up/31/0:1": {
+    "cycles": 13.35,
+    "insns": 42.0
+   },
+   "memmove-up/31/1:1": {
+    "cycles": 13.89,
+    "insns": 42.0
+   },
+   "memmove-up/31/3:2": {
+    "cycles": 12.92,
+    "insns": 42.0
+   },
+   "memmove-up/32/0:0": {
+    "cycles": 12.91,
+    "insns": 42.0
+   },
+   "memmove-up/32/0:1": {
+    "cycles": 13.35,
+    "insns": 42.0
+   },
+   "memmove-up/32/1:1": {
+    "cycles": 13.35,
+    "insns": 42.0
+   },
+   "memmove-up/32/3:2": {
+    "cycles": 13.35,
+    "insns": 42.0
+   },
+   "memmove-up/4/0:0": {
+    "cycles": 5.63,
+    "insns": 42.0
+   },
+   "memmove-up/4/0:1": {
+    "cycles": 5.45,
+    "insns": 42.0
+   },
+   "memmove-up/4/1:1": {
+    "cycles": 5.61,
+    "insns": 42.0
+   },
+   "memmove-up/4/3:2": {
+    "cycles": 6.54,
+    "insns": 42.0
+   },
+   "memmove-up/64/0:0": {
+    "cycles": 14.04,
+    "insns": 66.0
+   },
+   "memmove-up/64/0:1": {
+    "cycles": 16.1,
+    "insns": 66.0
+   },
+   "memmove-up/64/1:1": {
+    "cycles": 16.15,
+    "insns": 66.0
+   },
+   "memmove-up/64/3:2": {
+    "cycles": 16.68,
+    "insns": 66.0
+   },
+   "memmove-up/7/0:0": {
+    "cycles": 5.56,
+    "insns": 42.0
+   },
    "memmove-up/7/0:1": {
-    "cycles": 5.06,
+    "cycles": 5.53,
     "insns": 42.0
    },
    "memmove-up/7/1:1": {
-    "cycles": 4.97,
+    "cycles": 5.47,
     "insns": 42.0
    },
    "memmove-up/7/3:2": {
-    "cycles": 5.12,
+    "cycles": 6.12,
     "insns": 42.0
    },
    "memmove-up/8/0:0": {
-    "cycles": 3.76,
+    "cycles": 4.06,
     "insns": 40.0
    },
    "memmove-up/8/0:1": {
-    "cycles": 3.76,
+    "cycles": 3.8,
     "insns": 40.0
    },
    "memmove-up/8/1:1": {
-    "cycles": 3.71,
+    "cycles": 3.87,
     "insns": 40.0
    },
    "memmove-up/8/3:2": {
-    "cycles": 11.79,
+    "cycles": 13.29,
     "insns": 42.0
    },
    "memset/0/0": {
-    "cycles": 3.14,
+    "cycles": 3.46,
     "insns": 29.0
    },
    "memset/0/1": {
-    "cycles": 3.1,
+    "cycles": 3.44,
     "insns": 29.0
    },
    "memset/0/2": {
-    "cycles": 3.14,
+    "cycles": 3.51,
     "insns": 29.0
    },
    "memset/0/3": {
-    "cycles": 3.1,
+    "cycles": 3.52,
     "insns": 29.0
    },
    "memset/1/0": {
-    "cycles": 6.21,
+    "cycles": 7.52,
     "insns": 42.0
    },
    "memset/1/1": {
-    "cycles": 6.29,
+    "cycles": 7.01,
     "insns": 42.0
    },
    "memset/1/2": {
-    "cycles": 6.32,
+    "cycles": 10.25,
     "insns": 42.0
    },
    "memset/1/3": {
-    "cycles": 6.21,
+    "cycles": 6.79,
     "insns": 42.0
    },
    "memset/1024/0": {
-    "cycles": 43.17,
+    "cycles": 57.2,
     "insns": 203.0
    },
    "memset/1024/1": {
-    "cycles": 34.44,
+    "cycles": 31.9,
     "insns": 208.0
    },
    "memset/1024/2": {
-    "cycles": 27.91,
+    "cycles": 39.44,
     "insns": 208.0
    },
    "memset/1024/3": {
-    "cycles": 27.44,
+    "cycles": 31.97,
     "insns": 208.0
    },
    "memset/128/0": {
-    "cycles": 7.41,
+    "cycles": 9.82,
     "insns": 63.0
    },
    "memset/128/1": {
-    "cycles": 8.97,
+    "cycles": 11.0,
     "insns": 68.0
    },
    "memset/128/2": {
-    "cycles": 9.54,
+    "cycles": 10.75,
     "insns": 68.0
    },
    "memset/128/3": {
-    "cycles": 8.95,
+    "cycles": 10.31,
     "insns": 68.0
    },
    "memset/15/0": {
-    "cycles": 3.71,
+    "cycles": 5.73,
     "insns": 38.0
    },
    "memset/15/1": {
-    "cycles": 3.73,
+    "cycles": 6.47,
     "insns": 38.0
    },
    "memset/15/2": {
-    "cycles": 3.72,
+    "cycles": 4.34,
     "insns": 38.0
    },
    "memset/15/3": {
-    "cycles": 3.71,
+    "cycles": 3.87,
     "insns": 38.0
    },
    "memset/16/0": {
-    "cycles": 3.36,
+    "cycles": 3.4,
     "insns": 40.0
    },
    "memset/16/1": {
-    "cycles": 3.66,
+    "cycles": 3.53,
     "insns": 40.0
    },
    "memset/16/2": {
-    "cycles": 3.1,
+    "cycles": 3.5,
     "insns": 40.0
    },
    "memset/16/3": {
-    "cycles": 3.1,
+    "cycles": 3.4,
     "insns": 40.0
    },
    "memset/2/0": {
-    "cycles": 6.34,
+    "cycles": 7.15,
     "insns": 42.0
    },
    "memset/2/1": {
-    "cycles": 6.63,
+    "cycles": 7.05,
     "insns": 42.0
    },
    "memset/2/2": {
-    "cycles": 6.19,
+    "cycles": 7.12,
     "insns": 42.0
    },
    "memset/2/3": {
-    "cycles": 6.18,
+    "cycles": 7.0,
     "insns": 42.0
    },
    "memset/256/0": {
-    "cycles": 12.85,
+    "cycles": 15.1,
     "insns": 83.0
    },
    "memset/256/1": {
-    "cycles": 14.05,
+    "cycles": 16.54,
     "insns": 88.0
    },
    "memset/256/2": {
-    "cycles": 15.04,
+    "cycles": 16.08,
     "insns": 88.0
    },
    "memset/256/3": {
-    "cycles": 15.22,
+    "cycles": 17.02,
     "insns": 88.0
    },
    "memset/3/0": {
-    "cycles": 5.59,
+    "cycles": 6.33,
     "insns": 43.0
    },
    "memset/3/1": {
-    "cycles": 5.68,
+    "cycles": 6.31,
     "insns": 43.0
    },
    "memset/3/2": {
-    "cycles": 5.58,
+    "cycles": 6.3,
     "insns": 43.0
    },
    "memset/3/3": {
-    "cycles": 5.09,
+    "cycles": 6.3,
     "insns": 43.0
    },
    "memset/31/0": {
-    "cycles": 3.09,
+    "cycles": 3.48,
     "insns": 40.0
    },
    "memset/31/1": {
-    "cycles": 3.09,
+    "cycles": 3.51,
     "insns": 40.0
    },
    "memset/31/2": {
-    "cycles": 3.1,
+    "cycles": 3.44,
     "insns": 40.0
    },
    "memset/31/3": {
-    "cycles": 3.13,
+    "cycles": 3.56,
     "insns": 40.0
    },
    "memset/32/0": {
-    "cycles": 3.1,
+    "cycles": 3.54,
     "insns": 40.0
    },
    "memset/32/1": {
-    "cycles": 3.1,
+    "cycles": 3.51,
     "insns": 40.0
    },
    "memset/32/2": {
-    "cycles": 3.1,
+    "cycles": 3.44,
     "insns": 40.0
    },
    "memset/32/3": {
-    "cycles": 3.1,
+    "cycles": 3.72,
     "insns": 40.0
    },
    "memset/4/0": {
-    "cycles": 5.0,
+    "cycles": 5.68,
     "insns": 40.0
    },
    "memset/4/1": {
-    "cycles": 5.65,
+    "cycles": 5.64,
     "insns": 40.0
    },
    "memset/4/2": {
-    "cycles": 5.44,
+    "cycles": 5.64,
     "insns": 40.0
    },
    "memset/4/3": {
-    "cycles": 4.87,
+    "cycles": 5.51,
     "insns": 40.0
    },
    "memset/64/0": {
-    "cycles": 5.02,
+    "cycles": 5.72,
     "insns": 53.0
    },
    "memset/64/1": {
-    "cycles": 5.73,
+    "cycles": 6.51,
     "insns": 58.0
    },
    "memset/64/2": {
-    "cycles": 5.6,
+    "cycles": 6.65,
     "insns": 58.0
    },
    "memset/64/3": {
-    "cycles": 5.61,
+    "cycles": 6.51,
     "insns": 58.0
    },
    "memset/7/0": {
-    "cycles": 4.94,
+    "cycles": 5.67,
     "insns": 40.0
    },
    "memset/7/1": {
-    "cycles": 4.95,
+    "cycles": 5.81,
     "insns": 40.0
    },
    "memset/7/2": {
-    "cycles": 4.82,
+    "cycles": 5.62,
     "insns": 40.0
    },
    "memset/7/3": {
-    "cycles": 5.2,
+    "cycles": 5.44,
     "insns": 40.0
    },
    "memset/8/0": {
-    "cycles": 3.73,
-    "insns": 38.0
-   },
-   "memset/8/1": {
-    "cycles": 3.71,
-    "insns": 38.0
-   },
-   "memset/8/2": {
     "cycles": 4.07,
     "insns": 38.0
    },
+   "memset/8/1": {
+    "cycles": 4.07,
+    "insns": 38.0
+   },
+   "memset/8/2": {
+    "cycles": 4.09,
+    "insns": 38.0
+   },
    "memset/8/3": {
-    "cycles": 3.73,
+    "cycles": 4.21,
     "insns": 38.0
    },
    "mix/memcpy": {
-    "cycles": 7.86,
+    "cycles": 8.96,
     "insns": 39.98
    },
    "mix/memset": {
-    "cycles": 7.94,
+    "cycles": 8.78,
     "insns": 35.07
    },
    "mix/strlen": {
-    "cycles": 5.31,
+    "cycles": 6.17,
     "insns": 49.55
    },
    "strchr/0/0": {
-    "cycles": 2.49,
+    "cycles": 4.23,
     "insns": 33.0
    },
    "strchr/0/1": {
-    "cycles": 2.48,
+    "cycles": 4.2,
     "insns": 33.0
    },
    "strchr/0/2": {
-    "cycles": 1.93,
+    "cycles": 4.15,
     "insns": 33.0
    },
    "strchr/0/3": {
-    "cycles": 2.03,
+    "cycles": 4.15,
     "insns": 33.0
    },
    "strchr/1/0": {
-    "cycles": 2.26,
+    "cycles": 4.25,
     "insns": 31.0
    },
    "strchr/1/1": {
-    "cycles": 2.5,
+    "cycles": 3.99,
     "insns": 31.0
    },
    "strchr/1/2": {
-    "cycles": 2.3,
+    "cycles": 4.31,
     "insns": 31.0
    },
    "strchr/1/3": {
-    "cycles": 2.49,
+    "cycles": 4.32,
     "insns": 31.0
    },
    "strchr/1024/0": {
-    "cycles": 66.67,
+    "cycles": 66.59,
     "insns": 627.0
    },
    "strchr/1024/1": {
-    "cycles": 67.79,
+    "cycles": 69.84,
     "insns": 636.0
    },
    "strchr/1024/2": {
-    "cycles": 61.67,
+    "cycles": 70.27,
     "insns": 636.0
    },
    "strchr/1024/3": {
-    "cycles": 61.8,
+    "cycles": 67.66,
     "insns": 636.0
    },
    "strchr/128/0": {
-    "cycles": 10.58,
+    "cycles": 11.33,
     "insns": 123.0
    },
    "strchr/128/1": {
-    "cycles": 10.99,
+    "cycles": 12.56,
     "insns": 132.0
    },
    "strchr/128/2": {
-    "cycles": 11.54,
+    "cycles": 11.05,
     "insns": 132.0
    },
    "strchr/128/3": {
-    "cycles": 12.29,
+    "cycles": 12.2,
     "insns": 132.0
    },
    "strchr/15/0": {
-    "cycles": 5.64,
+    "cycles": 5.79,
     "insns": 61.0
    },
    "strchr/15/1": {
-    "cycles": 5.56,
+    "cycles": 5.74,
     "insns": 61.0
    },
    "strchr/15/2": {
-    "cycles": 5.04,
+    "cycles": 5.79,
     "insns": 69.0
    },
    "strchr/15/3": {
-    "cycles": 6.1,
+    "cycles": 5.82,
     "insns": 69.0
    },
    "strchr/16/0": {
-    "cycles": 4.94,
+    "cycles": 5.56,
     "insns": 61.0
    },
    "strchr/16/1": {
-    "cycles": 5.56,
+    "cycles": 5.6,
     "insns": 69.0
    },
    "strchr/16/2": {
-    "cycles": 4.95,
+    "cycles": 5.78,
     "insns": 69.0
    },
    "strchr/16/3": {
-    "cycles": 5.64,
+    "cycles": 5.79,
     "insns": 69.0
    },
    "strchr/2/0": {
-    "cycles": 3.1,
+    "cycles": 5.46,
     "insns": 36.0
    },
    "strchr/2/1": {
-    "cycles": 3.1,
+    "cycles": 5.68,
     "insns": 36.0
    },
    "strchr/2/2": {
-    "cycles": 3.1,
+    "cycles": 5.53,
     "insns": 36.0
    },
    "strchr/2/3": {
-    "cycles": 3.1,
+    "cycles": 4.75,
     "insns": 36.0
    },
    "strchr/256/0": {
-    "cycles": 19.87,
+    "cycles": 22.05,
     "insns": 195.0
    },
    "strchr/256/1": {
-    "cycles": 21.03,
+    "cycles": 21.81,
     "insns": 204.0
    },
    "strchr/256/2": {
-    "cycles": 22.33,
+    "cycles": 22.71,
     "insns": 204.0
    },
    "strchr/256/3": {
-    "cycles": 23.03,
+    "cycles": 22.42,
     "insns": 204.0
    },
    "strchr/3/0": {
-    "cycles": 5.04,
+    "cycles": 7.44,
     "insns": 61.0
    },
    "strchr/3/1": {
-    "cycles": 4.95,
+    "cycles": 5.98,
     "insns": 61.0
    },
    "strchr/3/2": {
-    "cycles": 5.12,
+    "cycles": 5.78,
     "insns": 61.0
    },
    "strchr/3/3": {
-    "cycles": 5.57,
+    "cycles": 5.65,
     "insns": 61.0
    },
    "strchr/31/0": {
-    "cycles": 5.58,
+    "cycles": 5.77,
     "insns": 69.0
    },
    "strchr/31/1": {
-    "cycles": 5.12,
+    "cycles": 5.62,
     "insns": 69.0
    },
    "strchr/31/2": {
-    "cycles": 6.54,
+    "cycles": 6.7,
     "insns": 78.0
    },
    "strchr/31/3": {
-    "cycles": 5.89,
-    "insns": 78.0
-   },
-   "strchr/32/0": {
-    "cycles": 4.94,
-    "insns": 69.0
-   },
-   "strchr/32/1": {
-    "cycles": 6.0,
-    "insns": 78.0
-   },
-   "strchr/32/2": {
     "cycles": 7.06,
     "insns": 78.0
    },
+   "strchr/32/0": {
+    "cycles": 5.62,
+    "insns": 69.0
+   },
+   "strchr/32/1": {
+    "cycles": 6.65,
+    "insns": 78.0
+   },
+   "strchr/32/2": {
+    "cycles": 6.84,
+    "insns": 78.0
+   },
    "strchr/32/3": {
-    "cycles": 5.88,
+    "cycles": 6.78,
     "insns": 78.0
    },
    "strchr/4/0": {
-    "cycles": 5.08,
+    "cycles": 5.75,
     "insns": 61.0
    },
    "strchr/4/1": {
-    "cycles": 5.37,
+    "cycles": 5.75,
     "insns": 61.0
    },
    "strchr/4/2": {
-    "cycles": 5.58,
+    "cycles": 5.84,
     "insns": 61.0
    },
    "strchr/4/3": {
-    "cycles": 5.77,
+    "cycles": 5.73,
     "insns": 61.0
    },
    "strchr/64/0": {
-    "cycles": 7.01,
+    "cycles": 7.99,
     "insns": 87.0
    },
    "strchr/64/1": {
-    "cycles": 8.34,
+    "cycles": 8.81,
     "insns": 96.0
    },
    "strchr/64/2": {
-    "cycles": 8.52,
+    "cycles": 9.05,
     "insns": 96.0
    },
    "strchr/64/3": {
-    "cycles": 7.72,
+    "cycles": 8.75,
     "insns": 96.0
    },
    "strchr/7/0": {
@@ -2597,451 +2597,451 @@
     "insns": 61.0
    },
    "strchr/7/1": {
-    "cycles": 5.9,
+    "cycles": 5.79,
     "insns": 61.0
    },
    "strchr/7/2": {
-    "cycles": 5.06,
+    "cycles": 5.71,
     "insns": 61.0
    },
    "strchr/7/3": {
-    "cycles": 5.25,
+    "cycles": 5.63,
     "insns": 61.0
    },
    "strchr/8/0": {
-    "cycles": 5.92,
+    "cycles": 5.8,
     "insns": 61.0
    },
    "strchr/8/1": {
-    "cycles": 4.96,
+    "cycles": 5.63,
     "insns": 61.0
    },
    "strchr/8/2": {
-    "cycles": 5.56,
+    "cycles": 5.64,
     "insns": 61.0
    },
    "strchr/8/3": {
-    "cycles": 6.1,
+    "cycles": 5.63,
     "insns": 61.0
    },
    "strcmp/0/0:0": {
-    "cycles": 3.1,
+    "cycles": 3.42,
     "insns": 35.0
    },
    "strcmp/0/0:1": {
-    "cycles": 3.1,
+    "cycles": 3.16,
     "insns": 35.0
    },
    "strcmp/0/1:1": {
-    "cycles": 3.1,
+    "cycles": 3.49,
     "insns": 35.0
    },
    "strcmp/0/3:2": {
-    "cycles": 3.1,
+    "cycles": 3.43,
     "insns": 35.0
    },
    "strcmp/1/0:0": {
-    "cycles": 2.47,
+    "cycles": 3.44,
     "insns": 40.0
    },
    "strcmp/1/0:1": {
-    "cycles": 3.41,
+    "cycles": 3.4,
     "insns": 40.0
    },
    "strcmp/1/1:1": {
-    "cycles": 3.52,
+    "cycles": 3.4,
     "insns": 40.0
    },
    "strcmp/1/3:2": {
-    "cycles": 3.1,
+    "cycles": 3.4,
     "insns": 40.0
    },
    "strcmp/1024/0:0": {
-    "cycles": 110.34,
+    "cycles": 214.26,
     "insns": 1288.0
    },
    "strcmp/1024/0:1": {
-    "cycles": 112.18,
+    "cycles": 228.79,
     "insns": 1288.0
    },
    "strcmp/1024/1:1": {
-    "cycles": 111.26,
+    "cycles": 245.56,
     "insns": 1288.0
    },
    "strcmp/1024/3:2": {
-    "cycles": 110.73,
+    "cycles": 237.15,
     "insns": 1288.0
    },
    "strcmp/128/0:0": {
-    "cycles": 18.75,
+    "cycles": 38.29,
     "insns": 224.0
    },
    "strcmp/128/0:1": {
-    "cycles": 17.91,
+    "cycles": 40.16,
     "insns": 224.0
    },
    "strcmp/128/1:1": {
-    "cycles": 18.27,
+    "cycles": 41.25,
     "insns": 224.0
    },
    "strcmp/128/3:2": {
-    "cycles": 19.84,
+    "cycles": 39.41,
     "insns": 224.0
    },
    "strcmp/15/0:0": {
-    "cycles": 8.47,
+    "cycles": 15.63,
     "insns": 91.0
    },
    "strcmp/15/0:1": {
-    "cycles": 8.31,
+    "cycles": 15.63,
     "insns": 91.0
    },
    "strcmp/15/1:1": {
-    "cycles": 9.19,
+    "cycles": 16.14,
     "insns": 91.0
    },
    "strcmp/15/3:2": {
-    "cycles": 7.96,
+    "cycles": 15.96,
     "insns": 91.0
    },
    "strcmp/16/0:0": {
-    "cycles": 8.03,
+    "cycles": 15.23,
     "insns": 91.0
    },
    "strcmp/16/0:1": {
-    "cycles": 8.62,
+    "cycles": 15.6,
     "insns": 91.0
    },
    "strcmp/16/1:1": {
-    "cycles": 8.7,
+    "cycles": 15.52,
     "insns": 91.0
    },
    "strcmp/16/3:2": {
-    "cycles": 8.03,
+    "cycles": 16.49,
     "insns": 91.0
    },
    "strcmp/2/0:0": {
-    "cycles": 3.71,
+    "cycles": 4.2,
     "insns": 45.0
    },
    "strcmp/2/0:1": {
-    "cycles": 3.73,
+    "cycles": 4.2,
     "insns": 45.0
    },
    "strcmp/2/1:1": {
-    "cycles": 3.72,
+    "cycles": 4.2,
     "insns": 45.0
    },
    "strcmp/2/3:2": {
-    "cycles": 3.72,
+    "cycles": 4.28,
     "insns": 45.0
    },
    "strcmp/256/0:0": {
-    "cycles": 36.55,
+    "cycles": 67.33,
     "insns": 376.0
    },
    "strcmp/256/0:1": {
-    "cycles": 36.05,
+    "cycles": 66.52,
     "insns": 376.0
    },
    "strcmp/256/1:1": {
-    "cycles": 36.05,
+    "cycles": 66.25,
     "insns": 376.0
    },
    "strcmp/256/3:2": {
-    "cycles": 34.89,
+    "cycles": 56.18,
     "insns": 376.0
    },
    "strcmp/3/0:0": {
-    "cycles": 4.32,
+    "cycles": 5.01,
     "insns": 50.0
    },
    "strcmp/3/0:1": {
-    "cycles": 4.32,
+    "cycles": 5.07,
     "insns": 50.0
    },
    "strcmp/3/1:1": {
-    "cycles": 4.32,
+    "cycles": 5.07,
     "insns": 50.0
    },
    "strcmp/3/3:2": {
-    "cycles": 4.32,
+    "cycles": 4.9,
     "insns": 50.0
    },
    "strcmp/31/0:0": {
-    "cycles": 9.26,
+    "cycles": 19.57,
     "insns": 110.0
    },
    "strcmp/31/0:1": {
-    "cycles": 9.26,
+    "cycles": 19.71,
     "insns": 110.0
    },
    "strcmp/31/1:1": {
-    "cycles": 9.26,
+    "cycles": 18.82,
     "insns": 110.0
    },
    "strcmp/31/3:2": {
-    "cycles": 9.31,
+    "cycles": 18.31,
     "insns": 110.0
    },
    "strcmp/32/0:0": {
-    "cycles": 10.21,
+    "cycles": 19.29,
     "insns": 110.0
    },
    "strcmp/32/0:1": {
-    "cycles": 9.26,
+    "cycles": 19.76,
     "insns": 110.0
    },
    "strcmp/32/1:1": {
-    "cycles": 9.31,
+    "cycles": 18.33,
     "insns": 110.0
    },
    "strcmp/32/3:2": {
-    "cycles": 9.26,
+    "cycles": 20.49,
     "insns": 110.0
    },
    "strcmp/4/0:0": {
-    "cycles": 4.34,
+    "cycles": 5.04,
     "insns": 55.0
    },
    "strcmp/4/0:1": {
-    "cycles": 4.32,
+    "cycles": 8.11,
     "insns": 55.0
    },
    "strcmp/4/1:1": {
-    "cycles": 4.33,
+    "cycles": 5.09,
     "insns": 55.0
    },
    "strcmp/4/3:2": {
-    "cycles": 4.32,
+    "cycles": 8.27,
     "insns": 55.0
    },
    "strcmp/64/0:0": {
-    "cycles": 12.04,
+    "cycles": 28.1,
     "insns": 148.0
    },
    "strcmp/64/0:1": {
-    "cycles": 13.46,
+    "cycles": 27.77,
     "insns": 148.0
    },
    "strcmp/64/1:1": {
-    "cycles": 11.78,
+    "cycles": 28.18,
     "insns": 148.0
    },
    "strcmp/64/3:2": {
-    "cycles": 13.56,
+    "cycles": 26.63,
     "insns": 148.0
    },
    "strcmp/7/0:0": {
-    "cycles": 6.32,
+    "cycles": 12.95,
     "insns": 70.0
    },
    "strcmp/7/0:1": {
-    "cycles": 6.25,
+    "cycles": 13.02,
     "insns": 70.0
    },
    "strcmp/7/1:1": {
-    "cycles": 6.27,
+    "cycles": 7.55,
     "insns": 70.0
    },
    "strcmp/7/3:2": {
-    "cycles": 6.25,
+    "cycles": 12.41,
     "insns": 70.0
    },
    "strcmp/8/0:0": {
-    "cycles": 7.89,
+    "cycles": 15.78,
     "insns": 91.0
    },
    "strcmp/8/0:1": {
-    "cycles": 9.05,
+    "cycles": 15.12,
     "insns": 91.0
    },
    "strcmp/8/1:1": {
-    "cycles": 8.05,
+    "cycles": 15.51,
     "insns": 91.0
    },
    "strcmp/8/3:2": {
-    "cycles": 9.41,
+    "cycles": 16.23,
     "insns": 91.0
    },
    "strcpy/0/0:0": {
-    "cycles": 9.25,
+    "cycles": 16.46,
     "insns": 57.0
    },
    "strcpy/0/0:1": {
-    "cycles": 10.27,
+    "cycles": 14.21,
     "insns": 57.0
    },
    "strcpy/0/1:1": {
-    "cycles": 10.38,
+    "cycles": 16.72,
     "insns": 57.0
    },
    "strcpy/0/3:2": {
-    "cycles": 9.4,
+    "cycles": 14.71,
     "insns": 57.0
    },
    "strcpy/1/0:0": {
-    "cycles": 9.26,
+    "cycles": 15.1,
     "insns": 72.0
    },
    "strcpy/1/0:1": {
-    "cycles": 9.26,
+    "cycles": 15.14,
     "insns": 72.0
    },
    "strcpy/1/1:1": {
-    "cycles": 8.7,
+    "cycles": 17.36,
     "insns": 72.0
    },
    "strcpy/1/3:2": {
-    "cycles": 8.65,
+    "cycles": 16.34,
     "insns": 72.0
    },
    "strcpy/1024/0:0": {
-    "cycles": 84.82,
+    "cycles": 90.51,
     "insns": 717.0
    },
    "strcpy/1024/0:1": {
-    "cycles": 70.41,
+    "cycles": 91.21,
     "insns": 717.0
    },
    "strcpy/1024/1:1": {
-    "cycles": 87.37,
+    "cycles": 96.82,
     "insns": 717.0
    },
    "strcpy/1024/3:2": {
-    "cycles": 89.59,
+    "cycles": 96.42,
     "insns": 717.0
    },
    "strcpy/128/0:0": {
-    "cycles": 17.6,
+    "cycles": 20.2,
     "insns": 157.0
    },
    "strcpy/128/0:1": {
-    "cycles": 18.41,
+    "cycles": 26.21,
     "insns": 157.0
    },
    "strcpy/128/1:1": {
-    "cycles": 17.6,
+    "cycles": 28.16,
     "insns": 157.0
    },
    "strcpy/128/3:2": {
-    "cycles": 19.13,
+    "cycles": 25.88,
     "insns": 157.0
    },
    "strcpy/15/0:0": {
-    "cycles": 6.2,
+    "cycles": 11.56,
     "insns": 64.0
    },
    "strcpy/15/0:1": {
-    "cycles": 6.21,
+    "cycles": 11.63,
     "insns": 64.0
    },
    "strcpy/15/1:1": {
-    "cycles": 5.58,
+    "cycles": 11.27,
     "insns": 72.0
    },
    "strcpy/15/3:2": {
-    "cycles": 5.58,
+    "cycles": 9.46,
     "insns": 72.0
    },
    "strcpy/16/0:0": {
-    "cycles": 5.56,
+    "cycles": 11.76,
     "insns": 72.0
    },
    "strcpy/16/0:1": {
-    "cycles": 5.58,
+    "cycles": 12.29,
     "insns": 72.0
    },
    "strcpy/16/1:1": {
-    "cycles": 5.56,
+    "cycles": 11.67,
     "insns": 72.0
    },
    "strcpy/16/3:2": {
-    "cycles": 5.58,
+    "cycles": 10.56,
     "insns": 72.0
    },
    "strcpy/2/0:0": {
-    "cycles": 8.69,
+    "cycles": 8.95,
     "insns": 72.0
    },
    "strcpy/2/0:1": {
-    "cycles": 9.1,
+    "cycles": 9.87,
     "insns": 72.0
    },
    "strcpy/2/1:1": {
-    "cycles": 8.66,
+    "cycles": 9.18,
     "insns": 72.0
    },
    "strcpy/2/3:2": {
-    "cycles": 9.36,
+    "cycles": 9.48,
     "insns": 72.0
    },
    "strcpy/256/0:0": {
-    "cycles": 28.42,
+    "cycles": 44.99,
     "insns": 237.0
    },
    "strcpy/256/0:1": {
-    "cycles": 25.52,
+    "cycles": 30.35,
     "insns": 237.0
    },
    "strcpy/256/1:1": {
-    "cycles": 28.62,
+    "cycles": 33.18,
     "insns": 237.0
    },
    "strcpy/256/3:2": {
-    "cycles": 26.75,
+    "cycles": 28.0,
     "insns": 237.0
    },
    "strcpy/3/0:0": {
-    "cycles": 8.85,
+    "cycles": 7.95,
     "insns": 66.0
    },
    "strcpy/3/0:1": {
-    "cycles": 7.66,
+    "cycles": 7.99,
     "insns": 66.0
    },
    "strcpy/3/1:1": {
-    "cycles": 9.92,
+    "cycles": 9.41,
     "insns": 66.0
    },
    "strcpy/3/3:2": {
-    "cycles": 8.01,
+    "cycles": 11.01,
     "insns": 66.0
    },
    "strcpy/31/0:0": {
-    "cycles": 5.58,
+    "cycles": 11.73,
     "insns": 72.0
    },
    "strcpy/31/0:1": {
-    "cycles": 5.58,
+    "cycles": 11.21,
     "insns": 72.0
    },
    "strcpy/31/1:1": {
-    "cycles": 6.2,
+    "cycles": 13.27,
     "insns": 78.0
    },
    "strcpy/31/3:2": {
-    "cycles": 6.2,
+    "cycles": 11.52,
     "insns": 78.0
    },
    "strcpy/32/0:0": {
-    "cycles": 8.65,
+    "cycles": 13.98,
     "insns": 97.0
    },
    "strcpy/32/0:1": {
-    "cycles": 9.5,
+    "cycles": 13.15,
     "insns": 97.0
    },
    "strcpy/32/1:1": {
-    "cycles": 9.14,
+    "cycles": 13.23,
     "insns": 97.0
    },
    "strcpy/32/3:2": {
-    "cycles": 9.48,
+    "cycles": 16.13,
     "insns": 97.0
    },
    "strcpy/4/0:0": {
-    "cycles": 8.03,
+    "cycles": 7.7,
     "insns": 66.0
    },
    "strcpy/4/0:1": {
@@ -3049,159 +3049,159 @@
     "insns": 66.0
    },
    "strcpy/4/1:1": {
-    "cycles": 6.79,
+    "cycles": 7.7,
     "insns": 66.0
    },
    "strcpy/4/3:2": {
-    "cycles": 8.09,
+    "cycles": 8.96,
     "insns": 66.0
    },
    "strcpy/64/0:0": {
-    "cycles": 11.44,
+    "cycles": 13.44,
     "insns": 117.0
    },
    "strcpy/64/0:1": {
-    "cycles": 11.36,
+    "cycles": 12.68,
     "insns": 117.0
    },
    "strcpy/64/1:1": {
-    "cycles": 10.98,
+    "cycles": 12.82,
     "insns": 117.0
    },
    "strcpy/64/3:2": {
-    "cycles": 10.95,
+    "cycles": 12.67,
     "insns": 117.0
    },
    "strcpy/7/0:0": {
-    "cycles": 7.25,
+    "cycles": 8.38,
     "insns": 64.0
    },
    "strcpy/7/0:1": {
-    "cycles": 6.84,
+    "cycles": 12.4,
     "insns": 64.0
    },
    "strcpy/7/1:1": {
-    "cycles": 6.84,
+    "cycles": 11.27,
     "insns": 64.0
    },
    "strcpy/7/3:2": {
-    "cycles": 6.79,
+    "cycles": 12.4,
     "insns": 64.0
    },
    "strcpy/8/0:0": {
-    "cycles": 8.03,
+    "cycles": 11.78,
     "insns": 64.0
    },
    "strcpy/8/0:1": {
-    "cycles": 6.55,
+    "cycles": 12.38,
     "insns": 64.0
    },
    "strcpy/8/1:1": {
-    "cycles": 7.27,
+    "cycles": 12.17,
     "insns": 64.0
    },
    "strcpy/8/3:2": {
-    "cycles": 6.89,
+    "cycles": 11.84,
     "insns": 64.0
    },
    "strlen/0/0": {
-    "cycles": 3.1,
+    "cycles": 3.39,
     "insns": 28.0
    },
    "strlen/0/1": {
-    "cycles": 3.1,
+    "cycles": 3.54,
     "insns": 28.0
    },
    "strlen/0/2": {
-    "cycles": 3.1,
+    "cycles": 3.57,
     "insns": 28.0
    },
    "strlen/0/3": {
-    "cycles": 3.13,
+    "cycles": 3.51,
     "insns": 28.0
    },
    "strlen/1/0": {
-    "cycles": 3.73,
+    "cycles": 4.22,
     "insns": 40.0
    },
    "strlen/1/1": {
-    "cycles": 4.09,
+    "cycles": 4.2,
     "insns": 40.0
    },
    "strlen/1/2": {
-    "cycles": 3.72,
+    "cycles": 4.37,
     "insns": 40.0
    },
    "strlen/1/3": {
-    "cycles": 4.28,
+    "cycles": 4.37,
     "insns": 40.0
    },
    "strlen/1024/0": {
-    "cycles": 51.35,
+    "cycles": 51.43,
     "insns": 426.0
    },
    "strlen/1024/1": {
-    "cycles": 49.85,
+    "cycles": 51.35,
     "insns": 426.0
    },
    "strlen/1024/2": {
-    "cycles": 45.25,
+    "cycles": 47.61,
     "insns": 426.0
    },
    "strlen/1024/3": {
-    "cycles": 44.84,
+    "cycles": 76.93,
     "insns": 426.0
    },
    "strlen/128/0": {
-    "cycles": 8.65,
+    "cycles": 10.08,
     "insns": 90.0
    },
    "strlen/128/1": {
-    "cycles": 9.25,
+    "cycles": 9.79,
     "insns": 90.0
    },
    "strlen/128/2": {
-    "cycles": 10.19,
+    "cycles": 10.82,
     "insns": 90.0
    },
    "strlen/128/3": {
-    "cycles": 10.14,
+    "cycles": 10.05,
     "insns": 90.0
    },
    "strlen/15/0": {
-    "cycles": 4.08,
+    "cycles": 4.09,
     "insns": 40.0
    },
    "strlen/15/1": {
-    "cycles": 3.42,
+    "cycles": 3.68,
     "insns": 48.0
    },
    "strlen/15/2": {
-    "cycles": 3.44,
+    "cycles": 3.73,
     "insns": 48.0
    },
    "strlen/15/3": {
-    "cycles": 3.3,
+    "cycles": 3.67,
     "insns": 48.0
    },
    "strlen/16/0": {
-    "cycles": 3.33,
+    "cycles": 3.8,
     "insns": 48.0
    },
    "strlen/16/1": {
-    "cycles": 3.31,
+    "cycles": 3.67,
     "insns": 48.0
    },
    "strlen/16/2": {
-    "cycles": 3.3,
+    "cycles": 3.95,
     "insns": 48.0
    },
    "strlen/16/3": {
-    "cycles": 3.3,
+    "cycles": 3.76,
     "insns": 48.0
    },
    "strlen/2/0": {
-    "cycles": 3.71,
+    "cycles": 4.37,
     "insns": 40.0
    },
    "strlen/2/1": {
@@ -3209,231 +3209,231 @@
     "insns": 40.0
    },
    "strlen/2/2": {
-    "cycles": 4.22,
+    "cycles": 4.21,
     "insns": 40.0
    },
    "strlen/2/3": {
-    "cycles": 4.09,
+    "cycles": 4.4,
     "insns": 40.0
    },
    "strlen/256/0": {
-    "cycles": 18.53,
+    "cycles": 22.61,
     "insns": 138.0
    },
    "strlen/256/1": {
-    "cycles": 20.69,
+    "cycles": 21.83,
     "insns": 138.0
    },
    "strlen/256/2": {
-    "cycles": 21.23,
+    "cycles": 21.72,
     "insns": 138.0
    },
    "strlen/256/3": {
-    "cycles": 20.68,
+    "cycles": 21.36,
     "insns": 138.0
    },
    "strlen/3/0": {
-    "cycles": 3.99,
+    "cycles": 4.2,
     "insns": 40.0
    },
    "strlen/3/1": {
-    "cycles": 3.72,
+    "cycles": 4.2,
     "insns": 40.0
    },
    "strlen/3/2": {
-    "cycles": 3.71,
+    "cycles": 4.34,
     "insns": 40.0
    },
    "strlen/3/3": {
-    "cycles": 4.09,
+    "cycles": 4.2,
     "insns": 40.0
    },
    "strlen/31/0": {
-    "cycles": 3.3,
+    "cycles": 3.91,
     "insns": 48.0
    },
    "strlen/31/1": {
-    "cycles": 3.81,
+    "cycles": 4.43,
     "insns": 54.0
    },
    "strlen/31/2": {
-    "cycles": 3.83,
+    "cycles": 4.41,
     "insns": 54.0
    },
    "strlen/31/3": {
-    "cycles": 3.83,
+    "cycles": 4.34,
     "insns": 54.0
    },
    "strlen/32/0": {
-    "cycles": 3.83,
+    "cycles": 4.33,
     "insns": 54.0
    },
    "strlen/32/1": {
-    "cycles": 3.81,
+    "cycles": 4.18,
     "insns": 54.0
    },
    "strlen/32/2": {
-    "cycles": 3.81,
+    "cycles": 4.49,
     "insns": 54.0
    },
    "strlen/32/3": {
-    "cycles": 3.83,
+    "cycles": 4.35,
     "insns": 54.0
    },
    "strlen/4/0": {
-    "cycles": 3.72,
+    "cycles": 4.35,
     "insns": 40.0
    },
    "strlen/4/1": {
-    "cycles": 3.71,
+    "cycles": 4.21,
     "insns": 40.0
    },
    "strlen/4/2": {
-    "cycles": 3.71,
+    "cycles": 4.35,
     "insns": 40.0
    },
    "strlen/4/3": {
-    "cycles": 3.73,
+    "cycles": 4.54,
     "insns": 40.0
    },
    "strlen/64/0": {
-    "cycles": 6.0,
+    "cycles": 6.78,
     "insns": 66.0
    },
    "strlen/64/1": {
-    "cycles": 7.1,
+    "cycles": 6.62,
     "insns": 66.0
    },
    "strlen/64/2": {
-    "cycles": 6.88,
+    "cycles": 6.85,
     "insns": 66.0
    },
    "strlen/64/3": {
-    "cycles": 6.88,
+    "cycles": 6.7,
     "insns": 66.0
    },
    "strlen/7/0": {
-    "cycles": 4.37,
+    "cycles": 4.36,
     "insns": 40.0
    },
    "strlen/7/1": {
-    "cycles": 3.73,
+    "cycles": 4.22,
     "insns": 40.0
    },
    "strlen/7/2": {
-    "cycles": 3.91,
+    "cycles": 4.21,
     "insns": 40.0
    },
    "strlen/7/3": {
-    "cycles": 3.71,
+    "cycles": 4.21,
     "insns": 40.0
    },
    "strlen/8/0": {
-    "cycles": 3.79,
+    "cycles": 4.23,
     "insns": 40.0
    },
    "strlen/8/1": {
-    "cycles": 3.94,
-    "insns": 40.0
-   },
-   "strlen/8/2": {
     "cycles": 4.06,
     "insns": 40.0
    },
+   "strlen/8/2": {
+    "cycles": 4.35,
+    "insns": 40.0
+   },
    "strlen/8/3": {
-    "cycles": 4.32,
+    "cycles": 4.07,
     "insns": 40.0
    }
   },
   "strto": {
    "atoi": {
-    "cycles": 35.48,
+    "cycles": 30.49,
     "insns": 230.0
    },
    "strtod/17-digits": {
-    "cycles": 119.81,
+    "cycles": 132.97,
     "insns": 1049.0
    },
    "strtod/exp-large": {
-    "cycles": 129.1,
+    "cycles": 131.78,
     "insns": 949.0
    },
    "strtod/exp-small": {
-    "cycles": 131.24,
+    "cycles": 150.9,
     "insns": 1113.0
    },
    "strtod/fixed": {
-    "cycles": 64.23,
+    "cycles": 69.87,
     "insns": 475.0
    },
    "strtod/hex": {
-    "cycles": 163.43,
+    "cycles": 144.9,
     "insns": 846.0
    },
    "strtod/integer": {
-    "cycles": 52.16,
+    "cycles": 52.3,
     "insns": 343.0
    },
    "strtod/long": {
-    "cycles": 218.01,
+    "cycles": 257.12,
     "insns": 1974.0
    },
    "strtod/micro": {
-    "cycles": 60.39,
+    "cycles": 66.06,
     "insns": 383.0
    },
    "strtod/min-normal": {
-    "cycles": 130.62,
+    "cycles": 148.74,
     "insns": 1106.0
    },
    "strtod/short": {
-    "cycles": 44.21,
+    "cycles": 46.97,
     "insns": 295.0
    },
    "strtod/subnormal": {
-    "cycles": 237.59,
+    "cycles": 244.94,
     "insns": 1115.0
    },
    "strtof/9-digits": {
-    "cycles": 111.6,
+    "cycles": 179.16,
     "insns": 820.0
    },
    "strtof/exp": {
-    "cycles": 119.23,
+    "cycles": 119.89,
     "insns": 866.0
    },
    "strtof/short": {
-    "cycles": 40.46,
+    "cycles": 47.55,
     "insns": 288.0
    },
    "strtol/hex": {
-    "cycles": 66.39,
+    "cycles": 64.56,
     "insns": 329.0
    },
    "strtol/int": {
-    "cycles": 49.69,
+    "cycles": 46.65,
     "insns": 312.0
    },
    "strtol/short": {
-    "cycles": 30.48,
+    "cycles": 23.66,
     "insns": 150.0
    },
    "strtoll/long": {
-    "cycles": 89.3,
+    "cycles": 86.6,
     "insns": 495.0
    },
    "strtoul/hex16": {
-    "cycles": 60.97,
+    "cycles": 58.81,
     "insns": 317.0
    },
    "strtoull/hex": {
-    "cycles": 87.76,
+    "cycles": 87.55,
     "insns": 491.0
    }
   },
   "threads": {
    "call_once/done": {
-    "cycles": 2.47,
+    "cycles": 2.76,
     "insns": 30.0
    },
    "mtx/nested": {
@@ -3441,23 +3441,23 @@
     "insns": 207.0
    },
    "mtx/plain": {
-    "cycles": 36.64,
+    "cycles": 41.63,
     "insns": 116.0
    },
    "mtx/recursive": {
-    "cycles": 36.7,
+    "cycles": 42.24,
     "insns": 116.0
    },
    "mtx/timed": {
-    "cycles": 36.48,
+    "cycles": 41.55,
     "insns": 116.0
    },
    "mtx/trylock": {
-    "cycles": 35.21,
+    "cycles": 38.81,
     "insns": 109.0
    },
    "tss_get": {
-    "cycles": 4.46,
+    "cycles": 5.0,
     "insns": 32.0
    }
   }

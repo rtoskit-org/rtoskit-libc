@@ -402,9 +402,11 @@ the gains and the members recorded.
   soft-double operations' costs, the sources, the choice per core, the error
   budget and the split (D186). Docs only.
 
-### P11.05b — `exp`, `exp2`, `exp10`, `expm1` on the double-FPU cores  `[ ]`
-- [ ] A 2^(j/N) table and a short polynomial in double, one rounding (AOR:
-  `exp` 56, `exp2` 52 instructions on armv7e-m-dp); tests, gains.
+### P11.05b — `exp`, `exp2`, `exp10`, `expm1` on the double-FPU cores  `[x]`
+- [x] A 2^(j/N) table and a short polynomial in double, one rounding (AOR:
+  `exp` 56, `exp2` 52 instructions on armv7e-m-dp); tests, gains. Done (D187):
+  `exp` 169 → 53, `exp2` 183 → 51 on armv7e-m-dp; at most 0.553 ulp. The fast
+  size figures may grow through P11.05 (the maintainer's decision, D187).
 
 ### P11.05c — `exp`, `exp2`, `exp10`, `expm1` on the soft-double cores  `[ ]`
 - [ ] A 64-bit fixed-point exp2 kernel, one rounding (AOR: `exp` 1090 on
