@@ -383,3 +383,80 @@ helpers were in between, see the PR):
 | `exp` | 3813 → 317 (AOR 1090) | 3874 → 318 | 10,317 → 1410 (AOR 3954) |
 | `exp2` | 5235 → 281 (AOR 934) | 5320 → 282 | 14,133 → 1210 (AOR 3335) |
 | `exp10` | 5252 → 316 | 5334 → 317 | 14,233 → 1412 |
+
+## 8. expm1 on the soft-double cores (P11.05c2)
+
+`libc/math/dp-fixed/fast/expm1.c`, over §7's kernel.
+
+### 8.1 Sources (ideas only)
+
+Read 2026-11-12:
+
+- **FreeBSD msun `s_expm1.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_expm1.c>,
+  fdlibm): x = k ln 2 + r with |r| ≤ ln 2/2 and the reduction's rounding
+  error carried as a correction; e^r − 1 from a degree-5 rational form in r²
+  (2^-61); and 2^k (1 + p) − 1 never formed as a subtraction from a value
+  near 1: the −1 is folded into a per-range constant (1 − 2^-k) or handled
+  apart for k = ±1. Under 1 ulp.
+- **Arm Optimized Routines, SVE `expm1`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/sve/expm1.c>):
+  the reduction by ln 2/64, a degree-6 polynomial, and, near zero (below
+  about 15 ln 2/64), a table of 2^(i/64) − 1, so that scale − 1 does not
+  cancel; elsewhere (scale − 1) + scale·poly. 2.81 + 0.5 ulp. AOR has no
+  scalar double expm1, so P11.06 has no AOR count to gate it on.
+- **CORE-MATH `expm1`**: the host refused automated access; not read.
+
+Both handle the cancellation the same way in essence: the subtraction of 1
+is either exact or taken out of the range where the result is small. In
+fixed point the subtraction is exact in integers anyway, so only the
+kernel's absolute error remains, and it matters only where the result is
+small.
+
+### 8.2 The method
+
+- **Below 1/16** (`|x| < 2^-4`), the series: expm1(x) = x (1 + q) with
+  q = x/2 + x²/6 + … in Q64, from y = 16|x| in Q64 and the coefficients
+  2^-4k/(k + 1)! in Q64, k = 1..9 (the tenth is below 0.43 units of 2^-64).
+  Horner's rule runs unsigned, subtracting each step for x < 0 (every
+  partial value stays positive, since the coefficients fall by more than 16
+  each step). The four innermost steps' operands fit in 32 bits, so they take
+  two partial products. q's absolute error of a few units of 2^-64 is a
+  relative error of x (1 + q), however small x is, down to 2^-54. Then
+  m·(1 + q) in Q63, normalized (at most two shifts) and rounded once by its
+  54th bit.
+- **From 1/16**, the kernel: t = x log2(e) as in §7 (`__libc_dp_fixed_scaled`),
+  y = 2^f in Q63 from the kernel's polynomial, now an inline
+  (`__libc_dp_fixed_exp2_fraction`) that `__libc_dp_fixed_exp2` wraps (its
+  object is unchanged), and the 1 subtracted exactly in integers:
+  - x > 0, n ≥ 0: y − 2^(63−n), or y alone from n = 64, where the 1 is below
+    a unit of y;
+  - x < 0, n ≤ −1: 2^63 − (y >> −n), negated.
+
+  The result is then at least 1 − e^-1/16 = 0.0606, so the kernel's few
+  units of 2^-63 are at most 0.03 ulp of it. A 1/32 threshold measured
+  0.5513 ulp at the edge, one step less in the series; 1/16 measured 0.5254.
+- **The ends:** NaN, below 2^-54 (x nudged, underflow for a subnormal) and
+  from 512 (§6's exp slow path: the 1 is below 2^-500 of the result) go out
+  of line; below −40, e^x is below 2^-57 and the result −1 + 2^-100, at run
+  time so that it is inexact and rounds in every direction.
+
+### 8.3 Measured (P11.05c2)
+
+On the host, as §7.2: 2·10^8 samples over (−45, 710) at most 0.5215 ulp, and
+every binade's 2^16 significands from 2^-56 to 2^9, both signs, at most
+0.5239; 10^6 floats on each side of 1/16, 2^-54, 64 ln 2, ±ln 2, ±1, −40 and
+512 at most 0.5254 (just below −1/16). `exp`, `exp2` and `exp10` measured as
+in §7.2, bit for bit.
+
+Instructions per call (speed → fast; P11.05b's double file on the soft
+helpers was 3549 on armv7e-m and 9720 on armv6-m):
+
+| Function | armv7e-m, armv8-m.main | armv7-m | armv6-m, armv6s-m |
+| --- | ---: | ---: | ---: |
+| `expm1` | 4075 → 346 | 4128 → 347 | 10,938 → 1468 |
+
+The kernel's polynomial as an inline with `constexpr` coefficients saved
+one instruction in `exp`, `exp2` and `exp10` on the Thumb-2 cores. The
+`expm1` member is 1622 bytes on armv6-m (the series, the kernel's
+polynomial inline, and the reduction); no size program calls it.

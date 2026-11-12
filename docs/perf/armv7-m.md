@@ -1013,3 +1013,11 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `exp` | 3874 | 1198 | 318 | -92 % |
 | `exp2` | 5320 | 1060 | 282 | -95 % |
 | `exp10` | 5334 | 1236 | 317 | -94 % |
+
+## P11.05c2 — Fast `expm1` in 64-bit fixed point (D189)
+
+`libc/math/dp-fixed/fast/expm1.c`: a Q64 series below 1/16, relative however small x is; from 1/16, P11.05c1's kernel result in Q63 minus 1 exactly in integers. Instructions per call (throughput): speed, P11.05b's fast (D187's double file on the soft-double helpers) and now; release and speed unchanged. `exp`, `exp2` and `exp10` are one instruction faster each (the kernel's polynomial as an inline).
+
+| Function | speed | P11.05b | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `expm1` | 4128 | 3603 | 347 | -92 % |

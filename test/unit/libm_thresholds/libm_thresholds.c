@@ -516,6 +516,16 @@ static void check_double_exponentials(void)
 	QUIET(near_double(exp2(-0x1.fffffffffffffp+8), 0x1.00000000000b1p-512) && near_double(exp(0x1.fffffffffffffp+8), 0x1.9476504ba839ap+738) && near_double(exp(-0x1.fffffffffffffp+8), 0x1.44109edb20a75p-739));
 	QUIET(exp(0x1p-54) == 1.0 && near_double(exp(-0x1.b7f4d3965907fp-49), 0x1.fffffffffffe5p-1) && near_double(exp(0x1.62e42fefa39efp-1), 2.0) && exp10(1.0) == 10.0);
 	QUIET(near_double(exp10(0x1.fffffffffffffp+7), 0x1.54fdd7f73bdb3p+850) && near_double(exp10(-0x1.fffffffffffffp+7), 0x1.8062864ac70fep-851) && near_double(exp10(0x1.29b7640c6aae2p+8), 0x1.fd4d1534d970dp+988));
+	/*
+	 * P11.05c2 (the soft-double cores' fixed-point expm1, D189): each side of the series' end at 1/16, of 2^-54 and 512, of
+	 * 64 ln 2 (where the 1 drops below a unit of the kernel's result) and of -40, and the sweeps' worst points
+	 */
+	QUIET(near_double(expm1(0x1.fffffffffffffp-5), 0x1.082b577d34ed7p-4) && near_double(expm1(0x1p-4), 0x1.082b577d34ed8p-4) && near_double(expm1(-0x1.fffffffffffffp-5), -0x1.f0540438fd5c2p-5));
+	QUIET(near_double(expm1(-0x1p-4), -0x1.f0540438fd5c3p-5) && expm1(0x1p-54) == 0x1p-54 && expm1(-0x1p-54) == -0x1p-54 && near_double(expm1(1.0), 0x1.b7e151628aed3p+0) && near_double(expm1(-1.0), -0x1.43a54e4e98864p-1));
+	QUIET(near_double(expm1(0x1.62e42fefa39efp+5), 0x1.ffffffffffff3p+63) && near_double(expm1(0x1.62e42fefa39eep+5), 0x1.fffffffffffb3p+63) && near_double(expm1(0x1.fffffffffffffp+8), 0x1.9476504ba839ap+738));
+	CHECK(expm1(-0x1.3ffffffffffffp+5) == -1.0 && expm1(-40.0) == -1.0 && expm1(-0x1.fffffffffffffp+8) == -1.0 && expm1(-512.0) == -1.0);
+	QUIET(near_double(expm1(-0x1.0a60a68030f0fp-4), -0x1.01e68a9e8cbep-4) && near_double(expm1(-0x1.045d580e1e606p-4), -0x1.f886318541a1fp-5) && near_double(expm1(0x1.36290a8f9f8f1p-4), 0x1.42349c9a9462dp-4));
+	QUIET(near_double(expm1(-0x1.00000000cd18fp-4), -0x1.f054043a7eb3dp-5) && near_double(expm1(0x1.5bcfa7205d3d6p-5), 0x1.634ce30cbc108p-5) && near_double(expm1(-0x1.0c7f173a14fdap-5), -0x1.0824e299f4421p-5));
 }
 
 int main(void)
