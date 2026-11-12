@@ -1043,4 +1043,98 @@ static inline float __libc_fast_erfcf_accurate(float a, int *k, float *lo)
 	return m;
 }
 
+/* 2^(j/64) correctly rounded and (2^(j/64) - T)/T, as bits, side by side (libc/math/fast/__libc_fast_exp_pairs.c) */
+extern const uint64_t __libc_fast_exp_pairs[128];
+
+/*
+ * e^u - 1 for |u| <= ln 2/128 and a little beyond (the reductions' error): u + u^2 q(u) with q of degree 3 fitted here
+ * (Chebyshev, 256-bit arithmetic), u^2 q within 2^-57.7 of e^u - 1 - u (docs/research/libm-fast-double.md, section 6)
+ */
+static inline double __libc_fast_expm1_poly(double u)
+{
+	double u2 = u * u;
+
+	return u + u2 * (0x1.ffffffffff57fp-2 + u * 0x1.5555555555255p-3 + u2 * (0x1.55556b3304ec0p-5 + u * 0x1.11111d8fbe766p-7));
+}
+
+/* 2^r - 1 for |r| <= 1/128 and a little beyond: r ln 2 + r^2 q(r), q of degree 3 fitted here (r^2 q within 2^-57.7) */
+static inline double __libc_fast_exp2m1_poly(double r)
+{
+	double r2 = r * r;
+
+	return r * 0x1.62e42fefa39efp-1 + r2 * (0x1.ebfbdff82bb76p-3 + r * 0x1.c6b08d7049cc0p-5 + r2 * (0x1.3b2acb2c36b23p-7 + r * 0x1.5d880e7706b57p-10));
+}
+
+/*
+ * tail + (e^u - 1) and tail + (2^r - 1) by Horner's rule with the same fits, the tail added by the last multiply-add: on
+ * the common paths this spares the square and the separate addition of the tail (two instructions per call)
+ */
+static inline double __libc_fast_expm1_tail(double u, double tail)
+{
+	return tail + u * (1.0 + u * (0x1.ffffffffff57fp-2 + u * (0x1.5555555555255p-3 + u * (0x1.55556b3304ec0p-5 + u * 0x1.11111d8fbe766p-7))));
+}
+
+static inline double __libc_fast_exp2m1_tail(double r, double tail)
+{
+	return tail + r * (0x1.62e42fefa39efp-1 + r * (0x1.ebfbdff82bb76p-3 + r * (0x1.c6b08d7049cc0p-5 + r * (0x1.3b2acb2c36b23p-7 + r * 0x1.5d880e7706b57p-10))));
+}
+
+/* The table entry of 2^(k/64): the bits of 2^(j/64) and of its tail, j = k mod 64 */
+static inline const uint64_t *__libc_fast_exp_entry(int32_t k)
+{
+	return &__libc_fast_exp_pairs[2 * (k & 63)];
+}
+
+/* k = round(64 x / c) for |x / c| below 2^30 by the 1.5 2^52 shift (t = 64 x / c), and k itself as a double in *kd */
+static inline int32_t __libc_fast_exp_index(double t, double *kd)
+{
+	double shifted = t + 0x1.8p52;
+
+	*kd = shifted - 0x1.8p52;
+	return (int32_t)(uint32_t)__libc_double_bits(shifted);
+}
+
+/* The bits of 2^(k/64) from its table entry and exponent n = floor(k/64) */
+static inline uint64_t __libc_fast_exp_scale_bits(const uint64_t *entry, int32_t n)
+{
+	return entry[0] + ((uint64_t)(int64_t)n << 52);
+}
+
+/*
+ * 2^(k/64) (1 + p) rounded once for |p| < 2^-6, as scale + scale (tail + p), the ends tested (the common paths, below
+ * 2^1014 in magnitude, build the scale themselves from __libc_fast_exp_entry with no test): the tail is below 2^-53 and its product with p below 2^-59, so before the last
+ * addition the error is about 2^-57 of the result. From 2^1023 the scale is halved and the sum doubled (exact, or the
+ * overflow); below 2^-1014 it is scaled by 2^1022 and the sum multiplied by 2^-1022, a second rounding only to the
+ * subnormal grid (and the underflow when it is inexact): unscaled, scale tmp would already be subnormal there and lose
+ * bits (0.76 ulp measured at 2^-1020).
+ */
+
+/*
+ * The top 11 bits of |x| (its biased exponent) outside [bottom, top): the fast functions' one test for their slow paths
+ * (tiny arguments, the ends, the infinities and NaN)
+ */
+static inline bool __libc_fast_exp_outside(double x, uint32_t bottom, uint32_t top)
+{
+	return (((uint32_t)(__libc_double_bits(x) >> 52) & 0x7ff) - bottom) >= top - bottom;
+}
+
+static inline double __libc_fast_exp_scale(int32_t k, double p)
+{
+	const uint64_t *entry = &__libc_fast_exp_pairs[2 * (k & 63)];
+	int32_t n = k >> 6;
+	double tmp = __libc_double_from(entry[1]) + p;
+	double scale;
+
+	if (n > 1022) {
+		scale = __libc_double_from(__libc_fast_exp_scale_bits(entry, n - 1));
+		return 2.0 * (scale + scale * tmp);
+	}
+	if (n < -1014) {
+		scale = __libc_double_from(__libc_fast_exp_scale_bits(entry, n + 1022));
+		return (scale + scale * tmp) * 0x1p-1022;
+	}
+	scale = __libc_double_from(__libc_fast_exp_scale_bits(entry, n));
+	return scale + scale * tmp;
+}
+
 #endif /* _MATH_FAST_H */

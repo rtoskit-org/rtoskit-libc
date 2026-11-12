@@ -35,11 +35,11 @@
      "ram": 48
     },
     "math-float": {
-     "code": 15456,
+     "code": 12684,
      "ram": 20
     },
     "math-mix": {
-     "code": 41340,
+     "code": 42552,
      "ram": 20
     }
    },
@@ -77,11 +77,11 @@
      "ram": 48
     },
     "math-float": {
-     "code": 15456,
+     "code": 12684,
      "ram": 20
     },
     "math-mix": {
-     "code": 41340,
+     "code": 42552,
      "ram": 20
     }
    },
@@ -119,11 +119,53 @@
      "ram": 48
     },
     "math-float": {
-     "code": 13516,
+     "code": 11456,
      "ram": 20
     },
     "math-mix": {
-     "code": 36376,
+     "code": 37552,
+     "ram": 20
+    }
+   },
+   "armv7e-m-dp": {
+    "float-exact": {
+     "code": 1684,
+     "ram": 20
+    },
+    "hello-printf-float": {
+     "code": 7832,
+     "ram": 348
+    },
+    "hello-printf-int": {
+     "code": 7808,
+     "ram": 348
+    },
+    "hello-printf-int-minimal": {
+     "code": 4475,
+     "ram": 348
+    },
+    "hello-printf-int-nofloat": {
+     "code": 4901,
+     "ram": 348
+    },
+    "hello-puts": {
+     "code": 2151,
+     "ram": 348
+    },
+    "malloc-heavy": {
+     "code": 2170,
+     "ram": 52
+    },
+    "malloc-heavy-tiny": {
+     "code": 2110,
+     "ram": 48
+    },
+    "math-float": {
+     "code": 5950,
+     "ram": 20
+    },
+    "math-mix": {
+     "code": 15478,
      "ram": 20
     }
    }

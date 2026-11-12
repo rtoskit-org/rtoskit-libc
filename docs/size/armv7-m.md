@@ -330,3 +330,7 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 ## P11.04g2 — The cores without an FPU: fast `asinhf`, `acoshf` and `atanhf` (D185)
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `asinhf.o` 100 → 304, `acoshf.o` 984 → 416, `atanhf.o` 976 → 1018, `__libc_fixed_log_root.o` new → 898, `__libc_fixed_rsqrt_seed.o` new → 48 (the seeds moved out of `__libc_fixed_asin.o`, 476 → 428); speed's `asinhf.o` is small only because its float-float core sits in other members, which these no longer pull.
+
+## P11.05b — Fast `exp`, `exp2`, `exp10` and `expm1` in double (D187)
+
+Release and speed unchanged (`size-report diff`). `math-mix` (exp and pow) grows from 36376 to 37552 bytes of code in fast: the fast `exp` and its 1 KiB table on top of the strict core that pow still uses. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187); `math-float` is re-locked smaller with them (P11.04's float steps took it below its speed figure).

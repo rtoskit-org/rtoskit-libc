@@ -1048,3 +1048,14 @@ Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D184).
 ## P11.04g2 — The cores without an FPU: fast `asinhf`, `acoshf` and `atanhf` (D185)
 
 Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D185).
+
+## P11.05b — Fast `exp`, `exp2`, `exp10` and `expm1` in double (D187)
+
+`libc/math/fast/`: a 64-entry table of 2^(j/64) and its tail, degree-3 polynomials by Horner's rule, one rounding; the strict core for the slow path (D187). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `exp` | 169 | 53 | -69 % |
+| `exp2` | 183 | 51 | -72 % |
+| `exp10` | 185 | 55 | -70 % |
+| `expm1` | 172 | 106 | -38 % |

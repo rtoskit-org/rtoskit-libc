@@ -198,3 +198,118 @@ function. So between P11.05b and c, the soft-double cores run the
 double-only files on their soft helpers. Each FPU sub-step measures what
 they cost there; they should be near AOR's, since the structure is the
 same.
+
+## 6. exp, exp2, exp10 and expm1 on the double-FPU cores (P11.05b)
+
+`libc/math/fast/exp.c`, `exp2.c`, `exp10.c`, `expm1.c` and the table
+`__libc_fast_exp_pairs.c`. No layer has a double exp, so these files apply on
+every core. The soft-double cores run them on their helpers until P11.05c.
+
+### 6.1 The method
+
+- **The table:** for j = 0..63, the bits of T = 2^(j/64) correctly rounded
+  and of its relative tail (2^(j/64) − T)/T, side by side, so that one base
+  address serves both (1 KiB). 2^(k/64) = 2^n T (1 + tail), with
+  n = ⌊k/64⌋ added to T's exponent field.
+- **The reductions** (k by the 1.5·2^52 shift, which rounds to nearest; in
+  a directed mode k may be one off and |u| twice as large, still within the
+  polynomial's reach):
+  - `exp`: k = round(64x/ln 2), u = (x − k c1) − k c2. c1 = ln 2/64 to 33
+    bits, so k c1 is exact for |k| < 2^17 and x − k c1 is exact (Sterbenz);
+    c2 is the rest.
+  - `exp2`: k = round(64x), r = x − k/64 exactly.
+  - `exp10`: k = round(64x log2 10), r = (x − k d1) − k d2 with d1 =
+    log10(2)/64 to 31 bits, and u = r ln 10 (rounded: 2^-59.5 of the
+    result).
+- **The polynomials** (Chebyshev fits in 256-bit arithmetic, coefficients
+  rounded to double):
+  - e^u − 1 = u + u² q(u), q of degree 3 for |u| ≤ ln 2/128 (u² q within
+    2^-57.7);
+  - 2^r − 1 = r ln 2 + r² q(r), q of degree 3 for |r| ≤ 1/128 (2^-57.7), so
+    exp2 needs no product r ln 2 first.
+  - On the common paths both run by Horner's rule as tail + u(1 + u(…)),
+    the tail added by the last multiply-add.
+  - Measured on armv7e-m-dp: the degree-4 fits over a 32-entry table were 2
+    instructions per call more; the separate square and tail addition 2
+    more.
+- **One rounding:** scale + scale·(tail + p). Before the last addition the
+  error is about 2^-57 of the result.
+- **The common path** (2^-54 ≤ |x| < 512, 256 for exp10) is guarded by one
+  integer test on the exponent bits (`__libc_fast_exp_outside`). It
+  builds the scale from the table with no test of the ends.
+- **The slow path** (tiny arguments, the ends, the infinities and NaN) is the
+  strict file's: `__libc_exp_core` and `__libc_exp_scale`, the double-double
+  core that `pow` shares, so a program that calls both carries no second
+  copy. It is out of line (`[[gnu::noinline]]`): inlined, its `fabs` call
+  (the files build with `-fno-builtin`) made the whole function save
+  registers, 6 instructions per call on armv7e-m-dp.
+- **The ends, as first built:** the first build scaled by 2^1022 below
+  2^-1014 and rounded twice there (0.76 ulp on subnormal results).
+  Unscaled, scale·tmp went subnormal near 2^-1020, which also measured
+  0.76 ulp. The strict core removed both, and `__libc_fast_exp_scale` is
+  left only for `expm1` above 2^60.
+- **The thresholds:** overflow above ln(DBL_MAX), 1024 and log10(DBL_MAX).
+  Zero (with underflow) below ln 2^-1075, −1075 and log10 2^-1075. The first
+  build used log10 2^-1074 for exp10, which returned 0 where 2^-1074 is the
+  nearest (1 ulp).
+- **Tiny arguments:** 1 + x for exp and exp2. For exp10, 1 + x ln 10: 1 + x
+  alone was 1.15 ulp just below 1 (found by the sweep).
+- **expm1** keeps exp's reduction with u = hi + lo, hi = x − k c1 exact:
+  - For k = 0, the polynomial alone, relative however small x.
+  - Otherwise (2^(k/64) − 1), exactly as a pair, plus 2^(k/64)·hi as an exact
+    product (one fma where the FPU has it, Dekker's splits on SSE2), plus
+    2^(k/64)(lo + u² q + tail (1 + hi)), summed as pairs so that only the
+    last addition rounds.
+  - Where the two first terms cancel (|x| near ln 2/128), a rounded u or
+    tail + p cost up to 2.1 ulp, a dropped tail·p 0.17 and a degree-4 q 0.13.
+    expm1 has its own degree-5 q (2^-71.5).
+  - From 2^60 the 1 is below 2^-8 of an ulp and exp's result stands.
+  - The special values are the strict file's: below −40, −1 + 2^-100 at run
+    time, so that it is inexact and rounds in every direction (the fast
+    files drop `-frounding-math`, which would otherwise fold it); below
+    2^-54, `__libc_math_tiny` (underflow for a subnormal).
+
+### 6.2 Measured (P11.05b)
+
+On the host, against long double (10^9 samples per function, half uniform
+over the domain and half with random exponents):
+
+| Function | sampled worst | every binade's 2^16 significands |
+| --- | ---: | ---: |
+| `exp` | 0.5469 | 0.5381 |
+| `exp2` | 0.5464 | 0.5464 |
+| `exp10` | 0.5527 | 0.5425 |
+| `expm1` | 0.5146 | 0.5093 |
+
+The bound is 1.
+
+Instructions per call (speed → fast, the bench's plugin):
+
+| Function | x86_64 | armv7e-m-dp | AOR (armv7e-m-dp) |
+| --- | ---: | ---: | ---: |
+| `exp` | 230 → 51 | 169 → 53 | 56 |
+| `exp2` | 287 → 47 | 183 → 51 | 52 |
+| `exp10` | 277 → 52 | 185 → 55 | – |
+| `expm1` | 242 → 134 | 172 → 106 | – |
+
+How the counts came down on armv7e-m-dp, for `exp2`: 68 instructions with
+the first build, 62 with the integer guard, 56 with the slow path out of
+line, 54 with the 64-entry table and degree 3, 53 with one pointer to the
+table entry, and 51 with Horner's rule and the tail in its last step.
+
+The soft-double cores run these files on their helpers until P11.05c, and
+they gain there too: `exp` 3813 → 1170 instructions on armv7e-m (AOR 1090),
+10,317 → 3648 on armv6-m (AOR 3954); `exp2` 5235 → 1035 (AOR 934) and
+14,133 → 3233 (AOR 3335); `expm1` 4075 → 3549 and 10,938 → 9720.
+
+**Size.** The `math-mix` size program calls `exp` and `pow`, and `pow` still
+pulls in the strict core until P11.05f/g. So the fast `exp` and its 1 KiB
+table come on top of it: against the locked fast figures, armv6-m and
+armv6s-m +1212 bytes, armv7-m +1176; armv7e-m-dp 15,478 bytes, against speed's
+12,302 (+25.8 %, over the +20 % budget). The
+maintainer decided (D187) that the fast figures may grow through P11.05:
+each step re-locks the fast figures of the cores it grows and records the
+growth, and P11.06 re-locks them all with the final figures. This step
+re-locked armv6-m, armv6s-m, armv7-m and armv7e-m-dp (`size-report --flavour
+fast --lock`). armv7e-m-dp now has its own fast figures, as the cores without
+an FPU do.
