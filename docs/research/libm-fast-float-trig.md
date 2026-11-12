@@ -959,3 +959,68 @@ Every float on the host (as §18): `sinhf` at most **0.5082 ulp**, `coshf`
 Test vectors (`libm_thresholds`): each side of 1/2, 11 and 9.1, the largest
 finite sinh and cosh and the first overflow, and the sweeps' worst points,
 within 1.5 ulp.
+
+## 21. asinhf, acoshf and atanhf on the cores without an FPU: `libc/math/nofp/fast/` (P11.04g2)
+
+armv6-m, armv6s-m and armv7-m, in integers: the second half of P11.04g,
+over the logarithm. Speed runs the float-float functions on soft float
+(15,868–19,926 instructions on armv6-m). With this step every float
+function of P11.04 has a fast path on all seven cores.
+
+### 21.1 Sources
+
+- The forms of §10 (P11.04c) and FreeBSD's `s_asinhf.c`, `e_acoshf.c` and
+  `e_atanhf.c` (§10.1): asinh = log(|x| + √(x² + 1)) with log(2|x|) for
+  large |x|, acosh = log(x + √(x² − 1)) or a log1p form near 1, and
+  atanh = log1p(2x/(1 − x))/2.
+- musl's `acoshf` near 1, log1p(t + √(2t + t²)) (§10.1).
+
+In fixed point a log1p form is not free: the log2 core takes 1 + s as a
+32-bit significand, which fixes s only to 2^-31 absolute. So near 0 (and
+near 1 for acosh) the series take over, and above, the arguments of the
+logarithm are formed exactly in integers where they can be.
+
+### 21.2 The method
+
+- **The shared square root**: §19's `square_root` became
+  `__libc_fixed_square_root` (fixed-fast.h) over an extern seed table
+  (`__libc_fixed_rsqrt_seed`), so the arcsine kernel's code is unchanged
+  (its bench figures did not move) and the logarithms reuse it.
+- **asinh**: below 1/2, §20's odd series with p of degree 6 (2^-34.7).
+  Above, `__libc_fixed_log_root`: a = m 2^(e−23), a² + 1 = m² + 2^(46−2e)
+  exactly in units of 2^(2e−46) (below 2^49), its top 32 bits (shifted by
+  an even count) through the square root, a + √(a² + 1) in units of
+  2^(e−55), and the logarithm by the log2 core times ln 2 (logf's product,
+  `__libc_fixed_log`). From 2^12, log(2a): the root's 1/(4a²) is below
+  2^-26 of a, and the result (above 9) has an ulp of 2^-20.
+- **acosh**: up to 1.25, acosh(1 + t) = √(2t) K(t), K = 1 + t p(t) with p of
+  degree 5 (2^-34.1): t = x − 1 = w 2^-23 is exact, 2t too, its square root
+  from w shifted by an even count; relative however close x is to 1 (from
+  1 + 2^-23). Above, `__libc_fixed_log_root` with a² − 1, exact the same
+  way; log(2x) from 2^12.
+- **atanh**: below 1/4, the odd series with p of degree 4 (2^-36.3; to 1/2
+  it needed degree 8). Above, −log((1 − |x|)/(1 + |x|))/2: both terms are
+  integers below 2^26 (|x| = m 2^(e−23) with e = −2 or −1), normalised, their
+  quotient by §18's division (in (0, 0.6]) and its logarithm (the result is
+  at least 0.255, so 2^-31 absolute is 1/32 of its ulp).
+- One rounding to nearest, no test, no fallback; the strict files' special
+  cases (atanh ±1 divides by zero at run time).
+- Found by the sweep: the first `asinhf` returned x + x below 2^-12 (the
+  tiny case shared a branch with ±infinity and NaN): 2^24 ulp. A regression
+  test checks both sides.
+
+### 21.3 Measured (P11.04g2)
+
+Every float on the host (as §18): `asinhf` at most **0.5260 ulp**,
+`acoshf` **0.5155**, `atanhf` **0.5098**; the bound is 1.5. Instructions
+per call (speed → fast, the bench's plugin):
+
+| | armv6-m, armv6s-m | armv7-m |
+| --- | ---: | ---: |
+| `asinhf` | 19,353 → 1152 | 9783 → 352 |
+| `acoshf` | 19,926 → 1182 | 10,152 → 356 |
+| `atanhf` | 15,868 → 877 | 7721 → 266 |
+
+Test vectors (`libm_thresholds`): each side of 1/2 (asinh), 1.25 (acosh),
+1/4 (atanh) and 2^12, the floats next to 1 and to FLT_MAX, the sweeps'
+worst points, and the regression, within 1.5 ulp.

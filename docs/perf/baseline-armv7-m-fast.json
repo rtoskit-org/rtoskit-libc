@@ -81,10 +81,10 @@
     "insns": 13773.19
    },
    "acoshf/latency": {
-    "insns": 10147.44
+    "insns": 351.0
    },
    "acoshf/throughput": {
-    "insns": 10152.06
+    "insns": 355.62
    },
    "asin/latency": {
     "insns": 13472.12
@@ -105,10 +105,10 @@
     "insns": 15719.38
    },
    "asinhf/latency": {
-    "insns": 9776.31
+    "insns": 344.88
    },
    "asinhf/throughput": {
-    "insns": 9783.19
+    "insns": 351.75
    },
    "atan/latency": {
     "insns": 8061.38
@@ -141,10 +141,10 @@
     "insns": 9757.0
    },
    "atanhf/latency": {
-    "insns": 7714.69
+    "insns": 259.81
    },
    "atanhf/throughput": {
-    "insns": 7721.12
+    "insns": 266.25
    },
    "cbrt/latency": {
     "insns": 4301.06

@@ -256,7 +256,7 @@ where the gain is, one family per sub-step.
   8,590 → 630 on armv6-m; `log1pf` 6,386 → 254 on armv7-m). Every argument on the host: at most 0.5779
   ulp (D174).
 
-## P11.04 — Float trigonometric, inverse and hyperbolic functions
+## P11.04 — Float trigonometric, inverse and hyperbolic functions  `[x]`
 
 Split (CLAUDE.md workflow), as P11.03: sixteen functions and their `pi`
 forms in three evaluations (double, float, fixed point), one family per
@@ -376,9 +376,10 @@ for the half-angle forms.
   tests, gains. Done (D184): at most 0.5083 ulp; `sinhf` 15,310 → 627
   instructions on armv6-m.
 
-### P11.04g2 — The cores without an FPU: `asinhf`, `acoshf`, `atanhf`  `[ ]`
-- [ ] Over the fixed-point log2 core, square root and quotient (15,868–19,926
-  instructions on armv6-m today); tests, gains.
+### P11.04g2 — The cores without an FPU: `asinhf`, `acoshf`, `atanhf`  `[x]`
+- [x] Over the fixed-point log2 core, square root and quotient (15,868–19,926
+  instructions on armv6-m today); tests, gains. Done (D185): at most 0.5260
+  ulp; `asinhf` 19,353 → 1152 instructions on armv6-m.
 
 P11.04g was split into g1 and g2 (CLAUDE.md workflow): the first three rest
 on the exponential, the last three on the logarithm.
