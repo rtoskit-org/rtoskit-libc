@@ -982,3 +982,13 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `sinhf` | 7396 | 171 | -98 % |
 | `coshf` | 7302 | 162 | -98 % |
 | `tanhf` | 7763 | 203 | -97 % |
+
+## P11.04g2 — The cores without an FPU: fast `asinhf`, `acoshf` and `atanhf` (D185)
+
+`nofp/fast/`: series near 0 (and near 1 for acosh), above the log2 core on arguments formed exactly in integers (x² ± 1 with the fixed-point square root, or the quotient (1 − x)/(1 + x)), rounded to nearest once (D185). Instructions per call (throughput), speed and fast; release and speed unchanged, `asinf` and `acosf` too (their square root is now shared).
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asinhf` | 9783 | 352 | -96 % |
+| `acoshf` | 10152 | 356 | -96 % |
+| `atanhf` | 7721 | 266 | -97 % |

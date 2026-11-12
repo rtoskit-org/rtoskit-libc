@@ -431,6 +431,17 @@ static void check_hyperbolic(void)
 	QUIET(within_ulps(coshf(0x1.65a9f8p+6f), 0x1.ffffd83e8e728p+127, 1.5) && within_ulps(coshf(0x1.6215d2p+3f), 0x1.f3435f0442a2ap+14, 1.5) && within_ulps(tanhf(0x1.fffffep-2f), 0x1.d9353be2bf67ep-2, 1.5));
 	QUIET(within_ulps(tanhf(0x1.000002p-1f), 0x1.d935409abb3bbp-2, 1.5) && within_ulps(tanhf(0x1.233332p+3f), 0x1.ffffff29c7959p-1, 1.5) && within_ulps(tanhf(-0x1.18f70cp-1f), -0x1.ff948efd0fd25p-2, 1.5));
 	RAISES(sinhf(0x1.65a9fap+6f) == INFINITY && coshf(-0x1.65a9fap+6f) == INFINITY, FE_OVERFLOW);
+	/*
+	 * The cores without an FPU (P11.04g2): each side of asinh's series at 1/2, of acosh's at 1.25, of atanh's at 1/4 and of
+	 * the logarithm's 2 |x| from 2^12, the floats next to 1 and FLT_MAX, and the sweeps' worst points
+	 */
+	QUIET(within_ulps(asinhf(0x1.000002p-1f), 0x1.ecc2ce803618ap-2, 1.5) && within_ulps(asinhf(0x1.fffffep+11f), 0x1.205966dab4f12p+3, 1.5) && within_ulps(asinhf(-0x1p+12f), -0x1.205966fab4f12p+3, 1.5));
+	QUIET(within_ulps(asinhf(0x1.0aa736p-1f), 0x1.ffbcf70d4df2fp-2, 1.5) && within_ulps(asinhf(0x1.fffffep+127f), 0x1.65a9f84b82e63p+6, 1.5) && within_ulps(acoshf(0x1.000002p+0f), 0x1.ffffffaaaaaadp-12, 1.5));
+	QUIET(within_ulps(acoshf(0x1.4p+0f), 0x1.62e42fefa39efp-1, 1.5) && within_ulps(acoshf(0x1.400002p+0f), 0x1.62e43544f8e87p-1, 1.5) && within_ulps(acoshf(0x1.fffffep+11f), 0x1.205966cab4f10p+3, 1.5));
+	QUIET(within_ulps(acoshf(0x1.00536ep+12f), 0x1.2063d2f8105e8p+3, 1.5) && within_ulps(acoshf(0x1.fffffep+127f), 0x1.65a9f84b82e63p+6, 1.5) && within_ulps(atanhf(0x1.fffffep-3f), 0x1.058aee9700342p-2, 1.5));
+	QUIET(within_ulps(atanhf(0x1p-2f), 0x1.058aefa811452p-2, 1.5) && within_ulps(atanhf(-0x1.fffffep-1f), -0x1.1542456b37d43p+3, 1.5) && within_ulps(atanhf(0x1.d89f58p-2f), 0x1.ff4176fb01c01p-2, 1.5));
+	/* regression: asinhf below 2^-12 returned x + x, twice its argument, in its first build (P11.04g2) */
+	QUIET(asinhf(0x1p-13f) == 0x1p-13f && asinhf(-0x1.fffffep-13f) == -0x1.fffffep-13f);
 }
 
 static void check_error_functions(void)

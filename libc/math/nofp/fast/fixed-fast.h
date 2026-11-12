@@ -513,4 +513,70 @@ static inline float __libc_fixed_cosh_sinh(int64_t z, bool subtract, bool negati
 	return __libc_fixed_float(r << k, n + 1 - k, negative);
 }
 
+/* 1/sqrt(t) on [(i + 8)/32, (i + 9)/32) in units of 2^-14, the value of least relative error (2^-5.1, computed here) */
+extern const uint16_t __libc_fixed_rsqrt_seed[24];
+
+/*
+ * sqrt(t) in Q32 for t = w 2^-32 in [1/4, 1): r = 1/sqrt(t) in units of 2^-30 from the seed and two Newton steps
+ * r + r (1 - t r^2)/2 (2^-18.6), s = t r, and s corrected once by its exact remainder, of either sign, s + (t - s^2) r/2
+ * (within a unit of 2^-32, measured over every 997th w)
+ */
+static inline uint32_t __libc_fixed_square_root(uint32_t w)
+{
+	uint32_t r = (uint32_t)__libc_fixed_rsqrt_seed[(w >> 27) - 8] << 16;
+	uint64_t remainder;
+	uint32_t s;
+	int32_t e;
+
+	for (int i = 0; i < 2; ++i) {
+		/* 1 - t r^2 in units of 2^-28 */
+		e = (int32_t)((UINT32_C(1) << 28) - __libc_fixed_high(w, __libc_fixed_high(r, r)));
+		r = e >= 0 ? r + __libc_fixed_high(r, (uint32_t)e << 3) : r - __libc_fixed_high(r, -(uint32_t)e << 3);
+	}
+
+	/* t - s^2 in units of 2^-64, below 2^47 in magnitude (negative where the last step rounded r up by a unit) */
+	s = __libc_fixed_high(w, r) << 2;
+	remainder = ((uint64_t)w << 32) - __libc_fixed_wide(s, s);
+	if ((int64_t)remainder >= 0)
+		return s + (__libc_fixed_high((uint32_t)(remainder >> 16), r) >> 15);
+	return s - (__libc_fixed_high((uint32_t)(-remainder >> 16), r) >> 15);
+}
+
+/*
+ * The natural logarithm of v 2^(exponent - 63), bit 63 of v set, by the log2 core (__libc_log2_fixed_core, its top 32 bits
+ * as m in [sqrt(1/2), sqrt(2))) times ln 2 as logf forms it: the magnitude as v 2^(*exponent - 63), its sign in *negative
+ * (0 for exactly 1)
+ */
+static inline uint64_t __libc_fixed_log(uint64_t v, int exponent, int *result, bool *negative)
+{
+	uint32_t m = (uint32_t)(v >> 32);
+	uint32_t high;
+	uint64_t product;
+
+	if (m >= 0xb504f334u) {
+		m = (uint32_t)(v >> 33);
+		++exponent;
+	}
+	*result = 0;
+	v = __libc_log2_fixed_core(m, exponent, result, negative);
+	if (v == 0)
+		return 0;
+
+	/* v ln 2 2^-64, in [2^62, 2^64): normalised to bit 63 */
+	high = (uint32_t)(v >> 32);
+	product = __libc_fixed_wide(high, 0xb17217f7) + (__libc_fixed_wide(high, 0xd1cf79ac) >> 32) + (__libc_fixed_wide((uint32_t)v, 0xb17217f7) >> 32);
+	if ((product >> 63) == 0) {
+		product <<= 1;
+		--*result;
+	}
+	return product;
+}
+
+/*
+ * log(a + sqrt(a^2 + 1)) or log(a + sqrt(a^2 - 1)) (minus) for a float magnitude as its bits, a >= 1/2 (above 1.25 with
+ * minus): positive, as v 2^(*exponent - 63) with bit 63 set (out of line in __libc_fixed_log_root.c, which asinhf and acoshf
+ * share)
+ */
+uint64_t __libc_fixed_log_root(uint32_t magnitude, bool minus, int *exponent);
+
 #endif /* _FIXED_FAST_H */

@@ -1139,3 +1139,7 @@ Unchanged here: the FPU cores' inverse functions are P11.04b (D176, D183).
 ## P11.04g1 — The cores without an FPU: fast `sinhf`, `coshf` and `tanhf` (D184)
 
 Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D184).
+
+## P11.04g2 — The cores without an FPU: fast `asinhf`, `acoshf` and `atanhf` (D185)
+
+Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D185).

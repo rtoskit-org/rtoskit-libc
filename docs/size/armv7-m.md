@@ -326,3 +326,7 @@ Release and speed unchanged (`size-report diff`); the speed and fast budgets hol
 ## P11.04g1 — The cores without an FPU: fast `sinhf`, `coshf` and `tanhf` (D184)
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `sinhf.o` 768 → 600, `coshf.o` 212 → 372, `tanhf.o` 990 → 732; they no longer pull the float-float exponential cores (speed's `coshf` is smaller only because those cores sit in other members).
+
+## P11.04g2 — The cores without an FPU: fast `asinhf`, `acoshf` and `atanhf` (D185)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `asinhf.o` 100 → 304, `acoshf.o` 984 → 416, `atanhf.o` 976 → 1018, `__libc_fixed_log_root.o` new → 898, `__libc_fixed_rsqrt_seed.o` new → 48 (the seeds moved out of `__libc_fixed_asin.o`, 476 → 428); speed's `asinhf.o` is small only because its float-float core sits in other members, which these no longer pull.
