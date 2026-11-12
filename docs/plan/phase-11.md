@@ -354,10 +354,20 @@ speed's code, rounding test included: D178 keeps it correctly rounded.
   Done as erf itself in seven pieces with no exponential (D181): above 1/2
   an absolute error suffices. 0.5223 ulp; 2961 → 414 instructions on armv6-m.
 
-### P11.04f — The cores without an FPU: the inverse trigonometric functions  `[ ]`
-- [ ] Fixed-point `asinf`, `acosf`, `atanf`, `atan2f` and their `pi` forms
-  (float-float on soft-float today, 17,750–23,828 instructions on
-  armv6-m); tests, gains.
+### P11.04f1 — The cores without an FPU: `atanf`, `atan2f` and their π forms  `[x]`
+- [x] Fixed-point `atanf`, `atan2f`, `atanpif` and `atan2pif` (float-float on
+  soft-float today, 17,683–18,355 instructions on armv6-m): a fixed-point
+  division and an atan kernel; tests, gains. Done (D182): at most 0.5746
+  ulp; `atanf` 17,683 → 751 instructions on armv6-m.
+
+### P11.04f2 — The cores without an FPU: `asinf`, `acosf` and their π forms  `[ ]`
+- [ ] Fixed-point `asinf`, `acosf`, `asinpif` and `acospif` (22,944–23,828
+  instructions on armv6-m): a fixed-point square root and the asin series;
+  tests, gains.
+
+P11.04f was split into f1 and f2 (CLAUDE.md workflow): each needs its own
+fixed-point building block, a division for the arctangent and a square root
+for the half-angle forms.
 
 ### P11.04g — The cores without an FPU: the hyperbolic functions  `[ ]`
 - [ ] Over P11.03e–g's fixed-point exp, m1, log and p1 cores (15,181–19,926

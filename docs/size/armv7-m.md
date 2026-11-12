@@ -314,3 +314,7 @@ figures included once the reduction and the kernel's combination moved out of li
 ## P11.04e2 — The cores without an FPU: fast `erff` (D181)
 
 Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls `erff`). Fast members (code and constants, speed → fast, bytes): `erff.o` 396 → 694; it no longer pulls `__libc_erff_fixed.o` (2238) or `__libc_erff_core.o` (732), which stay for `erfcf`, so a program calling `erff` alone takes 3366 → 694.
+
+## P11.04f1 — The cores without an FPU: fast `atanf`, `atan2f` and their π forms (D182)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `atanf.o` 112 → 236, `atan2f.o` 776 → 532, `atanpif.o` 512 → 504, `atan2pif.o` 884 → 700, `__libc_fixed_atan.o` new → 716; they no longer pull `__libc_atan2f_core.o` (1270) or the float-float helpers, which stay for `asinf` and `acosf` until P11.04f2.

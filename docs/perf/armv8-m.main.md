@@ -1127,3 +1127,7 @@ Unchanged here: the FPU cores' trigonometric functions are P11.04a (D180).
 ## P11.04e2 — The cores without an FPU: fast `erff` (D181)
 
 Unchanged here: the FPU cores' `erff` is P11.04d1 (D178, D181).
+
+## P11.04f1 — The cores without an FPU: fast `atanf`, `atan2f` and their π forms (D182)
+
+Unchanged here: the FPU cores' inverse functions are P11.04b (D176, D182).

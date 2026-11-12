@@ -359,6 +359,17 @@ static void check_inverse_trigonometric(void)
 	/* regression: a quotient near 2^-125 had its remainder rounded to half an ulp of it (0.67 ulp; complex_float's 0.52) */
 	CHECK(within_ulps(atan2f(-0x1.f59efp-36f, 0x1.6f5952p+89f), -0x1.5d9276a8b0b88p-125, 0.52) && within_ulps(atan2f(0x1.821528p+3f, 0x1.f6b5dep+126f), 0x1.893791320e1ffp-124, 0.52));
 	CHECK(within_ulp(atan2pif(-0x1.18fe76p-125f, 0x1.f9920ap-2f), -0x1.6a52954a74b4bp-126) && within_ulp(atan2pif(-0x1.0ec7f6p-126f, 0x1.68b2d6p-119f), -0x1.e962164514f9dp-10));
+	/*
+	 * The cores without an FPU (P11.04f1): each side of the kernel's series and pieces at 1/8 and of the 2^26 and 2^27 ends,
+	 * the sweeps' worst points, and tiny ratios down to zero
+	 */
+	QUIET(within_ulp(atanf(0x1.fffffep-4f), 0x1.fd5ba7b2a374ep-4) && within_ulp(atanf(0x1.000002p-3f), 0x1.fd5bad9b01fabp-4) && within_ulp(atanf(0x1.00418cp-3f), 0x1.fddcbcd9c9e98p-4));
+	QUIET(within_ulp(atanf(0x1.fffffep+25f), 0x1.921fb50442d14p+0) && within_ulp(atanf(0x1.000002p+26f), 0x1.921fb50442d20p+0) && within_ulp(atanpif(0x1.0087a2p-3f), 0x1.44ee7cebb95b4p-5));
+	QUIET(within_ulp(atanpif(0x1.fffffep+26f), 0x1.ffffffd7419f0p-2) && within_ulp(atan2f(-0x1.11ba3cp+72f, 0x1.1118eap+75f), -0x1.fe8570dcce5fcp-4));
+	CHECK(within_ulp(atanpif(0x1p-149f), 0x1.45f306dc9c883p-151) && within_ulp(atan2pif(-0x1.17ae5p-113f, 0x1.721ed8p-111f), -0x1.e6de531990acfp-5) && is_positive_zero(atan2f(0x1p-149f, 0x1p+127f)));
+	/* regression: an exact ratio of 1/8 gave a quotient a unit below 1/2 and the piece below the first (5411 ulp, P11.04f1) */
+	QUIET(within_ulp(atan2f(-0x1.2d625cp-59f, -0x1.2d625cp-62f), -0x1.b1f56fdeef00fp+0) && within_ulp(atan2f(0x1.2d625cp-62f, 0x1.2d625cp-59f), 0x1.fd5ba9aac2f6ep-4));
+	QUIET(within_ulp(atan2pif(-0x1.2d625cp-59f, -0x1.2d625cp-62f), -0x1.1444475077767p-1));
 }
 
 static void check_hyperbolic(void)

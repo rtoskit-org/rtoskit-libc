@@ -954,3 +954,12 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | Function | speed | fast | change |
 |---|---:|---:|---:|
 | `erff` | 1122 | 184 | -84 % |
+
+## P11.04f1 — The cores without an FPU: fast `atanf`, `atan2f` and their π forms (D182)
+
+`nofp/fast/`: a fixed-point quotient without a divide instruction and one atan kernel (series below 1/8, seven pieces above), rounded to nearest once (D182). Instructions per call (throughput), speed and fast; release and speed unchanged. The π forms have no bench case.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `atanf` | 8608 | 245 | -97 % |
+| `atan2f` | 8995 | 261 | -97 % |
