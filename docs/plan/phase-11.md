@@ -384,18 +384,73 @@ for the half-angle forms.
 P11.04g was split into g1 and g2 (CLAUDE.md workflow): the first three rest
 on the exponential, the last three on the logarithm.
 
-## P11.05 — Double functions  `[ ]`
-- [ ] Research: `docs/research/libm-fast-double.md`: on the soft-double cores
-  (armv6-m, armv6s-m, armv7-m, armv7e-m, armv8-m.main) whether each
-  function is cheaper as an AOR-style double evaluation on the soft helpers
-  or as a 64-bit fixed-point kernel (D136's style) with one final rounding
-  and no fallback; on the FPU cores (armv7e-m-dp, x86_64) a double-only
-  evaluation without the dd finish.
-- [ ] `exp`, `exp2`, `exp10`, `expm1`, `log`, `log2`, `log10`, `log1p`,
-  `pow`, `cbrt`, `sin`, `cos`, `sincos`, `tan`, `asin`, `acos`, `atan`,
-  `atan2`, the hyperbolic functions and `erf`, per core; split this step per
-  family if it is too big (CLAUDE.md workflow).
-- [ ] Tests, gains and members recorded.
+## P11.05 — Double functions  `[~]`
+
+Split (CLAUDE.md workflow), as P11.03 and P11.04: by family, each with the
+double-FPU cores (x86_64, armv7e-m-dp: double only, no double-double finish)
+and the soft-double cores (armv6-m, armv6s-m, armv7-m, armv7e-m,
+armv8-m.main: 64-bit fixed-point kernels, one rounding, no test) apart.
+AOR's functions come first, as they gate P11.06. Research note:
+`docs/research/libm-fast-double.md` (D186), extended by each sub-step. Every
+sub-step: the libm vectors at the fast bounds, `libm_thresholds`, a sampled
+host sweep (10^9 random arguments plus each piece and edge, against long
+double), `make check` in all four build types, the fast bench re-locked with
+the gains and the members recorded.
+
+### P11.05a — Research and decisions  `[x]`
+- [x] `docs/research/libm-fast-double.md`: the costs today against AOR, the
+  soft-double operations' costs, the sources, the choice per core, the error
+  budget and the split (D186). Docs only.
+
+### P11.05b — `exp`, `exp2`, `exp10`, `expm1` on the double-FPU cores  `[ ]`
+- [ ] A 2^(j/N) table and a short polynomial in double, one rounding (AOR:
+  `exp` 56, `exp2` 52 instructions on armv7e-m-dp); tests, gains.
+
+### P11.05c — `exp`, `exp2`, `exp10`, `expm1` on the soft-double cores  `[ ]`
+- [ ] A 64-bit fixed-point exp2 kernel, one rounding (AOR: `exp` 1090 on
+  armv7e-m, 3954 on armv6-m); tests, gains.
+
+### P11.05d — `log`, `log2`, `log10`, `log1p` on the double-FPU cores  `[ ]`
+- [ ] 1/c and log c from a table and a short polynomial in double (AOR: `log`
+  68, `log2` 73); tests, gains.
+
+### P11.05e — `log`, `log2`, `log10`, `log1p` on the soft-double cores  `[ ]`
+- [ ] A 64-bit fixed-point log2 kernel (AOR: `log` 1245 and 4335, `log2` 1514
+  and 5211); tests, gains.
+
+### P11.05f — `pow`, `cbrt` on the double-FPU cores  `[ ]`
+- [ ] The log with its tail, the exp of a pair (AOR: `pow` 135); tests, gains.
+
+### P11.05g — `pow`, `cbrt` on the soft-double cores  `[ ]`
+- [ ] Over P11.05c's and e's kernels with a 128-bit product (AOR: `pow` 3576
+  and 12,178); tests, gains.
+
+### P11.05h — `sin`, `cos`, `sincos`, `tan` on the double-FPU cores  `[ ]`
+- [ ] Cody–Waite in double and the polynomials without the double-double
+  finish; the strict reduction beyond; tests, gains.
+
+### P11.05i — `sin`, `cos`, `sincos`, `tan` on the soft-double cores  `[ ]`
+- [ ] D136's kernel without its rounding test, the strict path from 2^20;
+  tests, gains.
+
+### P11.05j — `asin`, `acos`, `atan`, `atan2` on the double-FPU cores  `[ ]`
+- [ ] In double; tests, gains.
+
+### P11.05k — `asin`, `acos`, `atan`, `atan2` on the soft-double cores  `[ ]`
+- [ ] 64-bit fixed point, after P11.04f's quotient and square root; tests,
+  gains.
+
+### P11.05l — The hyperbolic functions on the double-FPU cores  `[ ]`
+- [ ] Over P11.05b's and d's evaluations; tests, gains.
+
+### P11.05m — The hyperbolic functions on the soft-double cores  `[ ]`
+- [ ] Over P11.05c's and e's kernels; tests, gains.
+
+### P11.05n — `erf` on the double-FPU cores  `[ ]`
+- [ ] (AOR: 69 instructions on armv7e-m-dp); tests, gains.
+
+### P11.05o — `erf` on the soft-double cores  `[ ]`
+- [ ] (AOR: 8263 on armv7e-m, 25,491 on armv6-m); tests, gains.
 
 ## P11.06 — Comparison and wrap-up  `[ ]`
 - [ ] `bench-runner compare` and `bench-runner aor` with the fast build as
