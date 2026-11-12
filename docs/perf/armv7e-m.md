@@ -1143,3 +1143,7 @@ Unchanged here: the FPU cores' `erff` is P11.04d1 (D178, D181).
 ## P11.04f1 — The cores without an FPU: fast `atanf`, `atan2f` and their π forms (D182)
 
 Unchanged here: the FPU cores' inverse functions are P11.04b (D176, D182).
+
+## P11.04f2 — The cores without an FPU: fast `asinf`, `acosf` and their π forms (D183)
+
+Unchanged here: the FPU cores' inverse functions are P11.04b (D176, D183).

@@ -69,10 +69,10 @@
     "insns": 14076.0
    },
    "acosf/latency": {
-    "insns": 11790.06
+    "insns": 240.12
    },
    "acosf/throughput": {
-    "insns": 11793.94
+    "insns": 244.0
    },
    "acosh/latency": {
     "insns": 13764.94
@@ -93,10 +93,10 @@
     "insns": 13481.06
    },
    "asinf/latency": {
-    "insns": 11304.06
+    "insns": 232.88
    },
    "asinf/throughput": {
-    "insns": 11310.5
+    "insns": 239.31
    },
    "asinh/latency": {
     "insns": 15709.94

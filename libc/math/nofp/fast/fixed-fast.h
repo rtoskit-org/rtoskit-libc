@@ -448,4 +448,11 @@ static inline float __libc_fixed_offset_float(uint64_t offset, uint64_t v, int e
 	return __libc_fixed_float(r << k, 1 - k, negative);
 }
 
+/*
+ * The arcsine kernel for a float magnitude 0 < |x| <= 1 as its bits (out of line in __libc_fixed_asin.c, which asinf, acosf
+ * and their pi forms share): up to 1/2 asin |x| (*outer false), above 2 asin sqrt((1 - |x|)/2) (*outer true, 0 for |x| = 1),
+ * as v 2^(*exponent - 63) with bit 63 of v set, relative error about 2^-31
+ */
+uint64_t __libc_fixed_asin(uint32_t magnitude, int *exponent, bool *outer);
+
 #endif /* _FIXED_FAST_H */
