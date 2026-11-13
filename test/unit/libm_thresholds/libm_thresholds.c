@@ -565,6 +565,32 @@ static void check_double_logarithms(void)
 	QUIET(near_double(log1p(0x1.fffffffffffffp+62), 0x1.5d589f2fe5107p+5) && near_double(log1p(0x1p63), 0x1.5d589f2fe5107p+5) && near_double(log1p(0x1p64), 0x1.62e42fefa39efp+5) && near_double(log1p(0x1.6ap-1), 0x1.11cb81787ccf8p-1));
 }
 
+static void check_double_powers(void)
+{
+	/*
+	 * P11.05f (the double-FPU cores' double-only pow and cbrt, D193; the strict files elsewhere): the special values of
+	 * F.10.4.5, exact powers, each side of the ends and of the scaled path, a subnormal x and result, |y| from 2^63 and
+	 * below 2^-65, x near 1 with a large y, the sweeps' worst point, and the regressions: the log pair's low part (r^3 Q,
+	 * up to 2^-16 of it) pushed exp's reduced argument out of its range (130 ulp), and y log|x| just above ln(DBL_MAX)
+	 * wrapped the scale's exponent into the sign
+	 */
+	QUIET(pow(2.0, 10.0) == 1024.0 && pow(-2.0, 3.0) == -8.0 && pow(-2.0, 2.0) == 4.0 && pow(NAN, 0.0) == 1.0 && pow(1.0, NAN) == 1.0 && pow(-1.0, INFINITY) == 1.0);
+	QUIET(pow(0.5, INFINITY) == 0.0 && pow(2.0, -INFINITY) == 0.0 && pow(0.5, -INFINITY) == INFINITY && pow(-INFINITY, 3.0) == -INFINITY && pow(-INFINITY, -3.0) == 0.0 && signbit(pow(-INFINITY, -3.0)));
+	QUIET(pow(-0.0, 3.0) == 0.0 && signbit(pow(-0.0, 3.0)) && pow(-0.0, 2.0) == 0.0 && !signbit(pow(-0.0, 2.0)) && pow(-1.0, 0x1p63) == 1.0 && pow(2.0, 0x1p-70) == 1.0);
+	RAISES(pow(0.0, -1.0) == INFINITY && pow(-0.0, -1.0) == -INFINITY && pow(-0.0, -2.0) == INFINITY, FE_DIVBYZERO);
+	RAISES(isnan(pow(-8.0, 1.0 / 3.0)) && isnan(pow(-0x1p-1074, 0.5)), FE_INVALID);
+	RAISES(pow(2.0, 1024.0) == INFINITY && pow(10.0, 309.0) == INFINITY && pow(1.0000001, 0x1p63) == INFINITY && pow(0x1.fffff8bef5d93p-1, -0x1.99c2ea2d1d8cp+31) == INFINITY, FE_OVERFLOW);
+	RAISES(pow(2.0, -1076.0) == 0.0 && pow(0.9999999, 0x1p63) == 0.0 && pow(-0.9999999, 0x1p63) == 0.0, FE_UNDERFLOW);
+	QUIET(near_double(pow(0x1p-1074, 0.5), 0x1p-537) && near_double(pow(1.0 + 0x1p-52, 0x1p52), 0x1.5bf0a8b145769p+1) && near_double(pow(1.0 - 0x1p-53, 0x1p53), 0x1.78b56362cef37p-2));
+	QUIET(near_double(pow(10.0, 308.0), 0x1.1ccf385ebc8ap+1023) && near_double(pow(0x1.6c9f7067e16c1p+0, -0x1.4a45dde4e60ddp+10), 0x1.dd328471f8c79p-675) && near_double(pow(0x1.00b320f51fe56p+0, 0x1.d98646a264519p+17), 0x1.a7e4afc6ceeecp+954));
+	QUIET(near_double(pow(2.0, 0.5), 0x1.6a09e667f3bcdp+0) && near_double(pow(1.5, 2.5), 0x1.60b9fd68a4554p+1) && near_double(pow(3.0, -600.0), 0x1.0406143142763p-951) && near_double(pow(0x1.fffffffffffffp-1, -0x1p62), 0x1.9476504ba85f9p+738));
+	QUIET(near_double(pow(2.0, 1023.5), 0x1.6a09e667f3bcdp+1023) && near_double(pow(-3.0, -600.0), 0x1.0406143142763p-951) && near_double(pow(-3.0, -601.0), -0x1.5ab2c59703484p-953));
+	CHECK(near_double(pow(0.5, 1073.5), 0x1p-1074) && pow(0.5, 1074.0) == 0x1p-1074);
+	QUIET(cbrt(27.0) == 3.0 && cbrt(-8.0) == -2.0 && cbrt(1000.0) == 10.0 && cbrt(0.0) == 0.0 && signbit(cbrt(-0.0)) && cbrt(INFINITY) == INFINITY && cbrt(-INFINITY) == -INFINITY && isnan(cbrt(NAN)));
+	QUIET(near_double(cbrt(2.0), 0x1.428a2f98d728bp+0) && near_double(cbrt(4.0), 0x1.965fea53d6e3dp+0) && near_double(cbrt(0x1.fffffffffffffp+2), 2.0) && near_double(cbrt(0x1.fffffffffffffp+1023), 0x1.428a2f98d728bp+341));
+	QUIET(near_double(cbrt(0x1p-1074), 0x1p-358) && near_double(cbrt(-0x1.d341a3e2ecb4dp-1009), -0x1.f0a0ec2378bccp-337) && near_double(cbrt(0x1.0000000000001p+0), 1.0));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -580,6 +606,7 @@ int main(void)
 	check_error_functions();
 	check_double_exponentials();
 	check_double_logarithms();
+	check_double_powers();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

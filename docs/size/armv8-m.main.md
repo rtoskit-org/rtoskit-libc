@@ -834,3 +834,7 @@ Release and speed unchanged (`size-report diff`). `math-mix` (log and pow) grows
 ## P11.05e — Fast `log`, `log2`, `log10` and `log1p` in 64-bit fixed point (D192)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) shrinks from 34724 to 34188 bytes of code: the 1440-byte table and the two kernels replace D190's file and its 3 KiB table. Smaller than the locked fast figure, so it is not re-locked (P11.06 does, D187, D191).
+
+## P11.05f — Fast `pow` and `cbrt` in double (D193)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) grows from 34188 to 35148 bytes of code (+960): pow runs the double file on this core's helpers until P11.05g, with the double logarithms' 3 KiB table beside the fixed-point one. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).

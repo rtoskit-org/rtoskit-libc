@@ -1194,3 +1194,12 @@ Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D185).
 | `log2` | 7758 | 1845 | 349 | -96 % |
 | `log10` | 7635 | 2685 | 354 | -95 % |
 | `log1p` | 6727 | 2108 | 367 | -95 % |
+
+## P11.05f — Fast `pow` and `cbrt` in double (D193)
+
+`libc/math/fast/`: pow as the exp of y times a log pair from the logarithms' table, one rounding; cbrt by a polynomial, a Newton step and an exact-residual step (D193). This core runs them on its soft-double helpers until P11.05g. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `pow` | 11532 | 5600 | -51 % |
+| `cbrt` | 3765 | 1919 | -49 % |

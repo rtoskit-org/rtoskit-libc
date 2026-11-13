@@ -626,3 +626,103 @@ armv7e-m (570 and 682 on armv6-m), each function 656 to 944. `math-mix`
 shrinks against §9 (armv6-m 45,992 → 45,752 bytes, armv7-m 40,832 → 40,296,
 armv7e-m 34,828 → 34,300, armv8-m.main 34,724 → 34,188): not re-locked; P11.06
 does (D187, D191).
+
+## 11. pow and cbrt on the double-FPU cores (P11.05f)
+
+`libc/math/fast/pow.c` and `cbrt.c`, on every core with no layer of its own
+(the soft-double cores until P11.05g).
+
+### 11.1 Sources (ideas only)
+
+- **AOR's `pow`** (§2): log x to about 15 bits beyond double from its own
+  table with log c in two parts, y·log x as a pair, exp of the pair with the
+  tail folded into the polynomial; 0.54 ulp.
+- **FreeBSD msun `s_cbrt.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_cbrt.c>,
+  read 2026-11-13): the exponent divided by 3 on the bit pattern for a 5-bit
+  guess, a degree-4 polynomial to 23 bits, t rounded to 23 bits (away from
+  zero, deliberately), then one Halley step with rounded operations; under
+  0.667 ulp.
+- **AOR's AdvSIMD `cbrt`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/cbrt.c>):
+  m in [1/2, 1) and e/3 by a multiply, a table of 2^(i/3), a degree-3
+  polynomial and two Newton steps with no exact residual; 1.79 ulp observed.
+  AOR has no scalar double cbrt, so P11.06 has no AOR count to gate it on.
+
+### 11.2 The method
+
+- **pow's logarithm as a pair**, from §9's table (no second table, so a
+  program that calls `log` and `pow` carries one): r = z·invc − 1 exact,
+  w = k·ln 2_hi + logc exact, hi = (w + r) − r²/2 by two fast two-sums with
+  r² exact (a fused multiply-add, or Dekker's product), and lo the two sums'
+  errors, r²'s error, r³·Q(r) (a degree-6 fit of (log1p(r) − r + r²/2)/r³,
+  2^-54 relatively, the rounding of 1/3 itself) and the tails. lo is not
+  normalized: r³ Q reaches 2^-16 of hi. The error times |y| is what reaches
+  the result: below 2^-61 of it, since |y log x| ≤ 745 and Q's error is
+  relative to r³/3. Degree 5 (2^-51.2) measured 0.5591 ulp on 10^9 samples at
+  y log x ≈ −319, two instructions fewer.
+- **y·(hi + lo)** as zh + zl, the product's error exact.
+- **exp of the pair** with §6's table and polynomial: the index from zh + zl
+  (lo's size could otherwise push the reduced argument beyond the
+  polynomial's range), u = ((zh − k c1) − k c2) + zl, and the sign put into
+  the scale's bits, so that only the last addition rounds.
+- **The ends:** one test on |y log x| > 700 sends overflow, underflow and the
+  scaled path (§6's `__libc_fast_exp_scale`) out of line; below it the scale's
+  exponent needs no check.
+- **The special cases** (F.10.4.5 and the strict file's) that need no
+  logarithm are out of line: y = ±0, x = 1, NaN, an infinite y, x = ±0 or ±inf,
+  x < 0 with a non-integer y, and |y| below 2^-65 or from 2^63 (beyond the
+  ends for every x other than ±1). A negative x with an integer y and a
+  subnormal x are fixed in line and take the common path. A first version
+  passed the fix-ups back through pointers: x, the sign and the result then
+  lived in memory, and GCC saved d8–d15 and five integer registers on every
+  call (152 instructions on armv7e-m-dp; 131 without them).
+- **cbrt:** x = 2^(3q + j) m with m in [1, 2) (q by a multiply), cbrt(m) by a
+  degree-4 Chebyshev fit (2^-16.2) times cbrt(2^j), one Newton step (2^-31),
+  and one with the residual t³ − y exact (two exact products by fused
+  multiply-adds; t³ − y itself exact by Sterbenz): about 2^-62 before the one
+  rounding, t − d. Without a fused multiply-add (x86_64, and the soft-double
+  cores until P11.05g), t is cut to 26 bits so that t² and its split make t³
+  exact with plain products, and Halley's step (cubic) leaves 2^-78: Dekker's
+  two products had cost those cores 1.1 % over speed's cbrt (3807 against 3765
+  instructions on armv7e-m), past the bench gate. The sign goes on t and d
+  before the rounding; the exponent afterwards, exactly.
+- **Found along the way:**
+  - lo's r³ Q, up to 2^-16 of hi, made zl about 2^-7, so the reduced argument
+    left exp's polynomial range: 130 ulp at y log x ≈ 662 (a regression case).
+  - The first test for the ends allowed |y log x| up to 746, but above
+    ln(DBL_MAX) the scaled path's exponent leaves its field and wrapped into
+    the sign: a tiny negative result instead of +inf (a regression case).
+  - `conformance`'s directed-rounding regressions (Q36) ran against the new
+    files: `cbrt` put the sign on after rounding, which swaps upward and
+    downward for a negative x, and `pow`'s nudge for |y| below 2^-65, 1 +
+    2^-60, folded to 1 at compile time (the fast files drop
+    -frounding-math). The sign now goes on t and d before the rounding, and
+    the nudge is a volatile.
+
+### 11.3 Measured (P11.05f)
+
+On the host, against long double, 10^9 samples each on the SSE2 and the fma
+paths (which agree bit for bit): `pow` at most 0.5498 ulp (x in [1/2, 4] with
+y in [−8, 8], x across the range with |y| ≤ 1, x within 2^-50 of 1 with y up
+to 2^50, results across the range, and x in [e^-30, e^30] with |y| ≤ 25);
+`cbrt` 0.5000 ulp over every finite double (both paths), every exact cube
+to 100³ exact.
+
+Instructions per call (speed → fast):
+
+| Function | armv7e-m-dp | x86_64 | armv7e-m, armv8-m.main | armv7-m | armv6-m, armv6s-m |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `pow` | 393 → 133 (AOR 135) | 625 → 204 | 11,531 → 5600 (AOR 3576) | 11,833 → 5717 | 31,522 → 16,457 (AOR 12,178) |
+| `cbrt` | 132 → 90 | 143 → 93 | 3765 → 1919 | 4309 → 2106 | 14,702 → 6896 |
+
+The soft-double cores run these files on their helpers until P11.05g; `pow`
+there is still above AOR's, which P11.05g has to bring below.
+
+**Size:** `pow` is 1724 bytes on armv7e-m-dp, `cbrt` 380. `math-mix` (log
+and pow) shrinks on armv7e-m-dp from 18,806 to 17,548 bytes now that pow no
+longer pulls the strict log and exp cores (+44 % over speed, D191's line is
++20 %). On the soft-double cores it grows (armv6-m 45,752 → 46,928,
+armv7-m 40,296 → 41,392, armv7e-m 34,300 → 35,252, armv8-m.main 34,188 →
+35,148): their pow carries §9's 3 KiB table besides §10's; re-locked by
+D187's rule until P11.05g.

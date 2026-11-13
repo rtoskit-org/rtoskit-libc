@@ -699,3 +699,7 @@ fast --lock`), as the cores without an FPU's are; P11.06 re-locks them with the 
 ## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
 
 Release and speed unchanged (`size-report diff`). `math-mix` (log and pow) grows from 15478 to 18806 bytes of code in fast (+3328): the fast `log` and its 3 KiB table on top of the strict log core that pow still uses. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).
+
+## P11.05f — Fast `pow` and `cbrt` in double (D193)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) shrinks from 18806 to 17548 bytes of code: pow no longer pulls the strict log and exp cores. It is +44 % over speed (12,174), still above D191's +20 % line; not re-locked.
