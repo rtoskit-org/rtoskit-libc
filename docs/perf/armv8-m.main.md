@@ -1203,3 +1203,11 @@ Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D185).
 |---|---:|---:|---:|
 | `pow` | 11532 | 5600 | -51 % |
 | `cbrt` | 3765 | 1919 | -49 % |
+
+## P11.05g1 — Fast `pow` in fixed point (D194)
+
+`libc/math/dp-fixed/fast/pow.c`: log2 x to about 2^-72 from the logarithms' table (Q126 sums, normalized 96-bit products), then P11.05c1's exp2 kernel; no soft-double operation. Instructions per call (throughput): speed, P11.05f's fast (D193's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05f | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `pow` | 11532 | 5600 | 923 | -92 % |

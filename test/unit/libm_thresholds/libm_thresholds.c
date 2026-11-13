@@ -586,6 +586,15 @@ static void check_double_powers(void)
 	QUIET(near_double(pow(2.0, 0.5), 0x1.6a09e667f3bcdp+0) && near_double(pow(1.5, 2.5), 0x1.60b9fd68a4554p+1) && near_double(pow(3.0, -600.0), 0x1.0406143142763p-951) && near_double(pow(0x1.fffffffffffffp-1, -0x1p62), 0x1.9476504ba85f9p+738));
 	QUIET(near_double(pow(2.0, 1023.5), 0x1.6a09e667f3bcdp+1023) && near_double(pow(-3.0, -600.0), 0x1.0406143142763p-951) && near_double(pow(-3.0, -601.0), -0x1.5ab2c59703484p-953));
 	CHECK(near_double(pow(0.5, 1073.5), 0x1p-1074) && pow(0.5, 1074.0) == 0x1p-1074);
+	/*
+	 * P11.05g1 (the soft-double cores' fixed-point pow, D194): each side of the band around 1 and of the table's ends,
+	 * subnormal results down to 2^-1074, a negative x to a large odd power, the sweeps' worst points, and the
+	 * regressions: k went into Q64's bit, not Q96's (2^10 came out as 1), and subnormal results rounded twice (0.75 ulp)
+	 */
+	QUIET(pow(2.0, 10.0) == 1024.0 && pow(0.5, -3.0) == 8.0 && near_double(pow(0x1.fp-1, 100.0), 0x1.566bffb174bf5p-5) && near_double(pow(0x1.f000000000001p-1, 100.0), 0x1.566bffb174c3ap-5));
+	QUIET(near_double(pow(0x1.08p+0, -100.0), 0x1.79911928de471p-5) && near_double(pow(0x1.07fffffffffffp+0, -100.0), 0x1.79911928de5p-5) && near_double(pow(0x1.68p-1, 3.5), 0x1.2a7aa2aacb885p-2) && near_double(pow(0x1.68p+0, -7.25), 0x1.59dd6e0c7039p-4));
+	QUIET(near_double(pow(0x1.0000000000012p+0, -0x1.e1e36a3a0fbap+5), 0x1.ffffffffff788p-1) && near_double(pow(-0x1.400c1d6b00184p+1, 34.0), 0x1.ef85f07191b97p+44) && near_double(pow(-3.0, 645.0), -0x1.3b59c25079105p+1022));
+	CHECK(near_double(pow(0x1.20ddfd6041bcp-1, 0x1.3574545c1b567p+10), 0x0.ecc4ccd5bf687p-1022) && near_double(pow(2.0, -1024.5), 0x0.2d413cccfe77ap-1022) && pow(2.0, -1074.5) == 0x1p-1074);
 	QUIET(cbrt(27.0) == 3.0 && cbrt(-8.0) == -2.0 && cbrt(1000.0) == 10.0 && cbrt(0.0) == 0.0 && signbit(cbrt(-0.0)) && cbrt(INFINITY) == INFINITY && cbrt(-INFINITY) == -INFINITY && isnan(cbrt(NAN)));
 	QUIET(near_double(cbrt(2.0), 0x1.428a2f98d728bp+0) && near_double(cbrt(4.0), 0x1.965fea53d6e3dp+0) && near_double(cbrt(0x1.fffffffffffffp+2), 2.0) && near_double(cbrt(0x1.fffffffffffffp+1023), 0x1.428a2f98d728bp+341));
 	QUIET(near_double(cbrt(0x1p-1074), 0x1p-358) && near_double(cbrt(-0x1.d341a3e2ecb4dp-1009), -0x1.f0a0ec2378bccp-337) && near_double(cbrt(0x1.0000000000001p+0), 1.0));

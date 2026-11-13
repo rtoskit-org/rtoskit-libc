@@ -114,6 +114,8 @@ static inline uint64_t __libc_dp_fixed_negate(int32_t *n, uint64_t f)
 struct __libc_dp_fixed_log_entry {
 	int64_t logc;
 	uint32_t invc;
+	/* -log(invc) - logc in Q96 (pow's, D194; in what would be the entry's padding) */
+	int32_t tail;
 };
 
 extern const struct __libc_dp_fixed_log_entry __libc_dp_fixed_log_table[90];
