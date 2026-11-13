@@ -685,6 +685,100 @@ static inline double __libc_fast_signed_sum(double hi, double lo, bool negative)
 	return negative ? -hi - lo : hi + lo;
 }
 
+/* atan(j/16) for j = 0..16 as exact pairs (libc/math/fast/__libc_fast_atan_pairs.c, D198) */
+extern const struct __libc_dd __libc_fast_atan_pairs[17];
+
+/*
+ * The double atan2 of the double-FPU cores' slow path (D198): the strict file's special cases, scaling and double-double
+ * core, for what the fast path leaves (libc/math/fast/__libc_fast_atan2_slow.c)
+ */
+double __libc_fast_atan2_slow(double y, double x);
+
+/* n / d + *lo: the quotient and its remainder over d, the remainder exact (the product's error by fma or Dekker) */
+static inline double __libc_fast_quotient(double n, double d, double *lo)
+{
+	double q = n / d;
+	struct __libc_dd p = __libc_dd_product(q, d);
+
+	*lo = ((n - p.hi) - p.lo) / d;
+	return q;
+}
+
+/*
+ * atan(a + a_lo) as hi + *lo for 0 <= a <= 1 and |a_lo| a few units of a's last place (D198; the note, section 16):
+ * c = j/16 for j = round(16 a) and atan(c) from the table; t = (a - c)/(1 + a c) with a - c exact, 1 + a c as a pair and
+ * the quotient's remainder exact, |t| <= 1/32; atan t = t + t z P(z), z = t^2, five terms fitted here (2^-65.6 relative to
+ * t); atan(c) + t by a fast two-sum (atan(1/16) > 1/32), the rest in the low part
+ */
+static inline double __libc_fast_atan_kernel(double a, double a_lo, double *lo)
+{
+	int j = (int)(a * 16.0 + 0.5);
+	double c = (double)j * 0.0625;
+	const struct __libc_dd *e = &__libc_fast_atan_pairs[j];
+	struct __libc_dd p = __libc_dd_product(a, c);
+	double d = 1.0 + p.hi;
+	double d_lo = ((1.0 - d) + p.hi) + p.lo + a_lo * c;
+	double u = a - c;
+	double q = u / d;
+	struct __libc_dd r = __libc_dd_product(q, d);
+	double t_lo = (((u - r.hi) - r.lo) + a_lo - q * d_lo) / d;
+	double z = q * q;
+	double poly = z * (-0x1.5555555555555p-2 + z * (0x1.99999999998a4p-3 + z * (-0x1.24924922a7020p-3 + z * (0x1.c71c46c7ecbacp-4 + z * -0x1.739871480f801p-4))));
+	struct __libc_dd sum = __libc_dd_fast_sum(e->hi, q);
+
+	*lo = sum.lo + e->lo + t_lo + q * poly;
+	return sum.hi;
+}
+
+/*
+ * asin s - s = s w for z = s^2 <= 1/4 (D198), w = z/6 + z^2 Q(z) with Q of thirteen terms fitted here (2^-60.3 relative
+ * to asin s): s w as hi + *lo with its leading part exact, z/6 by an exact product with 1/6 as a pair and s w_hi by
+ * another, so that only z^2 Q (below 1 % of asin s) rounds in plain double. z + z_lo is s^2, as a pair.
+ */
+static inline double __libc_fast_asin_series(double s, double z, double z_lo, double *lo)
+{
+	double q = 0x1.023b2e4399215p-6 + z * (-0x1.c5cebe8c6ea21p-7 + z * 0x1.adba2f1957d13p-6);
+	struct __libc_dd w;
+	struct __libc_dd m;
+	double w_lo;
+
+	q = 0x1.2d1cc6b396421p-8 + z * q;
+	q = 0x1.240b1269e5ee4p-7 + z * q;
+	q = 0x1.3da52ba8cd821p-7 + z * q;
+	q = 0x1.7ab9ababb452cp-7 + z * q;
+	q = 0x1.c996a8c59b36cp-7 + z * q;
+	q = 0x1.1c4ed306f4679p-6 + z * q;
+	q = 0x1.6e8ba2987e0fap-6 + z * q;
+	q = 0x1.f1c71c72b3a23p-6 + z * q;
+	q = 0x1.6db6db6db652cp-5 + z * q;
+	q = 0x1.3333333333334p-4 + z * q;
+	w = __libc_dd_product(z, 0x1.5555555555555p-3);
+	w_lo = w.lo + (z * 0x1.5555555555555p-57 + z_lo * 0x1.5555555555555p-3) + z * (z * q);
+	m = __libc_dd_product(s, w.hi);
+	*lo = m.lo + s * w_lo;
+	return m.hi;
+}
+
+/*
+ * The half-angle forms' asin s (D198): z = (1 - a)/2 exactly for 1/2 < a < 1, s = sqrt z correctly rounded, and asin s =
+ * s + *rest + *tail_hi + *tail_lo: the square root's remainder (z - s^2)/(2 s) with s^2 exact, times 1 + w, and s w from
+ * __libc_fast_asin_series
+ */
+static inline double __libc_fast_asin_half(double a, double *rest, double *tail_lo, double *tail_hi)
+{
+	double z = (1.0 - a) * 0.5;
+	double s = __builtin_sqrt(z);
+	struct __libc_dd square = __libc_dd_product(s, s);
+
+	/*
+	 * asin S = S (1 + w(z)) for S = sqrt z exactly, and the series takes s w(z): the remainder S - s carries the factor
+	 * 1 + w = 1 + z/6 + 3 z^2/40 + ..., 1.045 at z = 1/4 (1 alone cost 2^-57.6 of the result next to 1/2)
+	 */
+	*rest = ((z - square.hi) - square.lo) / (s + s) * (1.0 + z * (0x1.5555555555555p-3 + z * 0x1.3333333333333p-4));
+	*tail_hi = __libc_fast_asin_series(s, z, 0.0, tail_lo);
+	return s;
+}
+
 /*
  * x = k pi/32 + s for 2^-6 <= |x| < 64 in float (the single-precision FPU cores' sinf family; the note, section 4), a
  * Cody-Waite reduction in four pieces: P1, P2, P3 of 14 bits, so that k P1, k P2, k P3 are exact (|k| < 2^10), x - k P1

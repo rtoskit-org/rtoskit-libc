@@ -1098,3 +1098,16 @@ AOR on this core: `pow` 135.
 AOR has no scalar double `sin`, `cos` or `tan`.
 
 P11.04a's `sinf`, `cosf`, `sincosf` and `tanf` now reach the strict reduction from 2^20 through the slow path (`__libc_fast_trig_large`): `cosf` 50.81 → 49.81, `sincosf` 86.19 → 84.19, `tanf` 69.31 → 70.31 (register allocation; results unchanged).
+
+## P11.05j — Fast `asin`, `acos`, `atan` and `atan2` in double (D198)
+
+`libc/math/fast/`: atan from a table of atan(j/16) pairs with the quotient's exact remainder, asin and acos by a polynomial up to 1/2 and the half-angle form above, atan2's special cases through the strict code. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asin` | 220 | 135 | -39 % |
+| `acos` | 228 | 127 | -44 % |
+| `atan` | 195 | 108 | -45 % |
+| `atan2` | 360 | 141 | -61 % |
+
+AOR has no scalar double `asin`, `acos`, `atan` or `atan2`.

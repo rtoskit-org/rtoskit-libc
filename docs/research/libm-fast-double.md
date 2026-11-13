@@ -1071,3 +1071,110 @@ kernel (§7's style) could cost less, and is noted for P11.06.
 
 **Size:** `math-mix`, which calls `sin`, `cos` and `tan`, changes by +6 to
 +44 bytes on these cores; every budget holds.
+
+## 16. asin, acos, atan and atan2 on the double-FPU cores (P11.05j)
+
+`libc/math/fast/asin.c`, `acos.c`, `atan.c` and `atan2.c`, on x86_64 and
+armv7e-m-dp (the soft-double cores keep the strict files until P11.05k). The
+strict files reach everything through the double-double `__libc_atan2_core`
+(asin and acos over a double-double square root): 195–360 instructions on
+armv7e-m-dp, 378–558 on x86_64.
+
+### 16.1 Sources (ideas only)
+
+- **FreeBSD msun `s_atan.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_atan.c>,
+  read 2026-11-13): five intervals with breakpoints near 7/16, 11/16, 19/16
+  and 39/16, each subtracting a reference angle by a Möbius map, then an
+  11-term odd polynomial with the angle added back as a pair; no stated
+  bound.
+- **FreeBSD msun `e_asin.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/e_asin.c>):
+  split at 1/2, x + x·R(x²) with a rational R (2^-58.75) below, and
+  π/2 − 2 asin(√((1 − |x|)/2)) above, with √ split into a high part with its
+  low word cleared plus a correction (t − f²)/(s + f), so its rounding error is
+  kept.
+- **AOR's AdvSIMD `asin`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/asin.c>):
+  the same split, one polynomial P of order 11 in z for both halves
+  (2^-57 for (asin √z − √z)/(z√z)), 1.01 ulp observed below 1/2 and 2.69
+  above (its harness tolerance says 2.20).
+- **P11.04b's double path** (D176): nine breakpoints j/8 and the Taylor
+  series, then one rounding to float; that has 29 spare bits, this none.
+
+### 16.2 The method
+
+- **The atan kernel** (`__libc_fast_atan_kernel`), for a + a_lo in [0, 1]:
+  - c = j/16 with j = ⌊16a + 1/2⌋, and atan(j/16) from a 17-entry table of
+    exact pairs (272 bytes);
+  - t = (a − c)/(1 + ac): a − c is exact (Sterbenz), 1 + ac is formed as a
+    pair (the product exact by fma or Dekker, its rounding exact by a fast
+    two-sum), and the quotient's remainder is exact, so t + t_lo carries the
+    quotient to about 2^-106, a_lo included; |t| ≤ 1/32;
+  - atan t = t + t·z·P(z), z = t², P of five terms fitted here (2^-65.6
+    relative to t);
+  - atan(c) + t by a fast two-sum (atan(1/16) > 1/32), every other term in
+    the low part, one rounding by the caller.
+- **atan:** |x| ≤ 1 directly; above, 1/|x| with its exact remainder and
+  π/2 − atan(1/|x|) with π/2 as a pair (the result is above π/4, so the fast
+  two-sum is exact). Below 2^-27 the strict tiny path; from 2^60, ±π/2.
+- **atan2:** for normal coordinates from 2^-959 to 2^960 whose exponents
+  differ by at most 60, the smaller magnitude over the larger with its exact
+  remainder (no underflow there), the kernel, then the quadrant's offset 0,
+  π/2 or π as a pair, and y's sign. Everything else (zeros, infinities, NaN,
+  subnormals, the far exponents where the result is a tiny quotient or ±π/2
+  or ±π) goes to the strict file's code, kept as a hidden slow path.
+- **asin and acos up to 1/2:** asin x = x + x·z·P(z), z = x², with P of
+  fourteen terms fitted here over z ≤ 1/4 (2^-58.5 relative to x; twelve
+  terms leave 2^-54); acos x = π/2 − asin x, π/2 a pair, by a fast two-sum
+  (|x| ≤ 1/2).
+- **Above 1/2:** z = (1 − |x|)/2 exactly (Sterbenz), s = √z correctly rounded
+  with its exact remainder s_lo, asin s by the same polynomial; asin |x| =
+  π/2 − 2 asin s (at least 0.52, so the fast two-sum loses nothing), acos x =
+  2 asin s for x > 0 (relative however close x is to 1) and π − 2 asin s for
+  x < 0. ±1 return π/2, 0 and π directly (s = 0 would divide by zero).
+- **Found along the way:**
+  - The first build rounded the tail s·z·P(z) in plain double: next to 1/2
+    it is 8 % of the result, and its four or five roundings cost asin 0.66
+    ulp (1.4 % not correctly rounded). The tail is now w = z/6 + z²·Q(z),
+    with z/6 by an exact product with 1/6 as a pair and s·w_hi by another,
+    so only z²·Q (below 1 %) rounds in plain double: 0.55.
+  - The square root's remainder S − s entered as itself, but the polynomial
+    is evaluated at the exact z = S² and multiplied by s, so asin S = s +
+    (S − s)(1 + w) + s·w: the factor 1 + w (1.045 at z = 1/4) was missing,
+    2^-57.6 of the result next to 1/2. With it, 0.5288. Taking the
+    derivative 1/√(1 − z) instead, a first guess, measured 0.566.
+
+### 16.3 Measured (P11.05j)
+
+On the host, against long double, 1.4·10^9 samples per function on the
+SSE2 and the fma paths, which agree bit for bit (|x| uniform in [0, 1] and
+log-uniform within 2^-30 of 1 for asin and acos; |x| log-uniform over
+2^±40 and 2^±70 for atan and the atan2 coordinates; [−10, 10]²):
+
+| Function | worst | not correctly rounded |
+| --- | ---: | ---: |
+| `asin` | 0.5288 | 0.01–0.14 % |
+| `acos` | 0.5225 | 0.005–0.06 % |
+| `atan` | 0.5010 | below 0.0001 % |
+| `atan2` | 0.5010 | below 0.0001 % |
+
+Instructions per call (speed → fast):
+
+| Function | armv7e-m-dp | x86_64 | armv7e-m (helpers) | armv6-m (helpers) |
+| --- | ---: | ---: | ---: | ---: |
+| `asin` | 220 → 135 | 481 → 204 | 13,029 → 7141 | 34,625 → 20,137 |
+| `acos` | 228 → 127 | 504 → 196 | 13,628 → 7192 | 35,718 → 20,151 |
+| `atan` | 195 → 108 | 378 → 203 | 7741 → 6081 | 21,175 → 17,848 |
+| `atan2` | 360 → 141 | 558 → 212 | 8314 → 6168 | 22,603 → 18,388 |
+
+The soft-double cores run these double files on their helpers until
+P11.05k; they are already about half the strict files' cost there. AOR has
+no scalar double `asin`, `acos`, `atan` or `atan2`.
+
+**Size:** on armv7e-m-dp `asin` is 786 bytes, `acos` 762, `atan` 620 and
+`atan2` 566, with the 272-byte table and the 736-byte strict slow path.
+`math-mix` (which calls `atan2`) grows from 19,286 to 20,128 bytes there
+(+65 % over speed, re-locked by D187's rule; D191 at P11.06), and by 1476 to
+1552 bytes on the soft-double cores (+11 % to +15 % over speed, inside the
+line).

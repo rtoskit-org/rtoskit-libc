@@ -82,11 +82,11 @@
   "math": {
    "acos/latency": {
     "cycles": 301.44,
-    "insns": 502.94
+    "insns": 194.94
    },
    "acos/throughput": {
     "cycles": 216.9,
-    "insns": 503.94
+    "insns": 195.94
    },
    "acosf/latency": {
     "cycles": 88.38,
@@ -114,11 +114,11 @@
    },
    "asin/latency": {
     "cycles": 295.21,
-    "insns": 480.44
+    "insns": 202.69
    },
    "asin/throughput": {
     "cycles": 190.16,
-    "insns": 481.44
+    "insns": 203.69
    },
    "asinf/latency": {
     "cycles": 88.07,
@@ -146,19 +146,19 @@
    },
    "atan/latency": {
     "cycles": 231.55,
-    "insns": 376.56
+    "insns": 201.94
    },
    "atan/throughput": {
     "cycles": 142.91,
-    "insns": 377.56
+    "insns": 202.94
    },
    "atan2/latency": {
     "cycles": 253.48,
-    "insns": 557.12
+    "insns": 211.0
    },
    "atan2/throughput": {
     "cycles": 168.13,
-    "insns": 558.12
+    "insns": 212.0
    },
    "atan2f/latency": {
     "cycles": 68.17,

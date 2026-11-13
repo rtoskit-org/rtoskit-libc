@@ -464,8 +464,9 @@ about 2^-72 relative (|y log2 x| up to 1075), a multi-word design of its own;
   tests, gains. D197: at most 0.5049 ulp; `cos` 1067 → 755 instructions on
   armv7e-m, `sincos` 1390 → 1065.
 
-### P11.05j — `asin`, `acos`, `atan`, `atan2` on the double-FPU cores  `[ ]`
-- [ ] In double; tests, gains.
+### P11.05j — `asin`, `acos`, `atan`, `atan2` on the double-FPU cores  `[x]`
+- [x] In double; tests, gains. D198: at most 0.5288 ulp; `atan2` 360 → 141
+  instructions on armv7e-m-dp, `asin` 220 → 135.
 
 ### P11.05k — `asin`, `acos`, `atan`, `atan2` on the soft-double cores  `[ ]`
 - [ ] 64-bit fixed point, after P11.04f's quotient and square root; tests,

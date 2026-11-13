@@ -644,6 +644,33 @@ static void check_double_trigonometric(void)
 	CHECK(s == sin(1e300) && c == cos(1e300));
 }
 
+static void check_double_inverse_trigonometric(void)
+{
+	/*
+	 * P11.05j (the double-FPU cores' asin, acos, atan and atan2, D198; the strict files elsewhere): the special values and
+	 * the domain errors, each side of 1/2 (the half-angle forms), of 2^-27, of 1 and 1/32 (atan's inversion and first
+	 * breakpoint), of 2^60, the doubles next to +-1, atan2's quadrants and each side of its fast path's edges (exponents 60
+	 * apart, 2^-960 and 2^959), a subnormal quotient, and the sweeps' worst points
+	 */
+	QUIET(asin(1.0) == 0x1.921fb54442d18p+0 && asin(-1.0) == -0x1.921fb54442d18p+0 && acos(1.0) == 0.0 && !signbit(acos(1.0)) && acos(-1.0) == 0x1.921fb54442d18p+1);
+	QUIET(signbit(asin(-0.0)) && asin(0.0) == 0.0 && signbit(atan(-0.0)) && atan(INFINITY) == 0x1.921fb54442d18p+0 && atan(-INFINITY) == -0x1.921fb54442d18p+0);
+	QUIET(isnan(asin(NAN)) && isnan(acos(NAN)) && isnan(atan(NAN)) && isnan(atan2(NAN, 1.0)) && isnan(atan2(1.0, NAN)));
+	RAISES(isnan(asin(0x1.0000000000001p+0)) && isnan(acos(-0x1.0000000000001p+0)) && isnan(asin(INFINITY)), FE_INVALID);
+	QUIET(atan2(0.0, -1.0) == 0x1.921fb54442d18p+1 && atan2(-0.0, 1.0) == 0.0 && signbit(atan2(-0.0, 1.0)) && atan2(1.0, 0.0) == 0x1.921fb54442d18p+0 && atan2(-INFINITY, INFINITY) == -0x1.921fb54442d18p-1);
+	QUIET(near_double(asin(0.5), 0x1.0c152382d7366p-1) && near_double(asin(0x1.0000000000001p-1), 0x1.0c152382d7367p-1) && near_double(asin(0x1.fffffffffffffp-2), 0x1.0c152382d7365p-1));
+	QUIET(near_double(acos(0.5), 0x1.0c152382d7366p+0) && near_double(acos(0x1.0000000000001p-1), 0x1.0c152382d7365p+0) && near_double(acos(0x1.fffffffffffffp-2), 0x1.0c152382d7366p+0));
+	QUIET(near_double(asin(0x1.fffffffffffffp-1), 0x1.921fb50442d18p+0) && near_double(acos(0x1.fffffffffffffp-1), 0x1p-26) && near_double(acos(-0x1.fffffffffffffp-1), 0x1.921fb52442d18p+1));
+	QUIET(asin(0x1.fffffffffffffp-28) == 0x1.fffffffffffffp-28 && near_double(asin(0x1p-27), 0x1p-27) && near_double(acos(0x1p-27), 0x1.921fb52442d18p+0) && near_double(atan(0x1p-27), 0x1p-27));
+	QUIET(near_double(atan(1.0), 0x1.921fb54442d18p-1) && near_double(atan(0x1.fffffffffffffp-1), 0x1.921fb54442d18p-1) && near_double(atan(0x1.0000000000001p+0), 0x1.921fb54442d19p-1));
+	QUIET(near_double(atan(0x1p-5), 0x1.ffd55bba97625p-6) && near_double(atan(0x1.0000000000001p-5), 0x1.ffd55bba97627p-6) && near_double(atan(0x1.fffffffffffffp-6), 0x1.ffd55bba97624p-6) && near_double(atan(0x1.8p-4), 0x1.7ee182602f10fp-4));
+	QUIET(near_double(atan(0x1p60), 0x1.921fb54442d18p+0) && near_double(atan(0x1.fffffffffffffp59), 0x1.921fb54442d18p+0) && near_double(atan(-1e10), -0x1.921fb543d4dep+0));
+	QUIET(near_double(atan2(1.0, 1.0), 0x1.921fb54442d18p-1) && near_double(atan2(1.0, -1.0), 0x1.2d97c7f3321d2p+1) && near_double(atan2(-1.0, -1.0), -0x1.2d97c7f3321d2p+1) && near_double(atan2(3.0, -2.0), 0x1.145385fa3af71p+1));
+	QUIET(near_double(atan2(0x1p60, 1.0), 0x1.921fb54442d18p+0) && near_double(atan2(0x1p61, 1.0), 0x1.921fb54442d18p+0) && near_double(atan2(1.0, 0x1p60), 0x1p-60) && near_double(atan2(1.0, 0x1p61), 0x1p-61) && near_double(atan2(1.0, -0x1p60), 0x1.921fb54442d18p+1));
+	QUIET(near_double(atan2(0x1p-960, 0x1p-960), 0x1.921fb54442d18p-1) && near_double(atan2(0x1p959, 0x1p959), 0x1.921fb54442d18p-1) && near_double(atan2(0x1p-1000, 3.0), 0x1.5555555555555p-1002));
+	QUIET(near_double(asin(0x1.101dc84c39c9ep-1), 0x1.1ee558c804933p-1) && near_double(asin(-0x1.122a045a5a2fp-1), -0x1.215125851920fp-1) && near_double(acos(0x1.1da5cc25957a2p-1), 0x1.f537266fed469p-1) && near_double(acos(-0x1.122a045a5a2fp-1), 0x1.1164240367b1p+1));
+	QUIET(near_double(atan2(-0x1.1f9a4767316fbp+42, 0x1.48836ba1bb9d2p+47), -0x1.c0209cc7ff694p-6) && near_double(atan2(0x1.1c54ae6882b6p-2, 0x1.39bbd506ebeeap+3), 0x1.cfe4447f19c0fp-6));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -661,6 +688,7 @@ int main(void)
 	check_double_logarithms();
 	check_double_powers();
 	check_double_trigonometric();
+	check_double_inverse_trigonometric();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");
