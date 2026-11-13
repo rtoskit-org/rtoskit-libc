@@ -358,3 +358,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and p
 ## P11.05g1 — Fast `pow` in fixed point (D194)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) shrinks from 41392 to 38980 bytes of code (+7.2 % over speed's 36376, inside D191's +20 %): the fixed-point pow shares the logarithms' table and the exponentials' kernel, and D193's double table and the exp pairs leave this core. Not re-locked (P11.06 does, D187, D191).
+
+## P11.05g2 — Fast `cbrt` in fixed point (D195)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls `cbrt`, and every budget holds; nothing is re-locked.

@@ -1442,3 +1442,13 @@ AOR on this core: `exp` 3954, `exp2` 3335.
 | Function | speed | P11.05f | fast | change from speed |
 |---|---:|---:|---:|---:|
 | `pow` | 31522 | 16457 | 3938 | -88 % |
+
+## P11.05g2 — Fast `cbrt` in fixed point (D195)
+
+`libc/math/dp-fixed/fast/cbrt.c`: u ≈ f^(-1/3) by two Newton steps in Q31, T = f·u²·cbrt(2^j), then two corrections from exact integer residuals, one rounding; no soft-double operation. Instructions per call (throughput): speed, P11.05f's fast (D193's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05f | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `cbrt` | 14702 | 6896 | 1230 | -92 % |
+
+AOR has no scalar double `cbrt`.

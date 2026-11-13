@@ -442,9 +442,12 @@ the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
   and 12,178); tests, gains. Done (D194): 11,531 → 923 on armv7e-m and 31,522
   → 3938 on armv6-m; at most 0.5029 ulp.
 
-### P11.05g2 — `cbrt` on the soft-double cores  `[ ]`
-- [ ] In 64-bit fixed point, the final rounding honouring the caller's
-  direction (`conformance`'s Q36 cases); tests, gains.
+### P11.05g2 — `cbrt` on the soft-double cores  `[x]`
+- [x] In 64-bit fixed point, the final rounding honouring the caller's
+  direction (`conformance`'s Q36 cases); tests, gains. These cores' `<fenv.h>`
+  has `FE_TONEAREST` alone (D44), so the Q36 cases do not run there and to
+  nearest is the caller's direction (D195). Every sampled result correctly
+  rounded; 3765 → 296 instructions on armv7e-m, 14,702 → 1230 on armv6-m.
 
 P11.05g was split into g1 and g2 (CLAUDE.md workflow): `pow` needs log2 x to
 about 2^-72 relative (|y log2 x| up to 1075), a multi-word design of its own;
