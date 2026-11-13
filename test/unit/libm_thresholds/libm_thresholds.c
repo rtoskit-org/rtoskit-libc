@@ -21,6 +21,8 @@
  * answer.
  */
 
+#define _GNU_SOURCE
+
 #include <fenv.h>
 #include <float.h>
 #include <math.h>
@@ -609,6 +611,39 @@ static void check_double_powers(void)
 	QUIET(near_double(cbrt(-0x1.fa7265fd9d029p+416), -0x1.fe2468c2b1ec5p+138) && near_double(cbrt(-0x1.c54bcf4dbdb0fp-1), -0x1.eba1effdff152p-1));
 }
 
+static void check_double_trigonometric(void)
+{
+	/*
+	 * P11.05h (the double-FPU cores' sin, cos, sincos and tan, D196; the strict files elsewhere): the special values, each
+	 * side of the tiny threshold 2^-27, of pi/64 (the first breakpoint) and of 2^20 (the slow path), the doubles next to
+	 * pi/2, pi and 4 pi (next to a zero, the slow path), a negative x with the half turn set, a large argument, the sweeps'
+	 * worst points, and the regression: the reduced argument's low part reached 2^-40 unnormalized (257 ulp near 2^20)
+	 */
+	double s;
+	double c;
+
+	QUIET(sin(0.0) == 0.0 && !signbit(sin(0.0)) && signbit(sin(-0.0)) && cos(0.0) == 1.0 && cos(-0.0) == 1.0 && signbit(tan(-0.0)) && tan(0.0) == 0.0);
+	QUIET(isnan(sin(NAN)) && isnan(cos(NAN)) && isnan(tan(NAN)));
+	RAISES(isnan(sin(INFINITY)) && isnan(cos(-INFINITY)) && isnan(tan(INFINITY)), FE_INVALID);
+	QUIET(sin(0x1.fffffffffffffp-28) == 0x1.fffffffffffffp-28 && near_double(sin(0x1p-27), 0x1p-27) && near_double(cos(0x1p-27), 1.0) && near_double(tan(0x1p-27), 0x1p-27));
+	QUIET(near_double(sin(0x1.921fb54442d18p-6), 0x1.92155f7a3667ep-6) && near_double(sin(0x1.921fb54442d19p-6), 0x1.92155f7a3667fp-6) && near_double(cos(0x1.921fb54442d19p-6), 0x1.ffd886084cd0dp-1) && near_double(tan(0x1.921fb54442d19p-6), 0x1.92346247a91f1p-6));
+	QUIET(near_double(sin(0x1.921fb54442d18p+1), 0x1.1a62633145c07p-53) && near_double(cos(0x1.921fb54442d18p+0), 0x1.1a62633145c07p-54) && near_double(tan(0x1.921fb54442d18p+0), 0x1.d02967c31cdb5p+53) && near_double(tan(0x1.921fb54442d18p+1), -0x1.1a62633145c07p-53));
+	QUIET(near_double(sin(0x1.921fb54442d18p+3), -0x1.1a62633145c07p-51) && near_double(cos(0x1.921fb54442d18p+3), 1.0) && near_double(tan(0x1.921fb54442d18p+3), -0x1.1a62633145c07p-51));
+	QUIET(near_double(sin(0x1.fffffffffffffp+19), 0x1.526ccb2de52a8p-2) && near_double(cos(0x1.fffffffffffffp+19), 0x1.e33ada9352c61p-1) && near_double(tan(0x1.fffffffffffffp+19), 0x1.6692e575533f1p-2));
+	QUIET(near_double(sin(0x1p20), 0x1.526ccb2fc8656p-2) && near_double(cos(0x1p20), 0x1.e33ada92fe2aep-1) && near_double(tan(0x1p20), 0x1.6692e5779206fp-2));
+	QUIET(near_double(sin(-4.0), 0x1.837b9dddc1eaep-1) && near_double(cos(-4.0), -0x1.4eaa606db24c1p-1) && near_double(tan(-4.0), -0x1.2866f9be4de13p+0));
+	QUIET(near_double(sin(1e300), -0x1.a2c16b010e385p-1) && near_double(cos(1e300), -0x1.2699022adc4c1p-1) && near_double(tan(1e300), 0x1.6be411f37ac77p+0) && near_double(sin(0x1.bd0a14269acdfp+707), 0x1.6e1cbd6c025f7p-1));
+	QUIET(near_double(sin(0x1.a94666d39717ep+5), 0x1.f61dda514f931p-3) && near_double(cos(-0x1.dcb93aa159b5ap+10), -0x1.ff4b26db560c5p-1) && near_double(tan(0x1.8d7989a8f2812p+15), -0x1.fc69756b245cap+1));
+	CHECK(near_double(sin(-0x1.fb530144d26dap+19), 0x1.922f9b04d95f5p-5) && near_double(cos(-0x1.fb530144d26dap+19), 0x1.ff61f13782899p-1) && near_double(tan(-0x1.fb530144d26dap+19), 0x1.92abe9b2589ffp-5));
+	/* sincos equals sin and cos, bit for bit */
+	sincos(-4.0, &s, &c);
+	CHECK(s == sin(-4.0) && c == cos(-4.0));
+	sincos(0x1.921fb54442d18p+1, &s, &c);
+	CHECK(s == sin(0x1.921fb54442d18p+1) && c == cos(0x1.921fb54442d18p+1));
+	sincos(1e300, &s, &c);
+	CHECK(s == sin(1e300) && c == cos(1e300));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -625,6 +660,7 @@ int main(void)
 	check_double_exponentials();
 	check_double_logarithms();
 	check_double_powers();
+	check_double_trigonometric();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

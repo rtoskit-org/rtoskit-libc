@@ -25,3 +25,7 @@ SRC := $(if $(filter %/exp.c %/exp2.c %/exp10.c %/expm1.c %/pow.c,${SRC}),${SRC}
 # The log tables only where a logarithm or pow of this directory stays (the special values stay: dp-fixed/fast calls them too)
 SRC := $(if $(filter %/log.c %/log10.c %/log1p.c %/pow.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log_table.c,${SRC}))
 SRC := $(if $(filter %/log2.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log2_table.c,${SRC}))
+# The trigonometric table only where a double sin, cos, sincos or tan of this directory stays, the slow path also where a
+# float one does
+SRC := $(if $(filter %/sin.c %/cos.c %/sincos.c %/tan.c,${SRC}),${SRC},$(filter-out %/__libc_fast_sin_table.c,${SRC}))
+SRC := $(if $(filter %/sin.c %/cos.c %/sincos.c %/tan.c %/sinf.c %/cosf.c %/sincosf.c %/tanf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_trig_slow.c,${SRC}))

@@ -21,7 +21,7 @@
 /*
  * The fast sincosf of the double-FPU cores (PLAN D162, D175): for |x| < 2^20, x = k pi/2 + r in double
  * (__libc_fast_rem_pio2, r to 2^-52 relative) and both Taylor polynomials in double, sin and cos picked by the quadrant; rounded once to float, below 0.51 ulp to nearest (the note,
- * section 3). Beyond 2^20, the infinities and NaNs, the double sincos rounded once.
+ * section 3). Beyond 2^20, the infinities and NaNs, the double sin's and cos's slow path rounded once (__libc_fast_trig_large).
  */
 void sincosf(float x, float *sinp, float *cosp)
 {
@@ -32,12 +32,8 @@ void sincosf(float x, float *sinp, float *cosp)
 
 	/* A NaN compares quietly (isless): the relational operators would raise invalid */
 	if (!isless(__builtin_fabsf(x), 0x1p20f)) {
-		double sine;
-		double cosine;
-
-		sincos((double)x, &sine, &cosine);
-		*sinp = (float)sine;
-		*cosp = (float)cosine;
+		*sinp = (float)__libc_fast_trig_large(x, 0);
+		*cosp = (float)__libc_fast_trig_large(x, 1);
 		return;
 	}
 	k = __libc_fast_rem_pio2((double)x, &r);

@@ -883,3 +883,130 @@ AOR has no scalar double `cbrt`, so P11.06 has no AOR count to gate it on.
 **Size:** the member is 852–868 bytes on the Thumb-2 cores and 1022 on
 Armv6-M, against 380 for §11's file on armv7e-m-dp, but it pulls no
 soft-double helper. No size program calls `cbrt`; every budget holds.
+
+## 14. sin, cos, sincos and tan on the double-FPU cores (P11.05h)
+
+`libc/math/fast/sin.c`, `cos.c`, `sincos.c` and `tan.c`, on x86_64 and
+armv7e-m-dp: the soft-double cores keep `dp-fixed/speed`'s files (D136, a
+later layer's) until P11.05i. The strict files (the speed flavour's on these
+cores) reduce by π/2 to a double-double and finish in double-double: 165
+instructions for `sin` and 207 for `tan` on armv7e-m-dp, 308 and 427 on
+x86_64.
+
+### 14.1 Sources (ideas only)
+
+- **FreeBSD msun `k_sin.c`, `k_cos.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/k_sin.c>,
+  <https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/k_cos.c>,
+  read 2026-11-13): kernels on [−π/4, π/4], odd and even polynomials of
+  degree 13 and 14 (2^-58 relative), the reduced argument's tail y entering
+  to first order, sin(x + y) ≈ sin x + (1 − x²/2)·y and cos(x + y) ≈
+  cos x − x·y; cos recovers the rounding error of 1 − x²/2 as a separate
+  term. Below 1 ulp, but not by much near π/4, where the polynomial part is
+  a tenth of the result.
+- **FreeBSD msun `e_rem_pio2.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/e_rem_pio2.c>):
+  π/2 in three 33-bit parts with tails, used up to about 2^20·π/2; the
+  exponents of x and of the remainder are compared, and a second and third
+  part are applied only when the remainder lost more than 16 or 49 bits.
+- **glibc `s_sin.c`** (IBM's table of sin and cos at breakpoints with
+  double-double corrections) could not be read: sourceware.org answers
+  automated fetches with a bot-protection page. Nothing here rests on it.
+- **P11.04a's float path** (§3 of `libm-fast-float-trig.md`, D175): a
+  reduction by π/32 and a table kernel whose leading terms are combined
+  exactly, so only the last addition rounds; this is that design in double.
+
+### 14.2 The method
+
+- **x = n·π/32 + t**, |t| ≤ π/64, by Cody–Waite with π/32 in three parts:
+  p1 and p2 of 29 bits, so n·p1 and n·p2 are exact for |n| < 2^24
+  (|x| < 2^20), x − n·p1 is exact (Sterbenz), (x − n·p1) − n·p2 as an exact
+  two-difference (t, t_lo), then n·p3 (53 bits) into t_lo. The parts leave
+  2^-118 of π/32, so t is good to about 2^-91 absolutely.
+- **Near a zero** (n ≠ 0, n ≡ 0 mod 16, and |t| < 2^-27), where sin, cos or
+  tan is t itself to first order, 2^-91 is not enough; those arguments
+  (about one in 2^24 of the range) and |x| ≥ 2^20 go to the strict reduction
+  and double-double cores (`__libc_rem_pio2`, `__libc_sin_core`,
+  `__libc_cos_core`), out of line in one hidden function.
+- **The table:** sin(jπ/32) for j = 0..16 as exact pairs (hi, lo) (272
+  bytes); cos(jπ/32) = sin((16 − j)π/32). With N = n mod 64, the quadrant
+  q = N/16 and j = N mod 16, sin(qπ/2 + a) and cos(qπ/2 + a) for
+  a = jπ/32 + t are ±sin a or ±cos a.
+- **The kernel:** A·cos t + B·sin t, with (A, B) = (S_j, C_j) for sin a and
+  (C_j, −S_j) for cos a. A + B·t is formed exactly: B_hi·t as an exact
+  product (fma on armv7e-m-dp, Dekker's on SSE2), and a fast two-sum, valid
+  because |A| ≥ 0.098 ≥ |B·t| for j ≥ 1 and A = 0 or B = 0 for j = 0. Every
+  other term goes into the low part: the product's error, A_lo + B_lo·t,
+  A·(cos t − 1), B·(sin t − t), and t_lo·(B − A·t). One rounding: hi + lo.
+- **The polynomials** over |t| ≤ π/64, fitted here: (sin t − t)/(t·t²) with
+  four terms (2^-65.3 relative to t) and (cos t − 1)/t² with four
+  (2^-71.2). Three terms measured 2^-58.3 and 2^-55.1 in the fit; the cos
+  one would be 2^-54 of sin(π/64) at j = 1, where A·(cos t − 1) enters a
+  result half of A.
+- **tan:** the period is π, so N = n mod 32; for q even sin a / cos a, for q
+  odd −cos a / sin a, from the two kernels as pairs, then a quotient with its
+  remainder (the product's error exact): the divisor is at least
+  sin(π/64), so the quotient keeps the pairs' accuracy.
+- **sincos:** one reduction, both kernels.
+- **The ends:** NaN returns x + x, ±inf raises invalid, and |x| < 2^-27 is
+  the strict files' tiny path (x, or 1 for cos, nudged so the direction and
+  inexact come out right).
+- **The slow path returns the result** (`__libc_fast_trig_slow(x, kind)`),
+  so the callers end in a tail call. A first version passed the cores'
+  pairs back through pointers: the frame and the saved d8–d11 cost `sin`
+  about 6 instructions, and a table entry copied as a struct about 4 more.
+- **Found along the way:**
+  - The reduction's low part reached 2^-40 unnormalized (n·p3 and the
+    two-difference's error), and the kernel takes t_lo to first order only:
+    t_lo·t²/2 was 2^-49, 257 ulp near 2^20. t + t_lo is now normalized by one
+    more fast two-sum (a regression case).
+  - The sign test compared a bool with `signbit`, whose nonzero value is the
+    sign bit on Arm (1 on the host), so a negative x with the half turn set
+    would have come out negated on armv7e-m-dp; the host sweeps could not see
+    it. It compares `signbit(x) != 0` now (`sin(-4.0)` is a case).
+  - `sincos` first sent both results down the slow path when either was
+    next to its zero; each now decides as `sin` or `cos` does, so the two
+    stay equal to them bit for bit.
+
+### 14.3 Measured (P11.05h)
+
+On the host, against long double (whose `sinl`, `cosl` and `tanl` reduce
+exactly), on both the SSE2 and the fma paths, which agree bit for bit:
+
+| Samples | `sin` | `cos` | `tan` |
+| --- | ---: | ---: | ---: |
+| 10^9 log-uniform in [2^-30, 2^20] | 0.5063 | 0.5059 | 0.5063 |
+| 2·10^8 uniform in [0, 10] | 0.5054 | 0.5054 | 0.5063 |
+| 2·10^8 within 1000 ulp of a multiple of π/32 below 2^20 | 0.5000 | 0.5000 | 0.5005 |
+| 2·10^7 in [2^20, 2^1020] (the strict reduction) | 0.5928 | 0.5898 | 0.6055 |
+
+About 0.01–0.02 % of results are not correctly rounded below 2^20. `sincos`
+equals `sin` and `cos` on every sample. Beyond 2^20 the results are the
+strict files', bit for bit; their 0.59–0.61 ulp there is the strict
+reduction's (checked against mpmath at 4000 bits: 0.593 ulp for
+`sin(0x1.bd0a14269acdfp+707)`), above the README's 0.53, and outside this
+step: suggested as a separate fix.
+
+Instructions per call (speed → fast):
+
+| Function | armv7e-m-dp | x86_64 |
+| --- | ---: | ---: |
+| `sin` | 165 → 96 | 308 → 145 |
+| `cos` | 167 → 93 | 313 → 138 |
+| `sincos` | 231 → 171 | 446 → 273 |
+| `tan` | 207 → 133 | 427 → 253 |
+
+AOR has no scalar double `sin`, `cos` or `tan`, so P11.06 has no AOR count
+to gate them on.
+
+**Size:** on armv7e-m-dp `sin` is 676 bytes, `cos` 592, `sincos` 860 and
+`tan` 772, with the 272-byte table and the 242-byte slow path shared.
+`math-mix`, which calls `sin`, `cos` and `tan`, grows from 17,548 to 19,286
+bytes: each file inlines the reduction and the kernel, where the strict files
+shared one double-double core. That is +58 % over speed, above D191's +20 %
+line; P11.06 decides. A shared out-of-line kernel would save about 1 KiB
+there for a call per evaluation. `math-float` shrinks from 5950 to 5710:
+P11.04a's `sinf`, `cosf`, `sincosf` and `tanf` now reach the strict
+reduction from 2^20 through the slow path (`__libc_fast_trig_large`), with
+the same results, instead of pulling the double files. Both fast figures are
+re-locked by D187's rule.
