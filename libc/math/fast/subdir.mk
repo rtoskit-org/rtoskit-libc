@@ -29,6 +29,6 @@ SRC := $(if $(filter %/log2.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log2_tab
 # float one does
 SRC := $(if $(filter %/sin.c %/cos.c %/sincos.c %/tan.c,${SRC}),${SRC},$(filter-out %/__libc_fast_sin_table.c,${SRC}))
 SRC := $(if $(filter %/sin.c %/cos.c %/sincos.c %/tan.c %/sinf.c %/cosf.c %/sincosf.c %/tanf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_trig_slow.c,${SRC}))
-# The atan(j/16) pairs only where a double atan or atan2 of this directory stays, the atan2 slow path where atan2 does
+# The atan(j/16) pairs only where a double atan or atan2 of this directory stays (the atan2 slow path stays: dp-fixed/fast
+# calls it too)
 SRC := $(if $(filter %/atan.c %/atan2.c,${SRC}),${SRC},$(filter-out %/__libc_fast_atan_pairs.c,${SRC}))
-SRC := $(if $(filter %/atan2.c,${SRC}),${SRC},$(filter-out %/__libc_fast_atan2_slow.c,${SRC}))

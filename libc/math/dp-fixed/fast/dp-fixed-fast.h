@@ -247,4 +247,14 @@ static inline double __libc_dp_fixed_trig_round(const struct __libc_trig_fixed *
 	return __libc_dp_fixed_double(value->negative ? 0x8000000000000000ull : 0, value->exponent, value->v);
 }
 
+/* atan(j/16) for j = 0..16 in Q64, rounded (libc/math/dp-fixed/fast/__libc_dp_fixed_atan_table.c, D199) */
+extern const uint64_t __libc_dp_fixed_atan_table[17];
+
+/*
+ * atan(y/x) for 0 < y <= x as significands my, mx (53 bits, bit 52 set) and exponents ey, ex, at most 60 apart (D199;
+ * docs/research/libm-fast-double.md, section 17), the quadrant's offset applied: 0 for K, 1 for pi/2 - K, 2 for pi/2 + K,
+ * 3 for pi - K; negated when negative; one rounding to nearest (__libc_dp_fixed_atan.c)
+ */
+double __libc_dp_fixed_atan(uint64_t my, int32_t ey, uint64_t mx, int32_t ex, unsigned int quadrant, bool negative);
+
 #endif /* _DP_FIXED_FAST_H */

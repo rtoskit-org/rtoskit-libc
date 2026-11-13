@@ -111,16 +111,16 @@
     "insns": 351.75
    },
    "atan/latency": {
-    "insns": 6426.94
+    "insns": 520.56
    },
    "atan/throughput": {
-    "insns": 6435.44
+    "insns": 529.06
    },
    "atan2/latency": {
-    "insns": 6533.25
+    "insns": 518.44
    },
    "atan2/throughput": {
-    "insns": 6542.88
+    "insns": 528.06
    },
    "atan2f/latency": {
     "insns": 253.31
