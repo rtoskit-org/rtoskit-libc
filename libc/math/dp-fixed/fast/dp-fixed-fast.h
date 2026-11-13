@@ -99,6 +99,20 @@ static inline uint64_t __libc_dp_fixed_scaled(uint64_t m, int e, uint64_t c_hi, 
 	return (high << (64 - shift)) | (low >> shift);
 }
 
+/* The high 32 bits of a b for signed a and b, from the unsigned product (no __aeabi_lmul on Armv6-M) */
+static inline int32_t __libc_dp_fixed_high_signed(int32_t a, int32_t b)
+{
+	uint32_t high = (uint32_t)(__libc_trig_wide((uint32_t)a, (uint32_t)b) >> 32);
+
+	/* The unsigned product of a two's complement operand counts the other operand 2^32 times too often */
+	if (a < 0)
+		high -= (uint32_t)b;
+	if (b < 0)
+		high -= (uint32_t)a;
+
+	return (int32_t)high;
+}
+
 /* -t for t = n + f 2^-64 */
 static inline uint64_t __libc_dp_fixed_negate(int32_t *n, uint64_t f)
 {

@@ -805,3 +805,81 @@ helpers inline). `math-mix` (log and pow) shrinks against §11 by 2100 to
 35,252 → 32,806, armv8-m.main 35,148 → 32,694): §11's 3 KiB double table and
 the exp pairs leave these cores. Against speed it is now +7 % to +9 %, inside
 D191's +20 %.
+
+## 13. cbrt on the soft-double cores (P11.05g2)
+
+`libc/math/dp-fixed/fast/cbrt.c`, shadowing §11's double file on the
+soft-double cores. §11's file runs there on the soft-double helpers: a
+handful of soft multiplies and two divisions, 1919 instructions on armv7e-m
+and 6896 on armv6-m.
+
+### 13.1 Sources (ideas only)
+
+- **§11.1's** FreeBSD `s_cbrt.c` and AOR's AdvSIMD `cbrt`: the exponent
+  divided by 3 on the bit pattern, a short polynomial seed, then Newton or
+  Halley steps.
+- **CORE-MATH's `cbrt`** (`gitlab.inria.fr/core-math`) could not be read on
+  2026-11-13: the host answers automated fetches with a bot-protection page.
+  Nothing here rests on it.
+- **P11.03g's `cbrtf`** (`libc/math/nofp/fast/cbrtf.c`, D174): w ≈ M^(-1/3)
+  by multiplication-only Newton steps w += w(1 − M·w³)/3 in Q31, and
+  cbrt M = M·w². Its degree-2 seed is reused here.
+
+### 13.2 The method
+
+- **x = 2^(3q + j)·M** with M = 2^j·f, f in [1, 2) the 53-bit significand
+  (a subnormal x normalized), q by a multiply (n·21846/2^16 is ⌊n/3⌋ below
+  32,768; Armv6-M has no divide).
+- **u ≈ f^(-1/3)**, not M^(-1/3): u lies in (0.79, 1], so u, u² and u³ keep
+  31 bits in Q31. P11.03g's w = M^(-1/3) reaches 0.5 and w³ 0.125, which
+  keep only 30 and 28 bits: the first build iterated on w and measured T to
+  only 2^-27.5 and 1.03 ulp. The seed (2^-8.9) and two Newton steps give u to
+  2^-29.7, the limit of Q31 here: rounding the products instead of
+  truncating them changed nothing.
+- **T = f·u²·cbrt(2^j)** in Q31, within about 2^-28 of cbrt M, clamped below
+  2^32 (cbrt M is within 2^-28 of 2 for M near 8).
+- **The residual R = M − T³ exactly**: M·2^93 is the significand shifted by
+  41 + j (96 bits), T³ is three 32 × 32 products; R is below 2^-23.
+- **First correction:** d = R/(3T²) with 1/T² ≈ u²·2^(-2j/3) (one product with
+  a per-j constant that includes the 1/3), in Q62. T + d is within about
+  2^-55 of cbrt M: Newton's own error d²/T and d times 1/T²'s 2^-28. A second
+  build stopped here and measured 0.7319 ulp, 3 % not correctly rounded.
+- **Second correction, again from an exact residual:** M − (T + d)³ =
+  R − d(3T² + 3Td + d²). It is below 2^-48, so in units of 2^-100 it fits 64
+  bits and every term is formed modulo 2^64: R exactly, 3T²d exactly before
+  its floor (T² is already exact from the cube, d an integer in Q62), 3Td² to
+  2^-12 of itself (|d| in Q56 squared), and d³ (2^-78) left out. Times the
+  same 1/(3T²) it leaves about 2^-80 before the rounding, at the cost of six
+  32 × 32 products.
+- **One rounding**, to nearest by the 54th bit straight into the double's
+  bits (`__libc_dp_fixed_double`), the exponent q added exactly. These cores
+  have no other direction: their `<fenv.h>` defines `FE_TONEAREST` alone
+  (D44), so `conformance`'s directed-rounding cases (Q36) do not run on them,
+  and to nearest is the whole of P11.05g2's "the caller's direction".
+- **The special cases** are F.10.4.1's: ±0, ±inf and NaN return x + x.
+- **A shared helper:** `__libc_dp_fixed_high_signed` in `dp-fixed-fast.h`,
+  the high word of a signed 32 × 32 product from the unsigned one (no
+  `__aeabi_lmul` on Armv6-M), as nofp's `__libc_fixed_high_signed`, which this
+  layer cannot reach.
+
+### 13.3 Measured (P11.05g2)
+
+On the host (the speed files' `umull` product), against long double: every
+one of 1.2·10^9 random doubles (a quarter of them in [2^-6, 2^6)) and of
+2^14 significands in every binade, subnormal ones included, correctly
+rounded (worst 0.5000 ulp); every cube of an integer to 200,000 below 2^53,
+and of its half, exact; ±0, ±inf and NaN as F.10.4.1.
+
+Instructions per call (speed → §11's double file on the helpers → fast):
+
+| Core | `cbrt` |
+| --- | ---: |
+| armv7e-m, armv8-m.main | 3765 → 1919 → 296 |
+| armv7-m | 4309 → 2106 → 299 |
+| armv6-m, armv6s-m | 14,702 → 6896 → 1230 |
+
+AOR has no scalar double `cbrt`, so P11.06 has no AOR count to gate it on.
+
+**Size:** the member is 852–868 bytes on the Thumb-2 cores and 1022 on
+Armv6-M, against 380 for §11's file on armv7e-m-dp, but it pulls no
+soft-double helper. No size program calls `cbrt`; every budget holds.

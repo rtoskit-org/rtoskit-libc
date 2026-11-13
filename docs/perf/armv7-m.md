@@ -1060,3 +1060,13 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | Function | speed | P11.05f | fast | change from speed |
 |---|---:|---:|---:|---:|
 | `pow` | 11833 | 5717 | 923 | -92 % |
+
+## P11.05g2 — Fast `cbrt` in fixed point (D195)
+
+`libc/math/dp-fixed/fast/cbrt.c`: u ≈ f^(-1/3) by two Newton steps in Q31, T = f·u²·cbrt(2^j), then two corrections from exact integer residuals, one rounding; no soft-double operation. Instructions per call (throughput): speed, P11.05f's fast (D193's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05f | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `cbrt` | 4309 | 2106 | 299 | -93 % |
+
+AOR has no scalar double `cbrt`.

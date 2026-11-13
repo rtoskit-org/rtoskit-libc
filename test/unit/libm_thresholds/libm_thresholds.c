@@ -598,6 +598,15 @@ static void check_double_powers(void)
 	QUIET(cbrt(27.0) == 3.0 && cbrt(-8.0) == -2.0 && cbrt(1000.0) == 10.0 && cbrt(0.0) == 0.0 && signbit(cbrt(-0.0)) && cbrt(INFINITY) == INFINITY && cbrt(-INFINITY) == -INFINITY && isnan(cbrt(NAN)));
 	QUIET(near_double(cbrt(2.0), 0x1.428a2f98d728bp+0) && near_double(cbrt(4.0), 0x1.965fea53d6e3dp+0) && near_double(cbrt(0x1.fffffffffffffp+2), 2.0) && near_double(cbrt(0x1.fffffffffffffp+1023), 0x1.428a2f98d728bp+341));
 	QUIET(near_double(cbrt(0x1p-1074), 0x1p-358) && near_double(cbrt(-0x1.d341a3e2ecb4dp-1009), -0x1.f0a0ec2378bccp-337) && near_double(cbrt(0x1.0000000000001p+0), 1.0));
+	/*
+	 * P11.05g2 (the soft-double cores' fixed-point cbrt, D195): each side of 1, 2, 4 and 8, where j and the clamp of T below
+	 * 2 change, the normal and subnormal ends, exact cubes (normal and subnormal), and the sweeps' worst points before
+	 * the second residual (0.73 ulp)
+	 */
+	QUIET(cbrt(343.0) == 7.0 && cbrt(0x1.bp-1067) == 0x1.8p-356 && cbrt(-0x1.bp-1067) == -0x1.8p-356 && cbrt(-27.0 / 64.0) == -0.75);
+	QUIET(near_double(cbrt(0x1.ffffffffffffdp+2), 0x1.fffffffffffffp+0) && near_double(cbrt(0x1.0000000000001p+3), 0x1p+1) && near_double(cbrt(0x1.fffffffffffffp-1), 0x1p+0) && near_double(cbrt(0x1.fffffffffffffp+0), 0x1.428a2f98d728bp+0));
+	QUIET(near_double(cbrt(0x1.fffffffffffffp+1), 0x1.965fea53d6e3cp+0) && near_double(cbrt(0x1p-1022), 0x1.428a2f98d728bp-341) && near_double(cbrt(0x0.fffffffffffffp-1022), 0x1.428a2f98d728ap-341) && near_double(cbrt(0x1p-1073), 0x1.428a2f98d728bp-358));
+	QUIET(near_double(cbrt(-0x1.fa7265fd9d029p+416), -0x1.fe2468c2b1ec5p+138) && near_double(cbrt(-0x1.c54bcf4dbdb0fp-1), -0x1.eba1effdff152p-1));
 }
 
 int main(void)
