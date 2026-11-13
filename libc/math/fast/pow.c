@@ -26,64 +26,6 @@ static inline double pow_log_q(double r, double r2)
 	return 0x1.5555555555555p-2 + r * -0x1.0000000000006p-2 + r2 * (0x1.99999999999a5p-3 + r * -0x1.555555524a540p-3 + r2 * (0x1.24924921ce195p-3 + r * -0x1.0002eb43a3fc0p-3 + r2 * 0x1.c721c070d115fp-4));
 }
 
-/* 0 for a non-integer y, 1 for an odd integer, 2 for an even one (|y| finite) */
-static int pow_integer_kind(uint64_t iy)
-{
-	int32_t e = (int32_t)((iy >> 52) & 0x7ff) - 1023;
-
-	if (e < 0)
-		return (iy << 1) == 0 ? 2 : 0;
-	if (e > 52)
-		return 2;
-	if ((iy & ((1ull << (52 - e)) - 1)) != 0)
-		return 0;
-
-	return ((iy >> (52 - e)) & 1) != 0 && e < 53 ? 1 : 2;
-}
-
-/*
- * The special cases (C23 7.12.7.5, F.10.4.5, and the strict file) that need no logarithm: y = +-0, x = 1, NaN, an
- * infinite y, x = +-0 or +-inf, x < 0 with y not an integer, and |y| below 2^-65 or from 2^63 for a finite nonzero x
- */
-[[gnu::noinline]] static double pow_special(double x, double y)
-{
-	uint64_t iy = __libc_double_bits(y);
-	double sign;
-	int kind;
-
-	if ((iy << 1) == 0 || x == 1.0)
-		return 1.0;
-	if (isnan(x) || isnan(y))
-		return x + y;
-	if (isinf(y)) {
-		if (__builtin_fabs(x) == 1.0)
-			return 1.0;
-		return (__builtin_fabs(x) < 1.0) == (y < 0) ? INFINITY : 0.0;
-	}
-	kind = pow_integer_kind(iy);
-	sign = signbit(x) && kind == 1 ? -1.0 : 1.0;
-	if (x == 0)
-		return y < 0 ? __libc_math_divbyzero(sign) : sign * 0.0;
-	if (isinf(x))
-		return y < 0 ? sign * 0.0 : sign * INFINITY;
-	if (x < 0 && kind == 0)
-		return __libc_math_invalid();
-	/* From 2^63 y log|x| is beyond the ends for every x other than +-1 (|log x| is at least 2^-53) */
-	if (__builtin_fabs(y) >= 0x1p63) {
-		if (__builtin_fabs(x) == 1.0)
-			return 1.0;
-		return (__builtin_fabs(x) < 1.0) == (y > 0) ? __libc_math_underflow(sign) : __libc_math_overflow(sign);
-	}
-
-	/*
-	 * Below 2^-65 (not an integer, so x > 0) e^(y log x) is 1 nudged toward y log x, at run time so that it rounds in the
-	 * caller's direction (the fast files drop -frounding-math, which would let the sum fold to 1)
-	 */
-	volatile double nudge = 0x1p-60;
-
-	return 1.0 + ((y > 0) == (x > 1.0) ? nudge : -nudge);
-}
-
 /*
  * e^(zh + zl) with z = zh + zl beyond 700 in magnitude: overflow above ln(DBL_MAX), underflow below exp's end (D187),
  * between them the scaled path (__libc_fast_exp_scale), the sign after its rounding
@@ -144,12 +86,12 @@ double pow(double x, double y)
 	if (((ix >> 52) - 0x001) >= 0x7fe || ((iy >> 52) & 0x7ff) - 0x3be >= 0x43e - 0x3be) {
 		/* Here only a negative finite x or a subnormal one with y of 2^-65 to 2^63: the rest needs no logarithm */
 		if (((iy >> 52) & 0x7ff) - 0x3be >= 0x43e - 0x3be || (ix << 1) == 0 || ((ix >> 52) & 0x7ff) == 0x7ff || x == 1.0)
-			return pow_special(x, y);
+			return __libc_fast_pow_special(x, y);
 		if ((ix >> 63) != 0) {
-			int kind = pow_integer_kind(iy);
+			int kind = __libc_fast_pow_integer_kind(iy);
 
 			if (kind == 0)
-				return pow_special(x, y);
+				return __libc_fast_pow_special(x, y);
 			sign = kind == 1 ? 0x8000000000000000ull : 0;
 			ix &= 0x7fffffffffffffffull;
 		}

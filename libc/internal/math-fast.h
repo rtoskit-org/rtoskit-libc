@@ -1220,4 +1220,26 @@ static inline bool __libc_fast_log_outside(double x, uint64_t *ix)
 	return false;
 }
 
+/* 0 for a non-integer y, 1 for an odd integer, 2 for an even one (|y| finite) */
+static inline int __libc_fast_pow_integer_kind(uint64_t iy)
+{
+	int32_t e = (int32_t)((iy >> 52) & 0x7ff) - 1023;
+
+	if (e < 0)
+		return (iy << 1) == 0 ? 2 : 0;
+	if (e > 52)
+		return 2;
+	if ((iy & ((1ull << (52 - e)) - 1)) != 0)
+		return 0;
+
+	return ((iy >> (52 - e)) & 1) != 0 && e < 53 ? 1 : 2;
+}
+
+/*
+ * The fast pows' special cases that need no logarithm (__libc_fast_pow_special.c; libc/math/fast/pow.c and
+ * libc/math/dp-fixed/fast/pow.c): y = +-0, x = 1, NaN, an infinite y, x = +-0 or +-inf, x < 0 with y not an integer,
+ * and |y| below 2^-65 or from 2^63 for a finite nonzero x
+ */
+double __libc_fast_pow_special(double x, double y);
+
 #endif /* _MATH_FAST_H */

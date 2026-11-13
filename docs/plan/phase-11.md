@@ -437,9 +437,18 @@ the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
   Done (D193): `pow` 393 → 133 and `cbrt` 132 → 90 on armv7e-m-dp; at most
   0.5498 ulp.
 
-### P11.05g — `pow`, `cbrt` on the soft-double cores  `[ ]`
-- [ ] Over P11.05c's and e's kernels with a 128-bit product (AOR: `pow` 3576
-  and 12,178); tests, gains.
+### P11.05g1 — `pow` on the soft-double cores  `[x]`
+- [x] Over P11.05c's and e's kernels with a 128-bit product (AOR: `pow` 3576
+  and 12,178); tests, gains. Done (D194): 11,531 → 923 on armv7e-m and 31,522
+  → 3938 on armv6-m; at most 0.5029 ulp.
+
+### P11.05g2 — `cbrt` on the soft-double cores  `[ ]`
+- [ ] In 64-bit fixed point, the final rounding honouring the caller's
+  direction (`conformance`'s Q36 cases); tests, gains.
+
+P11.05g was split into g1 and g2 (CLAUDE.md workflow): `pow` needs log2 x to
+about 2^-72 relative (|y log2 x| up to 1075), a multi-word design of its own;
+`cbrt` shares none of it.
 
 ### P11.05h — `sin`, `cos`, `sincos`, `tan` on the double-FPU cores  `[ ]`
 - [ ] Cody–Waite in double and the polynomials without the double-double

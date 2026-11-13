@@ -1223,3 +1223,13 @@ AOR on this core: `log` 1245, `log2` 1514.
 | `cbrt` | 3765 | 1919 | -49 % |
 
 AOR on this core: `pow` 3576.
+
+## P11.05g1 — Fast `pow` in fixed point (D194)
+
+`libc/math/dp-fixed/fast/pow.c`: log2 x to about 2^-72 from the logarithms' table (Q126 sums, normalized 96-bit products), then P11.05c1's exp2 kernel; no soft-double operation. Instructions per call (throughput): speed, P11.05f's fast (D193's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05f | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `pow` | 11531 | 5600 | 923 | -92 % |
+
+AOR on this core: `pow` 3576.

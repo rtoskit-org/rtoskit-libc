@@ -726,3 +726,82 @@ longer pulls the strict log and exp cores (+44 % over speed, D191's line is
 armv7-m 40,296 → 41,392, armv7e-m 34,300 → 35,252, armv8-m.main 34,188 →
 35,148): their pow carries §9's 3 KiB table besides §10's; re-locked by
 D187's rule until P11.05g.
+
+## 12. pow on the soft-double cores (P11.05g1)
+
+`libc/math/dp-fixed/fast/pow.c`, shadowing §11's double file on the
+soft-double cores. Sources as §11.1 (AOR's pow: log x to about 15 bits beyond
+double, y·log x as a pair, exp of the pair); the arithmetic here is integer.
+P11.05g was split: cbrt (g2) shares none of this.
+
+### 12.1 The error budget
+
+|y·log2 x| is at most 1075 for a finite nonzero result, and the exponential
+kernel (§7) needs y·log2 x to about 2^-62 absolutely. So log2 x must be good
+to about 2^-72 relatively: beyond one 64-bit word, but not by much. A
+relative bound (not an absolute one) matters near 1, where log2 x is small
+and y can be up to 2^62.
+
+### 12.2 The method
+
+- **x = 2^k z** with z in [45/64, 90/64) in Q63, as §10 (a subnormal x
+  normalized there).
+- **The table path** (k ≠ 0 or z strictly beyond 2^-5 of 1): ln z in Q126,
+  in two 64-bit words, to about 2^-82 absolutely:
+  - −log(invc) from §10's table, extended to Q96 by a signed 32-bit tail in
+    what was the entry's padding (the table's size and §10's results are
+    unchanged);
+  - r = z·invc − 1 exact, from the 96-bit product;
+  - r²/2 from r to 2^-71 (|r|·2^71 squared, 128 bits);
+  - r³·S(r), S = Σ (−r)^m/(m + 3) for m ≤ 8, by unsigned Horner's rule in
+    y = 2^7|r| in Q64 (the four innermost steps' operands fit in 32 bits).
+  ln z · log2(e) is one product of normalized 96-bit values (below); k is
+  added in Q96, then the sum normalized again. On this path |log2 x| is at
+  least 2^-4.6, so the absolute bound is a relative one.
+- **Within 2^-5 of 1** (k = 0): s = z − 1 exactly, and log1p(s) = s·W with
+  W = 1 − s/2 + s²·S(s) in Q126 (s/2 exact, s² exact in 128 bits, S of
+  thirteen terms in y = 2^5|s|): relative however close x is to 1. Then
+  times log2(e).
+- **The products**: a normalized value m·2^(e−95), m of 96 bits; a product
+  keeps the 192-bit product's columns from 2^64 up (six 32 × 32 products; the
+  lower ones change it by 2^-125) and renormalizes by one bit. Three of them
+  per call: ·log2(e), ·y, and on the near path s·W.
+- **The exponential**: y·log2 x as n + f·2^-64 (one shift of the 96-bit
+  significand), then §7's kernel, one rounding. From 2^10 (positive) the
+  result overflows; for n below −1022 a subnormal is rounded once at its own
+  last place from the kernel's 64 bits (`__libc_dp_fixed_exp2_fraction`);
+  below −1075 it underflows.
+- **The special cases** that need no logarithm are §11's, now shared as
+  `__libc_fast_pow_special` (`libc/math/fast/`); a negative x with an
+  integer y is fixed in line.
+- **Found along the way:**
+  - k went into the high word's bit 0 (Q64's units place) instead of
+    bit 32 (Q96's): 2^10 came out as 1.0000000069.
+  - Products from −1024 to −1075 went to the underflow branch (0 where a
+    subnormal was due); then the subnormals were rounded twice, by the kernel
+    to 53 bits and by a multiply by 2^-64 (0.7502 ulp). Both are regression
+    cases.
+
+### 12.3 Measured (P11.05g1)
+
+On the host (the speed files' `umull` product), against long double, 10^9
+samples as §11.3: at most 0.5029 ulp, 0.05 % not correctly rounded (§11's
+double file: 0.54 %). 4·10^6 edge cases (subnormal and underflowing
+results, both ends, a negative x to integer powers, a subnormal x, x within
+2^-40 of 1 with y to 2^60, the band around 1): at most 0.5020, subnormal
+results included.
+
+Instructions per call (speed → §11's double file on the helpers → fast):
+
+| Core | `pow` | AOR |
+| --- | ---: | ---: |
+| armv7e-m, armv8-m.main | 11,531 → 5600 → 923 | 3576 |
+| armv7-m | 11,833 → 5717 → 923 | |
+| armv6-m, armv6s-m | 31,522 → 16,457 → 3938 | 12,178 |
+
+**Size:** the member is 3828 bytes on armv7e-m and 4118 on armv6-m (its
+helpers inline). `math-mix` (log and pow) shrinks against §11 by 2100 to
+2454 bytes (armv6-m 46,928 → 44,828, armv7-m 41,392 → 38,980, armv7e-m
+35,252 → 32,806, armv8-m.main 35,148 → 32,694): §11's 3 KiB double table and
+the exp pairs leave these cores. Against speed it is now +7 % to +9 %, inside
+D191's +20 %.

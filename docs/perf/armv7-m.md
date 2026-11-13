@@ -1052,3 +1052,11 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 |---|---:|---:|---:|
 | `pow` | 11833 | 5717 | -52 % |
 | `cbrt` | 4309 | 2106 | -51 % |
+
+## P11.05g1 — Fast `pow` in fixed point (D194)
+
+`libc/math/dp-fixed/fast/pow.c`: log2 x to about 2^-72 from the logarithms' table (Q126 sums, normalized 96-bit products), then P11.05c1's exp2 kernel; no soft-double operation. Instructions per call (throughput): speed, P11.05f's fast (D193's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05f | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `pow` | 11833 | 5717 | 923 | -92 % |
