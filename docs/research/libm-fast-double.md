@@ -559,3 +559,70 @@ armv7e-m-dp 15,478 → 18,806, armv7e-m 31,284 → 34,828, armv8-m.main 31,188 �
 34,724); by the maintainer's decision for P11.05 (D187) those fast figures are
 re-locked. A table of floats for invc and the tail (2 KiB) would cost two
 conversions per call, and `log` would miss AOR's count.
+
+## 10. log, log2, log10 and log1p on the soft-double cores (P11.05e)
+
+`libc/math/dp-fixed/fast/log.c`, `log2.c`, `log10.c`, `log1p.c`, over two
+out-of-line kernels (`__libc_dp_fixed_log_core.c`, `__libc_dp_fixed_log_near.c`)
+and a 90-entry table (`__libc_dp_fixed_log_table.c`, 1440 bytes). They shadow
+§9's double files on armv6-m, armv6s-m, armv7-m, armv7e-m and armv8-m.main.
+Sources as §9.1 and §2 (Qfplib-M0-full's cycle counts: an integer `ln` an
+order of magnitude below a soft-double one).
+
+### 10.1 The method
+
+- **No soft-double operation.** x = 2^k z with z in [45/64, 90/64) in Q63,
+  from x's bits (a subnormal normalized with a count of leading zeros).
+- **The table path** (|z − 1| ≥ 2^-5 or k ≠ 0): the entry by (z − 45/64) in
+  steps of 2^-7; invc = 1/c in Q31 (c the entry's middle) and −log(invc) in
+  Q64, for that invc exactly.
+  - r = z·invc − 1: the Q63 by Q31 product is exact in 96 bits (two 32 × 32
+    products), less 1, kept in Q64 (one floor), |r| ≤ 2^-7.5.
+  - ln z = −log(invc) + r + r·q, q = Σ (−r)^n/(n + 1) for n ≤ 7 in Q64 from
+    y = 2^7|r| by Horner's rule, unsigned (subtracting for r > 0; every
+    partial value stays positive). The three innermost steps' operands fit in
+    32 bits. r·q is always negative. The error is a few units of 2^-64.
+  - The result as a 128-bit value: k·ln 2 (ln 2 in Q64) + ln z for `log`;
+    k + ln z·log2(e) (as ln z + ln z·(log2(e) − 1), since the sum can reach
+    2^-1) for `log2`; k·log10(2) + ln z·log10(e) for `log10`. Then its top 64
+    bits, normalized, rounded once by the 54th bit. The result is at least
+    2^-6.3 in magnitude on this path, so the few units of 2^-64 are at most
+    0.03 ulp.
+- **Strictly within 2^-5 of 1** (k = 0): s = z − 1 is exact; normalized, the
+  series s·(1 + q) with q = Σ (−s)^n/(n + 1) for n ≤ 11 in Q64 from
+  y = 2^5|s| (the six innermost steps fit in 32 bits), times the base's
+  constant (log2(e), or 4 log10(e), normalized in Q63) for `log2` and `log10`:
+  relative however close x is to 1. log(1) returns +0.
+- **log1p:** below 2^-5 the same series on x itself (below 2^-60, x nudged
+  toward −inf); otherwise 1 + x as 2^k z in integers: exact for x < 0
+  (1 − |x|, normalized) and up to 2^11, else to 64 bits (2^-64 relatively, at
+  most 2^-64 on the logarithm), and the table path.
+- **The ends:** x ≤ 0, +inf and NaN by one unsigned test, out of line to §9's
+  `__libc_fast_log_special`, which therefore stays built on every core.
+- **Found along the way:** the band around 1 was closed at 1 − 2^-5: there
+  |s| = 2^-5 made the series' shift negative (10^14 ulp at that one double).
+  The band is now open at both ends (a regression case).
+
+### 10.2 Measured (P11.05e)
+
+On the host (the speed files' `umull` product; Armv6-M's `muls` product gives
+the same bits), against long double, 10^9 samples per function as §9.3: `log`
+0.5098 ulp, `log2` 0.5161, `log10` 0.5171, `log1p` 0.5098. 10^6 doubles on
+each side of 1 ± 2^-5, 45/64, 90/64, 1 and log1p's ±2^-5: at most 0.5190
+(log10 just outside the band, where its result is smallest). Every power of 2
+in `log2` and of 10 in `log10` exact.
+
+Instructions per call (speed → §9's double files on the soft helpers → fast):
+
+| Function | armv7e-m, armv8-m.main | armv7-m | armv6-m, armv6s-m |
+| --- | ---: | ---: | ---: |
+| `log` | 6184 → 1649 → 334 (AOR 1245) | 6405 → 1683 → 336 | 16,964 → 4902 → 1454 (AOR 4335) |
+| `log2` | 7758 → 1845 → 349 (AOR 1514) | 8007 → 1884 → 351 | 21,420 → 5441 → 1535 (AOR 5211) |
+| `log10` | 7635 → 2685 → 354 | 7881 → 2743 → 357 | 21,066 → 8108 → 1601 |
+| `log1p` | 6727 → 2108 → 367 | 6961 → 2149 → 371 | 18,025 → 5808 → 1479 |
+
+**Size:** the table is 1440 bytes, the two kernels 422 and 582 bytes on
+armv7e-m (570 and 682 on armv6-m), each function 656 to 944. `math-mix`
+shrinks against §9 (armv6-m 45,992 → 45,752 bytes, armv7-m 40,832 → 40,296,
+armv7e-m 34,828 → 34,300, armv8-m.main 34,724 → 34,188): not re-locked; P11.06
+does (D187, D191).

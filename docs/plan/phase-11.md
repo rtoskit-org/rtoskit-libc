@@ -426,9 +426,11 @@ the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
   68, `log2` 73); tests, gains. Done (D190): `log` 150 → 68, `log2` 200 → 72
   on armv7e-m-dp; at most 0.5249 ulp.
 
-### P11.05e — `log`, `log2`, `log10`, `log1p` on the soft-double cores  `[ ]`
-- [ ] A 64-bit fixed-point log2 kernel (AOR: `log` 1245 and 4335, `log2` 1514
-  and 5211); tests, gains.
+### P11.05e — `log`, `log2`, `log10`, `log1p` on the soft-double cores  `[x]`
+- [x] A 64-bit fixed-point log2 kernel (AOR: `log` 1245 and 4335, `log2` 1514
+  and 5211); tests, gains. Done (D192): `log` 6184 → 334 on armv7e-m and
+  16,964 → 1454 on armv6-m, `log2` 7758 → 349 and 21,420 → 1535; at most
+  0.5190 ulp.
 
 ### P11.05f — `pow`, `cbrt` on the double-FPU cores  `[ ]`
 - [ ] The log with its tail, the exp of a pair (AOR: `pow` 135); tests, gains.
@@ -471,7 +473,13 @@ the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
 - [ ] Exit check: on armv7e-m the fast build's maths throughput at or below
   picolibc's; at or below AOR's on every case AOR implements, on every Arm
   core; any miss recorded as a Q*.
-- [ ] Size: fast budget held, members recorded; `docs/size/`.
+- [ ] Size: fast budget held, members recorded; `docs/size/`. After the final
+  re-lock (D187), compare every core's fast `math-mix` and `math-float` with
+  the fast flavour's original rule, +20 % over the speed figure (D191): a core
+  still over it is the maintainer's decision before the phase exit, not
+  re-locked silently. At P11.05d: armv7e-m-dp `math-mix` +54.5 %
+  (12,174 → 18,806 bytes); armv6-m +11.3 %, armv7-m +12.3 %, armv7e-m and
+  armv8-m.main +16.2 % and +16.1 %.
 - [ ] README (Performance table gains a fast column; the accuracy
   paragraph states the fast contract), `docs/configuration.md`,
   `docs/release.md`: `release-package` adds the `fast` tree to each archive

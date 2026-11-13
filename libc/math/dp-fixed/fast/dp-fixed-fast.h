@@ -106,4 +106,119 @@ static inline uint64_t __libc_dp_fixed_negate(int32_t *n, uint64_t f)
 	return -f;
 }
 
+/*
+ * The fast logarithms of the soft-double cores (PLAN D192; docs/research/libm-fast-double.md, section 10): z in
+ * [45/64, 90/64) in Q63, the entry by (z - 45/64) in steps of 2^-7, invc in Q31 and -log(invc) in Q64
+ * (__libc_dp_fixed_log_table.c)
+ */
+struct __libc_dp_fixed_log_entry {
+	int64_t logc;
+	uint32_t invc;
+};
+
+extern const struct __libc_dp_fixed_log_entry __libc_dp_fixed_log_table[90];
+
+/* ln z in Q64 for z in [45/64, 90/64) in Q63, to a few units (__libc_dp_fixed_log_core.c) */
+int64_t __libc_dp_fixed_log_core(uint64_t z);
+
+/*
+ * log1p(+-s 2^(*e - 63)) for s normalized (bit 63 set) and a value below 2^-5, relative: the result's significand,
+ * normalized, its exponent in *e (__libc_dp_fixed_log_near.c)
+ */
+uint64_t __libc_dp_fixed_log_near(uint64_t s, int32_t *e, bool negative);
+
+/* The double (n 2^-63) 2^e with sign, n normalized, rounded to nearest by its 54th bit (e within the normal range) */
+static inline double __libc_dp_fixed_double(uint64_t sign, int32_t e, uint64_t n)
+{
+	return __libc_double_from(sign | ((((uint64_t)(int64_t)(e + 1022) << 52) + (n >> 11) + ((n >> 10) & 1))));
+}
+
+/* n c 2^-64 for n normalized and c of bit 63 set, renormalized: the significand, and 1 or 0 added to the exponent */
+static inline uint64_t __libc_dp_fixed_scale(uint64_t n, uint64_t c, int32_t *e)
+{
+	uint64_t h = __libc_trig_high64(n, c);
+
+	if ((h >> 63) != 0) {
+		*e += 1;
+		return h;
+	}
+
+	return h << 1;
+}
+
+/* |k| c as a 128-bit (hi, lo) for |k| < 2^32 */
+static inline void __libc_dp_fixed_k_product(uint32_t k, uint64_t c, uint64_t *hi, uint64_t *lo)
+{
+	uint64_t p0 = __libc_trig_wide(k, (uint32_t)c);
+	uint64_t p1 = __libc_trig_wide(k, (uint32_t)(c >> 32));
+	uint64_t middle = (p0 >> 32) + (uint32_t)p1;
+
+	*lo = (middle << 32) | (uint32_t)p0;
+	*hi = (p1 >> 32) + (middle >> 32);
+}
+
+/*
+ * The double of the signed 128-bit value (hi, lo) 2^-64, at least 2^-7 in magnitude (the table path): negated to a
+ * magnitude, its top 64 bits normalized and rounded once
+ */
+static inline double __libc_dp_fixed_from128(uint64_t hi, uint64_t lo)
+{
+	uint64_t sign = hi & 0x8000000000000000ull;
+	int32_t shift;
+
+	if (sign != 0) {
+		hi = ~hi + (lo == 0);
+		lo = -lo;
+	}
+	if (hi != 0) {
+		shift = 64 - __builtin_clzll(hi);
+		return __libc_dp_fixed_double(sign, shift - 1, (hi << (64 - shift)) | (lo >> shift));
+	}
+	shift = __builtin_clzll(lo);
+
+	return __libc_dp_fixed_double(sign, -1 - shift, lo << shift);
+}
+
+/* (hi, lo) += t sign-extended */
+static inline void __libc_dp_fixed_add128(uint64_t *hi, uint64_t *lo, int64_t t)
+{
+	uint64_t sum = *lo + (uint64_t)t;
+
+	*hi += (sum < *lo) - (t < 0);
+	*lo = sum;
+}
+
+/* (hi, lo) for k c, k signed, |k| < 2^32 */
+static inline void __libc_dp_fixed_k_signed(int32_t k, uint64_t c, uint64_t *hi, uint64_t *lo)
+{
+	__libc_dp_fixed_k_product(k < 0 ? -(uint32_t)k : (uint32_t)k, c, hi, lo);
+	if (k < 0) {
+		*hi = ~*hi + (*lo == 0);
+		*lo = -*lo;
+	}
+}
+
+/*
+ * A positive finite x's bits as 2^k z with z in [45/64, 90/64) in Q63 (a subnormal normalized first)
+ */
+static inline uint64_t __libc_dp_fixed_log_reduce(uint64_t bits, int32_t *k)
+{
+	int32_t e = (int32_t)(bits >> 52) - 1023;
+	uint64_t z = ((bits << 12) >> 1) | 0x8000000000000000ull;
+
+	if (e == -1023) {
+		int32_t shift = __builtin_clzll(bits << 12) + 1;
+
+		z = bits << (11 + shift);
+		e = -1022 - shift;
+	}
+	if (z >= 0xb400000000000000ull) {
+		z >>= 1;
+		e++;
+	}
+	*k = e;
+
+	return z;
+}
+
 #endif /* _DP_FIXED_FAST_H */

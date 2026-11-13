@@ -1414,3 +1414,14 @@ AOR on this core: `exp` 3954, `exp2` 3335.
 | `log2` | 21420 | 5441 | -75 % |
 | `log10` | 21066 | 8108 | -62 % |
 | `log1p` | 18025 | 5808 | -68 % |
+
+## P11.05e — Fast `log`, `log2`, `log10` and `log1p` in 64-bit fixed point (D192)
+
+`libc/math/dp-fixed/fast/`: a 90-entry table with invc in Q31 and −log(invc) in Q64, the series and the sum in 128 bits, a relative series within 2^-5 of 1, one rounding; no soft-double operation. Instructions per call (throughput): speed, P11.05d's fast (D190's double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05d | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `log` | 16964 | 4902 | 1454 | -91 % |
+| `log2` | 21420 | 5441 | 1535 | -93 % |
+| `log10` | 21066 | 8108 | 1601 | -92 % |
+| `log1p` | 18025 | 5808 | 1479 | -92 % |
