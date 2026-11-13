@@ -460,3 +460,102 @@ The kernel's polynomial as an inline with `constexpr` coefficients saved
 one instruction in `exp`, `exp2` and `exp10` on the Thumb-2 cores. The
 `expm1` member is 1622 bytes on armv6-m (the series, the kernel's
 polynomial inline, and the reduction); no size program calls it.
+
+## 9. log, log2, log10 and log1p on the double-FPU cores (P11.05d)
+
+`libc/math/fast/log.c`, `log2.c`, `log10.c`, `log1p.c`, the tables
+`__libc_fast_log_table.c` and `__libc_fast_log2_table.c` (3 KiB each) and
+`__libc_fast_log_special.c`; on every core with no layer of its own, so the
+soft-double cores run them on their helpers until P11.05e.
+
+### 9.1 Sources (ideas only)
+
+AOR's `log` (§2): 1/c and log c from a 128-entry table, r = z/c − 1 by a fused
+multiply-add (or a second table of c split in two without one), a degree-5
+polynomial after r², and near 1 a separate polynomial of degree 10 to 12 in
+x − 1, because there the table's rounding of log c and r's rounding would show.
+AOR's `log2` has its own table and r/ln 2 as a pair.
+
+### 9.2 The method
+
+- **An exact r everywhere, so no separate path near 1.** x = 2^k z with z in
+  [0x1.68aaap-1, 0x1.68aaap+0), the entry by the top 7 bits of z's fraction.
+  The offset puts 1 two thirds of the way into its entry in bit order (its
+  lower part is half as wide), and that entry's invc is 1. Every other invc is
+  chosen on a grid of 2^-6 to 2^-10, with at most 10 significant bits, to
+  make |r| smallest while z·invc − 1 still fits 53 bits for every z of the
+  entry: |r| ≤ 2^-7.47 (the entries just above 1, where the grid must be
+  coarse). r = z·invc − 1 is then exact:
+  - with a fused multiply-add (armv7e-m-dp);
+  - without one (x86_64), z's top 43 bits times invc is exact, minus 1 is
+    exact (Sterbenz), the rest of z times invc is exact, and their sum is
+    exact because r is representable.
+- **logc = −log(invc), rounded to a multiple of 2^-43** (2^-42 for log2) with
+  its tail, so that w = k·ln 2_hi + logc is exact (ln 2_hi has 42 bits; for
+  log2, k + logc). hi + lo = w + r by a fast two-sum: wherever w is not 0,
+  |w| ≥ |r| (checked for every entry).
+- **The polynomial:** (log1p(r) − r)/r² by a Chebyshev fit of degree 5 in
+  double on [−2^-7.47, 2^-7.47]: r² times it is within 2^-60.1 of log1p(r),
+  relatively (log2's, scaled by 1/ln 2, 2^-59.7). The result is
+  lo + r²·P(r) + hi, one rounding. Near 1, k = 0 and invc = 1, so w = 0 and the
+  result is r + r²·P(r), relative however small r is.
+- **log2:** its own table in base 2, and r/ln 2 as t + te: a fused
+  multiply-add for the product's error, or without one r's top 21 bits times
+  1/ln 2 to 32 bits (exact) plus the rest, which leaves an error near 2^-74 of r.
+- **log10:** log's hi and lo, times 1/ln 10 as a pair with the product's error
+  exact (fma or Dekker), so that only the last addition rounds. Powers of 10
+  come out exact: the error is far below half an ulp of the integer.
+- **log1p:** for |x| ≤ 2^-7.5, x + x²·P(x) with log's polynomial; otherwise
+  u = 1 + x and its error e by a fast two-sum (the larger magnitude first),
+  log(u) as log's, and e/u added to the tail. One division: e·invc·2^-k
+  would leave e·r, up to 2^-53 of the smallest result there (2^-7.5).
+- **The ends:** one integer test sends x ≤ 0, +inf and NaN out of line
+  (`__libc_fast_log_special`) and scales a subnormal by 2^52 in place. log(1)
+  must be +0 in every direction, but r = z·invc − 1 is −0 rounding downward.
+  `log` tests x = 1. `log2` and `log10` test r = 0 instead, which happens only
+  for z = 1 (no other invc is a power of 2), and return k (k log10 2, rounded
+  once) at once. On armv7e-m-dp that test saved 2 instructions in `log2`
+  (73.6 to 71.6, AOR 73) but cost 1 in `log` (67.6 to 68.6, AOR 68), so `log`
+  keeps the test for x = 1.
+- **log1p's ends:** quiet comparisons (`isgreater`, `isless`), so that a quiet
+  NaN raises nothing; above 2^53 u = x and e = 1 (1 + x rounding upward would
+  overflow DBL_MAX to infinity), and from 2^60 e = 0, so that e/u never goes
+  subnormal (the strict file raises a spurious underflow there).
+- **Found along the way:**
+  - A first build returned 0 from the scaling helper for the special values;
+    2^-1023, scaled, has the bit pattern 0, and log2 returned the argument
+    (a regression case in `libm_thresholds`).
+  - `log1p` compared x with relational operators, which raise invalid for a
+    quiet NaN, and rounding upward 1 + DBL_MAX overflowed to infinity and gave
+    NaN (`libm_vectors`).
+
+### 9.3 Measured (P11.05d)
+
+On the host, against long double, 10^9 samples per function (every positive
+double, [0.5, 2], within 2^-40 of 1, and [10^-3, 10^3]; log1p over x − 1 of
+the same), on both paths (SSE2 and a fused multiply-add, which agree bit for
+bit): `log` 0.5151 ulp, `log2` 0.5249, `log10` 0.5132, `log1p` 0.5059. 2·10^5
+to 10^6 doubles on each side of the subnormal range's ends, DBL_MAX, 1, the
+table's ends and log1p's switch at ±2^-7.5: at most 0.5083. Every power of 2
+in `log2` and of 10 (to 10^22) in `log10` exact.
+
+Instructions per call (speed → fast):
+
+| Function | armv7e-m-dp | x86_64 | armv7e-m, armv8-m.main | armv7-m | armv6-m, armv6s-m |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `log` | 150 → 68 (AOR 68) | 252 → 77 | 6184 → 1649 (AOR 1245) | 6405 → 1683 | 16,964 → 4902 (AOR 4335) |
+| `log2` | 200 → 72 (AOR 73) | 330 → 88 | 7758 → 1845 (AOR 1514) | 8007 → 1884 | 21,420 → 5441 (AOR 5211) |
+| `log10` | 161 → 77 | 288 → 102 | 7635 → 2685 | 7881 → 2743 | 21,066 → 8108 |
+| `log1p` | 187 → 86 | 316 → 92 | 6727 → 2108 | 6961 → 2149 | 18,025 → 5808 |
+
+The soft-double cores run these files on their helpers until P11.05e gives
+them fixed-point kernels; they are already 3 to 4 times faster than speed.
+
+**Size:** the table is 3 KiB (128 entries of three doubles); `log` is 340
+bytes on armv7e-m-dp and 556 on armv6-m. `math-mix`, which calls `log` and
+`pow`, grows by 3.3 KiB in fast on the Arm cores while `pow` keeps the
+strict log core (armv6-m 42,552 → 45,992 bytes, armv7-m 37,552 → 40,832,
+armv7e-m-dp 15,478 → 18,806, armv7e-m 31,284 → 34,828, armv8-m.main 31,188 →
+34,724); by the maintainer's decision for P11.05 (D187) those fast figures are
+re-locked. A table of floats for invc and the tail (2 KiB) would cost two
+conversions per call, and `log` would miss AOR's count.

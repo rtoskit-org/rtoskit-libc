@@ -695,3 +695,7 @@ Release and speed unchanged (`size-report diff`). `math-mix` (exp and pow) is 15
 speed (+25.8 %, over the +20 % budget): the fast `exp` and its 1 KiB table on top of the strict core that pow still uses.
 As the maintainer decided for P11.05 (D187), armv7e-m-dp's fast figures are locked from this build (`size-report --flavour
 fast --lock`), as the cores without an FPU's are; P11.06 re-locks them with the final figures.
+
+## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
+
+Release and speed unchanged (`size-report diff`). `math-mix` (log and pow) grows from 15478 to 18806 bytes of code in fast (+3328): the fast `log` and its 3 KiB table on top of the strict log core that pow still uses. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).

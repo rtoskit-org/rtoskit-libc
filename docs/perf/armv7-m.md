@@ -1021,3 +1021,14 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | Function | speed | P11.05b | fast | change from speed |
 |---|---:|---:|---:|---:|
 | `expm1` | 4128 | 3603 | 347 | -92 % |
+
+## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
+
+`libc/math/fast/`: a 128-entry table of invc and −log(invc), r = z·invc − 1 exact, a degree-5 polynomial and one rounding (D190). This core runs them on its soft-double helpers until P11.05e gives it fixed-point kernels. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `log` | 6405 | 1683 | -74 % |
+| `log2` | 8007 | 1884 | -76 % |
+| `log10` | 7881 | 2743 | -65 % |
+| `log1p` | 6961 | 2149 | -69 % |

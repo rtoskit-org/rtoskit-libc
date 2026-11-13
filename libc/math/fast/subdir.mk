@@ -22,3 +22,7 @@ SRC := $(if $(filter %/atanf.c %/atan2f.c %/asinf.c %/acosf.c %/atanpif.c %/atan
 # The erfc table only where erff or erfcf of this directory stays
 SRC := $(if $(filter %/erff.c %/erfcf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_erfc_table.c,${SRC}))
 SRC := $(if $(filter %/exp.c %/exp2.c %/exp10.c %/expm1.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp_pairs.c,${SRC}))
+# The log tables and the logarithms' special values only where a logarithm of this directory stays
+SRC := $(if $(filter %/log.c %/log10.c %/log1p.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log_table.c,${SRC}))
+SRC := $(if $(filter %/log2.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log2_table.c,${SRC}))
+SRC := $(if $(filter %/log.c %/log2.c %/log10.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log_special.c,${SRC}))

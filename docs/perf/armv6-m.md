@@ -1403,3 +1403,16 @@ AOR on this core: `exp` 3954, `exp2` 3335.
 | Function | speed | P11.05b | fast | change from speed |
 |---|---:|---:|---:|---:|
 | `expm1` | 10938 | 9720 | 1468 | -87 % |
+
+## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
+
+`libc/math/fast/`: a 128-entry table of invc and −log(invc), r = z·invc − 1 exact, a degree-5 polynomial and one rounding (D190). This core runs them on its soft-double helpers until P11.05e gives it fixed-point kernels. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `log` | 16964 | 4902 | -71 % |
+| `log2` | 21420 | 5441 | -75 % |
+| `log10` | 21066 | 8108 | -62 % |
+| `log1p` | 18025 | 5808 | -68 % |
+
+AOR on this core: `log` 4335, `log2` 5211.

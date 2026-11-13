@@ -1147,4 +1147,77 @@ double __libc_fast_exp_special(double x);
 double __libc_fast_exp2_special(double x);
 double __libc_fast_exp10_special(double x);
 
+/*
+ * The fast double logarithms (libc/math/fast/, PLAN D190): x = 2^k z with z in [0x1.6955p-1, 0x1.6955p+0), the
+ * entry by the top 7 bits of z's fraction, r = z invc - 1 exactly (invc of at most 10 bits, chosen per entry so that
+ * |r| <= 2^-7.47 and r fits 53 bits), and -log(invc) in the table's units as logc, a multiple of 2^-43 (2^-42 for log2)
+ * so that k ln 2 + logc is exact, plus its tail
+ */
+struct __libc_fast_log_entry {
+	double invc;
+	double logc;
+	double tail;
+};
+
+/* In natural logarithms (__libc_fast_log_table.c) and in base 2 (__libc_fast_log2_table.c) */
+extern const struct __libc_fast_log_entry __libc_fast_log_table[128];
+extern const struct __libc_fast_log_entry __libc_fast_log2_table[128];
+
+/* The logarithms of x <= 0, +inf and NaN (C23 7.12.6.11, F.10.3.7): -inf with divide-by-zero, invalid, inf, NaN */
+double __libc_fast_log_special(double x);
+
+/*
+ * The entry for a positive normal x's bits (or a subnormal's, scaled by 2^52 and the exponent taken back): z and k with
+ * x = 2^k z, the offset putting 1 two thirds of the way into its entry, whose invc is 1
+ */
+static inline const struct __libc_fast_log_entry *__libc_fast_log_reduce(const struct __libc_fast_log_entry *table, uint64_t ix, double *z, int32_t *k)
+{
+	uint64_t tmp = ix - 0x3fe68aaa00000000ull;
+
+	*k = (int32_t)((int64_t)tmp >> 52);
+	*z = __libc_double_from(ix - (tmp & 0xfff0000000000000ull));
+
+	return &table[(tmp >> 45) & 127];
+}
+
+/*
+ * r = z invc - 1, exact: one fused multiply-add, or without one z split after its 43rd bit, so that both products are
+ * exact (invc has at most 10 bits), the first minus 1 is exact (Sterbenz) and so is the sum, r being representable
+ */
+static inline double __libc_fast_log_r(double z, double invc)
+{
+	double high;
+
+	if (__libc_fpu_fma)
+		return __builtin_fma(z, invc, -1.0);
+
+	high = __libc_double_from(__libc_double_bits(z) & ~0x3ffull);
+	return (high * invc - 1.0) + (z - high) * invc;
+}
+
+/*
+ * (log1p(r) - r)/r^2 for |r| <= 2^-7.47 by its Chebyshev fit of degree 5 in double (r^2 times it within 2^-60.1 of
+ * log1p(r), relatively), in Estrin's order: log, log10 and log1p
+ */
+static inline double __libc_fast_log_poly(double r, double r2)
+{
+	return -0x1.0000000000001p-1 + r * 0x1.5555555555557p-2 + r2 * (-0x1.fffffffd8e049p-3 + r * 0x1.999999976d2bcp-3 + r2 * (-0x1.555875f84f672p-3 + r * 0x1.249510d200b2dp-3));
+}
+
+/*
+ * True for x <= 0, +inf and NaN (__libc_fast_log_special); otherwise a positive normal x's bits in *ix, or a subnormal's
+ * scaled by 2^52 with the exponent taken back (which can make any bit pattern, 0 included for 2^-1023)
+ */
+static inline bool __libc_fast_log_outside(double x, uint64_t *ix)
+{
+	*ix = __libc_double_bits(x);
+	if (*ix - 0x0010000000000000ull >= 0x7fe0000000000000ull) {
+		if (*ix == 0 || *ix >= 0x7ff0000000000000ull)
+			return true;
+		*ix = __libc_double_bits(x * 0x1p52) - (52ull << 52);
+	}
+
+	return false;
+}
+
 #endif /* _MATH_FAST_H */
