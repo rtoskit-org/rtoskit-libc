@@ -1043,3 +1043,12 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `log2` | 8007 | 1884 | 351 | -96 % |
 | `log10` | 7881 | 2743 | 357 | -95 % |
 | `log1p` | 6961 | 2149 | 371 | -95 % |
+
+## P11.05f — Fast `pow` and `cbrt` in double (D193)
+
+`libc/math/fast/`: pow as the exp of y times a log pair from the logarithms' table, one rounding; cbrt by a polynomial, a Newton step and an exact-residual step (D193). This core runs them on its soft-double helpers until P11.05g. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `pow` | 11833 | 5717 | -52 % |
+| `cbrt` | 4309 | 2106 | -51 % |

@@ -1425,3 +1425,12 @@ AOR on this core: `exp` 3954, `exp2` 3335.
 | `log2` | 21420 | 5441 | 1535 | -93 % |
 | `log10` | 21066 | 8108 | 1601 | -92 % |
 | `log1p` | 18025 | 5808 | 1479 | -92 % |
+
+## P11.05f — Fast `pow` and `cbrt` in double (D193)
+
+`libc/math/fast/`: pow as the exp of y times a log pair from the logarithms' table, one rounding; cbrt by a polynomial, a Newton step and an exact-residual step (D193). This core runs them on its soft-double helpers until P11.05g. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `pow` | 31522 | 16457 | -48 % |
+| `cbrt` | 14702 | 6896 | -53 % |

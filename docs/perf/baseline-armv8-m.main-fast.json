@@ -147,10 +147,10 @@
     "insns": 110.31
    },
    "cbrt/latency": {
-    "insns": 3763.88
+    "insns": 1918.19
    },
    "cbrt/throughput": {
-    "insns": 3765.12
+    "insns": 1919.44
    },
    "cbrtf/latency": {
     "insns": 79.38
@@ -411,10 +411,10 @@
     "insns": 74.31
    },
    "pow/latency": {
-    "insns": 11532.25
+    "insns": 5600.56
    },
    "pow/throughput": {
-    "insns": 11531.94
+    "insns": 5600.25
    },
    "powf/latency": {
     "insns": 204.44

@@ -432,8 +432,10 @@ the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
   16,964 → 1454 on armv6-m, `log2` 7758 → 349 and 21,420 → 1535; at most
   0.5190 ulp.
 
-### P11.05f — `pow`, `cbrt` on the double-FPU cores  `[ ]`
-- [ ] The log with its tail, the exp of a pair (AOR: `pow` 135); tests, gains.
+### P11.05f — `pow`, `cbrt` on the double-FPU cores  `[x]`
+- [x] The log with its tail, the exp of a pair (AOR: `pow` 135); tests, gains.
+  Done (D193): `pow` 393 → 133 and `cbrt` 132 → 90 on armv7e-m-dp; at most
+  0.5498 ulp.
 
 ### P11.05g — `pow`, `cbrt` on the soft-double cores  `[ ]`
 - [ ] Over P11.05c's and e's kernels with a 128-bit product (AOR: `pow` 3576
