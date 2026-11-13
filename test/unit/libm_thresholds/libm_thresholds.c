@@ -678,6 +678,14 @@ static void check_double_inverse_trigonometric(void)
 	QUIET(near_double(atan2(0x1.8fe9ebad92749p-5, 0x1.8fda6e94d040bp+0), 0x1.ffe92bf6150f3p-6) && near_double(atan2(0x1p-6, 1.0), 0x1.fff555bbb729bp-7) && near_double(atan2(0x1.fffffffffffffp-7, 1.0), 0x1.fff555bbb729ap-7));
 	QUIET(near_double(atan2(0x1p-7, 0x1.fffffffffffffp-1), 0x1.fffd555bbba98p-8) && near_double(atan2(-0x1.d5d1778f60ba2p-39, 0x1.0241fedebaed6p-6), -0x1.d1b5fcb9031b6p-33));
 	QUIET(near_double(atan2(0x1.fp-1, -1.0), 0x1.2f9fdd46e309ap+1) && near_double(atan2(1.0, 0x1.fffffffffffffp-1), 0x1.921fb54442d19p-1));
+	/*
+	 * P11.05k2 (the soft-double cores' fixed-point asin and acos, D200): each side of 2^-60 (acos's pi/2), the doubles two
+	 * ulps below 1 (the square root's smallest arguments), the half-angle form's middle, and the sweeps' worst points
+	 */
+	QUIET(near_double(acos(0x1p-60), 0x1.921fb54442d18p+0) && near_double(acos(0x1.fffffffffffffp-61), 0x1.921fb54442d18p+0) && near_double(asin(0x1p-60), 0x1p-60));
+	QUIET(near_double(asin(0x1.ffffffffffffep-1), 0x1.921fb4e9c057fp+0) && near_double(acos(0x1.ffffffffffffep-1), 0x1.6a09e667f3bcdp-26) && near_double(acos(-0x1.ffffffffffffep-1), 0x1.921fb5170194bp+1));
+	QUIET(near_double(asin(0.75), 0x1.b235315c680dcp-1) && near_double(acos(0.75), 0x1.720a392c1d955p-1) && near_double(acos(-0.75), 0x1.359d26f93b6c3p+1));
+	QUIET(near_double(asin(0x1.99b41ee9b3ee8p-1), 0x1.daf2a6673616dp-1) && near_double(acos(0x1.a14710bf73068p-1), 0x1.3c745b0f762f5p-1) && near_double(acos(0x1.fffffbd411a02p-1), 0x1.056f08e97b2cp-11));
 }
 
 int main(void)

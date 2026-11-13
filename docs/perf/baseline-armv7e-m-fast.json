@@ -63,10 +63,10 @@
   },
   "math": {
    "acos/latency": {
-    "insns": 7192.0
+    "insns": 667.5
    },
    "acos/throughput": {
-    "insns": 7192.19
+    "insns": 667.69
    },
    "acosf/latency": {
     "insns": 64.38
@@ -87,10 +87,10 @@
     "insns": 125.31
    },
    "asin/latency": {
-    "insns": 7138.94
+    "insns": 658.88
    },
    "asin/throughput": {
-    "insns": 7140.88
+    "insns": 660.81
    },
    "asinf/latency": {
     "insns": 65.38
