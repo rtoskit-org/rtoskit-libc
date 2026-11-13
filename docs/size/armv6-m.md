@@ -911,3 +911,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and p
 ## P11.05g2 — Fast `cbrt` in fixed point (D195)
 
 Release and speed unchanged (`size-report diff`). In fast, no size program calls `cbrt`, and every budget holds; nothing is re-locked.
+
+## P11.05i — Fast `sin`, `cos`, `sincos` and `tan` without the rounding test (D197)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `sin`, `cos` and `tan`) goes from 44828 to 44860 bytes of code (+32): the four files drop the rounding test but inline the 54th-bit rounding. Every budget holds; nothing is re-locked.

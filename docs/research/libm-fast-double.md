@@ -1010,3 +1010,64 @@ P11.04a's `sinf`, `cosf`, `sincosf` and `tanf` now reach the strict
 reduction from 2^20 through the slow path (`__libc_fast_trig_large`), with
 the same results, instead of pulling the double files. Both fast figures are
 re-locked by D187's rule.
+
+## 15. sin, cos, sincos and tan on the soft-double cores (P11.05i)
+
+`libc/math/dp-fixed/fast/sin.c`, `cos.c`, `sincos.c` and `tan.c`, shadowing
+`dp-fixed/speed`'s files (D133, D136, D142) on the soft-double cores.
+
+### 15.1 Sources
+
+The kernel is this library's own (`docs/research/sincos.md`, D136): x·2/π
+from a 2/π table in fixed point, sin and cos of the reduced argument as
+64-bit significands with a measured error below 18 units of their last bit
+(`tools/scripts/trig-fixed-check`), and `tan` as sin/cos by a 64-bit
+reciprocal, below 56 units (D142). The speed files keep a result only when
+its 11 bits below the double's significand are more than that bound from a
+halfway point, and otherwise run the double-double path (`__libc_trig_dd`,
+`__libc_tan_dd`): about 1.8 % of arguments (Q44), each a whole double-double
+evaluation on soft helpers.
+
+### 15.2 The method
+
+- **No rounding test:** the kernel's 64-bit significand is rounded to
+  nearest by its 54th bit (`__libc_dp_fixed_double`), straight into the
+  double's bits. 18 units of 2^-63 relative are at most 18/2048 of an ulp, so
+  the result is within 0.5088 ulp; `tan`'s 56 units, within 0.5274. The
+  largest errors measured for D136 and D142 are 7.08 units (`sin`, `cos`)
+  and 12.5 (`tan`): about 0.5035 and 0.5061 ulp. The fallback this removes
+  ran on 1.8 % of `sin` and `cos` arguments and 5.6 % of `tan`'s.
+- **The strict path stays** where the kernel declines: |x| ≥ 2^20, and the
+  reductions that cancel more than 64 bits (the arguments next to a multiple
+  of π/2). The entry tests (NaN, infinity, zero, |x| < 2^-27) are the speed
+  files', on the bits.
+- **sincos** makes one kernel call for both results, rounded the same way, so
+  each equals the fast `sin` and `cos`, bit for bit.
+
+### 15.3 Measured (P11.05i)
+
+On the host (the speed files' `umull` product), against long double, with
+§14's sweep: 10^9 log-uniform in [2^-30, 2^20], 2·10^8 in [0, 10] and 2·10^8
+within 1000 ulp of a multiple of π/32. At most 0.5020 ulp for `sin` and
+`cos` and 0.5049 for `tan`; 0.03–0.07 % of `sin` and `cos` results and
+0.06–0.09 % of `tan`'s are not correctly rounded (the speed files: none,
+by their test). `sincos` equals `sin` and `cos` on every sample. Beyond 2^20
+the results are the strict files' (§14.3).
+
+Instructions per call (speed → fast; the speed files were the fast
+flavour's until now):
+
+| Core | `sin` | `cos` | `sincos` | `tan` |
+| --- | ---: | ---: | ---: | ---: |
+| armv7e-m | 765 → 751 | 1067 → 755 | 1390 → 1065 | 1005 → 987 |
+| armv8-m.main | 754 → 740 | 1057 → 743 | 1379 → 1054 | 1000 → 982 |
+| armv7-m | 770 → 755 | 1074 → 760 | 1400 → 1072 | 1012 → 996 |
+| armv6-m, armv6s-m | 2833 → 2775 | 3663 → 2779 | 5177 → 4248 | 4970 → 4915 |
+
+The bench's 32 arguments are where the counts come from: `cos` and `sincos`
+gain most because more of their arguments fell back. The kernel itself is
+about 740 instructions on the Thumb-2 cores; a table-driven fixed-point
+kernel (§7's style) could cost less, and is noted for P11.06.
+
+**Size:** `math-mix`, which calls `sin`, `cos` and `tan`, changes by +6 to
++44 bytes on these cores; every budget holds.

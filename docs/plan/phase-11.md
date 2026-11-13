@@ -459,9 +459,10 @@ about 2^-72 relative (|y log2 x| up to 1075), a multi-word design of its own;
   a table of exact pairs (D196): at most 0.5063 ulp below 2^20; `sin` 165 →
   96 instructions on armv7e-m-dp.
 
-### P11.05i — `sin`, `cos`, `sincos`, `tan` on the soft-double cores  `[ ]`
-- [ ] D136's kernel without its rounding test, the strict path from 2^20;
-  tests, gains.
+### P11.05i — `sin`, `cos`, `sincos`, `tan` on the soft-double cores  `[x]`
+- [x] D136's kernel without its rounding test, the strict path from 2^20;
+  tests, gains. D197: at most 0.5049 ulp; `cos` 1067 → 755 instructions on
+  armv7e-m, `sincos` 1390 → 1065.
 
 ### P11.05j — `asin`, `acos`, `atan`, `atan2` on the double-FPU cores  `[ ]`
 - [ ] In double; tests, gains.

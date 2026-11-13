@@ -1460,3 +1460,16 @@ AOR on this core: `pow` 12178.
 | `cbrt` | 14702 | 6896 | 1230 | -92 % |
 
 AOR has no scalar double `cbrt`.
+
+## P11.05i — Fast `sin`, `cos`, `sincos` and `tan` without the rounding test (D197)
+
+`libc/math/dp-fixed/fast/`: D136's fixed-point kernel (D142's for `tan`) rounded to nearest with no test; the double-double path only where the kernel declines. Instructions per call (throughput): speed (the same kernel with its test, the fast flavour until now) and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sin` | 2833 | 2775 | -2 % |
+| `cos` | 3663 | 2779 | -24 % |
+| `sincos` | 5177 | 4248 | -18 % |
+| `tan` | 4970 | 4915 | -1 % |
+
+AOR has no scalar double `sin`, `cos` or `tan`.
