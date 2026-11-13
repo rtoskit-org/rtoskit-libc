@@ -468,9 +468,18 @@ about 2^-72 relative (|y log2 x| up to 1075), a multi-word design of its own;
 - [x] In double; tests, gains. D198: at most 0.5288 ulp; `atan2` 360 → 141
   instructions on armv7e-m-dp, `asin` 220 → 135.
 
-### P11.05k — `asin`, `acos`, `atan`, `atan2` on the soft-double cores  `[ ]`
-- [ ] 64-bit fixed point, after P11.04f's quotient and square root; tests,
-  gains.
+### P11.05k1 — `atan`, `atan2` on the soft-double cores  `[x]`
+- [x] 64-bit fixed point: one kernel for atan(y/x), y <= x, with a 64-bit
+  quotient (P11.04f1's, widened); tests, gains. D199: at most 0.5093 ulp;
+  `atan` 7741 → 523 instructions on armv7e-m, 21,175 → 2542 on armv6-m.
+
+### P11.05k2 — `asin`, `acos` on the soft-double cores  `[ ]`
+- [ ] 64-bit fixed point, with a 64-bit square root (P11.04f2's, widened);
+  tests, gains.
+
+P11.05k was split into k1 and k2 (CLAUDE.md workflow), as P11.04f was: each
+half needs its own fixed-point building block, a 64-bit quotient for the
+arctangent and a 64-bit square root for the half-angle forms.
 
 ### P11.05l — The hyperbolic functions on the double-FPU cores  `[ ]`
 - [ ] Over P11.05b's and d's evaluations; tests, gains.

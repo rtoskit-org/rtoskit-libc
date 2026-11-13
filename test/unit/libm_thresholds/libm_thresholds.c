@@ -669,6 +669,15 @@ static void check_double_inverse_trigonometric(void)
 	QUIET(near_double(atan2(0x1p-960, 0x1p-960), 0x1.921fb54442d18p-1) && near_double(atan2(0x1p959, 0x1p959), 0x1.921fb54442d18p-1) && near_double(atan2(0x1p-1000, 3.0), 0x1.5555555555555p-1002));
 	QUIET(near_double(asin(0x1.101dc84c39c9ep-1), 0x1.1ee558c804933p-1) && near_double(asin(-0x1.122a045a5a2fp-1), -0x1.215125851920fp-1) && near_double(acos(0x1.1da5cc25957a2p-1), 0x1.f537266fed469p-1) && near_double(acos(-0x1.122a045a5a2fp-1), 0x1.1164240367b1p+1));
 	QUIET(near_double(atan2(-0x1.1f9a4767316fbp+42, 0x1.48836ba1bb9d2p+47), -0x1.c0209cc7ff694p-6) && near_double(atan2(0x1.1c54ae6882b6p-2, 0x1.39bbd506ebeeap+3), 0x1.cfe4447f19c0fp-6));
+	/*
+	 * P11.05k1 (the soft-double cores' fixed-point atan and atan2, D199): each side of the breakpoint estimate's 1/32 (where
+	 * j rounds to 0 or 1, the relative and the absolute paths), of an exponent gap of 6 (the aligned path's limit), y = x
+	 * next to 1 (j = 16), the second quadrant, and the sweeps' worst points
+	 */
+	QUIET(near_double(atan(0x1.0005964d2f5c4p-5), 0x1.ffe0858a728c2p-6) && near_double(atan(0x1.73dd0ff7123bp-5), 0x1.739bc1a10005dp-5) && near_double(atan(0x1.fffffffffffffp+59), 0x1.921fb54442d18p+0));
+	QUIET(near_double(atan2(0x1.8fe9ebad92749p-5, 0x1.8fda6e94d040bp+0), 0x1.ffe92bf6150f3p-6) && near_double(atan2(0x1p-6, 1.0), 0x1.fff555bbb729bp-7) && near_double(atan2(0x1.fffffffffffffp-7, 1.0), 0x1.fff555bbb729ap-7));
+	QUIET(near_double(atan2(0x1p-7, 0x1.fffffffffffffp-1), 0x1.fffd555bbba98p-8) && near_double(atan2(-0x1.d5d1778f60ba2p-39, 0x1.0241fedebaed6p-6), -0x1.d1b5fcb9031b6p-33));
+	QUIET(near_double(atan2(0x1.fp-1, -1.0), 0x1.2f9fdd46e309ap+1) && near_double(atan2(1.0, 0x1.fffffffffffffp-1), 0x1.921fb54442d19p-1));
 }
 
 int main(void)

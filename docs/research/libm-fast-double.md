@@ -1178,3 +1178,76 @@ no scalar double `asin`, `acos`, `atan` or `atan2`.
 (+65 % over speed, re-locked by D187's rule; D191 at P11.06), and by 1476 to
 1552 bytes on the soft-double cores (+11 % to +15 % over speed, inside the
 line).
+
+## 17. atan and atan2 on the soft-double cores (P11.05k1)
+
+`libc/math/dp-fixed/fast/atan.c` and `atan2.c`, shadowing §16's double files
+on the soft-double cores, where they run on the soft helpers (6081 and 6168
+instructions on armv7e-m, 17,848 and 18,388 on armv6-m). P11.05k was split:
+`asin` and `acos` (k2) need a 64-bit square root, these a 64-bit quotient.
+
+### 17.1 Sources (ideas only)
+
+- **§16's double design**: atan(j/16) from a table and t = (a − c)/(1 + ac),
+  |t| ≤ 1/32, and a short series; here in integers.
+- **P11.04f1's `__libc_fixed_atan`** (D182): one out-of-line kernel for
+  atan(a/b), a ≤ b, shared by `atanf`, `atan2f` and the π forms, with the
+  quadrant's offset added in fixed point.
+- **D142's 64-bit reciprocal** (`__libc_tan_fixed.c`): a 17-bit seed by one
+  32/16-bit division, then Newton's y(2 − dy) by high products.
+
+### 17.2 The method
+
+- **One kernel, atan(y/x) for y ≤ x** (`__libc_dp_fixed_atan`, out of line),
+  on the significands and exponents, with the quadrant (0, π/2 − K,
+  π/2 + K, π − K) and the sign applied in fixed point and one rounding:
+  - **j = round(16 y/x)** from one 32-bit division of the top bits (UDIV on
+    the Thumb-2 cores, `__aeabi_uidiv` on Armv6-M); off by one at worst
+    next to a breakpoint, which widens |t| a little past 1/32.
+  - **j ≥ 1** (the exponents at most 6 apart): x's significand shifted by 10
+    and y's by 10 − d, so c·x = j·x/16 and c·y are exact; N = y − c·x
+    exactly, D = x + c·y exactly, t = N/D by a 64-bit reciprocal of D (two
+    Newton steps) and one high product, |t| in Q64; atan t = t − t·V with
+    V = u·G(u), u = t², G of six terms by unsigned Horner's rule in 2^10·u
+    (every nested term positive); K = atan(j/16) ± atan|t| in Q64 from a
+    17-entry table (136 bytes).
+  - **j = 0**: t = y/x relative (the significands' quotient and the
+    exponents' difference), the same series, so tiny ratios keep their
+    relative accuracy (down to 2^-61, the fast path's limit).
+  - The offsets π/2 and π in Q62; K enters them shifted.
+- **atan:** |x| ≤ 1 is K(x, 1), and |x| > 1 is π/2 − K(1, |x|): one quotient
+  either way. Below 2^-27 the strict tiny path, from 2^60 ±π/2.
+- **atan2:** normal, finite, nonzero coordinates whose exponents differ by at
+  most 60 go to the kernel with the smaller magnitude first; the rest to
+  §16's slow path (the strict code), as on the double-FPU cores.
+- **Found along the way:**
+  - The first scaling of the series, w = 2^10·t², overflows Q64 at
+    t = 2^-5, which j's 32-bit estimate can reach next to 1/32; w = 2^8·t²
+    leaves room to t = 2^-4.
+  - The kernel calls `__libc_trig_high64` out of line: `dp-fixed/fast` is
+    built at `-Os`, and so are §7–§13's kernels. `-O2` for the module
+    measured `atan` 523 → 422 instructions on armv7e-m and `pow` 923 →
+    738, but `math-mix` +2.6 KB on armv7e-m and +16 KB on armv6-m, far past
+    the budgets; it stays at `-Os` (Q53, for P11.06).
+
+### 17.3 Measured (P11.05k1)
+
+On the host (the speed files' `umull` product), against long double, with
+§16.3's sweep (1.4·10^9 samples per function) and 2·10^8 pairs at the
+breakpoints' boundaries (ratios next to (2j + 1)/32, exponents 0 to 8
+apart): at most 0.5059 ulp for `atan` and 0.5093 for `atan2`; about 0.02–
+0.03 % not correctly rounded. The worst cases sit just above a ratio of 1/32
+on the absolute path, where 2^-64 is 1/128 of the result's ulp; a third
+Newton step for the reciprocal changed 0.5093 only to 0.5083.
+
+Instructions per call (speed → §16's double files on the helpers → fast):
+
+| Core | `atan` | `atan2` |
+| --- | ---: | ---: |
+| armv7e-m, armv8-m.main | 7741 → 6081 → 523 | 8314 → 6168 → 524 |
+| armv7-m | 8070 → 6435 → 529 | 8667 → 6543 → 528 |
+| armv6-m, armv6s-m | 21,175 → 17,848 → 2542 | 22,603 → 18,388 → 2565 |
+
+**Size:** the kernel is 960 bytes on armv7e-m (974 on armv6-m), `atan` 292
+and `atan2` 154, with the 136-byte table. `math-mix` (which calls `atan2`)
+shrinks by 200 to 304 bytes against P11.05j: +10.5 % to +13.5 % over speed.
