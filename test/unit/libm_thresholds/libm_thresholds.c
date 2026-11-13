@@ -551,6 +551,18 @@ static void check_double_logarithms(void)
 	CHECK(near_double(log1p(0x1.fffffffffffffp+1023), 0x1.62e42fefa39efp+9) && near_double(log1p(0x1p60), 0x1.4cb5ecf0a9650p+5) && near_double(log1p(0x1.0000000000001p60), 0x1.4cb5ecf0a9650p+5));
 	QUIET(near_double(log1p(1.0), 0x1.62e42fefa39efp-1) && near_double(log1p(-0x1.6a09e667b433dp-8), -0x1.6b0ad8c4c5c1fp-8) && log1p(0x1p-61) == 0x1p-61);
 	CHECK(log1p(-0x1p-1074) == -0x1p-1074 && log1p(0x1p-1074) == 0x1p-1074);
+	/*
+	 * P11.05e (the soft-double cores' fixed-point logarithms, D192): each side of the series' band around 1 (open at
+	 * 1 - 2^-5 and 1 + 2^-5) and of its table's ends (45/64 and 90/64), log1p each side of 2^-5 and of the carry into a bit
+	 * 64 at 2^63, the sweeps' worst points, and the regression: 1 - 2^-5 itself went to the series with |s| = 2^-5, where
+	 * the series' shift is negative
+	 */
+	QUIET(near_double(log(0x1.fp-1), -0x1.0415d89e74444p-5) && near_double(log(0x1.f000000000001p-1), -0x1.0415d89e74434p-5) && near_double(log(0x1.08p+0), 0x1.f829b0e7833p-6) && near_double(log(0x1.07fffffffffffp+0), 0x1.f829b0e7832c2p-6));
+	QUIET(near_double(log2(0x1.fp-1), -0x1.77394c9d958d5p-5) && near_double(log2(0x1.08p+0), 0x1.6bad3758efd87p-5) && near_double(log10(0x1.fp-1), -0x1.c3d0837784c41p-7) && near_double(log10(0x1.08p+0), 0x1.b5e908eb1379p-7));
+	QUIET(near_double(log(0x1.68p-1), -0x1.68ac83e9c6a14p-2) && near_double(log(0x1.67fffffffffffp-1), -0x1.68ac83e9c6a17p-2) && near_double(log(0x1.68p+0), 0x1.5d1bdbf5809cap-2) && near_double(log(0x1.67fffffffffffp+0), 0x1.5d1bdbf5809c7p-2));
+	QUIET(near_double(log10(0x1.08000000e5ae8p+0), 0x1.b5e9091b707f7p-7) && near_double(log10(0x1.efffffffa1775p-1), -0x1.c3d083821d15p-7) && near_double(log2(0x1.efffffff77c6bp-1), -0x1.77394caa43758p-5));
+	QUIET(near_double(log1p(0x1p-5), 0x1.f829b0e7833p-6) && near_double(log1p(0x1.fffffffffffffp-6), 0x1.f829b0e7832ffp-6) && near_double(log1p(-0x1p-5), -0x1.0415d89e74444p-5) && near_double(log1p(-0x1.fffffffffffffp-6), -0x1.0415d89e74444p-5));
+	QUIET(near_double(log1p(0x1.fffffffffffffp+62), 0x1.5d589f2fe5107p+5) && near_double(log1p(0x1p63), 0x1.5d589f2fe5107p+5) && near_double(log1p(0x1p64), 0x1.62e42fefa39efp+5) && near_double(log1p(0x1.6ap-1), 0x1.11cb81787ccf8p-1));
 }
 
 int main(void)

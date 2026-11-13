@@ -1183,3 +1183,14 @@ Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D185).
 | `log2` | 7758 | 1845 | -76 % |
 | `log10` | 7635 | 2685 | -65 % |
 | `log1p` | 6727 | 2108 | -69 % |
+
+## P11.05e — Fast `log`, `log2`, `log10` and `log1p` in 64-bit fixed point (D192)
+
+`libc/math/dp-fixed/fast/`: a 90-entry table with invc in Q31 and −log(invc) in Q64, the series and the sum in 128 bits, a relative series within 2^-5 of 1, one rounding; no soft-double operation. Instructions per call (throughput): speed, P11.05d's fast (D190's double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05d | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `log` | 6184 | 1649 | 334 | -95 % |
+| `log2` | 7758 | 1845 | 349 | -96 % |
+| `log10` | 7635 | 2685 | 354 | -95 % |
+| `log1p` | 6727 | 2108 | 367 | -95 % |

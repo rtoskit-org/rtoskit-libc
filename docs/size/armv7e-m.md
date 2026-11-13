@@ -837,3 +837,7 @@ Release and speed unchanged (`size-report diff`); the fast budgets hold. No size
 ## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
 
 Release and speed unchanged (`size-report diff`). `math-mix` (log and pow) grows from 31284 to 34828 bytes of code in fast (+3544): the fast `log` and its 3 KiB table on top of the strict log core that pow still uses. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).
+
+## P11.05e — Fast `log`, `log2`, `log10` and `log1p` in 64-bit fixed point (D192)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) shrinks from 34828 to 34300 bytes of code: the 1440-byte table and the two kernels replace D190's file and its 3 KiB table. Smaller than the locked fast figure, so it is not re-locked (P11.06 does, D187, D191).

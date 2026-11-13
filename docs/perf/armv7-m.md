@@ -1032,3 +1032,14 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `log2` | 8007 | 1884 | -76 % |
 | `log10` | 7881 | 2743 | -65 % |
 | `log1p` | 6961 | 2149 | -69 % |
+
+## P11.05e — Fast `log`, `log2`, `log10` and `log1p` in 64-bit fixed point (D192)
+
+`libc/math/dp-fixed/fast/`: a 90-entry table with invc in Q31 and −log(invc) in Q64, the series and the sum in 128 bits, a relative series within 2^-5 of 1, one rounding; no soft-double operation. Instructions per call (throughput): speed, P11.05d's fast (D190's double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05d | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `log` | 6405 | 1683 | 336 | -95 % |
+| `log2` | 8007 | 1884 | 351 | -96 % |
+| `log10` | 7881 | 2743 | 357 | -95 % |
+| `log1p` | 6961 | 2149 | 371 | -95 % |
