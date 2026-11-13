@@ -1070,3 +1070,16 @@ Unchanged here: the cores without an FPU follow in P11.04e (D179).
 | `cbrt` | 4309 | 2106 | 299 | -93 % |
 
 AOR has no scalar double `cbrt`.
+
+## P11.05i — Fast `sin`, `cos`, `sincos` and `tan` without the rounding test (D197)
+
+`libc/math/dp-fixed/fast/`: D136's fixed-point kernel (D142's for `tan`) rounded to nearest with no test; the double-double path only where the kernel declines. Instructions per call (throughput): speed (the same kernel with its test, the fast flavour until now) and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sin` | 770 | 755 | -2 % |
+| `cos` | 1074 | 760 | -29 % |
+| `sincos` | 1400 | 1072 | -23 % |
+| `tan` | 1012 | 996 | -2 % |
+
+AOR has no scalar double `sin`, `cos` or `tan`.

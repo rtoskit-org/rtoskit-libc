@@ -1221,3 +1221,16 @@ Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D185).
 | `cbrt` | 3765 | 1919 | 296 | -92 % |
 
 AOR has no scalar double `cbrt`.
+
+## P11.05i — Fast `sin`, `cos`, `sincos` and `tan` without the rounding test (D197)
+
+`libc/math/dp-fixed/fast/`: D136's fixed-point kernel (D142's for `tan`) rounded to nearest with no test; the double-double path only where the kernel declines. Instructions per call (throughput): speed (the same kernel with its test, the fast flavour until now) and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sin` | 754 | 740 | -2 % |
+| `cos` | 1057 | 743 | -30 % |
+| `sincos` | 1379 | 1054 | -24 % |
+| `tan` | 1000 | 982 | -2 % |
+
+AOR has no scalar double `sin`, `cos` or `tan`.

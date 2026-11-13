@@ -237,4 +237,14 @@ static inline uint64_t __libc_dp_fixed_log_reduce(uint64_t bits, int32_t *k)
 	return z;
 }
 
+/*
+ * The double nearest D136's fixed-point result, (-1)^negative v 2^(exponent - 63), by its 54th bit with no rounding test
+ * (D197): the kernel's error, below 18 units of v's last bit (56 for tan), is at most 0.03 ulp more. The kernel's results
+ * are normal doubles for 2^-27 <= |x| < 2^20.
+ */
+static inline double __libc_dp_fixed_trig_round(const struct __libc_trig_fixed *value)
+{
+	return __libc_dp_fixed_double(value->negative ? 0x8000000000000000ull : 0, value->exponent, value->v);
+}
+
 #endif /* _DP_FIXED_FAST_H */

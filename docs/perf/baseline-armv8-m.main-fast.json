@@ -159,10 +159,10 @@
     "insns": 78.31
    },
    "cos/latency": {
-    "insns": 1044.44
+    "insns": 731.12
    },
    "cos/throughput": {
-    "insns": 1056.62
+    "insns": 743.31
    },
    "cosf/latency": {
     "insns": 122.38
@@ -435,16 +435,16 @@
     "insns": 10.31
    },
    "sin/latency": {
-    "insns": 746.44
+    "insns": 732.44
    },
    "sin/throughput": {
-    "insns": 753.56
+    "insns": 739.56
    },
    "sincos/latency": {
-    "insns": 1367.06
+    "insns": 1042.44
    },
    "sincos/throughput": {
-    "insns": 1378.62
+    "insns": 1054.0
    },
    "sincosf/latency": {
     "insns": 209.38
@@ -495,10 +495,10 @@
     "insns": 10.31
    },
    "tan/latency": {
-    "insns": 998.62
+    "insns": 980.62
    },
    "tan/throughput": {
-    "insns": 999.81
+    "insns": 981.81
    },
    "tanf/latency": {
     "insns": 213.38
