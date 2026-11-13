@@ -528,6 +528,31 @@ static void check_double_exponentials(void)
 	QUIET(near_double(expm1(-0x1.00000000cd18fp-4), -0x1.f054043a7eb3dp-5) && near_double(expm1(0x1.5bcfa7205d3d6p-5), 0x1.634ce30cbc108p-5) && near_double(expm1(-0x1.0c7f173a14fdap-5), -0x1.0824e299f4421p-5));
 }
 
+static void check_double_logarithms(void)
+{
+	/*
+	 * P11.05d (the double-FPU cores' double-only logarithms, D190; the strict files elsewhere): the special values, +0 for 1
+	 * in every direction, the exact powers of 2 and 10, each side of the table's ends (0x1.68aaap-1 and its double) and of
+	 * log1p's series at 2^-7.5, the extremes, the sweeps' worst points, and the regression: 2^-1023, scaled from a
+	 * subnormal, has the bit pattern 0, which a first build took for a special value (log2 returned the argument)
+	 */
+	QUIET(log(1.0) == 0.0 && !signbit(log(1.0)) && log2(1.0) == 0.0 && !signbit(log2(1.0)) && log10(1.0) == 0.0 && !signbit(log10(1.0)));
+	QUIET(log(INFINITY) == INFINITY && isnan(log(NAN)) && log2(0x1p-1074) == -1074.0 && log2(0x1p-1023) == -1023.0 && log2(0x1p-1022) == -1022.0 && log2(0x1p1023) == 1023.0);
+	QUIET(log10(1000.0) == 3.0 && log10(1e22) == 22.0 && log10(10.0) == 1.0 && log1p(0.0) == 0.0 && is_negative_zero((float)log1p(-0.0)) && log1p(INFINITY) == INFINITY);
+	RAISES(log(0.0) == -INFINITY && log(-0.0) == -INFINITY && log2(0.0) == -INFINITY && log10(-0.0) == -INFINITY && log1p(-1.0) == -INFINITY, FE_DIVBYZERO);
+	RAISES(isnan(log(-1.0)) && isnan(log2(-INFINITY)) && isnan(log10(-0x1p-1074)) && isnan(log1p(-2.0)) && isnan(log1p(-INFINITY)), FE_INVALID);
+	QUIET(near_double(log(0x1.00b52855823a7p+0), 0x1.69d0b54f8dee1p-9) && near_double(log2(0x1.00ade07cc039ep+0), 0x1.f509cf6cd471fp-9) && near_double(log10(0x1.00ba421879db7p+0), 0x1.431acc7ff8b0fp-10));
+	QUIET(near_double(log(0x1.68aaap-1), -0x1.66c7a173b5128p-2) && near_double(log(0x1.68a9fffffffffp-1), -0x1.66c967b93d82dp-2) && near_double(log(0x1.68aaap+0), 0x1.5f00be6b922b7p-2) && near_double(log(0x1.68a9fffffffffp+0), 0x1.5efef82609bb2p-2));
+	QUIET(near_double(log(0x1.fffffffffffffp+1023), 0x1.62e42fefa39efp+9) && near_double(log(0x1p-1074), -0x1.74385446d71c3p+9) && near_double(log(0x1.fffffffffffffp-1), -0x1p-53) && near_double(log(0x1.0000000000001p+0), 0x1.fffffffffffffp-53));
+	QUIET(near_double(log2(0x1.fffffffffffffp-1), -0x1.71547652b82fep-53) && near_double(log2(0x1.0000000000001p+0), 0x1.71547652b82fdp-52) && near_double(log10(0x1.0000000000001p+0), 0x1.bcb7b1526e50dp-54) && near_double(log10(0x1p-1074), -0x1.434e6420f4374p+8));
+	QUIET(near_double(log1p(0x1.6a09e667f3bcdp-8), 0x1.690ad6c502fa9p-8) && near_double(log1p(0x1.6a09e667f3bcep-8), 0x1.690ad6c502faap-8) && near_double(log1p(-0x1.6a09e667f3bcdp-8), -0x1.6b0ad8c505a54p-8) && near_double(log1p(-0x1.6a09e667f3bcep-8), -0x1.6b0ad8c505a55p-8));
+	QUIET(near_double(log1p(-0x1.ac44dfb0777p-9), -0x1.acf86168cd623p-9) && near_double(log1p(-0x1.fffffffffffffp-1), -0x1.25e4f7b2737fap+5) && near_double(log1p(0x1p53), 0x1.25e4f7b2737fap+5));
+	/* Not QUIET: the strict file raises a spurious underflow there (its correction 1/x is subnormal) */
+	CHECK(near_double(log1p(0x1.fffffffffffffp+1023), 0x1.62e42fefa39efp+9) && near_double(log1p(0x1p60), 0x1.4cb5ecf0a9650p+5) && near_double(log1p(0x1.0000000000001p60), 0x1.4cb5ecf0a9650p+5));
+	QUIET(near_double(log1p(1.0), 0x1.62e42fefa39efp-1) && near_double(log1p(-0x1.6a09e667b433dp-8), -0x1.6b0ad8c4c5c1fp-8) && log1p(0x1p-61) == 0x1p-61);
+	CHECK(log1p(-0x1p-1074) == -0x1p-1074 && log1p(0x1p-1074) == 0x1p-1074);
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -542,6 +567,7 @@ int main(void)
 	check_hyperbolic();
 	check_error_functions();
 	check_double_exponentials();
+	check_double_logarithms();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

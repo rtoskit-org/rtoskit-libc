@@ -1059,3 +1059,16 @@ Unchanged here: the FPU cores' hyperbolic functions are P11.04c (D177, D185).
 | `exp2` | 183 | 51 | -72 % |
 | `exp10` | 185 | 55 | -70 % |
 | `expm1` | 172 | 106 | -38 % |
+
+## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
+
+`libc/math/fast/`: a 128-entry table of invc and −log(invc), r = z·invc − 1 exact, a degree-5 polynomial and one rounding (D190). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `log` | 150 | 68 | -55 % |
+| `log2` | 200 | 72 | -64 % |
+| `log10` | 161 | 77 | -52 % |
+| `log1p` | 187 | 86 | -54 % |
+
+AOR on this core: `log` 68, `log2` 73.

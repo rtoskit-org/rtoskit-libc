@@ -421,9 +421,10 @@ the gains and the members recorded.
 P11.05c was split into c1 and c2 (CLAUDE.md workflow): expm1 needs more than
 the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
 
-### P11.05d — `log`, `log2`, `log10`, `log1p` on the double-FPU cores  `[ ]`
-- [ ] 1/c and log c from a table and a short polynomial in double (AOR: `log`
-  68, `log2` 73); tests, gains.
+### P11.05d — `log`, `log2`, `log10`, `log1p` on the double-FPU cores  `[x]`
+- [x] 1/c and log c from a table and a short polynomial in double (AOR: `log`
+  68, `log2` 73); tests, gains. Done (D190): `log` 150 → 68, `log2` 200 → 72
+  on armv7e-m-dp; at most 0.5249 ulp.
 
 ### P11.05e — `log`, `log2`, `log10`, `log1p` on the soft-double cores  `[ ]`
 - [ ] A 64-bit fixed-point log2 kernel (AOR: `log` 1245 and 4335, `log2` 1514
