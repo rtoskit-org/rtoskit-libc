@@ -203,11 +203,11 @@
      "ram": 48
     },
     "math-float": {
-     "code": 5950,
+     "code": 5710,
      "ram": 20
     },
     "math-mix": {
-     "code": 18806,
+     "code": 19286,
      "ram": 20
     }
    },

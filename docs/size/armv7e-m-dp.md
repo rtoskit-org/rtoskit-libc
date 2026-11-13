@@ -703,3 +703,7 @@ Release and speed unchanged (`size-report diff`). `math-mix` (log and pow) grows
 ## P11.05f — Fast `pow` and `cbrt` in double (D193)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) shrinks from 18806 to 17548 bytes of code: pow no longer pulls the strict log and exp cores. It is +44 % over speed (12,174), still above D191's +20 % line; not re-locked.
+
+## P11.05h — Fast `sin`, `cos`, `sincos` and `tan` in double (D196)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix`, which calls `sin`, `cos` and `tan`, grows from 17548 to 19286 bytes of code (+1738): the three fast files (`sin` 676 bytes, `cos` 592, `tan` 772) inline their reduction and kernel, beside a 272-byte table and the 242-byte slow path, where the strict files shared one double-double core. That is +58 % over speed's 12174, above D191's +20 % line, which P11.06 brings to the maintainer. `math-float` shrinks from 5950 to 5710 (−240): `sinf` and `cosf` reach the strict reduction from 2^20 through the slow path, not the double files. Both fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).

@@ -18,7 +18,7 @@
 /*
  * The fast tanf of the double-FPU cores (PLAN D162, D175): for |x| < 2^20, x = k pi/2 + r in double
  * (__libc_fast_rem_pio2, r to 2^-52 relative) and sin r / cos r (or -cos r / sin r for an odd k) in double; rounded once to float, below 0.51 ulp to nearest (the note,
- * section 3). Beyond 2^20, the infinities and NaNs, the double tan rounded once.
+ * section 3). Beyond 2^20, the infinities and NaNs, the double tan's slow path rounded once (__libc_fast_trig_large).
  */
 float tanf(float x)
 {
@@ -32,7 +32,7 @@ float tanf(float x)
 		return __libc_math_tinyf(x, x);
 	/* A NaN compares quietly (isless): the relational operators would raise invalid */
 	if (!isless(__builtin_fabsf(x), 0x1p20f))
-		return (float)tan((double)x);
+		return (float)__libc_fast_trig_large(x, 2);
 
 	k = __libc_fast_rem_pio2((double)x, &r);
 	s = __libc_fast_sin_double(r);

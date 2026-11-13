@@ -18,7 +18,7 @@
 /*
  * The fast cosf of the double-FPU cores (PLAN D162, D175): for |x| < 2^20, x = k pi/2 + r in double
  * (__libc_fast_rem_pio2, r to 2^-52 relative) and sin((k + 1) pi/2 + r) by the Taylor polynomials in double; rounded once to float, below 0.51 ulp to nearest (the note,
- * section 3). Beyond 2^20, the infinities and NaNs, the double cos rounded once.
+ * section 3). Beyond 2^20, the infinities and NaNs, the double cos's slow path rounded once (__libc_fast_trig_large).
  */
 float cosf(float x)
 {
@@ -27,7 +27,7 @@ float cosf(float x)
 
 	/* A NaN compares quietly (isless): the relational operators would raise invalid */
 	if (!isless(__builtin_fabsf(x), 0x1p20f))
-		return (float)cos((double)x);
+		return (float)__libc_fast_trig_large(x, 1);
 
 	k = __libc_fast_rem_pio2((double)x, &r);
 

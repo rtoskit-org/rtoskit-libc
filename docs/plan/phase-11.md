@@ -453,9 +453,11 @@ P11.05g was split into g1 and g2 (CLAUDE.md workflow): `pow` needs log2 x to
 about 2^-72 relative (|y log2 x| up to 1075), a multi-word design of its own;
 `cbrt` shares none of it.
 
-### P11.05h — `sin`, `cos`, `sincos`, `tan` on the double-FPU cores  `[ ]`
-- [ ] Cody–Waite in double and the polynomials without the double-double
-  finish; the strict reduction beyond; tests, gains.
+### P11.05h — `sin`, `cos`, `sincos`, `tan` on the double-FPU cores  `[x]`
+- [x] Cody–Waite in double and the polynomials without the double-double
+  finish; the strict reduction beyond; tests, gains. A reduction by π/32 and
+  a table of exact pairs (D196): at most 0.5063 ulp below 2^20; `sin` 165 →
+  96 instructions on armv7e-m-dp.
 
 ### P11.05i — `sin`, `cos`, `sincos`, `tan` on the soft-double cores  `[ ]`
 - [ ] D136's kernel without its rounding test, the strict path from 2^20;

@@ -1083,3 +1083,18 @@ AOR on this core: `log` 68, `log2` 73.
 | `cbrt` | 132 | 90 | -32 % |
 
 AOR on this core: `pow` 135.
+
+## P11.05h — Fast `sin`, `cos`, `sincos` and `tan` in double (D196)
+
+`libc/math/fast/`: a reduction by π/32 in double, a table of sin(jπ/32) as exact pairs, the leading terms combined exactly; the strict reduction and cores from 2^20 and next to a zero. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sin` | 165 | 96 | -42 % |
+| `cos` | 167 | 93 | -44 % |
+| `sincos` | 231 | 171 | -26 % |
+| `tan` | 207 | 133 | -36 % |
+
+AOR has no scalar double `sin`, `cos` or `tan`.
+
+P11.04a's `sinf`, `cosf`, `sincosf` and `tanf` now reach the strict reduction from 2^20 through the slow path (`__libc_fast_trig_large`): `cosf` 50.81 → 49.81, `sincosf` 86.19 → 84.19, `tanf` 69.31 → 70.31 (register allocation; results unchanged).
