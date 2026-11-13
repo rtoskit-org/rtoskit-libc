@@ -1256,3 +1256,16 @@ AOR has no scalar double `cbrt`.
 | `tan` | 1005 | 987 | -2 % |
 
 AOR has no scalar double `sin`, `cos` or `tan`.
+
+## P11.05j — Fast `asin`, `acos`, `atan` and `atan2` in double (D198)
+
+`libc/math/fast/`: on this core the double files run on the soft-double helpers until P11.05k gives it fixed-point kernels. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asin` | 13029 | 7141 | -45 % |
+| `acos` | 13628 | 7192 | -47 % |
+| `atan` | 7741 | 6081 | -21 % |
+| `atan2` | 8314 | 6168 | -26 % |
+
+AOR has no scalar double `asin`, `acos`, `atan` or `atan2`.

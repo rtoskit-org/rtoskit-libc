@@ -366,3 +366,7 @@ Release and speed unchanged (`size-report diff`). In fast, no size program calls
 ## P11.05i — Fast `sin`, `cos`, `sincos` and `tan` without the rounding test (D197)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `sin`, `cos` and `tan`) goes from 38980 to 38995 bytes of code (+15): the four files drop the rounding test but inline the 54th-bit rounding. Every budget holds; nothing is re-locked.
+
+## P11.05j — Fast `asin`, `acos`, `atan` and `atan2` in double (D198)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `atan2`) grows from 38995 to 40471 bytes of code (+1476): until P11.05k this core runs the double file on its helpers, with the atan(j/16) table and the strict slow path beside it. That is +11 % over speed's 36423, inside D191's +20 % line; every budget holds and nothing is re-locked.
