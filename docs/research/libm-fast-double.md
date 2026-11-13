@@ -1251,3 +1251,64 @@ Instructions per call (speed → §16's double files on the helpers → fast):
 **Size:** the kernel is 960 bytes on armv7e-m (974 on armv6-m), `atan` 292
 and `atan2` 154, with the 136-byte table. `math-mix` (which calls `atan2`)
 shrinks by 200 to 304 bytes against P11.05j: +10.5 % to +13.5 % over speed.
+
+## 18. asin and acos on the soft-double cores (P11.05k2)
+
+`libc/math/dp-fixed/fast/asin.c` and `acos.c`, shadowing §16's double files
+on the soft-double cores (7141 and 7192 instructions on armv7e-m's helpers,
+20,137 and 20,151 on armv6-m).
+
+### 18.1 Sources (ideas only)
+
+- **§16's double design**: x + x·w up to 1/2 and the half-angle form
+  π/2 − 2 asin √((1 − |x|)/2) above, with one polynomial for both halves
+  (FreeBSD's `e_asin.c` and AOR's `asin`, read for §16).
+- **P11.04f2's fixed-point square root** (D183): 1/√t from a 24-entry table
+  of 16-bit seeds and Newton steps, then s = t·r corrected by its exact
+  remainder; here widened to 64 bits.
+
+### 18.2 The method
+
+- **One out-of-line kernel** (`__libc_dp_fixed_asin`), for asin and acos:
+  - **|x| ≤ 1/2:** z = x² in Q64 (from x's significand, absolute, which is
+    all w needs), W = z·P(z), asin |x| = |x|(1 + W) relative. acos x =
+    π/2 ∓ asin |x| in Q62.
+  - **1/2 < |x| < 1:** z = (1 − |x|)/2 exactly in integers, normalized by an
+    even shift, s = √z by the 64-bit square root, asin s = s(1 + W(z)).
+    asin |x| = π/2 − 2 asin s, acos x = π − 2 asin s (x < 0) in Q62, and
+    acos x = 2 asin s (x > 0) relative, however close x is to 1.
+- **P(z)** = (asin √z − √z)/(z√z) for z ≤ 1/4, fifteen terms fitted here
+  with Q64 coefficients (W within 2^-65.4; fourteen leave 2^-61.9). The fit
+  has one negative coefficient, so Horner's rule runs in signed 64 bits
+  (every partial sum is below 2^62).
+- **The 64-bit square root** of t in [2^62, 2^64) (τ = t·2^-64 in [1/4, 1)):
+  r ≈ 1/√τ in Q30 from the 24 seeds (2^-5.09) and three Newton steps
+  r(3 − τr²)/2; s = τ·r in Q32; then twice s += (t − s²)·r/2, first in
+  units of 2^-32 (s then within a unit), then in units of 2^-64: about 6
+  units of 2^-64 (the second correction times r's 2^-29.5), 2^-60.5
+  relatively.
+- **The ends** in the callers: NaN, |x| > 1 (invalid), ±1 exactly, asin below
+  2^-27 (the strict tiny path), acos below 2^-60 (π/2).
+- **Found along the way:** the second remainder correction shifted its
+  96-bit product right by shift − 32 = −1, so it added nothing and the root
+  stayed at 32 bits: 2·10^6 ulp above 1/2. The product now shifts either way
+  (the square root within 2 units of 2^-64 after it).
+
+### 18.3 Measured (P11.05k2)
+
+On the host (the speed files' `umull` product), against long double, with
+§16.3's sweep (1.4·10^9 samples per function): `asin` at most 0.5049 ulp
+and `acos` 0.5039; 0.04–0.07 % and 0.03–0.04 % not correctly rounded.
+
+Instructions per call (speed → §16's double files on the helpers → fast):
+
+| Core | `asin` | `acos` |
+| --- | ---: | ---: |
+| armv7e-m, armv8-m.main | 13,029 → 7141 → 661 | 13,628 → 7192 → 668 |
+| armv7-m | 13,481 → 7295 → 664 | 14,076 → 7338 → 669 |
+| armv6-m, armv6s-m | 34,625 → 20,137 → 3293 | 35,718 → 20,151 → 3293 |
+
+AOR has no scalar double `asin` or `acos`.
+
+**Size:** the kernel is 988 bytes on armv7e-m, `asin` 248 and `acos` 152,
+with the 48-byte seed table. No size program calls them; every budget holds.

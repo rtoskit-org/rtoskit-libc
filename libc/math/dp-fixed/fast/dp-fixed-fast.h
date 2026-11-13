@@ -257,4 +257,13 @@ extern const uint64_t __libc_dp_fixed_atan_table[17];
  */
 double __libc_dp_fixed_atan(uint64_t my, int32_t ey, uint64_t mx, int32_t ex, unsigned int quadrant, bool negative);
 
+/* 1/sqrt(t) on [(i + 8)/32, (i + 9)/32) in units of 2^-14, the value of least relative error, 2^-5.09 (D200) */
+extern const uint16_t __libc_dp_fixed_rsqrt_seed[24];
+
+/*
+ * asin |x| (acos false) or acos x (acos true) for a magnitude's bits, 2^-60 <= |x| < 1, x < 0 when negative, one rounding
+ * to nearest (D200; docs/research/libm-fast-double.md, section 18; __libc_dp_fixed_asin.c)
+ */
+double __libc_dp_fixed_asin(uint64_t magnitude, bool acos, bool negative);
+
 #endif /* _DP_FIXED_FAST_H */

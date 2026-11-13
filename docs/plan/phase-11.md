@@ -473,9 +473,10 @@ about 2^-72 relative (|y log2 x| up to 1075), a multi-word design of its own;
   quotient (P11.04f1's, widened); tests, gains. D199: at most 0.5093 ulp;
   `atan` 7741 → 523 instructions on armv7e-m, 21,175 → 2542 on armv6-m.
 
-### P11.05k2 — `asin`, `acos` on the soft-double cores  `[ ]`
-- [ ] 64-bit fixed point, with a 64-bit square root (P11.04f2's, widened);
-  tests, gains.
+### P11.05k2 — `asin`, `acos` on the soft-double cores  `[x]`
+- [x] 64-bit fixed point, with a 64-bit square root (P11.04f2's, widened);
+  tests, gains. D200: at most 0.5049 ulp; `asin` 13,029 → 661 instructions
+  on armv7e-m, 34,625 → 3293 on armv6-m.
 
 P11.05k was split into k1 and k2 (CLAUDE.md workflow), as P11.04f was: each
 half needs its own fixed-point building block, a 64-bit quotient for the

@@ -1280,3 +1280,14 @@ AOR has no scalar double `asin`, `acos`, `atan` or `atan2`.
 | `atan2` | 8314 | 6168 | 524 | -94 % |
 
 AOR has no scalar double `atan` or `atan2`.
+
+## P11.05k2 — Fast `asin` and `acos` in fixed point (D200)
+
+`libc/math/dp-fixed/fast/`: one out-of-line kernel, a 15-term Q64 series up to 1/2 and the half-angle form above with a 64-bit square root; no soft-double operation on the common path. Instructions per call (throughput): speed, P11.05j's fast (the double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05j | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `asin` | 13029 | 7141 | 661 | -95 % |
+| `acos` | 13628 | 7192 | 668 | -95 % |
+
+AOR has no scalar double `asin` or `acos`.

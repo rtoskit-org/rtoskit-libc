@@ -858,3 +858,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which cal
 ## P11.05k1 — Fast `atan` and `atan2` in fixed point (D199)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `atan2`) shrinks from 34290 to 33986 bytes of code (-304): the fixed-point kernel and its 136-byte Q64 table replace P11.05j's double file and its pairs on this core's helpers. That is +13.5 % over speed's 29956, inside D191's +20 % line; every budget holds and nothing is re-locked.
+
+## P11.05k2 — Fast `asin` and `acos` in fixed point (D200)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls `asin` or `acos` (`math-mix` calls `atan2` only); every budget holds and nothing is re-locked.
