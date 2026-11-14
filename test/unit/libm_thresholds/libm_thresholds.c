@@ -728,6 +728,18 @@ static void check_double_hyperbolic(void)
 	QUIET(near_double(cosh(-0x1.330cf48daaf9bp+2), 0x1.e4f101ed5a5f9p+5) && near_double(cosh(0x1.7343718b8e291p-1), 0x1.464ddfe8f0c2bp+0) && near_double(sinh(0x1.709d048b2a8c6p+8), 0x1.bcb061e40e697p+530) && near_double(cosh(0x1.709d048b2a8c6p+8), 0x1.bcb061e40e697p+530));
 	QUIET(near_double(tanh(0x1.0000000000000p-3), 0x1.fd5992bc4b835p-4) && near_double(tanh(0x1.fffffffffffffp-4), 0x1.fd5992bc4b834p-4) && near_double(tanh(-0x1.789a1cb1d52dcp-3), -0x1.7469eb6a1fb28p-3) && near_double(tanh(0x1.367301cbbeb91p-3), 0x1.3417cff2bd6a4p-3));
 	QUIET(near_double(tanh(0x1.5fffffffffff0p+4), 0x1.0000000000000p+0) && near_double(cosh(0x1.0000000000000p-26), 0x1.0000000000001p+0));
+	/*
+	 * P11.05m2 (the soft-double cores' fixed-point asinh, acosh and atanh, D203): each side of log1p's argument reaching
+	 * 2^-5 (the relative series and the table path), of 1 (asinh) and 2 (acosh), where the arguments change form, the
+	 * double above 1 (acosh's smallest argument), each side of 2^-12 (atanh's 1 - |x| exact), the doubles next to 1/2 and
+	 * 1 (atanh), and the sweeps' worst points
+	 */
+	QUIET(near_double(asinh(0x1.f83e0f83e0f83p-6), 0x1.f829b0e7832ffp-6) && near_double(asinh(0x1.f83e0f83e0f84p-6), 0x1.f829b0e783300p-6) && near_double(asinh(0x1.f83e0f83e0f85p-6), 0x1.f829b0e783301p-6) && near_double(acosh(0x1.001f07c1f07c1p+0), 0x1.f829b0e782b5fp-6));
+	QUIET(near_double(acosh(0x1.001f07c1f07c2p+0), 0x1.f829b0e78337ep-6) && near_double(acosh(0x1.001f07c1f07c3p+0), 0x1.f829b0e783b9ep-6) && near_double(atanh(0x1.f81f81f81f81fp-7), 0x1.f829b0e783300p-7) && near_double(atanh(0x1.f81f81f81f820p-7), 0x1.f829b0e783301p-7));
+	QUIET(near_double(atanh(0x1.f81f81f81f821p-7), 0x1.f829b0e783302p-7) && near_double(asinh(0x1.0000000000000p+0), 0x1.c34366179d427p-1) && near_double(asinh(0x1.fffffffffffffp-1), 0x1.c34366179d426p-1) && near_double(acosh(0x1.0000000000000p+1), 0x1.5124271980435p+0));
+	QUIET(near_double(acosh(0x1.fffffffffffffp+0), 0x1.5124271980434p+0) && near_double(acosh(0x1.0000000000001p+0), 0x1.6a09e667f3bccp-26) && near_double(atanh(0x1.0000000000000p-12), 0x1.0000005555559p-12) && near_double(atanh(0x1.fffffffffffffp-13), 0x1.0000005555558p-12));
+	QUIET(near_double(atanh(0x1.0000000000000p-1), 0x1.193ea7aad030bp-1) && near_double(atanh(0x1.fffffffffffffp-1), 0x1.2b708872320e2p+4));
+	QUIET(near_double(asinh(0x1.f90358c9aaf29p-6), 0x1.f8eee23cff5e9p-6) && near_double(acosh(0x1.001fe30a578e7p+0), 0x1.ff12d046a47f0p-6) && near_double(atanh(-0x1.f9cec4ddb450ep-7), -0x1.f9d90e06916abp-7) && near_double(asinh(-0x1.fe12135b34d32p-6), -0x1.fdfcfde287c82p-6));
 }
 
 int main(void)

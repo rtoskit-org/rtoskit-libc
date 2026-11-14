@@ -46,54 +46,6 @@ static uint64_t series(uint64_t z)
 	return __libc_trig_high64(z, (uint64_t)p);
 }
 
-/* (a r) >> shift for a below 2^40 and 0 < shift < 96: the 96-bit product from two 32 x 32 products */
-static inline uint64_t product_shift(uint64_t a, uint32_t r, int shift)
-{
-	uint64_t low = __libc_trig_wide((uint32_t)a, r);
-	uint64_t high = __libc_trig_wide((uint32_t)(a >> 32), r) + (low >> 32);
-
-	if (shift >= 32)
-		return high >> (shift - 32);
-
-	return (high << (32 - shift)) | ((uint32_t)low >> shift);
-}
-
-/* s + d r/2^shift with the sign of d, for the remainder corrections */
-static inline uint64_t corrected(uint64_t s, int64_t d, uint32_t r, int shift)
-{
-	uint64_t c = product_shift(d < 0 ? -(uint64_t)d : (uint64_t)d, r, shift);
-
-	return d < 0 ? s - c : s + c;
-}
-
-/*
- * sqrt(t 2^-64) 2^64 for t in [2^62, 2^64): r = 1/sqrt(tau) in Q30 from the seed and three Newton steps r (3 - tau r^2)/2
- * (2^-29.5), s = tau r in Q32, then twice s += (t - s^2) r/2 with the remainder exact, in units of 2^-32 (s within a
- * unit) and then of 2^-64 (about 6 units, r's error times the correction)
- */
-static uint64_t root(uint64_t t)
-{
-	uint32_t w = (uint32_t)(t >> 32);
-	uint32_t r = (uint32_t)__libc_dp_fixed_rsqrt_seed[(w >> 27) - 8] << 16;
-	uint64_t s;
-
-	for (int i = 0; i < 3; ++i) {
-		uint32_t tr = (uint32_t)(__libc_trig_wide(w, r) >> 32);
-		uint32_t trr = (uint32_t)(__libc_trig_wide(tr, r) >> 30);
-
-		r = (uint32_t)(__libc_trig_wide(r, 0xc0000000u - trr) >> 31);
-	}
-	s = __libc_trig_wide(w, r) >> 30;
-	if ((s >> 32) != 0)
-		s = 0xffffffffu;
-	s = corrected(s, (int64_t)(t - s * s), r, 63);
-	if ((s >> 32) != 0)
-		s = 0xffffffffu;
-	s = corrected(s << 32, (int64_t)(t - s * s), r, 31);
-
-	return s;
-}
-
 /* The double of v 2^(e - 63), v nonzero, normalized by its leading zeros, with sign; rounded once */
 static inline double result(uint64_t v, int32_t e, bool negative)
 {
@@ -134,7 +86,7 @@ double __libc_dp_fixed_asin(uint64_t magnitude, bool acos, bool negative)
 	/* 1/2 < |x| < 1: |x| = m 2^-53, z 2^64 = (2^53 - m) 2^10 exactly, normalized by an even shift for the square root */
 	z = (0x0020000000000000ull - m) << 10;
 	h = __builtin_clzll(z) >> 1;
-	s = root(z << (2 * h));
+	s = __libc_dp_fixed_root(z << (2 * h));
 	/* asin s = (s/2)(1 + W) 2^(-63 - h), and 2 asin s in Q62 is that >> h */
 	t = (s >> 1) + __libc_trig_high64(s >> 1, series(z));
 	if (acos && !negative)

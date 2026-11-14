@@ -63,10 +63,10 @@
   },
   "math": {
    "acos/latency": {
-    "insns": 661.44
+    "insns": 661.94
    },
    "acos/throughput": {
-    "insns": 668.62
+    "insns": 669.12
    },
    "acosf/latency": {
     "insns": 240.12
@@ -75,10 +75,10 @@
     "insns": 244.0
    },
    "acosh/latency": {
-    "insns": 7256.88
+    "insns": 490.56
    },
    "acosh/throughput": {
-    "insns": 7265.12
+    "insns": 498.81
    },
    "acoshf/latency": {
     "insns": 351.0
@@ -87,10 +87,10 @@
     "insns": 355.62
    },
    "asin/latency": {
-    "insns": 654.81
+    "insns": 656.31
    },
    "asin/throughput": {
-    "insns": 663.75
+    "insns": 665.25
    },
    "asinf/latency": {
     "insns": 232.88
@@ -99,10 +99,10 @@
     "insns": 239.31
    },
    "asinh/latency": {
-    "insns": 7156.25
+    "insns": 523.31
    },
    "asinh/throughput": {
-    "insns": 7165.69
+    "insns": 532.75
    },
    "asinhf/latency": {
     "insns": 344.88
@@ -135,10 +135,10 @@
     "insns": 244.75
    },
    "atanh/latency": {
-    "insns": 4381.12
+    "insns": 514.69
    },
    "atanh/throughput": {
-    "insns": 4390.06
+    "insns": 523.62
    },
    "atanhf/latency": {
     "insns": 259.81
