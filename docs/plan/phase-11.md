@@ -501,8 +501,9 @@ Split, as P11.04g was: the two halves rest on different kernels.
   (D203; the note, §21): at most 0.5229 ulp; `asinh` 15,215 → 535
   instructions on armv7e-m.
 
-### P11.05n — `erf` on the double-FPU cores  `[ ]`
-- [ ] (AOR: 69 instructions on armv7e-m-dp); tests, gains.
+### P11.05n — `erf` on the double-FPU cores  `[x]`
+- [x] (AOR: 69 instructions on armv7e-m-dp); tests, gains (D204; the note,
+  §22): 418 → 68 instructions on armv7e-m-dp, at most 0.5264 ulp.
 
 ### P11.05o — `erf` on the soft-double cores  `[ ]`
 - [ ] (AOR: 8263 on armv7e-m, 25,491 on armv6-m); tests, gains.

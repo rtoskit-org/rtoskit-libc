@@ -694,6 +694,28 @@ extern const struct __libc_dd __libc_fast_atan_pairs[17];
  */
 double __libc_fast_atan2_slow(double y, double x);
 
+/*
+ * a b as an exact pair, always inline: the fast files build at -Os, where __libc_dd_product, called more than once, stays
+ * out of line (erf measured 121 instructions on armv7e-m-dp with the calls, PLAN D204). One fused multiply-add where the
+ * FPU has it, Dekker's products otherwise.
+ */
+[[gnu::always_inline]] static inline struct __libc_dd __libc_fast_product(double a, double b)
+{
+	double product = a * b;
+	double ah;
+	double al;
+	double bh;
+	double bl;
+
+	if (__libc_fpu_fma)
+		return (struct __libc_dd){ .hi = product, .lo = __builtin_fma(a, b, -product) };
+
+	__libc_dd_split(a, &ah, &al);
+	__libc_dd_split(b, &bh, &bl);
+
+	return (struct __libc_dd){ .hi = product, .lo = ((ah * bh - product) + ah * bl + al * bh) + al * bl };
+}
+
 /* n / d + *lo: the quotient and its remainder over d, the remainder exact (the product's error by fma or Dekker) */
 static inline double __libc_fast_quotient(double n, double d, double *lo)
 {

@@ -1308,3 +1308,13 @@ AOR has no scalar double hyperbolic function.
 | `atanh` | 9286 | 4056 | 524 | -94 % |
 
 AOR has no scalar double hyperbolic function.
+
+## P11.05n — Fast `erf` in double (D204)
+
+`libc/math/fast/erf.c`'s double file (P11.05n, the double-FPU cores' design) runs here on the soft-double helpers until P11.05o. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erf` | 12173 | 3206 | -74 % |
+
+AOR's `erf`: 8251.

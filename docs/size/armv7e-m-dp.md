@@ -715,3 +715,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which cal
 ## P11.05l — Fast hyperbolic functions in double (D201)
 
 Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.
+
+## P11.05n — Fast `erf` in double (D204)
+
+Release and speed unchanged (`size-report diff`). In fast, `erf` is 3388 bytes on armv7e-m-dp with its 2.5 KiB table of pieces; no size program calls it, every budget holds and nothing is re-locked.
