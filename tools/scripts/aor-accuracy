@@ -22,7 +22,7 @@
 #                                               results to build/x86_64/aor/accuracy/results.txt
 #   tools/scripts/aor-accuracy arm [--arch A ...]
 #                                               evaluate tools/aor/arm-sample.c on Arm architectures under their
-#                                               runner (rtoskit size and speed flavours, and AOR), and
+#                                               runner (rtoskit size, speed and fast flavours, and AOR), and
 #                                               measure the records on the host: arm-results.txt
 #   tools/scripts/aor-accuracy markdown [FILE]  print the tables of a results file (host or arm)
 #
@@ -147,6 +147,7 @@ def command_arm(args):
 			variants = {
 				'size': (os.path.join('build', arch, 'release'), []),
 				'speed': (os.path.join('build', arch, 'speed'), []),
+				'fast': (os.path.join('build', arch, 'fast'), []),
 				'aor': (os.path.join('build', arch, 'release'), [aor.library_path('build', arch, name) for name in names]),
 			}
 			for variant, (build_dir, libraries) in variants.items():
@@ -203,7 +204,7 @@ def fraction(wrong, checked):
 
 
 def records_markdown(runs):
-	labels = sorted({label for kind, _, label in runs if kind == 'records'}, key=lambda l: (l.split('/')[0], ['size', 'speed', 'aor'].index(l.split('/')[1])))
+	labels = sorted({label for kind, _, label in runs if kind == 'records'}, key=lambda l: (l.split('/')[0], ['size', 'speed', 'fast', 'aor'].index(l.split('/')[1])))
 	print('#### On the Arm targets\n')
 	print(f'{ARM_SAMPLES:,} sampled arguments per function, round to nearest: maximum ulp error / results not correctly rounded.\n')
 	print('| Function | ' + ' | '.join(labels) + ' |')
