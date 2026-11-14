@@ -258,11 +258,11 @@
    },
    "erf/latency": {
     "cycles": 424.66,
-    "insns": 503.06
+    "insns": 97.0
    },
    "erf/throughput": {
     "cycles": 371.3,
-    "insns": 504.06
+    "insns": 98.0
    },
    "erfc/latency": {
     "cycles": 1135.8,

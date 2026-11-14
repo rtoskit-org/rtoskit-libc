@@ -742,6 +742,23 @@ static void check_double_hyperbolic(void)
 	QUIET(near_double(asinh(0x1.f90358c9aaf29p-6), 0x1.f8eee23cff5e9p-6) && near_double(acosh(0x1.001fe30a578e7p+0), 0x1.ff12d046a47f0p-6) && near_double(atanh(-0x1.f9cec4ddb450ep-7), -0x1.f9d90e06916abp-7) && near_double(asinh(-0x1.fe12135b34d32p-6), -0x1.fdfcfde287c82p-6));
 }
 
+static void check_double_error_function(void)
+{
+	/*
+	 * P11.05n (the double-FPU cores' erf, D204; the strict file elsewhere): the special values, underflow for a subnormal x,
+	 * each side of 2^-60 (the tiny path), 2^-28 (the strict file's), 1/2 (the series' end) and 6, the pieces' edges (m +-
+	 * 1/8, a tie of the rounding to m), and the sweeps' worst points: x^3 p0 rounded with the rest of the series (0.76 ulp)
+	 * and the tiny path from 2^-28 (0.53)
+	 */
+	QUIET(erf(0.0) == 0.0 && signbit(erf(-0.0)) && erf(INFINITY) == 1.0 && erf(-INFINITY) == -1.0 && isnan(erf(NAN)) && near_double(erf(6.0), 1.0) && near_double(erf(-1e300), -1.0));
+	RAISES(erf(0x1p-1070) == 0x1.2p-1070 && erf(-0x1p-1074) == -0x1p-1074, FE_UNDERFLOW);
+	QUIET(near_double(erf(0x1.0000000000000p-60), 0x1.20dd750429b6dp-60) && near_double(erf(0x1.fffffffffffffp-61), 0x1.20dd750429b6dp-60) && near_double(erf(0x1.0000000000000p-28), 0x1.20dd750429b6dp-28) && near_double(erf(0x1.fffffffffffffp-29), 0x1.20dd750429b6cp-28));
+	QUIET(near_double(erf(0x1.0000000000000p-1), 0x1.0a7ef5c18edd2p-1) && near_double(erf(0x1.fffffffffffffp-2), 0x1.0a7ef5c18edd2p-1) && near_double(erf(0x1.4000000000000p-1), 0x1.3f196dcd0f135p-1) && near_double(erf(0x1.3ffffffffffffp-1), 0x1.3f196dcd0f134p-1));
+	QUIET(near_double(erf(0x1.4000000000001p-1), 0x1.3f196dcd0f136p-1) && near_double(erf(0x1.c000000000000p-1), 0x1.91724951b8fc6p-1) && near_double(erf(0x1.2000000000000p+0), 0x1.c6dad2829ec62p-1) && near_double(erf(0x1.7000000000000p+1), 0x1.fff9ba420e834p-1));
+	QUIET(near_double(erf(0x1.8000000000000p+1), 0x1.fffd1ac4135f9p-1) && near_double(erf(0x1.7800000000000p+2), 0x1.fffffffffffffp-1) && near_double(erf(0x1.7ffffffffffffp+2), 0x1.0000000000000p+0) && near_double(erf(-0x1.3333333333333p-2), -0x1.50838881dea0fp-2));
+	QUIET(near_double(erf(0x1.1bb8874e36d08p+0), 0x1.c4144a3af4197p-1) && near_double(erf(0x1.1b66f7c6b691ap+0), 0x1.c3de52d6984dfp-1) && near_double(erf(-0x1.d59d70884fd86p-2), -0x1.eefc28d3f3ae9p-2) && near_double(erf(0x1.caa205731e295p-2), 0x1.e4e4f27a916c3p-2));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -761,6 +778,7 @@ int main(void)
 	check_double_trigonometric();
 	check_double_inverse_trigonometric();
 	check_double_hyperbolic();
+	check_double_error_function();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

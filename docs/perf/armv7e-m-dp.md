@@ -1126,3 +1126,13 @@ AOR has no scalar double `asin`, `acos`, `atan` or `atan2`.
 | `atanh` | 217 | 90 | -59 % |
 
 AOR has no scalar double hyperbolic function.
+
+## P11.05n — Fast `erf` in double (D204)
+
+`libc/math/fast/erf.c`: 23 pieces of width 1/4 approximating erf itself from 1/2 to 6 (c0 + c1 t exact, by two fused multiply-adds where the FPU has them), an odd series with exact leading terms below 1/2; no exponential. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erf` | 418 | 68 | -84 % |
+
+AOR's `erf`: 69.

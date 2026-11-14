@@ -1578,3 +1578,94 @@ scalar double hyperbolic function.
 **Size:** `asinh` is 1446 bytes on armv7e-m, `acosh` 1228 and `atanh` 1066,
 with the 204-byte shared root (332 on armv6-m); the asin kernel shrinks to
 772. No size program calls them; every budget holds.
+
+## 22. erf on the double-FPU cores (P11.05n)
+
+`libc/math/fast/erf.c`, on x86_64 and armv7e-m-dp (the soft-double cores
+run it on their helpers until P11.05o). The strict file finishes in
+double-double over an erfc table and tail: 418 instructions on armv7e-m-dp,
+504 on x86_64, against AOR's 69, which P11.06 gates on.
+
+### 22.1 Sources (ideas only)
+
+Read 2026-11-14:
+
+- **AOR `math/erf.c` and `erf_data.c`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/erf.c>,
+  `.../erf_data.c`): no exponential and no table, only coefficients (98 in
+  all). An odd polynomial of degree 19 below 1/2, rational functions up to
+  0.84375 and 1.25, then 1 minus polynomials of degree 13–17 in a shifted
+  variable on four ranges up to 5.90625, ±1 beyond. The comment gives 1.01
+  ulp and the test harness 0.51.
+- **AOR's AdvSIMD `erf`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/erf.c>):
+  |x| rounded to a multiple of 1/128, erf(r) and 2/√π·e^(−r²) from a table,
+  then a Taylor expansion in d = |x| − r to d⁵ with coefficients in r (2.29
+  ulp in its comment).
+- **FreeBSD msun `s_erf.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/s_erf.c>):
+  x + x·R(x²) with R rational below 0.84375, a constant plus a rational in
+  |x| − 1 up to 1.25, and above 1 − e^(−x² − 0.5625 + R/S)/x, with x² split so
+  that its rounding error enters the exponential's argument.
+
+### 22.2 The method
+
+- **No exponential.** From 1/2, erf is at least 0.52, so an absolute error
+  of 2^-59 is enough. As in AOR's scalar file and P11.04e2's `erff`, erf
+  itself is approximated in pieces.
+- **The pieces:** 23 of width 1/4 about m = round(4|x|)/4 (1/2 to 6), the
+  index by the 1.5·2^52 shift, t = |x| − m exact (|t| ≤ 1/8, m ≥ 1/2).
+  - Each piece is c0 + c1·t + t²·Q(t), degree 11, fitted here by least squares
+    on Chebyshev nodes: within 2^-59.24 of erf with the coefficients rounded
+    (2.5 KiB).
+  - c0 and c1 are pairs. c1·t is up to 0.11 against c0 ≥ 0.52, so rounding
+    either alone would cost about 0.2 ulp.
+  - c0 + c1·t is formed exactly. With an FMA it takes two: hi =
+    fma(c1, t, c0), then its error fma(c1, t, c0 − hi), where c0 − hi is
+    exact by Sterbenz. Without one, Dekker's product and a fast two-sum.
+  - Only c1_lo + t·Q (below 0.03 of the result) rounds in plain double.
+- **Below 1/2:** x·2/√π + x³·p0 + x⁵·Q(x²), with p0 = −2/(3√π) and 2/√π as
+  pairs. x², x³ and both products are exact pairs and a fast two-sum joins
+  them, so the result is relative however small x is. Q has nine terms
+  fitted here (2^-61.9). This path is out of line, so the pieces' path saves
+  no registers.
+- **The ends:** below 2^-60, x·2/√π by the strict file's scaled product (the
+  x³ term is below 2^-121 of the result); from 6, ±(1 − tiny).
+- **Inlining:** the fast files build at -Os, where `__libc_dd_product`,
+  called more than once, stays out of line. `__libc_fast_product` in
+  `math-fast.h` is an always-inline copy (121 → 81 instructions on
+  armv7e-m-dp, with the Horner chain written out).
+- **Found along the way:**
+  - The series rounded x³·p0 with the rest, 7 % of the result at 1/2: 0.76
+    ulp. With the exact products, 0.537, and with p0 as a pair (rounded
+    alone it left 2^-58.2) 0.53.
+  - The strict file's tiny path from 2^-28 drops the x³ term, 0.376·x² of
+    the result: 0.03 ulp there (0.532 measured). The fast file takes the
+    series down to 2^-60.
+  - To reach AOR's count: the range tests on the high word, the index by
+    the rounding shift, the sign from the bits, c0 + c1·t by two FMAs, and
+    c1's low part inside the Horner chain (81 → 68 instructions).
+
+### 22.3 Measured (P11.05n)
+
+On the host, against long double, 1.4·10^9 samples on each of the SSE2 and
+fma paths, which agree bit for bit (|x| uniform in [0, 6.5] and [0, 3], below
+1/2, and log-uniform down to 2^-70; then 4·10^8 over the pieces alone): at
+most 0.5264 ulp, 0.11–0.12 % not correctly rounded.
+
+Instructions per call (speed → fast), with AOR's:
+
+| Core | `erf` | AOR |
+| --- | ---: | ---: |
+| armv7e-m-dp | 418 → 68 | 69 |
+| x86_64 | 504 → 98 | – |
+| armv7e-m, armv8-m.main (helpers) | 12,171 → 3206 | 8263 |
+| armv7-m (helpers) | 13,408 → 3272 | – |
+| armv6-m, armv6s-m (helpers) | 40,655 → 9579 | 25,491 |
+
+The soft-double cores already run below AOR's count on this double file;
+P11.05o gives them a fixed-point kernel.
+
+**Size:** `erf` is 3388 bytes on armv7e-m-dp (the table 2576), against the
+strict file's 564 over shared double-double cores. No size program calls it;
+every budget holds.
