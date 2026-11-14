@@ -102,8 +102,8 @@ nearest, measured on the host with MPFR; the full table is below).
    x86_64, whose special-argument tests and table-free logarithm cost the
    difference (D207; P11.06b and c work on it). The cases where AOR was faster
    at P11.06a (since P11.06b, D208, `expf`, `exp2f`, `logf`, `log2f`, `log10f`
-   and `powf` are at or below AOR's counts; `erff`, `sinf`, `cosf` and
-   `sincosf` are P11.06c's):
+   and `powf` are at or below AOR's counts, and since P11.06c, D209, `erff`,
+   `sinf`, `cosf` and `sincosf`: the exit check is met on every Arm core):
    - `powf`: AOR takes 0.55 of our instructions.
    - `logf`, `log2f`, `log10f`: 0.57–0.60.
    - `erff`: 0.59.

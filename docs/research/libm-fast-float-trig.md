@@ -1024,3 +1024,90 @@ per call (speed → fast, the bench's plugin):
 Test vectors (`libm_thresholds`): each side of 1/2 (asinh), 1.25 (acosh),
 1/4 (atanh) and 2^12, the floats next to 1 and to FLT_MAX, the sweeps'
 worst points, and the regression, within 1.5 ulp.
+
+## 22. The double path's sinf, cosf, sincosf and erff made faster (P11.06c, Q55, D207)
+
+P11.06a measured AOR's `sinf`, `cosf`, `sincosf` and `erff` ahead of the fast
+flavour on armv7e-m-dp (instructions per call 50.5, 47.2, 80.8 and 67.1
+against our 57.8, 49.8, 84.2 and 113.1). As for the exponentials and
+logarithms (`libm-fast-float-exp-log.md` §18), that core runs the double path
+of `libc/math/fast/` (section 3, section 12), shared with x86_64.
+
+### What was slow
+
+- **The tests:** `isless` compares of |x| against 2^-30 and 2^20, each
+  `vabs`, `vcmp`, `vmrs`, a branch and a constant.
+- **The reduction:** three parts of π/2 (`__libc_fast_rem_pio2`, r to 2^-52
+  relative), which the double `tan` path and the π forms need, but a float
+  result does not.
+- **The polynomials:** Taylor series to r^11 (sine) and r^12 (cosine),
+  2^-36.7 and 2^-38, where the float target needs about 2^-28.
+- **`erff`:** above 1/2 it was 1 − erfc|x| through erfcf's kernel: e^(−x²)
+  by a degree 5 exponential, R(x) = erfc(x) e^(x²) in pieces, and a division
+  above 3. That design served `erfcf`'s correct rounding (section 12); `erff`
+  needs only an absolute 2^-30.
+
+### The design
+
+- **One integer test:** |x|'s bits − bits(2^-30) ≥ bits(2^20) −
+  bits(2^-30), unsigned, for `sinf` and `sincosf` (tiny, large, infinite and
+  NaN together); bits ≥ bits(2^20) for `cosf`; bits ≥ bits(3.92) for `erff`.
+  The rest goes to a `noinline` helper, with the old code.
+- **Two parts of π/2** (`__libc_fast_rem_pio2f`): k = round(x·2/π) by the
+  1.5·2^52 shift; P1 = π/2 to 33 bits, so k·P1 and x − k·P1 are exact for
+  |k| < 2^20 (section 3); P2 the double nearest π/2 − P1, short by 2^-87.9.
+  r = (x − k P1) − k P2 is within 2^-66 absolutely. The float arguments
+  from 2^-30 to 2^20 come no closer than 2^-27.83 to a nonzero multiple of
+  π/2 (measured over all of them, against a 64-bit reduction), so r keeps
+  2^-38 relatively.
+- **The float polynomials**, fitted here by least squares on 300 Chebyshev
+  nodes of |r| ≤ π/4 (mpmath, 50 digits), evaluated as Estrin pairs:
+  - sin r = r + r³ S(r²), S of degree 3: 2^-35.6 relative;
+  - cos r = 1 + r² C(r²), C of degree 3: 2^-31.8.
+- **`erff` in pieces, no exponential** (as P11.05n did for the double `erf`,
+  `libm-fast-double.md` §22): from 1/2 to 3.92, erf ≥ 0.52, so an absolute
+  error is enough.
+  - c = round(2|x|)/2 by the shift, t = |x| − c exact, |t| ≤ 1/4.
+  - Eight pieces about c = 1/2, 1, …, 4 (`__libc_fast_erf_pieces`, 512 bytes),
+    degree 7 each, fitted over [max(c − 1/4, 1/2), min(c + 1/4, 3.92)]:
+    2^-30.7 absolute (degree 8 gives 2^-35.0, degree 9 2^-38.7).
+  - Below 1/2, the existing odd series x P(x²) (2^-36.2 relative).
+  - The sign goes in by x's sign bit, so erff(−0) = −0 and the result is odd.
+
+### Measured (P11.06c)
+
+On the host, every float argument the common path takes (`sinf`, `cosf`,
+`sincosf` from 2^-30 to 2^20; `erff` every finite float), against long
+double, on the SSE2 and the fma paths, which agree:
+
+| Function | Arguments | max ulp | not correctly rounded |
+|---|---:|---:|---:|
+| `sinf` | 838,860,800 | 0.5032 | 0.0155 % |
+| `cosf` | 838,860,800 | 0.5031 | 0.0166 % |
+| `sincosf` | 838,860,800 | as `sinf` and `cosf`, bit for bit | |
+| `erff` | 4,278,190,080 | 0.5095 | 0.0095 % |
+
+Before: `sinf` and `cosf` 0.5001 (the 2^-52 reduction and the long Taylor
+series), `erff` 0.5002. The arguments from 2^20 and below 2^-30 take the
+old code. Instructions per call on armv7e-m-dp (AOR's in brackets):
+
+| Function | before | after |
+|---|---:|---:|
+| `sinf` | 57.8 | 42.8 (50.5) |
+| `cosf` | 49.8 | 42.8 (47.2) |
+| `sincosf` | 84.2 | 67.3 (80.8) |
+| `erff` | 109.6 | 65.4 (67.1) |
+
+Found along the way: `sincosf`'s tiny path first took cos x by the
+polynomial directly, while `cosf` reduces every argument. Rounding downward,
+the reduction's shift gives k = −1 for a tiny negative x (r near π/2), and
+the two results differed in the last bit. `posix`'s check that `sincosf` is
+`sinf` and `cosf` bit for bit, in every direction, caught it. The tiny path
+now computes the cosine exactly as `cosf` does.
+
+The re-run exit check found one case left: armv7e-m-dp's double `log`, 67.62
+instructions per call against AOR's 67.56. Its range test
+(`__libc_fast_log_outside`, `libm-fast-double.md`) compared all 64 bits by a
+subtraction with borrow. A double is a positive normal exactly when its high
+word lies in [0x00100000, 0x7ff00000), so it now tests that word alone, with
+the same classification: `log` 65.62, `log2` 69.62, `log10` 74.62.

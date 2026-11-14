@@ -12,27 +12,33 @@
  */
 
 #include <math.h>
+#include <stdint.h>
 
 #include "internal/math-fast.h"
 
 /*
- * The fast sinf of the double-FPU cores (PLAN D162, D175): for |x| < 2^20, x = k pi/2 + r in double
- * (__libc_fast_rem_pio2, r to 2^-52 relative) and the Taylor polynomials in double (__libc_fast_sin_quadrant); rounded once to float, below 0.51 ulp to nearest (the note,
- * section 3). Beyond 2^20, the infinities and NaNs, the double sin's slow path rounded once (__libc_fast_trig_large).
+ * Off the common path: the tiny arguments as the other build types (x, with underflow for a subnormal one), and from
+ * 2^20, the infinities and NaNs, the double sin's slow path rounded once (__libc_fast_trig_large)
+ */
+[[gnu::noinline]] static float sinf_unusual(float x)
+{
+	if (isless(__builtin_fabsf(x), 0x1p-30f))
+		return __libc_math_tinyf(x, -x);
+	return (float)__libc_fast_trig_large(x, 0);
+}
+
+/*
+ * The fast sinf of the double-FPU cores (PLAN D162, D175, P11.06c; docs/research/libm-fast-float-trig.md section 22):
+ * for 2^-30 <= |x| < 2^20, one integer test, x = k pi/2 + r in double by two parts of pi/2 (__libc_fast_rem_pio2f) and
+ * the float polynomials (__libc_fast_sinf_quadrant); rounded once to float, below 0.51 ulp to nearest.
  */
 float sinf(float x)
 {
 	double r;
 	int k;
 
-	/* The tiny arguments as the other build types: x, with underflow for a subnormal one */
-	if (isless(__builtin_fabsf(x), 0x1p-30f))
-		return __libc_math_tinyf(x, -x);
-	/* A NaN compares quietly (isless): the relational operators would raise invalid */
-	if (!isless(__builtin_fabsf(x), 0x1p20f))
-		return (float)__libc_fast_trig_large(x, 0);
-
-	k = __libc_fast_rem_pio2((double)x, &r);
-
-	return (float)__libc_fast_sin_quadrant(k, r);
+	if ((__libc_float_bits(x) & 0x7fffffffu) - 0x30800000u >= 0x49800000u - 0x30800000u)
+		return sinf_unusual(x);
+	k = __libc_fast_rem_pio2f((double)x, &r);
+	return (float)__libc_fast_sinf_quadrant(k, r);
 }

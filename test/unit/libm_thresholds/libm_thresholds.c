@@ -243,6 +243,35 @@ static void check_one_test_edges(void)
 	QUIET(within_ulp(powf(-0x1.000002p+0f, 3.0f), pow(-0x1.000002p+0, 3.0)) && within_ulp(powf(0x1.fffffep-1f, 0x1p20f), pow(0x1.fffffep-1, 0x1p20)));
 }
 
+/*
+ * The double path's trigonometric and error-function entries (P11.06c): each side of the one integer test (2^-30 and
+ * 2^20 for sinf and sincosf, 2^20 for cosf; 1/2 and 3.92 for erff), each side of erff's pieces (the ties of round(2|x|)
+ * at 3/4, 5/4, ..., 15/4) with both signs, and sincosf against sinf and cosf, within 1 ulp of a double reference in
+ * every build type
+ */
+static void check_one_test_trig_edges(void)
+{
+	static const float trig_points[] = { 0x1p-30f, 0x1.000002p-30f, 0x1.fffffep-31f, 0x1.fffffep+19f, 0x1.921fb6p+0f, 0x1.921fb6p+1f, 0x1.2d97c8p+2f, 0x1.f6a7a2p+19f };
+
+	for (unsigned int i = 0; i < sizeof(trig_points) / sizeof(trig_points[0]); ++i) {
+		float x = trig_points[i];
+		float s;
+		float c;
+
+		sincosf(x, &s, &c);
+		CHECK(within_ulp(sinf(x), sin(x)) && within_ulp(sinf(-x), sin(-x)) && within_ulp(cosf(x), cos(x)) && within_ulp(cosf(-x), cos(-x)));
+		CHECK(s == sinf(x) && c == cosf(x));
+	}
+	QUIET(within_ulp(erff(0x1.fffffep-2f), erf(0x1.fffffep-2)) && within_ulp(erff(0.5f), erf(0.5)) && within_ulp(erff(-0.5f), erf(-0.5)));
+	QUIET(within_ulp(erff(0x1.f5c28ep+1f), erf(0x1.f5c28ep+1)) && erff(0x1.f5c290p+1f) == 1.0f && erff(-0x1.f5c290p+1f) == -1.0f);
+	for (int j = 3; j <= 15; j += 2) {
+		float tie = (float)j / 4.0f;
+
+		QUIET(within_ulp(erff(tie), erf(tie)) && within_ulp(erff(nextafterf(tie, 0.0f)), erf(nextafterf(tie, 0.0f))) && within_ulp(erff(nextafterf(tie, 8.0f)), erf(nextafterf(tie, 8.0f))));
+		QUIET(within_ulp(erff(-tie), erf(-tie)) && signbit(erff(-tie)));
+	}
+}
+
 static void check_minus_one(void)
 {
 	static float (*const functions[])(float) = { expm1f, exp2m1f, exp10m1f };
@@ -820,6 +849,7 @@ int main(void)
 	check_cube_root();
 	check_fixed_edges();
 	check_one_test_edges();
+	check_one_test_trig_edges();
 	check_trigonometric();
 	check_inverse_trigonometric();
 	check_hyperbolic();

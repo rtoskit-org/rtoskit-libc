@@ -1160,3 +1160,17 @@ AOR's `erf`: 69.
 | `erfcf` | 122.7 | 118.9 | -3 % | — |
 
 The AOR column is AOR's own function, where it has one (P11.06a's record, `docs/perf/aor-armv7e-m-dp-fast.json`); the m1, hyperbolic and error functions gain from the shared exponential kernel.
+
+## P11.06c — The double path's `sinf`, `cosf`, `sincosf` and `erff` (D209)
+
+`libc/math/fast/`: one integer test each, two parts of π/2 and shorter fitted polynomials for the trigonometric floats, `erff` in eight pieces without an exponential, and the double logarithms' range test on the high word only. Instructions per call (throughput), fast before → after; release and speed unchanged.
+
+| Function | before | after | change | AOR |
+|---|---:|---:|---:|---:|
+| `sinf` | 57.8 | 42.8 | -26 % | 50.5 |
+| `cosf` | 49.8 | 42.8 | -14 % | 47.2 |
+| `sincosf` | 84.2 | 67.3 | -20 % | 80.8 |
+| `erff` | 109.6 | 65.4 | -40 % | 67.1 |
+| `log` | 67.6 | 65.6 | -3 % | 67.6 |
+| `log2` | 71.6 | 69.6 | -3 % | 72.6 |
+| `log10` | 76.6 | 74.6 | -3 % | — |

@@ -630,6 +630,51 @@ static inline double __libc_fast_sin_quadrant(int k, double r)
 	return (k & 2) == 0 ? value : -value;
 }
 
+/*
+ * The float sinf, cosf and sincosf of the double path (P11.06c; docs/research/libm-fast-float-trig.md section 22):
+ * x = k pi/2 + r for 2^-30 <= |x| < 2^20 by two parts of pi/2, P1 of 33 bits (k P1 and x - k P1 exact, as in
+ * __libc_fast_rem_pio2) and P2 the double nearest pi/2 - P1 (2^-87.9 short): r within 2^-66 absolutely, against
+ * |r| of at least 2^-27.83 for every float argument there with k != 0 (measured), so 2^-38 relatively
+ */
+static inline int __libc_fast_rem_pio2f(double x, double *r)
+{
+	double shifted = x * 0x1.45f306dc9c883p-1 + 0x1.8p52;
+	int k = (int)(uint32_t)__libc_double_bits(shifted);
+	double kd = shifted - 0x1.8p52;
+
+	*r = (x - kd * 0x1.921fb544p+0) - kd * 0x1.0b4611a626331p-34;
+	return k;
+}
+
+/* sin r for |r| <= pi/4: r + r^3 S(r^2), S of degree 3 fitted here (relative error 2^-35.6) */
+static inline double __libc_fast_sinf_poly(double r)
+{
+	double z = r * r;
+	double p = (-0x1.555555545e495p-3 + z * 0x1.11110defa02e2p-7) + (z * z) * (-0x1.a013a80efaeb6p-13 + z * 0x1.6dbe2984fb53ap-19);
+
+	return r + (r * z) * p;
+}
+
+/* cos r for |r| <= pi/4: 1 + r^2 C(r^2), C of degree 3 fitted here (relative error 2^-31.8) */
+static inline double __libc_fast_cosf_poly(double r)
+{
+	double z = r * r;
+	double p = (-0x1.fffffffab3709p-2 + z * 0x1.55554cbcb64c2p-5) + (z * z) * (-0x1.6c0e09475d98bp-10 + z * 0x1.9a6f61b96517dp-16);
+
+	return 1.0 + z * p;
+}
+
+/* sin(k pi/2 + r) for |r| <= pi/4 with the float polynomials: the quadrant picks sin or cos and the sign */
+static inline double __libc_fast_sinf_quadrant(int k, double r)
+{
+	double value = (k & 1) == 0 ? __libc_fast_sinf_poly(r) : __libc_fast_cosf_poly(r);
+
+	return (k & 2) == 0 ? value : -value;
+}
+
+/* erf(c + t) for c = j/2 + 1/2, j = 0..7, and |t| <= 1/4: degree 7 in t, fitted here (libc/math/fast/__libc_fast_erf_pieces.c) */
+extern const double __libc_fast_erf_pieces[8][8];
+
 /* sin(j pi/32) for j = 0..16 as exact pairs; cos(j pi/32) is entry 16 - j (libc/math/fast/__libc_fast_sin_table.c, D196) */
 extern const struct __libc_dd __libc_fast_sin_table[17];
 
@@ -1560,7 +1605,8 @@ static inline double __libc_fast_log_poly(double r, double r2)
 static inline bool __libc_fast_log_outside(double x, uint64_t *ix)
 {
 	*ix = __libc_double_bits(x);
-	if (*ix - 0x0010000000000000ull >= 0x7fe0000000000000ull) {
+	/* The high word alone classifies: a positive normal's is in [0x00100000, 0x7ff00000) (P11.06c: one 32-bit test) */
+	if ((uint32_t)(*ix >> 32) - 0x00100000u >= 0x7fe00000u) {
 		if (*ix == 0 || *ix >= 0x7ff0000000000000ull)
 			return true;
 		*ix = __libc_double_bits(x * 0x1p52) - (52ull << 52);

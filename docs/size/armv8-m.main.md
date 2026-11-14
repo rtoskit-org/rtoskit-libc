@@ -886,3 +886,7 @@ Release and speed unchanged (`size-report diff`). In fast, `erf` is 3802 bytes w
 ## P11.06b — The double path's float exp, log and pow (D208)
 
 Release and speed unchanged (`size-report diff`). The fast files changed are the double-FPU cores' (x86_64, armv7e-m-dp); on this core every fast budget holds and nothing is re-locked.
+
+## P11.06c — The double path's `sinf`, `cosf`, `sincosf` and `erff` (D209)
+
+Release and speed unchanged (`size-report diff`). The fast files changed are the double-FPU cores' (x86_64, armv7e-m-dp); on this core every fast budget holds and nothing is re-locked.
