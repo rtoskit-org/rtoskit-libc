@@ -711,3 +711,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix`, which cal
 ## P11.05j — Fast `asin`, `acos`, `atan` and `atan2` in double (D198)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `atan2`) grows from 19286 to 20128 bytes of code (+842): the fast `atan2` (566 bytes), the 272-byte atan(j/16) table and the strict code kept as its 736-byte slow path, where the strict file shared the double-double core with nothing else in the program. That is +65 % over speed, above D191's +20 % line, which P11.06 brings to the maintainer. Re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).
+
+## P11.05l — Fast hyperbolic functions in double (D201)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.

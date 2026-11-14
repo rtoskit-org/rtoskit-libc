@@ -1508,3 +1508,18 @@ AOR has no scalar double `atan` or `atan2`.
 | `acos` | 35718 | 20151 | 3293 | -91 % |
 
 AOR has no scalar double `asin` or `acos`.
+
+## P11.05l — Fast hyperbolic functions in double (D201)
+
+`libc/math/fast/`'s double files (P11.05l, the double-FPU cores' design) run here on the soft-double helpers until P11.05m gives these cores fixed-point kernels. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinh` | 17842 | 9200 | -48 % |
+| `cosh` | 16696 | 5297 | -68 % |
+| `tanh` | 20152 | 16684 | -17 % |
+| `asinh` | 39784 | 18468 | -54 % |
+| `acosh` | 34248 | 18611 | -46 % |
+| `atanh` | 25834 | 12620 | -51 % |
+
+AOR has no scalar double hyperbolic function.

@@ -862,3 +862,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which cal
 ## P11.05k2 — Fast `asin` and `acos` in fixed point (D200)
 
 Release and speed unchanged (`size-report diff`). In fast, no size program calls `asin` or `acos` (`math-mix` calls `atan2` only); every budget holds and nothing is re-locked.
+
+## P11.05l — Fast hyperbolic functions in double (D201)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.
