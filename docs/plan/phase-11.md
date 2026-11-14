@@ -505,8 +505,10 @@ Split, as P11.04g was: the two halves rest on different kernels.
 - [x] (AOR: 69 instructions on armv7e-m-dp); tests, gains (D204; the note,
   §22): 418 → 68 instructions on armv7e-m-dp, at most 0.5264 ulp.
 
-### P11.05o — `erf` on the soft-double cores  `[ ]`
-- [ ] (AOR: 8263 on armv7e-m, 25,491 on armv6-m); tests, gains.
+### P11.05o — `erf` on the soft-double cores  `[x]`
+- [x] (AOR: 8263 on armv7e-m, 25,491 on armv6-m); tests, gains (D205; the
+  note, §23): 12,171 → 518 instructions on armv7e-m and 40,655 → 2049 on
+  armv6-m, at most 0.5044 ulp.
 
 ## P11.06 — Comparison and wrap-up  `[ ]`
 - [ ] `bench-runner compare` and `bench-runner aor` with the fast build as

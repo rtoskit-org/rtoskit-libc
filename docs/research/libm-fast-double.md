@@ -1669,3 +1669,49 @@ P11.05o gives them a fixed-point kernel.
 **Size:** `erf` is 3388 bytes on armv7e-m-dp (the table 2576), against the
 strict file's 564 over shared double-double cores. No size program calls it;
 every budget holds.
+
+## 23. erf on the soft-double cores (P11.05o)
+
+`libc/math/dp-fixed/fast/erf.c`, shadowing §22's double file on the five
+soft-double cores. Sources: §22.1's, and P11.04e2's fixed-point `erff`
+(pieces of erf in signed Q31 above 1/2, x·(2/√π + u·q(u)) below); no new
+source was read.
+
+### 23.1 The method
+
+- **Pieces, in integers, from 1/2 to 6:** 22 of width 1/4, left-aligned at
+  a = (j + 2)/4. 4|x| = significand·2^(e − 50), so its integer part picks the
+  piece and its fraction is u in Q64, both exact from x's bits.
+  - erf(a + u/4) = b0 + u·Q(u), with b0 = erf(a) in Q64 and Q's twelve
+    coefficients signed in Q63, fitted here by least squares on Chebyshev
+    nodes: within 2^-61.94 of erf with the coefficients rounded (twelve leave
+    2^-59.17).
+  - Horner's rule runs signed: each step c + u·p takes the high product of u
+    and |p| with p's sign, truncated toward zero.
+  - b0 + u·Q is summed modulo 2^64; the result is below 1 and from 1/2 at
+    least 0.52, so bit 63 is set and one rounding by the 54th bit finishes.
+  - The truncations, a few units of 2^-63, stay below 2^-58 of the result.
+- **Below 1/2:** erf x = x·K(w) with w = 4x² in Q64 and K = 2/√π − w·G(w) in
+  Q62. G has nine signed Q64 coefficients (w·G within 2^-63 of the rest,
+  relatively). The result is relative however small x is.
+- **The ends:** below 2^-60 the strict file's scaled product (the only
+  soft-double operation, and rare); from 6, ±(1 − tiny).
+- **Size:** the table is 22 × 13 × 8 = 2288 bytes.
+
+### 23.2 Measured (P11.05o)
+
+On the host (the speed files' `umull` product), against long double, with
+§22.3's sweep (1.4·10^9 samples): at most 0.5044 ulp, 0.02–0.04 % not
+correctly rounded.
+
+Instructions per call (speed → §22's double file on the helpers → fast),
+with AOR's:
+
+| Core | `erf` | AOR |
+| --- | ---: | ---: |
+| armv7e-m, armv8-m.main | 12,171 → 3206 → 518 | 8263 |
+| armv6-m, armv6s-m | 40,655 → 9579 → 2049 | 25,491 |
+
+AOR has no record for armv7-m (518). **Size:** `erf` is 3802 bytes on
+armv7e-m and 3852 on armv6-m, the table 2288 of them. No size program calls
+it; every budget holds.

@@ -195,10 +195,10 @@
     "insns": 900.0
    },
    "erf/latency": {
-    "insns": 9616.75
+    "insns": 2086.62
    },
    "erf/throughput": {
-    "insns": 9578.94
+    "insns": 2048.81
    },
    "erfc/latency": {
     "insns": 113001.5
