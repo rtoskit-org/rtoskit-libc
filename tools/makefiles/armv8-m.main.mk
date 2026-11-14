@@ -23,11 +23,16 @@ export LIBC_FENV := soft
 # soft-dp is the double-precision run-time ABI helpers in integers (D99)
 # soft-int is the conversions to 64-bit integers, in integers (D102)
 export LIBC_MATH_LAYERS := sp sp-nearest fpv5-sp soft-dp soft-int dp-fixed
+# The layers whose fast/ directory the fast flavour takes (PLAN D168, D188): the float-only files with fused multiply-adds
+# and the 64-bit fixed-point doubles of dp-fixed
+export LIBC_MATH_FAST_LAYERS := sp-nearest dp-fixed
 # Hand-written string kernels (libc/string/<kernels>; the first directory with a function wins)
 # per flavour: the speed build type sets LIBC_FLAVOUR (PLAN D69, D70, D73)
 LIBC_FLAVOUR ?= size
 LIBC_STRING_KERNELS_size := thumb1
 LIBC_STRING_KERNELS_speed := thumb2-dsp thumb2 thumb1
+# The fast flavour has the speed kernels (PLAN D162)
+LIBC_STRING_KERNELS_fast := ${LIBC_STRING_KERNELS_speed}
 export LIBC_STRING_KERNELS = ${LIBC_STRING_KERNELS_${LIBC_FLAVOUR}}
 
 include ${PROJECT_ROOT}/tools/makefiles/arm-none-eabi.mk

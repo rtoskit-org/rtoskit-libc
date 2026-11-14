@@ -13,6 +13,7 @@
 
 #include <errno.h>
 #include <limits.h>
+#include <math.h>
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -150,6 +151,12 @@ static void check_scan(enum flavour flavour)
 		CHECK(status == 1 && big == -123456789012LL);
 }
 
+/* The headers every build type shares (PLAN D162, flavours.run): libm reports errors by exceptions only, fast included (D45, D163) */
+static void check_headers(void)
+{
+	CHECK(math_errhandling == MATH_ERREXCEPT);
+}
+
 int main(int argc, char **argv)
 {
 	enum flavour flavour = FULL;
@@ -159,6 +166,7 @@ int main(int argc, char **argv)
 	else if (argc > 1 && strcmp(argv[1], "minimal") == 0)
 		flavour = MINIMAL;
 
+	check_headers();
 	check_common();
 	check_wide(flavour);
 	check_count(flavour);

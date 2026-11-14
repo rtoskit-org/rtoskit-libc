@@ -697,7 +697,7 @@
      "rodata": 3700,
      "tbss": 0,
      "tdata": 0,
-     "text": 22426,
+     "text": 22418,
      "unwind": 0
     },
     "libgcc": {
@@ -743,7 +743,7 @@
     "rodata": 3700,
     "tbss": 0,
     "tdata": 0,
-    "text": 23260,
+    "text": 23252,
     "unwind": 0
    }
   }
@@ -1161,7 +1161,7 @@
     "rodata": 72,
     "tbss": 0,
     "tdata": 0,
-    "text": 668,
+    "text": 664,
     "unwind": 0
    },
    "__libc_atexit_run.o": {
@@ -6192,7 +6192,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 1576,
+    "text": 1568,
     "unwind": 0
    },
    "powf.o": {
@@ -9190,7 +9190,7 @@
    "rodata": 10215,
    "tbss": 362,
    "tdata": 8,
-   "text": 152404,
+   "text": 152392,
    "unwind": 36
   }
  },

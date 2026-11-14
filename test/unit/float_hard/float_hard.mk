@@ -15,7 +15,7 @@ ifeq ($(findstring ${BUILD_ROOT},${CURDIR}),)
 include ${PROJECT_ROOT}/tools/makefiles/target.mk
 else
 
-EXTRA_DEPS := ${SOURCE_DIR}/float_hard.mk
+EXTRA_DEPS := ${SOURCE_DIR}/float_hard.mk ${SOURCE_DIR}/subdir.mk
 EXTRA_ELF_DEPS := ${BUILD_ROOT}/libc/libc.a
 
 TARGET_OBJ_LIBS := port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY}
@@ -26,5 +26,10 @@ include ${PROJECT_ROOT}/tools/makefiles/project.mk
 CFLAGS += -fno-builtin
 
 all: $(if ${SRC},${CURDIR}/float_hard.elf)
+
+# The fast build type's expectation compiles into a subdirectory of the build directory (subdir.mk)
+${CURDIR}/fast/expect.o: | ${CURDIR}/fast
+${CURDIR}/fast:
+	mkdir -p $@
 
 endif

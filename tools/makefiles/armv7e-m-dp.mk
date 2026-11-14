@@ -26,6 +26,8 @@ export LIBC_MATH_LAYERS := sp fpv5-sp fpv5-dp
 LIBC_FLAVOUR ?= size
 LIBC_STRING_KERNELS_size := thumb1
 LIBC_STRING_KERNELS_speed := thumb2-dsp thumb2 thumb1
+# The fast flavour has the speed kernels (PLAN D162)
+LIBC_STRING_KERNELS_fast := ${LIBC_STRING_KERNELS_speed}
 export LIBC_STRING_KERNELS = ${LIBC_STRING_KERNELS_${LIBC_FLAVOUR}}
 
 include ${PROJECT_ROOT}/tools/makefiles/arm-none-eabi.mk

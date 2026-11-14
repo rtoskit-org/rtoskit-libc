@@ -14,4 +14,6 @@
 # The double path of the float functions, with every rounding direction (PLAN D44, D98)
 ifneq ($(filter sse2 fpv5-dp,${LIBC_FPU}),)
 SRC += ${SOURCE_DIR}/float_hard.c
+# The expectation of the build type's contract: the strict one, or in fast the fast one (PLAN D162, D164)
+SRC += $(if $(filter fast,${LIBC_FLAVOURS}),${SOURCE_DIR}/fast/expect.c,${SOURCE_DIR}/expect.c)
 endif

@@ -43,9 +43,12 @@ TARGET_OBJ_LIBS += libc/stat
 TARGET_OBJ_LIBS += libc/stdbit
 TARGET_OBJ_LIBS += libc/stdio
 TARGET_OBJ_LIBS += libc/stdlib
-# The speed flavour's replacement files (PLAN D77)
-TARGET_OBJ_LIBS += $(if $(filter speed,${LIBC_FLAVOUR}),libc/stdio/speed libc/stdlib/speed)
-TARGET_OBJ_LIBS += $(if $(filter speed,${LIBC_FLAVOUR}),$(foreach layer,${LIBC_MATH_LAYERS},$(if $(wildcard ${PROJECT_ROOT}/libc/math/${layer}/speed/speed.mk),libc/math/${layer}/speed)))
+# The speed flavour's replacement files (PLAN D77), in the speed and fast flavours (LIBC_FLAVOURS, D162)
+TARGET_OBJ_LIBS += $(if $(filter speed,${LIBC_FLAVOURS}),libc/stdio/speed libc/stdlib/speed)
+# libm's flavour directories, generic and per layer, for each flavour the build type lists: <layer>/speed/ in speed,
+# and those then libc/math/fast/ and <layer>/fast/ in fast, for the layers the arch file lists in LIBC_MATH_FAST_LAYERS
+# (D77, D162, D168)
+TARGET_OBJ_LIBS += $(foreach flavour,${LIBC_FLAVOURS},$(foreach dir,libc/math $(addprefix libc/math/,$(if $(filter fast,${flavour}),$(filter ${LIBC_MATH_FAST_LAYERS},${LIBC_MATH_LAYERS}),${LIBC_MATH_LAYERS})),$(if $(wildcard ${PROJECT_ROOT}/${dir}/${flavour}/${flavour}.mk),${dir}/${flavour})))
 TARGET_OBJ_LIBS += libc/string
 TARGET_OBJ_LIBS += $(addprefix libc/string/,${LIBC_STRING_KERNELS})
 TARGET_OBJ_LIBS += libc/strings
@@ -56,11 +59,21 @@ TARGET_OBJ_LIBS += libc/unistd
 
 EXTRA_DEPS := ${SOURCE_DIR}/libc.mk
 
+# No two members of libc.a may share a name (PLAN D164): ar keeps both and the link takes the first, so a shadowed
+# file's object left in a build directory (D117), or a speed/ or fast/ file a module does not filter out, stops here
+EXTRA_LIB_DEPS := ${CURDIR}/libc.unique
+EXTRA_CLEAN := ${CURDIR}/libc.unique
+
 LIBC_HEADERS := $(patsubst ${PROJECT_ROOT}/include/%,${INSTALL_ROOT}/include/%,$(shell find ${PROJECT_ROOT}/include -name '*.h'))
 
 include ${PROJECT_ROOT}/tools/makefiles/project.mk
 
 all: ${INSTALL_ROOT}/lib/libc.a ${INSTALL_ROOT}/lib/libm.a ${LIBC_HEADERS}
+
+${CURDIR}/libc.unique: ${TARGET_OBJ} ${EXTRA_DEPS}
+	@echo "CHECKING ${@}"
+	duplicates="$$(printf '%s\n' $(notdir ${TARGET_OBJ}) | sort | uniq -d)"; if [ -n "$${duplicates}" ]; then echo "libc.a: members of the same name in two modules (delete the stale object or make clean, CLAUDE.md):" $${duplicates} >&2; exit 1; fi
+	touch $@
 all: ${INSTALL_ROOT}/lib/libc-nofloat.a ${INSTALL_ROOT}/lib/libc-minimal-printf.a ${INSTALL_ROOT}/lib/libc-tinymalloc.a
 
 # Flavour archives (PLAN D13, D53): libc.a with members replaced by the objects of a variant
@@ -70,17 +83,17 @@ LIBC_MINIMAL_OBJ := ${LIBC_NOFLOAT_OBJ} $(wildcard ${BUILD_ROOT}/libc/stdio/mini
 LIBC_TINYMALLOC_OBJ := $(wildcard ${BUILD_ROOT}/libc/malloc/tiny/*.o)
 libc_flavour = $(filter-out $(addprefix %/,$(notdir ${1})),${TARGET_OBJ}) ${1}
 
-${CURDIR}/libc-nofloat.a: ${TARGET_OBJ} ${LIBC_NOFLOAT_OBJ} ${EXTRA_DEPS}
+${CURDIR}/libc-nofloat.a: ${TARGET_OBJ} ${LIBC_NOFLOAT_OBJ} ${EXTRA_DEPS} ${EXTRA_LIB_DEPS}
 	@echo "ARCHIVING ${@}"
 	${RM} $@
 	$(AR) ${ARFLAGS} $@ $(call libc_flavour,${LIBC_NOFLOAT_OBJ})
 
-${CURDIR}/libc-minimal-printf.a: ${TARGET_OBJ} ${LIBC_MINIMAL_OBJ} ${EXTRA_DEPS}
+${CURDIR}/libc-minimal-printf.a: ${TARGET_OBJ} ${LIBC_MINIMAL_OBJ} ${EXTRA_DEPS} ${EXTRA_LIB_DEPS}
 	@echo "ARCHIVING ${@}"
 	${RM} $@
 	$(AR) ${ARFLAGS} $@ $(call libc_flavour,${LIBC_MINIMAL_OBJ})
 
-${CURDIR}/libc-tinymalloc.a: ${TARGET_OBJ} ${LIBC_TINYMALLOC_OBJ} ${EXTRA_DEPS}
+${CURDIR}/libc-tinymalloc.a: ${TARGET_OBJ} ${LIBC_TINYMALLOC_OBJ} ${EXTRA_DEPS} ${EXTRA_LIB_DEPS}
 	@echo "ARCHIVING ${@}"
 	${RM} $@
 	$(AR) ${ARFLAGS} $@ $(call libc_flavour,${LIBC_TINYMALLOC_OBJ})

@@ -68,10 +68,14 @@ double pow(double x, double y)
 		return __libc_math_invalid();
 	if (y == 1.0)
 		return x;
-	if (fabs(y) <= 0x1p20 && scalbn(fabs(x), -ilogb(x)) == 1.0) {
+	if (scalbn(fabs(x), -ilogb(x)) == 1.0) {
 		double power = y * ilogb(x);
 
-		if (power == trunc(power) && fma(y, ilogb(x), -power) == 0)
+		/*
+		 * The power bounded, not y: +-1 to any integer y is then +-1 here (bounding |y| by 2^20 sent (-1)^y beyond it
+		 * to the path below, which dropped the sign and, rounding down, 1's last bit)
+		 */
+		if (fabs(power) <= 0x1p20 && power == trunc(power) && fma(y, ilogb(x), -power) == 0)
 			return scalbn(negative ? -1.0 : 1.0, (int)power);
 	}
 

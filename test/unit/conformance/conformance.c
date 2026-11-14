@@ -248,6 +248,31 @@ static void regression_directed_rounding(void)
 #endif
 }
 
+/* pow(-1, y) for an odd integer y beyond 2^20 returned +1, and pow(+-1, y) beyond 2^20 rounded down to 1 - 2^-53 (P11.03c) */
+static void regression_pow_minus_one(void)
+{
+	CHECK(pow(-1.0, 0x1.fffffffffffffp52) == -1.0 && pow(-1.0, 0x1p21 + 1) == -1.0 && pow(-1.0, -0x1p21 - 1) == -1.0);
+	CHECK(powf(-1.0f, 0x1.fffffep23f) == -1.0f && powf(-1.0f, -0x1.fffffep23f) == -1.0f && powf(-1.0f, 0x1p30f) == 1.0f);
+	CHECK(pow(-1.0, 0x1p53) == 1.0 && pow(-1.0, 0x1p21) == 1.0 && powl(-1.0L, 0x1p21L + 1) == -1.0L);
+#ifdef FE_DOWNWARD
+	CHECK(fesetround(FE_DOWNWARD) == 0);
+	CHECK(pow(-1.0, 0x1p21) == 1.0 && pow(-1.0, 0x1p21 + 1) == -1.0 && powf(-1.0f, 0x1p24f) == 1.0f);
+	CHECK(fesetround(FE_TOWARDZERO) == 0);
+	CHECK(pow(-1.0, -0x1p30) == 1.0 && pow(-1.0, -0x1p30 - 1) == -1.0);
+	CHECK(fesetround(FE_TONEAREST) == 0);
+#endif
+}
+
+/*
+ * atan of the float just below 1/16 picked the breakpoint 1/8, as t 8 + 1/2 rounds up to 1 there, and t - 1/8 was
+ * inexact: 1.27 ulp on the float-float cores, in every build type (P11.04b)
+ */
+static void regression_atanf_sixteenth(void)
+{
+	CHECK(fabs((double)atanf(0x1.fffffep-5f) - 0x1.ff55b974cde0ap-5) < 0x1p-28 && fabs((double)atanf(-0x1.fffffep-5f) + 0x1.ff55b974cde0ap-5) < 0x1p-28);
+	CHECK(fabs((double)atan2f(0x1.fffffep-5f, 1.0f) - 0x1.ff55b974cde0ap-5) < 0x1p-28 && fabs((double)atan2f(0x1.fffffep-1f, 0x1p4f) - 0x1.ff55b974cde0ap-5) < 0x1p-28);
+}
+
 /* functional/strtod, strtod_long, strtod_simple, strtold: exact rounding at the boundaries, very long input, round trips */
 static void functional_strtod(void)
 {
@@ -571,6 +596,8 @@ int main(void)
 	regression_long_double_classes();
 	regression_nan_conversion_sign();
 	regression_directed_rounding();
+	regression_pow_minus_one();
+	regression_atanf_sixteenth();
 
 	functional_strtod();
 	functional_strtol();

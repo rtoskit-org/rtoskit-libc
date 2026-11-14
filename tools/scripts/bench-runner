@@ -18,8 +18,9 @@
 #   tools/scripts/bench-runner [--build-type T] run [--arch A ...]
 #                                                        measure; write results.json in the build
 #                                                        (release: the size flavour, the default;
-#                                                        speed: the speed flavour, PLAN D73)
-#   tools/scripts/bench-runner diff [--arch A ...]      compare results.json with docs/perf/baseline-<arch>[-speed].json;
+#                                                        speed: the speed flavour, PLAN D73; fast: the
+#                                                        fast flavour, D162)
+#   tools/scripts/bench-runner diff [--arch A ...]      compare results.json with docs/perf/baseline-<arch>[-speed|-fast].json;
 #                                                        exit status 1 when a case regressed
 #   tools/scripts/bench-runner report [--arch A ...]    write the baselines from results.json
 #   tools/scripts/bench-runner markdown --arch A [--previous REF | --against FILE]
@@ -30,12 +31,16 @@
 #                                                        build the test/bench programs against picolibc and
 #                                                        newlib-nano (the packages of size-report compare),
 #                                                        count them the same way and print a Markdown table
-#                                                        beside the baselines (context, not a gate; P3.06)
+#                                                        beside the baselines (context, not a gate; P3.06);
+#                                                        with --build-type fast, the fast build is a column too and
+#                                                        the reference of the ratios (P11.02)
 #   tools/scripts/bench-runner aor [--arch A ...] [--record | --from-record]
 #                                                        relink the speed build's programs with Arm Optimized
 #                                                        Routines ("make aor" first), count them and print the
 #                                                        tables against the baselines; --record keeps the results
-#                                                        in docs/perf/aor-<arch>.json (P4.03, PLAN D92)
+#                                                        in docs/perf/aor-<arch>.json (P4.03, PLAN D92); with
+#                                                        --build-type fast, the fast build's programs, a fast
+#                                                        column as the reference, and docs/perf/aor-<arch>-fast.json
 #
 # Figures: per case of each test/bench program, the guest instructions per
 # operation counted by the qemu plugin tools/qemu-plugins/bench-roi.c (on
@@ -84,13 +89,21 @@ def results_path(build):
 
 
 def flavour_of(build_type):
-	"""The speed build type is the speed flavour (PLAN D73); release (and debug) are the size flavour."""
-	return 'speed' if build_type == 'speed' else 'size'
+	"""The speed and fast build types are their flavours (PLAN D73, D162); release (and debug) are the size flavour."""
+	return build_type if build_type in ('speed', 'fast') else 'size'
 
 
 def baseline_path(directory, arch, build_type):
-	suffix = '-speed' if flavour_of(build_type) == 'speed' else ''
+	flavour = flavour_of(build_type)
+	suffix = '' if flavour == 'size' else f'-{flavour}'
 	return os.path.join(directory, f'baseline-{arch}{suffix}.json')
+
+
+def reference_of(build_type):
+	"""The rtoskit flavours the comparisons show, and the one their ratios are against: speed, or fast when it is
+	the build type (P11.02, PLAN D162)."""
+	flavours = [('size', 'release'), ('speed', 'speed')] + ([('fast', 'fast')] if build_type == 'fast' else [])
+	return flavours, flavours[-1][0]
 
 
 def symbol_addresses(arch, elf, names):
@@ -335,6 +348,9 @@ def command_markdown(args):
 COMPARE_PROGRAMS = ['string', 'stdio', 'strto', 'malloc', 'qsort', 'math']
 COMPARE_LIBRARIES = ['picolibc', 'newlib-nano']
 COMPARE_FLAGS = ['-Os', '-std=gnu23', '-fno-builtin', '-fno-tree-loop-distribute-patterns', '-ffunction-sections', '-fdata-sections']
+# The C23 functions neither library provides (P11.06a): the math program links the placeholders of
+# tools/bench-compare/c23-math.c, and their cases are left out of the table and the means
+COMPARE_ABSENT = {'exp2m1', 'exp10m1', 'log2p1', 'log10p1', 'sinpi', 'cospi', 'tanpi'}
 
 # The cases the table shows; every common case enters the geometric means
 COMPARE_CASES = {
@@ -359,6 +375,8 @@ def compare_build(report, roots, library, arch, program, work):
 	flags = report.cross_flags(arch) + COMPARE_FLAGS + ['-I' + os.path.join('test', 'bench', 'harness')]
 	sources = [os.path.join('tools', 'bench-compare', 'start.S'), os.path.join('tools', 'bench-compare', 'picolibc.c' if library == 'picolibc' else 'newlib.c'),
 		   os.path.join('test', 'bench', 'harness', 'bench.c'), os.path.join('test', 'bench', program, program + '.c')]
+	if program == 'math':
+		sources[-1:] = [os.path.join('tools', 'bench-compare', 'math.c'), os.path.join('tools', 'bench-compare', 'c23-math.c')]
 	directory = os.path.join(work, library, arch)
 	os.makedirs(directory, exist_ok=True)
 	elf = os.path.join(directory, f'bench-{program}.elf')
@@ -393,24 +411,28 @@ def command_compare(args):
 	os.makedirs(args.work, exist_ok=True)
 	roots = report.fetch_packages(args.work)
 	for arch in [b for b in args.arch if is_arm(b)]:
-		ours = {flavour: read_json(baseline_path(args.baseline_dir, arch, build_type))['programs'] for flavour, build_type in (('size', 'release'), ('speed', 'speed'))}
+		flavours, reference = reference_of(args.build_type)
+		ours = {flavour: read_json(baseline_path(args.baseline_dir, arch, build_type))['programs'] for flavour, build_type in flavours}
 		theirs = {}
 		for library in COMPARE_LIBRARIES:
 			theirs[library] = {program: count_instructions(arch, compare_build(report, roots, library, arch, program, args.work)) for program in COMPARE_PROGRAMS}
+			theirs[library]['math'] = {case: figure for case, figure in theirs[library]['math'].items() if case.split('/')[0].removesuffix('f') not in COMPARE_ABSENT}
 			write_json(os.path.join(args.work, library, arch, 'results.json'), theirs[library])
 		print(f'### {arch}\n')
-		print('Instructions per operation; the geometric mean is over every case all four builds share, as a ratio to rtoskit\'s speed flavour.\n')
-		print('| Program | Case | rtoskit (size) | rtoskit (speed) | picolibc | newlib-nano |')
-		print('|---|---|---:|---:|---:|---:|')
+		names = [flavour for flavour, build_type in flavours]
+		print(f'Instructions per operation; the geometric mean is over every case all {len(names) + len(COMPARE_LIBRARIES)} builds share, as a ratio to rtoskit\'s {reference} flavour.\n')
+		print('| Program | Case | ' + ' | '.join(f'rtoskit ({name})' for name in names) + ' | picolibc | newlib-nano |')
+		print('|---|---|' + '---:|' * (len(names) + len(COMPARE_LIBRARIES)))
 		for program in COMPARE_PROGRAMS:
-			common = [case for case in ours['speed'][program] if case in ours['size'][program] and all(case in theirs[library][program] for library in COMPARE_LIBRARIES)]
-			means = [geometric_mean([source[program][case]['insns'] / ours['speed'][program][case]['insns'] if isinstance(source[program][case], dict) else source[program][case] / ours['speed'][program][case]['insns']
-						 for case in common if ours['speed'][program][case]['insns'] > 0]) for source in (ours['size'], ours['speed'], theirs['picolibc'], theirs['newlib-nano'])]
+			base = ours[reference][program]
+			common = [case for case in base if all(case in ours[name][program] for name in names) and all(case in theirs[library][program] for library in COMPARE_LIBRARIES)]
+			means = [geometric_mean([source[program][case]['insns'] / base[case]['insns'] if isinstance(source[program][case], dict) else source[program][case] / base[case]['insns']
+						 for case in common if base[case]['insns'] > 0]) for source in [ours[name] for name in names] + [theirs[library] for library in COMPARE_LIBRARIES]]
 			print(f'| {program} | geometric mean ({len(common)} cases) | ' + ' | '.join(f'{m:.2f}' for m in means) + ' |')
 			for case in COMPARE_CASES[program]:
 				if case not in common:
 					continue
-				figures = [ours['size'][program][case]['insns'], ours['speed'][program][case]['insns'], theirs['picolibc'][program][case], theirs['newlib-nano'][program][case]]
+				figures = [ours[name][program][case]['insns'] for name in names] + [theirs[library][program][case] for library in COMPARE_LIBRARIES]
 				print(f'| | `{case}` | ' + ' | '.join(f'{f:.0f}' if f >= 100 else f'{f:.1f}' for f in figures) + ' |')
 		print()
 	return 0
@@ -431,12 +453,12 @@ def aor_build():
 	return module
 
 
-def aor_record_path(directory, arch):
-	return os.path.join(directory, f'aor-{arch}.json')
+def aor_record_path(directory, arch, build_type='speed'):
+	return os.path.join(directory, f'aor-{arch}' + ('-fast' if build_type == 'fast' else '') + '.json')
 
 
-def aor_measure(aor, arch, build_root):
-	build = os.path.join(build_root, arch, 'speed')
+def aor_measure(aor, arch, build_root, build_type='speed'):
+	build = os.path.join(build_root, arch, build_type)
 	manifest = aor.read_manifest(build_root, arch)
 	names = [name for name in AOR_LIBRARIES if name in manifest['provided']]
 	libraries = [aor.library_path(build_root, arch, name) for name in names]
@@ -446,11 +468,11 @@ def aor_measure(aor, arch, build_root):
 	harness = os.path.join(build, 'test', 'bench', 'harness')
 	common = sorted(glob.glob(os.path.join(harness, '*.o'))) + sorted(glob.glob(os.path.join(harness, 'arm' if is_arm(arch) else 'x86_64', '*.o')))
 	# The JSON is key-sorted, so the run order of the cases, which the tables follow, is kept beside them
-	result = {'arch': arch, 'build_type': 'speed', 'aor': manifest['revision'], 'qemu': QEMU_VERSION, 'programs': {}, 'order': {}, 'substituted': {}}
+	result = {'arch': arch, 'build_type': build_type, 'aor': manifest['revision'], 'qemu': QEMU_VERSION, 'programs': {}, 'order': {}, 'substituted': {}}
 	for program in AOR_PROGRAMS:
 		objects = sorted(glob.glob(os.path.join(build, 'test', 'bench', program, '*.o')))
 		if not objects:
-			raise SystemExit(f'{build}: test/bench/{program} not built (make ARCH_CROSS={arch} BUILD_TYPE=speed)')
+			raise SystemExit(f'{build}: test/bench/{program} not built (make ARCH_CROSS={arch} BUILD_TYPE={build_type})')
 		elf = os.path.join(directory, f'bench-{program}.elf')
 		mapfile = aor.link(arch, build, objects + common, libraries, elf, provided)
 		result['substituted'][program] = aor.check_substitution(arch, elf, mapfile, provided)
@@ -471,13 +493,15 @@ def is_entry_point(symbol):
 	return not symbol.startswith('arm_math_')
 
 
-def aor_markdown(arch, ours, theirs):
-	"""The tables of one architecture: rtoskit's size and speed flavours and the speed flavour with AOR's routines."""
-	lines = [f'### {arch}', '', 'Instructions per operation: rtoskit-libc\'s size and speed flavours, and the speed flavour with AOR\'s routines linked in. '
-		 'The ratio is AOR against the speed flavour, as a geometric mean over the cases whose count changed.', '',
-		 '| Program | Cases changed | AOR / speed (geometric mean) | AOR symbols linked |', '|---|---:|---:|---|']
+def aor_markdown(arch, ours, theirs, reference='speed'):
+	"""The tables of one architecture: rtoskit's size and speed (and fast) flavours and the reference flavour (speed, or
+	fast) with AOR's routines."""
+	names = list(ours)
+	lines = [f'### {arch}', '', f'Instructions per operation: rtoskit-libc\'s {", ".join(names[:-1])} and {names[-1]} flavours, and the {reference} flavour with AOR\'s routines linked in. '
+		 f'The ratio is AOR against the {reference} flavour, as a geometric mean over the cases whose count changed.', '',
+		 f'| Program | Cases changed | AOR / {reference} (geometric mean) | AOR symbols linked |', '|---|---:|---:|---|']
 	for program in AOR_PROGRAMS:
-		speed = ours['speed'][program]
+		speed = ours[reference][program]
 		cases = theirs['programs'][program]
 		changed = [c for c in cases if c in speed and cases[c]['insns'] != speed[c]['insns'] and speed[c]['insns'] > 0]
 		mean = geometric_mean([cases[c]['insns'] / speed[c]['insns'] for c in changed])
@@ -486,16 +510,16 @@ def aor_markdown(arch, ours, theirs):
 	lines.append('')
 
 	string = theirs['programs']['string']
-	functions = [f for f in STRING_FUNCTIONS if any(c.startswith(f + '/') and c in ours['speed']['string'] and string[c]['insns'] != ours['speed']['string'][c]['insns'] for c in string)]
+	functions = [f for f in STRING_FUNCTIONS if any(c.startswith(f + '/') and c in ours[reference]['string'] and string[c]['insns'] != ours[reference]['string'][c]['insns'] for c in string)]
 	if functions:
-		lines += ['#### string', '', 'Aligned case per size: size flavour / speed flavour / AOR.', '',
+		lines += ['#### string', '', 'Aligned case per size: ' + ' / '.join(f'{name} flavour' for name in names) + ' / AOR.', '',
 			  '| Function | ' + ' | '.join(str(s) for s in SUMMARY_SIZES) + ' |', '|---|' + '---:|' * len(SUMMARY_SIZES)]
 		for function in functions:
 			cells = []
 			for size in SUMMARY_SIZES:
 				prefix = f'{function}/{size}/'
 				case = prefix + ('0:0' if f'{prefix}0:0' in string else '0')
-				values = [ours['size']['string'].get(case, {}).get('insns'), ours['speed']['string'].get(case, {}).get('insns'), string.get(case, {}).get('insns')]
+				values = [ours[name]['string'].get(case, {}).get('insns') for name in names] + [string.get(case, {}).get('insns')]
 				cells.append(' / '.join('—' if v is None else f'{v:.0f}' for v in values))
 			lines.append(f'| `{function}` | ' + ' | '.join(cells) + ' |')
 		lines.append('')
@@ -503,18 +527,20 @@ def aor_markdown(arch, ours, theirs):
 	math_cases = theirs['programs']['math']
 	rows = []
 	for case in theirs['order']['math']:
-		if not case.endswith('/throughput') or case not in ours['speed']['math'] or math_cases[case]['insns'] == ours['speed']['math'][case]['insns']:
+		if not case.endswith('/throughput') or case not in ours[reference]['math'] or math_cases[case]['insns'] == ours[reference]['math'][case]['insns']:
 			continue
-		rows.append(f'| `{case.split("/")[0]}` | ' + ratio_cells([ours['size']['math'][case]['insns'], ours['speed']['math'][case]['insns'], math_cases[case]['insns']]) + f' | {math_cases[case]["insns"] / ours["speed"]["math"][case]["insns"]:.2f} |')
+		rows.append(f'| `{case.split("/")[0]}` | ' + ratio_cells([ours[name]['math'][case]['insns'] for name in names] + [math_cases[case]['insns']]) + f' | {math_cases[case]["insns"] / ours[reference]["math"][case]["insns"]:.2f} |')
+	header = '| ' + ' | '.join(names) + f' | AOR | AOR / {reference} |'
+	rule = '|---:' * (len(names) + 2) + '|'
 	if rows:
 		lines += ['#### math', '', 'Throughput per call, for the functions whose count changed (AOR\'s own, or ours through AOR\'s soft-float).', '',
-			  '| Function | size | speed | AOR | AOR / speed |', '|---|---:|---:|---:|---:|'] + rows + ['']
+			  '| Function ' + header, '|---' + rule] + rows + ['']
 
 	soft = theirs['programs']['softfloat']
-	lines += ['#### softfloat', '', 'Per operation.', '', '| Operation | size | speed | AOR | AOR / speed |', '|---|---:|---:|---:|---:|']
+	lines += ['#### softfloat', '', 'Per operation.', '', '| Operation ' + header, '|---' + rule]
 	for case in theirs['order']['softfloat']:
-		values = [ours['size']['softfloat'].get(case, {}).get('insns'), ours['speed']['softfloat'].get(case, {}).get('insns'), soft[case]['insns']]
-		ratio = f'{values[2] / values[1]:.2f}' if values[1] else '—'
+		values = [ours[name]['softfloat'].get(case, {}).get('insns') for name in names] + [soft[case]['insns']]
+		ratio = f'{values[-1] / values[-2]:.2f}' if values[-2] else '—'
 		lines.append(f'| `{case}` | ' + ratio_cells(values) + f' | {ratio} |')
 	lines.append('')
 	return lines
@@ -524,15 +550,16 @@ def command_aor(args):
 	check_tools()
 	aor = aor_build()
 	for arch in args.arch:
+		flavours, reference = reference_of(args.build_type)
 		if args.from_record:
-			theirs = read_json(aor_record_path(args.baseline_dir, arch))
+			theirs = read_json(aor_record_path(args.baseline_dir, arch, reference))
 		else:
-			theirs = aor_measure(aor, arch, args.build_root)
-			write_json(os.path.join(aor.aor_dir(args.build_root, arch), 'bench-results.json'), theirs)
+			theirs = aor_measure(aor, arch, args.build_root, reference)
+			write_json(os.path.join(aor.aor_dir(args.build_root, arch), 'bench-results' + ('-fast' if reference == 'fast' else '') + '.json'), theirs)
 			if args.record:
-				write_json(aor_record_path(args.baseline_dir, arch), theirs)
-		ours = {flavour: read_json(baseline_path(args.baseline_dir, arch, build_type))['programs'] for flavour, build_type in (('size', 'release'), ('speed', 'speed'))}
-		print('\n'.join(aor_markdown(arch, ours, theirs)))
+				write_json(aor_record_path(args.baseline_dir, arch, reference), theirs)
+		ours = {flavour: read_json(baseline_path(args.baseline_dir, arch, build_type))['programs'] for flavour, build_type in flavours}
+		print('\n'.join(aor_markdown(arch, ours, theirs, reference)))
 	return 0
 
 

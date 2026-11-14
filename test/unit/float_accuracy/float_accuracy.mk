@@ -15,7 +15,7 @@ ifeq ($(findstring ${BUILD_ROOT},${CURDIR}),)
 include ${PROJECT_ROOT}/tools/makefiles/target.mk
 else
 
-EXTRA_DEPS := ${SOURCE_DIR}/float_accuracy.mk
+EXTRA_DEPS := ${SOURCE_DIR}/float_accuracy.mk ${SOURCE_DIR}/subdir.mk
 EXTRA_ELF_DEPS := ${BUILD_ROOT}/libc/libc.a
 
 TARGET_OBJ_LIBS := port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY}
@@ -25,7 +25,11 @@ TARGET_OBJ_LIBS := port/${RTOS_PORT} port/${RTOS_PORT}/${ARCH_FAMILY}
 # The release run takes most of a minute natively, so float_accuracy.timeout raises run-unit's limit
 ifeq (${ARCH_FAMILY},x86_64)
 SP_NEAREST_SRC := $(wildcard ${PROJECT_ROOT}/libc/math/sp-nearest/*.c)
-EXTRA_OBJS := $(patsubst ${PROJECT_ROOT}/libc/math/sp-nearest/%.c,${CURDIR}/sp-nearest/%.o,${SP_NEAREST_SRC})
+# In the fast build type, the layer's fast/ files over its own of the same name (PLAN D168), so the native run
+# measures the fast float code
+SP_NEAREST_FAST_SRC := $(if $(filter fast,${LIBC_FLAVOURS}),$(wildcard ${PROJECT_ROOT}/libc/math/sp-nearest/fast/*.c))
+SP_NEAREST_SRC := $(filter-out $(addprefix ${PROJECT_ROOT}/libc/math/sp-nearest/,$(notdir ${SP_NEAREST_FAST_SRC})),${SP_NEAREST_SRC})
+EXTRA_OBJS := $(patsubst ${PROJECT_ROOT}/libc/math/sp-nearest/%.c,${CURDIR}/sp-nearest/%.o,${SP_NEAREST_SRC} ${SP_NEAREST_FAST_SRC})
 SAMPLES := $(if $(filter debug,${BUILD_TYPE}),65536,2097152)
 else
 SAMPLES := 8192
@@ -45,5 +49,10 @@ ${CURDIR}/sp-nearest/%.o: ${PROJECT_ROOT}/libc/math/sp-nearest/%.c ${EXTRA_DEPS}
 -include ${EXTRA_OBJS:.o=.d}
 
 all: ${CURDIR}/float_accuracy.elf
+
+# The fast build type's expectation compiles into a subdirectory of the build directory (subdir.mk)
+${CURDIR}/fast/expect.o: | ${CURDIR}/fast
+${CURDIR}/fast:
+	mkdir -p $@
 
 endif

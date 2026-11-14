@@ -30,14 +30,15 @@ static const float table[9][2] = {
 
 /*
  * atan(t) for t in [0, 1] (Tang): c = k/8 nearest t, atan(t) = atan(c) +
- * atan(u) with u = (t - c)/(1 + t c), |u| <= 1/16 (t - c exact by Sterbenz,
+ * atan(u) with u = (t - c)/(1 + t c), |u| <= 1/16 (t - c exact by Sterbenz, c/2 <= t <= 2c for k >= 1,
  * the product exact), and atan(u) = u - u^3/3 + u^5/5 - u^7/7 + u^9/9 with
  * the cube and the 1/3 as float-float; the u^11 term is below 2^-43 of the
  * result.
  */
 static struct __libc_ff atan_unit(struct __libc_ff t)
 {
-	int k = (int)(t.hi * 8.0f + 0.5f);
+	/* The nearest k/8 from t 16 (exact) truncated: t 8 + 1/2 rounds up to 1 just below 1/16, and t - 1/8 is then inexact (P11.04b) */
+	int k = ((int)(t.hi * 16.0f) + 1) >> 1;
 	float c = (float)k * 0x1p-3f;
 	struct __libc_ff numerator = __libc_ff_fast_sum(t.hi - c, t.lo);
 	struct __libc_ff product = __libc_ff_product(t.hi, c);

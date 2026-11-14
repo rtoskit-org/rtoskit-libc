@@ -789,3 +789,165 @@ Members that grew, justified: `clock_getres.o` 36 → 56 (+20), the local the se
 ## Phase 10 — POSIX threads (P10.02–P10.07, D148–D157)
 
 Members that grew, justified: 107 members, nearly all new (`libc/pthread`, `sched_get_priority_max`/`min`): `<pthread.h>`, linked only by programs that use threads; the seam's futex time base (D150) adds an argument at each wait. Reduced: 14 members, -630 bytes, mostly the C11 functions that are now wrappers over `<pthread.h>` (D156) and the removed `__libc_mutex_lock`, `__libc_mutex_unlock`, `__libc_cond_wait` and `__libc_thread_start`. Images: the seven programs that link the Linux test port's lock grow by 12 bytes each, with the library's share unchanged: the port's `__rtos_futex_wait` rejects an unknown time base (D150) and `__rtos_lock_acquire` passes one. The exact speed figures (D110) move by the same bytes and are re-locked (D157).
+
+## P11.02a — The `fast` build type (D162, D164)
+
+No member, image or stack depth changed: the size and speed flavours build the same objects, and the fast
+flavour's `libc.a` has the speed flavour's members, byte for byte but the debug sections
+(`size-report --build-type fast same --as speed`). No `libc/math/fast/` member yet. The fast flavour is budgeted
+as the speed flavour (`docs/size/budget.json`).
+
+## P11.03a — Fast `expf`, `exp2f`, `exp10f` (D168)
+
+Release and speed unchanged (`size-report diff`; the speed budget holds). Fast members: none: fast is the speed flavour here (`size-report --build-type fast same --as speed`). The fast flavour's
+budget holds.
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+Release and speed unchanged (`size-report diff`); the fast budget holds. Fast members (code and constants, speed →
+fast, bytes): none: fast is the speed flavour here.
+
+## P11.03c — Fast `powf` (D170)
+
+Release and speed: no growth (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed → fast, bytes): none: fast is the speed flavour here.
+
+## P11.03d — Fast m1 and p1 forms, `cbrtf` (D171)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants,
+speed → fast, bytes; several speed members call a shared core or the double function, not counted): none: fast is the speed flavour here.
+
+## P11.03e — The cores without an FPU: fixed point without the test (D172)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed
+→ fast, bytes; the speed files' float-float fallback and its cores, which fast leaves out of the logarithms, not
+counted): `expf.o` 456 → 440, `exp2f.o` 232 → 216, `exp10f.o` 316 → 416, `logf.o` 488 → 224, `log2f.o` 220 → 148, `log10f.o` 488 → 224, `powf.o` 978 → 962.
+
+## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed
+→ fast, bytes; speed's float-float cores, which fast no longer links for these, not counted): `expm1f.o` 588 → 598, `exp2m1f.o` 684 → 626, `exp10m1f.o` 690 → 666.
+
+## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold. Fast members (code and constants, speed
+→ fast, bytes; speed's float-float cores, which fast no longer links for these, not counted): `log1pf.o` 340 → 938, `log2p1f.o` 364 → 1,066, `log10p1f.o` 496 → 1,134, `cbrtf.o` 580 → 358, `exp2m1f.o` 684 → 826, `exp10m1f.o` 690 → 862.
+
+## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
+
+Unchanged here (`size-report diff`; the budgets hold).
+
+## P11.04b — Fast `asinf`, `acosf`, `atanf`, `atan2f` and the π forms (D176)
+
+Unchanged here (`size-report diff`; the budgets hold): the strict atan core's index fix (D176) is the same size on these
+cores. The cores without an FPU follow in P11.04f.
+
+## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU follow in P11.04g.
+
+## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
+
+Unchanged here (`size-report diff`; the budgets hold). The cores without an FPU follow in P11.04e.
+
+## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
+
+Unchanged here (`size-report diff`; the budgets hold): the cores without an FPU follow in P11.04e.
+
+## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold, armv6-m's, armv6s-m's and armv7-m's own fast
+figures included once the reduction and the kernel's combination moved out of line (inline in each caller, `math-mix`'s
+`sinf` and `cosf` took 604 bytes over the locked figure on armv6-m). Fast members (code and constants, speed → fast, bytes):
+`sinf.o` 300 → 374, `cosf.o` 280 → 366, `sincosf.o` 448 → 502, `tanf.o` 720 → 806, `sinpif.o` 508 → 830, `cospif.o` 384 → 614, `tanpif.o` 712 → 1186, `__libc_fixed_trig_reduce.o` new → 356, `__libc_fixed_trig_combine.o` new → 548.
+
+## P11.04e2 — The cores without an FPU: fast `erff` (D181)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls `erff`). Fast members (code and constants, speed → fast, bytes): `erff.o` 384 → 662; it no longer pulls `__libc_erff_fixed.o` (2328) or `__libc_erff_core.o` (728), which stay for `erfcf`, so a program calling `erff` alone takes 3440 → 662.
+
+## P11.04f1 — The cores without an FPU: fast `atanf`, `atan2f` and their π forms (D182)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `atanf.o` 108 → 200, `atan2f.o` 780 → 460, `atanpif.o` 508 → 368, `atan2pif.o` 884 → 508, `__libc_fixed_atan.o` new → 824; they no longer pull `__libc_atan2f_core.o` (1260) or the float-float helpers, which stay for `asinf` and `acosf` until P11.04f2.
+
+## P11.04f2 — The cores without an FPU: fast `asinf`, `acosf` and their π forms (D183)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `asinf.o` 592 → 188, `acosf.o` 590 → 272, `asinpif.o` 792 → 336, `acospif.o` 708 → 316, `__libc_fixed_asin.o` new → 574; no real inverse function pulls `__libc_atan2f_core.o` or the float-float square root any more (the complex functions still do).
+
+## P11.04g1 — The cores without an FPU: fast `sinhf`, `coshf` and `tanhf` (D184)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `sinhf.o` 776 → 604, `coshf.o` 216 → 336, `tanhf.o` 974 → 750; they no longer pull the float-float exponential cores (speed's `coshf` is smaller only because those cores sit in other members).
+
+## P11.04g2 — The cores without an FPU: fast `asinhf`, `acoshf` and `atanhf` (D185)
+
+Release and speed unchanged (`size-report diff`); the speed and fast budgets hold (no size program calls them). Fast members (code and constants, speed → fast, bytes): `asinhf.o` 100 → 340, `acoshf.o` 972 → 502, `atanhf.o` 972 → 1146, `__libc_fixed_log_root.o` new → 978, `__libc_fixed_rsqrt_seed.o` new → 48 (the seeds moved out of `__libc_fixed_asin.o`, 574 → 526); speed's `asinhf.o` is small only because its float-float core sits in other members, which these no longer pull.
+
+## P11.05b — Fast `exp`, `exp2`, `exp10` and `expm1` in double (D187)
+
+Release and speed unchanged (`size-report diff`). `math-mix` (exp and pow) grows from 41340 to 42552 bytes of code in fast: the fast `exp` and its 1 KiB table on top of the strict core that pow still uses. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187); `math-float` is re-locked smaller with them (P11.04's float steps took it below its speed figure).
+
+## P11.05c1 — Fast `exp`, `exp2` and `exp10` in 64-bit fixed point (D188)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (exp and pow) shrinks from 42552 to 42460 bytes of code (41340 in speed): the fixed-point `exp`, its kernel and its 512-byte table replace D187's double file and its 1 KiB table, and the slow path stays the strict core that pow shares. Smaller than the locked fast figure, so it is not re-locked (P11.06 re-locks every core, D187).
+
+## P11.05c2 — Fast `expm1` in 64-bit fixed point (D189)
+
+Release and speed unchanged (`size-report diff`); the fast budgets hold. No size program calls `expm1`; `math-mix` is unchanged.
+
+## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
+
+Release and speed unchanged (`size-report diff`). `math-mix` (log and pow) grows from 42552 to 45992 bytes of code in fast (+3440): the fast `log` and its 3 KiB table on top of the strict log core that pow still uses. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).
+
+## P11.05e — Fast `log`, `log2`, `log10` and `log1p` in 64-bit fixed point (D192)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) shrinks from 45992 to 45752 bytes of code: the 1440-byte table and the two kernels replace D190's file and its 3 KiB table. Smaller than the locked fast figure, so it is not re-locked (P11.06 does, D187, D191).
+
+## P11.05f — Fast `pow` and `cbrt` in double (D193)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) grows from 45752 to 46928 bytes of code (+1176): pow runs the double file on this core's helpers until P11.05g, with the double logarithms' 3 KiB table beside the fixed-point one. The fast figures are re-locked (`size-report --flavour fast --lock`), as the maintainer decided for P11.05 (D187).
+
+## P11.05g1 — Fast `pow` in fixed point (D194)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (log and pow) shrinks from 46928 to 44828 bytes of code (+8.4 % over speed's 41340, inside D191's +20 %): the fixed-point pow shares the logarithms' table and the exponentials' kernel, and D193's double table and the exp pairs leave this core. Not re-locked (P11.06 does, D187, D191).
+
+## P11.05g2 — Fast `cbrt` in fixed point (D195)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls `cbrt`, and every budget holds; nothing is re-locked.
+
+## P11.05i — Fast `sin`, `cos`, `sincos` and `tan` without the rounding test (D197)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `sin`, `cos` and `tan`) goes from 44828 to 44860 bytes of code (+32): the four files drop the rounding test but inline the 54th-bit rounding. Every budget holds; nothing is re-locked.
+
+## P11.05j — Fast `asin`, `acos`, `atan` and `atan2` in double (D198)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `atan2`) grows from 44860 to 46348 bytes of code (+1488): until P11.05k this core runs the double file on its helpers, with the atan(j/16) table and the strict slow path beside it. That is +12 % over speed's 41388, inside D191's +20 % line; every budget holds and nothing is re-locked.
+
+## P11.05k1 — Fast `atan` and `atan2` in fixed point (D199)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` (which calls `atan2`) shrinks from 46348 to 46148 bytes of code (-200): the fixed-point kernel and its 136-byte Q64 table replace P11.05j's double file and its pairs on this core's helpers. That is +11.5 % over speed's 41388, inside D191's +20 % line; every budget holds and nothing is re-locked.
+
+## P11.05k2 — Fast `asin` and `acos` in fixed point (D200)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls `asin` or `acos` (`math-mix` calls `atan2` only); every budget holds and nothing is re-locked.
+
+## P11.05l — Fast hyperbolic functions in double (D201)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.
+
+## P11.05m1 — Fast `sinh`, `cosh` and `tanh` in fixed point (D202)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.
+
+## P11.05m2 — Fast `asinh`, `acosh` and `atanh` in fixed point (D203)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls these functions or `asin` and `acos`, whose square root moved into its own member; every budget holds and nothing is re-locked.
+
+## P11.05n — Fast `erf` in double (D204)
+
+Release and speed unchanged (`size-report diff`). In fast, `erf` is 4916 bytes on armv6-m with its 2.5 KiB table of pieces; no size program calls it, every budget holds and nothing is re-locked.
+
+## P11.05o — Fast `erf` in fixed point (D205)
+
+Release and speed unchanged (`size-report diff`). In fast, `erf` is 3852 bytes with its 2288-byte table; no size program calls it, every budget holds and nothing is re-locked.
+
+## P11.06b — The double path's float exp, log and pow (D208)
+
+Release and speed unchanged (`size-report diff`). The fast files changed are the double-FPU cores' (x86_64, armv7e-m-dp); on this core every fast budget holds and nothing is re-locked.

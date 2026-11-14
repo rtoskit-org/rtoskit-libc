@@ -31,6 +31,7 @@ decision log D*, open questions Q*), then the active phase file
 7. Tick the checkboxes, append any new decisions to the PLAN.md decision log
    (never rewrite old entries; supersede them), and record open questions as Q*.
 8. Commit with a message prefixed by the step ID, e.g. `P1.03: string.h word-at-a-time functions`.
+   One commit per step: squash any fix-ups into it before the final push.
 
 Never mark a step `[x]` with failing builds, failing tests or missing
 research notes. If blocked, leave it `[~]`, write the blocker in the step, and
@@ -89,6 +90,14 @@ make library                           # headers, libc*.a and the port archives 
   with a function wins. Speed-only C goes in the module's `speed/` directory
   (D77): a file there replaces the generic file of the same name in the speed
   flavour only; never `#if`.
+- **The fast flavour (D162, D164, D168):** the `fast` build type is the speed flavour
+  (`LIBC_FLAVOURS := speed fast`) with a faster, less accurate libm: files in
+  `libc/math/fast/` and `libc/math/<layer>/fast/` replace files of the same name in
+  fast only, by layer first (generic < `fast/` < each layer in `LIBC_MATH_LAYERS`
+  order, and within a layer its files < `speed/` < `fast/`). A layer's `fast/`
+  applies only where the arch file lists it in `LIBC_MATH_FAST_LAYERS`. A module
+  that may be shadowed calls `libc_math_fast_filter` (`common.mk`) with its layer;
+  a `libc.a` member name in two modules stops the build (`libc.unique`).
 - **Flavour archives (D53, D54):** `libc-nofloat.a`, `libc-minimal-printf.a`
   and `libc-tinymalloc.a` are `libc.a` with some members replaced; a program
   links one instead of `libc.a`.
@@ -249,13 +258,17 @@ Any exception needs a PLAN.md decision entry.
   step's reductions are recorded in `docs/size/<arch>.md`.
 - **Speed (phase 3, D72):** `test/bench/` holds the benchmark programs (built,
   run only by `tools/scripts/bench-runner`). `make bench` measures the release
-  (size) and speed builds of every architecture: guest instructions per operation under a qemu built with
+  (size), speed and fast builds of every architecture: guest instructions per operation under a qemu built with
   TCG plugins (`make setup-bench`, into `local/`), plus `rdtsc` cycles on x86_64
   (not gated). It fails when a case grew by more than 1 %; record a step's
   improvements with `make bench BENCH_UPDATE=1` and the tables in
   `docs/perf/<arch>.md` (`bench-runner markdown --previous <rev>`).
 - **CI (D119):** `.github/workflows/ci.yml` runs `make check` per architecture, plus the Arm size
   gates, in an `ubuntu:26.04` container on every pull request (opened, reopened, ready or updated).
+- **Per-contract expectations (D164, D165, D167):** a test that checks the strict libm contract asks an expectation
+  file, `expect.c` (debug, release, speed) or `fast/expect.c` (fast), selected by its `subdir.mk` on `LIBC_FLAVOURS`,
+  or (`libm_exp`, `libm_trig`, `libm_special`) includes `libm_expect.h` from `test/unit/include/strict/` or `fast/`;
+  the fast contract's relaxed families and bounds are in `test/unit/include/fast_contract.h`.
 - Never skip, disable or weaken a test to get green. Fix the code, or record a
   justified scope exclusion that refers to PLAN.md §1.
 

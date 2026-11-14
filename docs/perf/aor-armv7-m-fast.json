@@ -1,0 +1,3563 @@
+{
+ "aor": "f67e7daa5457646fad9f75580263dba654c988aa",
+ "arch": "armv7-m",
+ "build_type": "fast",
+ "order": {
+  "malloc": [
+   "fixed/16",
+   "fixed/256",
+   "fixed/4096",
+   "batch/fifo",
+   "batch/lifo",
+   "batch/shuffled",
+   "batch/churn",
+   "realloc/grow",
+   "calloc/256"
+  ],
+  "math": [
+   "sqrtf/throughput",
+   "sqrtf/latency",
+   "cbrtf/throughput",
+   "cbrtf/latency",
+   "hypotf/throughput",
+   "hypotf/latency",
+   "expf/throughput",
+   "expf/latency",
+   "exp2f/throughput",
+   "exp2f/latency",
+   "exp10f/throughput",
+   "exp10f/latency",
+   "expm1f/throughput",
+   "expm1f/latency",
+   "exp2m1f/throughput",
+   "exp2m1f/latency",
+   "exp10m1f/throughput",
+   "exp10m1f/latency",
+   "logf/throughput",
+   "logf/latency",
+   "log2f/throughput",
+   "log2f/latency",
+   "log10f/throughput",
+   "log10f/latency",
+   "log1pf/throughput",
+   "log1pf/latency",
+   "log2p1f/throughput",
+   "log2p1f/latency",
+   "log10p1f/throughput",
+   "log10p1f/latency",
+   "powf/throughput",
+   "powf/latency",
+   "sinf/throughput",
+   "sinf/latency",
+   "cosf/throughput",
+   "cosf/latency",
+   "sincosf/throughput",
+   "sincosf/latency",
+   "tanf/throughput",
+   "tanf/latency",
+   "sinpif/throughput",
+   "sinpif/latency",
+   "cospif/throughput",
+   "cospif/latency",
+   "tanpif/throughput",
+   "tanpif/latency",
+   "asinf/throughput",
+   "asinf/latency",
+   "acosf/throughput",
+   "acosf/latency",
+   "atanf/throughput",
+   "atanf/latency",
+   "atan2f/throughput",
+   "atan2f/latency",
+   "sinhf/throughput",
+   "sinhf/latency",
+   "coshf/throughput",
+   "coshf/latency",
+   "tanhf/throughput",
+   "tanhf/latency",
+   "asinhf/throughput",
+   "asinhf/latency",
+   "acoshf/throughput",
+   "acoshf/latency",
+   "atanhf/throughput",
+   "atanhf/latency",
+   "erff/throughput",
+   "erff/latency",
+   "erfcf/throughput",
+   "erfcf/latency",
+   "lgammaf/throughput",
+   "lgammaf/latency",
+   "tgammaf/throughput",
+   "tgammaf/latency",
+   "fmodf/throughput",
+   "fmodf/latency",
+   "floorf/throughput",
+   "floorf/latency",
+   "roundf/throughput",
+   "roundf/latency",
+   "sqrt/throughput",
+   "sqrt/latency",
+   "cbrt/throughput",
+   "cbrt/latency",
+   "hypot/throughput",
+   "hypot/latency",
+   "exp/throughput",
+   "exp/latency",
+   "exp2/throughput",
+   "exp2/latency",
+   "exp10/throughput",
+   "exp10/latency",
+   "expm1/throughput",
+   "expm1/latency",
+   "exp2m1/throughput",
+   "exp2m1/latency",
+   "exp10m1/throughput",
+   "exp10m1/latency",
+   "log/throughput",
+   "log/latency",
+   "log2/throughput",
+   "log2/latency",
+   "log10/throughput",
+   "log10/latency",
+   "log1p/throughput",
+   "log1p/latency",
+   "log2p1/throughput",
+   "log2p1/latency",
+   "log10p1/throughput",
+   "log10p1/latency",
+   "pow/throughput",
+   "pow/latency",
+   "sin/throughput",
+   "sin/latency",
+   "cos/throughput",
+   "cos/latency",
+   "sincos/throughput",
+   "sincos/latency",
+   "tan/throughput",
+   "tan/latency",
+   "sinpi/throughput",
+   "sinpi/latency",
+   "cospi/throughput",
+   "cospi/latency",
+   "tanpi/throughput",
+   "tanpi/latency",
+   "asin/throughput",
+   "asin/latency",
+   "acos/throughput",
+   "acos/latency",
+   "atan/throughput",
+   "atan/latency",
+   "atan2/throughput",
+   "atan2/latency",
+   "sinh/throughput",
+   "sinh/latency",
+   "cosh/throughput",
+   "cosh/latency",
+   "tanh/throughput",
+   "tanh/latency",
+   "asinh/throughput",
+   "asinh/latency",
+   "acosh/throughput",
+   "acosh/latency",
+   "atanh/throughput",
+   "atanh/latency",
+   "erf/throughput",
+   "erf/latency",
+   "erfc/throughput",
+   "erfc/latency",
+   "lgamma/throughput",
+   "lgamma/latency",
+   "tgamma/throughput",
+   "tgamma/latency",
+   "fmod/throughput",
+   "fmod/latency",
+   "floor/throughput",
+   "floor/latency",
+   "round/throughput",
+   "round/latency"
+  ],
+  "qsort": [
+   "qsort/random/16",
+   "qsort/random/256",
+   "qsort/random/1024",
+   "qsort/sorted/1024",
+   "qsort/reversed/1024",
+   "qsort/equal/1024",
+   "qsort/strings/256",
+   "bsearch/1024"
+  ],
+  "softfloat": [
+   "fadd",
+   "fsub",
+   "fmul",
+   "fdiv",
+   "fcmp",
+   "dadd",
+   "dsub",
+   "dmul",
+   "ddiv",
+   "dcmp",
+   "f2d",
+   "d2f",
+   "f2i",
+   "i2f",
+   "d2i",
+   "i2d",
+   "f2l",
+   "l2f",
+   "d2l",
+   "l2d"
+  ],
+  "stdio": [
+   "snprintf/%d",
+   "snprintf/%u-small",
+   "snprintf/%x",
+   "snprintf/%08x",
+   "snprintf/%lld",
+   "snprintf/%s",
+   "snprintf/%-20s",
+   "snprintf/%c",
+   "snprintf/%p",
+   "snprintf/literal",
+   "snprintf/%f",
+   "snprintf/%.3f",
+   "snprintf/%e",
+   "snprintf/%g",
+   "snprintf/%.17g",
+   "snprintf/%a",
+   "snprintf/mix",
+   "fprintf/mix",
+   "fputs/line",
+   "sscanf/%d",
+   "sscanf/%x",
+   "sscanf/mix",
+   "sscanf/%lf"
+  ],
+  "string": [
+   "memcpy/0/0:0",
+   "memcpy/0/1:1",
+   "memcpy/0/0:1",
+   "memcpy/0/3:2",
+   "memcpy/1/0:0",
+   "memcpy/1/1:1",
+   "memcpy/1/0:1",
+   "memcpy/1/3:2",
+   "memcpy/2/0:0",
+   "memcpy/2/1:1",
+   "memcpy/2/0:1",
+   "memcpy/2/3:2",
+   "memcpy/3/0:0",
+   "memcpy/3/1:1",
+   "memcpy/3/0:1",
+   "memcpy/3/3:2",
+   "memcpy/4/0:0",
+   "memcpy/4/1:1",
+   "memcpy/4/0:1",
+   "memcpy/4/3:2",
+   "memcpy/7/0:0",
+   "memcpy/7/1:1",
+   "memcpy/7/0:1",
+   "memcpy/7/3:2",
+   "memcpy/8/0:0",
+   "memcpy/8/1:1",
+   "memcpy/8/0:1",
+   "memcpy/8/3:2",
+   "memcpy/15/0:0",
+   "memcpy/15/1:1",
+   "memcpy/15/0:1",
+   "memcpy/15/3:2",
+   "memcpy/16/0:0",
+   "memcpy/16/1:1",
+   "memcpy/16/0:1",
+   "memcpy/16/3:2",
+   "memcpy/31/0:0",
+   "memcpy/31/1:1",
+   "memcpy/31/0:1",
+   "memcpy/31/3:2",
+   "memcpy/32/0:0",
+   "memcpy/32/1:1",
+   "memcpy/32/0:1",
+   "memcpy/32/3:2",
+   "memcpy/64/0:0",
+   "memcpy/64/1:1",
+   "memcpy/64/0:1",
+   "memcpy/64/3:2",
+   "memcpy/128/0:0",
+   "memcpy/128/1:1",
+   "memcpy/128/0:1",
+   "memcpy/128/3:2",
+   "memcpy/256/0:0",
+   "memcpy/256/1:1",
+   "memcpy/256/0:1",
+   "memcpy/256/3:2",
+   "memcpy/1024/0:0",
+   "memcpy/1024/1:1",
+   "memcpy/1024/0:1",
+   "memcpy/1024/3:2",
+   "memmove-down/0/0:0",
+   "memmove-down/0/1:1",
+   "memmove-down/0/0:1",
+   "memmove-down/0/3:2",
+   "memmove-down/1/0:0",
+   "memmove-down/1/1:1",
+   "memmove-down/1/0:1",
+   "memmove-down/1/3:2",
+   "memmove-down/2/0:0",
+   "memmove-down/2/1:1",
+   "memmove-down/2/0:1",
+   "memmove-down/2/3:2",
+   "memmove-down/3/0:0",
+   "memmove-down/3/1:1",
+   "memmove-down/3/0:1",
+   "memmove-down/3/3:2",
+   "memmove-down/4/0:0",
+   "memmove-down/4/1:1",
+   "memmove-down/4/0:1",
+   "memmove-down/4/3:2",
+   "memmove-down/7/0:0",
+   "memmove-down/7/1:1",
+   "memmove-down/7/0:1",
+   "memmove-down/7/3:2",
+   "memmove-down/8/0:0",
+   "memmove-down/8/1:1",
+   "memmove-down/8/0:1",
+   "memmove-down/8/3:2",
+   "memmove-down/15/0:0",
+   "memmove-down/15/1:1",
+   "memmove-down/15/0:1",
+   "memmove-down/15/3:2",
+   "memmove-down/16/0:0",
+   "memmove-down/16/1:1",
+   "memmove-down/16/0:1",
+   "memmove-down/16/3:2",
+   "memmove-down/31/0:0",
+   "memmove-down/31/1:1",
+   "memmove-down/31/0:1",
+   "memmove-down/31/3:2",
+   "memmove-down/32/0:0",
+   "memmove-down/32/1:1",
+   "memmove-down/32/0:1",
+   "memmove-down/32/3:2",
+   "memmove-down/64/0:0",
+   "memmove-down/64/1:1",
+   "memmove-down/64/0:1",
+   "memmove-down/64/3:2",
+   "memmove-down/128/0:0",
+   "memmove-down/128/1:1",
+   "memmove-down/128/0:1",
+   "memmove-down/128/3:2",
+   "memmove-down/256/0:0",
+   "memmove-down/256/1:1",
+   "memmove-down/256/0:1",
+   "memmove-down/256/3:2",
+   "memmove-down/1024/0:0",
+   "memmove-down/1024/1:1",
+   "memmove-down/1024/0:1",
+   "memmove-down/1024/3:2",
+   "memmove-up/0/0:0",
+   "memmove-up/0/1:1",
+   "memmove-up/0/0:1",
+   "memmove-up/0/3:2",
+   "memmove-up/1/0:0",
+   "memmove-up/1/1:1",
+   "memmove-up/1/0:1",
+   "memmove-up/1/3:2",
+   "memmove-up/2/0:0",
+   "memmove-up/2/1:1",
+   "memmove-up/2/0:1",
+   "memmove-up/2/3:2",
+   "memmove-up/3/0:0",
+   "memmove-up/3/1:1",
+   "memmove-up/3/0:1",
+   "memmove-up/3/3:2",
+   "memmove-up/4/0:0",
+   "memmove-up/4/1:1",
+   "memmove-up/4/0:1",
+   "memmove-up/4/3:2",
+   "memmove-up/7/0:0",
+   "memmove-up/7/1:1",
+   "memmove-up/7/0:1",
+   "memmove-up/7/3:2",
+   "memmove-up/8/0:0",
+   "memmove-up/8/1:1",
+   "memmove-up/8/0:1",
+   "memmove-up/8/3:2",
+   "memmove-up/15/0:0",
+   "memmove-up/15/1:1",
+   "memmove-up/15/0:1",
+   "memmove-up/15/3:2",
+   "memmove-up/16/0:0",
+   "memmove-up/16/1:1",
+   "memmove-up/16/0:1",
+   "memmove-up/16/3:2",
+   "memmove-up/31/0:0",
+   "memmove-up/31/1:1",
+   "memmove-up/31/0:1",
+   "memmove-up/31/3:2",
+   "memmove-up/32/0:0",
+   "memmove-up/32/1:1",
+   "memmove-up/32/0:1",
+   "memmove-up/32/3:2",
+   "memmove-up/64/0:0",
+   "memmove-up/64/1:1",
+   "memmove-up/64/0:1",
+   "memmove-up/64/3:2",
+   "memmove-up/128/0:0",
+   "memmove-up/128/1:1",
+   "memmove-up/128/0:1",
+   "memmove-up/128/3:2",
+   "memmove-up/256/0:0",
+   "memmove-up/256/1:1",
+   "memmove-up/256/0:1",
+   "memmove-up/256/3:2",
+   "memmove-up/1024/0:0",
+   "memmove-up/1024/1:1",
+   "memmove-up/1024/0:1",
+   "memmove-up/1024/3:2",
+   "memset/0/0",
+   "memset/0/1",
+   "memset/0/2",
+   "memset/0/3",
+   "memset/1/0",
+   "memset/1/1",
+   "memset/1/2",
+   "memset/1/3",
+   "memset/2/0",
+   "memset/2/1",
+   "memset/2/2",
+   "memset/2/3",
+   "memset/3/0",
+   "memset/3/1",
+   "memset/3/2",
+   "memset/3/3",
+   "memset/4/0",
+   "memset/4/1",
+   "memset/4/2",
+   "memset/4/3",
+   "memset/7/0",
+   "memset/7/1",
+   "memset/7/2",
+   "memset/7/3",
+   "memset/8/0",
+   "memset/8/1",
+   "memset/8/2",
+   "memset/8/3",
+   "memset/15/0",
+   "memset/15/1",
+   "memset/15/2",
+   "memset/15/3",
+   "memset/16/0",
+   "memset/16/1",
+   "memset/16/2",
+   "memset/16/3",
+   "memset/31/0",
+   "memset/31/1",
+   "memset/31/2",
+   "memset/31/3",
+   "memset/32/0",
+   "memset/32/1",
+   "memset/32/2",
+   "memset/32/3",
+   "memset/64/0",
+   "memset/64/1",
+   "memset/64/2",
+   "memset/64/3",
+   "memset/128/0",
+   "memset/128/1",
+   "memset/128/2",
+   "memset/128/3",
+   "memset/256/0",
+   "memset/256/1",
+   "memset/256/2",
+   "memset/256/3",
+   "memset/1024/0",
+   "memset/1024/1",
+   "memset/1024/2",
+   "memset/1024/3",
+   "memcmp/0/0:0",
+   "memcmp/0/1:1",
+   "memcmp/0/0:1",
+   "memcmp/0/3:2",
+   "memcmp/1/0:0",
+   "memcmp/1/1:1",
+   "memcmp/1/0:1",
+   "memcmp/1/3:2",
+   "memcmp/2/0:0",
+   "memcmp/2/1:1",
+   "memcmp/2/0:1",
+   "memcmp/2/3:2",
+   "memcmp/3/0:0",
+   "memcmp/3/1:1",
+   "memcmp/3/0:1",
+   "memcmp/3/3:2",
+   "memcmp/4/0:0",
+   "memcmp/4/1:1",
+   "memcmp/4/0:1",
+   "memcmp/4/3:2",
+   "memcmp/7/0:0",
+   "memcmp/7/1:1",
+   "memcmp/7/0:1",
+   "memcmp/7/3:2",
+   "memcmp/8/0:0",
+   "memcmp/8/1:1",
+   "memcmp/8/0:1",
+   "memcmp/8/3:2",
+   "memcmp/15/0:0",
+   "memcmp/15/1:1",
+   "memcmp/15/0:1",
+   "memcmp/15/3:2",
+   "memcmp/16/0:0",
+   "memcmp/16/1:1",
+   "memcmp/16/0:1",
+   "memcmp/16/3:2",
+   "memcmp/31/0:0",
+   "memcmp/31/1:1",
+   "memcmp/31/0:1",
+   "memcmp/31/3:2",
+   "memcmp/32/0:0",
+   "memcmp/32/1:1",
+   "memcmp/32/0:1",
+   "memcmp/32/3:2",
+   "memcmp/64/0:0",
+   "memcmp/64/1:1",
+   "memcmp/64/0:1",
+   "memcmp/64/3:2",
+   "memcmp/128/0:0",
+   "memcmp/128/1:1",
+   "memcmp/128/0:1",
+   "memcmp/128/3:2",
+   "memcmp/256/0:0",
+   "memcmp/256/1:1",
+   "memcmp/256/0:1",
+   "memcmp/256/3:2",
+   "memcmp/1024/0:0",
+   "memcmp/1024/1:1",
+   "memcmp/1024/0:1",
+   "memcmp/1024/3:2",
+   "memchr/0/0",
+   "memchr/0/1",
+   "memchr/0/2",
+   "memchr/0/3",
+   "memchr/1/0",
+   "memchr/1/1",
+   "memchr/1/2",
+   "memchr/1/3",
+   "memchr/2/0",
+   "memchr/2/1",
+   "memchr/2/2",
+   "memchr/2/3",
+   "memchr/3/0",
+   "memchr/3/1",
+   "memchr/3/2",
+   "memchr/3/3",
+   "memchr/4/0",
+   "memchr/4/1",
+   "memchr/4/2",
+   "memchr/4/3",
+   "memchr/7/0",
+   "memchr/7/1",
+   "memchr/7/2",
+   "memchr/7/3",
+   "memchr/8/0",
+   "memchr/8/1",
+   "memchr/8/2",
+   "memchr/8/3",
+   "memchr/15/0",
+   "memchr/15/1",
+   "memchr/15/2",
+   "memchr/15/3",
+   "memchr/16/0",
+   "memchr/16/1",
+   "memchr/16/2",
+   "memchr/16/3",
+   "memchr/31/0",
+   "memchr/31/1",
+   "memchr/31/2",
+   "memchr/31/3",
+   "memchr/32/0",
+   "memchr/32/1",
+   "memchr/32/2",
+   "memchr/32/3",
+   "memchr/64/0",
+   "memchr/64/1",
+   "memchr/64/2",
+   "memchr/64/3",
+   "memchr/128/0",
+   "memchr/128/1",
+   "memchr/128/2",
+   "memchr/128/3",
+   "memchr/256/0",
+   "memchr/256/1",
+   "memchr/256/2",
+   "memchr/256/3",
+   "memchr/1024/0",
+   "memchr/1024/1",
+   "memchr/1024/2",
+   "memchr/1024/3",
+   "strlen/0/0",
+   "strlen/0/1",
+   "strlen/0/2",
+   "strlen/0/3",
+   "strlen/1/0",
+   "strlen/1/1",
+   "strlen/1/2",
+   "strlen/1/3",
+   "strlen/2/0",
+   "strlen/2/1",
+   "strlen/2/2",
+   "strlen/2/3",
+   "strlen/3/0",
+   "strlen/3/1",
+   "strlen/3/2",
+   "strlen/3/3",
+   "strlen/4/0",
+   "strlen/4/1",
+   "strlen/4/2",
+   "strlen/4/3",
+   "strlen/7/0",
+   "strlen/7/1",
+   "strlen/7/2",
+   "strlen/7/3",
+   "strlen/8/0",
+   "strlen/8/1",
+   "strlen/8/2",
+   "strlen/8/3",
+   "strlen/15/0",
+   "strlen/15/1",
+   "strlen/15/2",
+   "strlen/15/3",
+   "strlen/16/0",
+   "strlen/16/1",
+   "strlen/16/2",
+   "strlen/16/3",
+   "strlen/31/0",
+   "strlen/31/1",
+   "strlen/31/2",
+   "strlen/31/3",
+   "strlen/32/0",
+   "strlen/32/1",
+   "strlen/32/2",
+   "strlen/32/3",
+   "strlen/64/0",
+   "strlen/64/1",
+   "strlen/64/2",
+   "strlen/64/3",
+   "strlen/128/0",
+   "strlen/128/1",
+   "strlen/128/2",
+   "strlen/128/3",
+   "strlen/256/0",
+   "strlen/256/1",
+   "strlen/256/2",
+   "strlen/256/3",
+   "strlen/1024/0",
+   "strlen/1024/1",
+   "strlen/1024/2",
+   "strlen/1024/3",
+   "strchr/0/0",
+   "strchr/0/1",
+   "strchr/0/2",
+   "strchr/0/3",
+   "strchr/1/0",
+   "strchr/1/1",
+   "strchr/1/2",
+   "strchr/1/3",
+   "strchr/2/0",
+   "strchr/2/1",
+   "strchr/2/2",
+   "strchr/2/3",
+   "strchr/3/0",
+   "strchr/3/1",
+   "strchr/3/2",
+   "strchr/3/3",
+   "strchr/4/0",
+   "strchr/4/1",
+   "strchr/4/2",
+   "strchr/4/3",
+   "strchr/7/0",
+   "strchr/7/1",
+   "strchr/7/2",
+   "strchr/7/3",
+   "strchr/8/0",
+   "strchr/8/1",
+   "strchr/8/2",
+   "strchr/8/3",
+   "strchr/15/0",
+   "strchr/15/1",
+   "strchr/15/2",
+   "strchr/15/3",
+   "strchr/16/0",
+   "strchr/16/1",
+   "strchr/16/2",
+   "strchr/16/3",
+   "strchr/31/0",
+   "strchr/31/1",
+   "strchr/31/2",
+   "strchr/31/3",
+   "strchr/32/0",
+   "strchr/32/1",
+   "strchr/32/2",
+   "strchr/32/3",
+   "strchr/64/0",
+   "strchr/64/1",
+   "strchr/64/2",
+   "strchr/64/3",
+   "strchr/128/0",
+   "strchr/128/1",
+   "strchr/128/2",
+   "strchr/128/3",
+   "strchr/256/0",
+   "strchr/256/1",
+   "strchr/256/2",
+   "strchr/256/3",
+   "strchr/1024/0",
+   "strchr/1024/1",
+   "strchr/1024/2",
+   "strchr/1024/3",
+   "strcmp/0/0:0",
+   "strcmp/0/1:1",
+   "strcmp/0/0:1",
+   "strcmp/0/3:2",
+   "strcmp/1/0:0",
+   "strcmp/1/1:1",
+   "strcmp/1/0:1",
+   "strcmp/1/3:2",
+   "strcmp/2/0:0",
+   "strcmp/2/1:1",
+   "strcmp/2/0:1",
+   "strcmp/2/3:2",
+   "strcmp/3/0:0",
+   "strcmp/3/1:1",
+   "strcmp/3/0:1",
+   "strcmp/3/3:2",
+   "strcmp/4/0:0",
+   "strcmp/4/1:1",
+   "strcmp/4/0:1",
+   "strcmp/4/3:2",
+   "strcmp/7/0:0",
+   "strcmp/7/1:1",
+   "strcmp/7/0:1",
+   "strcmp/7/3:2",
+   "strcmp/8/0:0",
+   "strcmp/8/1:1",
+   "strcmp/8/0:1",
+   "strcmp/8/3:2",
+   "strcmp/15/0:0",
+   "strcmp/15/1:1",
+   "strcmp/15/0:1",
+   "strcmp/15/3:2",
+   "strcmp/16/0:0",
+   "strcmp/16/1:1",
+   "strcmp/16/0:1",
+   "strcmp/16/3:2",
+   "strcmp/31/0:0",
+   "strcmp/31/1:1",
+   "strcmp/31/0:1",
+   "strcmp/31/3:2",
+   "strcmp/32/0:0",
+   "strcmp/32/1:1",
+   "strcmp/32/0:1",
+   "strcmp/32/3:2",
+   "strcmp/64/0:0",
+   "strcmp/64/1:1",
+   "strcmp/64/0:1",
+   "strcmp/64/3:2",
+   "strcmp/128/0:0",
+   "strcmp/128/1:1",
+   "strcmp/128/0:1",
+   "strcmp/128/3:2",
+   "strcmp/256/0:0",
+   "strcmp/256/1:1",
+   "strcmp/256/0:1",
+   "strcmp/256/3:2",
+   "strcmp/1024/0:0",
+   "strcmp/1024/1:1",
+   "strcmp/1024/0:1",
+   "strcmp/1024/3:2",
+   "strcpy/0/0:0",
+   "strcpy/0/1:1",
+   "strcpy/0/0:1",
+   "strcpy/0/3:2",
+   "strcpy/1/0:0",
+   "strcpy/1/1:1",
+   "strcpy/1/0:1",
+   "strcpy/1/3:2",
+   "strcpy/2/0:0",
+   "strcpy/2/1:1",
+   "strcpy/2/0:1",
+   "strcpy/2/3:2",
+   "strcpy/3/0:0",
+   "strcpy/3/1:1",
+   "strcpy/3/0:1",
+   "strcpy/3/3:2",
+   "strcpy/4/0:0",
+   "strcpy/4/1:1",
+   "strcpy/4/0:1",
+   "strcpy/4/3:2",
+   "strcpy/7/0:0",
+   "strcpy/7/1:1",
+   "strcpy/7/0:1",
+   "strcpy/7/3:2",
+   "strcpy/8/0:0",
+   "strcpy/8/1:1",
+   "strcpy/8/0:1",
+   "strcpy/8/3:2",
+   "strcpy/15/0:0",
+   "strcpy/15/1:1",
+   "strcpy/15/0:1",
+   "strcpy/15/3:2",
+   "strcpy/16/0:0",
+   "strcpy/16/1:1",
+   "strcpy/16/0:1",
+   "strcpy/16/3:2",
+   "strcpy/31/0:0",
+   "strcpy/31/1:1",
+   "strcpy/31/0:1",
+   "strcpy/31/3:2",
+   "strcpy/32/0:0",
+   "strcpy/32/1:1",
+   "strcpy/32/0:1",
+   "strcpy/32/3:2",
+   "strcpy/64/0:0",
+   "strcpy/64/1:1",
+   "strcpy/64/0:1",
+   "strcpy/64/3:2",
+   "strcpy/128/0:0",
+   "strcpy/128/1:1",
+   "strcpy/128/0:1",
+   "strcpy/128/3:2",
+   "strcpy/256/0:0",
+   "strcpy/256/1:1",
+   "strcpy/256/0:1",
+   "strcpy/256/3:2",
+   "strcpy/1024/0:0",
+   "strcpy/1024/1:1",
+   "strcpy/1024/0:1",
+   "strcpy/1024/3:2",
+   "mix/memcpy",
+   "mix/memset",
+   "mix/strlen"
+  ],
+  "strto": [
+   "strtol/short",
+   "strtol/int",
+   "strtol/hex",
+   "strtoul/hex16",
+   "strtoll/long",
+   "strtoull/hex",
+   "atoi",
+   "strtod/integer",
+   "strtod/short",
+   "strtod/fixed",
+   "strtod/17-digits",
+   "strtod/long",
+   "strtod/exp-small",
+   "strtod/exp-large",
+   "strtod/min-normal",
+   "strtod/subnormal",
+   "strtod/hex",
+   "strtod/micro",
+   "strtof/short",
+   "strtof/9-digits",
+   "strtof/exp"
+  ]
+ },
+ "programs": {
+  "malloc": {
+   "batch/churn": {
+    "insns": 117.91
+   },
+   "batch/fifo": {
+    "insns": 96.05
+   },
+   "batch/lifo": {
+    "insns": 91.13
+   },
+   "batch/shuffled": {
+    "insns": 110.52
+   },
+   "calloc/256": {
+    "insns": 131.0
+   },
+   "fixed/16": {
+    "insns": 92.0
+   },
+   "fixed/256": {
+    "insns": 92.0
+   },
+   "fixed/4096": {
+    "insns": 92.0
+   },
+   "realloc/grow": {
+    "insns": 99.09
+   }
+  },
+  "math": {
+   "acos/latency": {
+    "insns": 668.81
+   },
+   "acos/throughput": {
+    "insns": 659.19
+   },
+   "acosf/latency": {
+    "insns": 251.62
+   },
+   "acosf/throughput": {
+    "insns": 235.62
+   },
+   "acosh/latency": {
+    "insns": 494.56
+   },
+   "acosh/throughput": {
+    "insns": 488.19
+   },
+   "acoshf/latency": {
+    "insns": 360.0
+   },
+   "acoshf/throughput": {
+    "insns": 346.94
+   },
+   "asin/latency": {
+    "insns": 660.81
+   },
+   "asin/throughput": {
+    "insns": 656.62
+   },
+   "asinf/latency": {
+    "insns": 242.38
+   },
+   "asinf/throughput": {
+    "insns": 229.5
+   },
+   "asinh/latency": {
+    "insns": 527.81
+   },
+   "asinh/throughput": {
+    "insns": 523.44
+   },
+   "asinhf/latency": {
+    "insns": 354.38
+   },
+   "asinhf/throughput": {
+    "insns": 339.94
+   },
+   "atan/latency": {
+    "insns": 525.06
+   },
+   "atan/throughput": {
+    "insns": 519.56
+   },
+   "atan2/latency": {
+    "insns": 522.94
+   },
+   "atan2/throughput": {
+    "insns": 519.5
+   },
+   "atan2f/latency": {
+    "insns": 262.81
+   },
+   "atan2f/throughput": {
+    "insns": 249.69
+   },
+   "atanf/latency": {
+    "insns": 247.38
+   },
+   "atanf/throughput": {
+    "insns": 234.38
+   },
+   "atanh/latency": {
+    "insns": 519.19
+   },
+   "atanh/throughput": {
+    "insns": 513.75
+   },
+   "atanhf/latency": {
+    "insns": 269.31
+   },
+   "atanhf/throughput": {
+    "insns": 255.94
+   },
+   "cbrt/latency": {
+    "insns": 295.06
+   },
+   "cbrt/throughput": {
+    "insns": 289.38
+   },
+   "cbrtf/latency": {
+    "insns": 164.38
+   },
+   "cbrtf/throughput": {
+    "insns": 150.06
+   },
+   "cos/latency": {
+    "insns": 747.81
+   },
+   "cos/throughput": {
+    "insns": 749.81
+   },
+   "cosf/latency": {
+    "insns": 855.12
+   },
+   "cosf/throughput": {
+    "insns": 843.31
+   },
+   "cosh/latency": {
+    "insns": 495.88
+   },
+   "cosh/throughput": {
+    "insns": 486.69
+   },
+   "coshf/latency": {
+    "insns": 169.88
+   },
+   "coshf/throughput": {
+    "insns": 153.25
+   },
+   "cospi/latency": {
+    "insns": 5493.75
+   },
+   "cospi/throughput": {
+    "insns": 5489.94
+   },
+   "cospif/latency": {
+    "insns": 332.12
+   },
+   "cospif/throughput": {
+    "insns": 318.56
+   },
+   "erf/latency": {
+    "insns": 8368.69
+   },
+   "erf/throughput": {
+    "insns": 8363.94
+   },
+   "erfc/latency": {
+    "insns": 32527.31
+   },
+   "erfc/throughput": {
+    "insns": 32519.25
+   },
+   "erfcf/latency": {
+    "insns": 1047.44
+   },
+   "erfcf/throughput": {
+    "insns": 1032.31
+   },
+   "erff/latency": {
+    "insns": 4261.19
+   },
+   "erff/throughput": {
+    "insns": 4247.88
+   },
+   "exp/latency": {
+    "insns": 1160.25
+   },
+   "exp/throughput": {
+    "insns": 1156.5
+   },
+   "exp10/latency": {
+    "insns": 1147.94
+   },
+   "exp10/throughput": {
+    "insns": 1141.94
+   },
+   "exp10f/latency": {
+    "insns": 119.88
+   },
+   "exp10f/throughput": {
+    "insns": 104.75
+   },
+   "exp10m1/latency": {
+    "insns": 4996.75
+   },
+   "exp10m1/throughput": {
+    "insns": 4992.69
+   },
+   "exp10m1f/latency": {
+    "insns": 154.94
+   },
+   "exp10m1f/throughput": {
+    "insns": 141.88
+   },
+   "exp2/latency": {
+    "insns": 992.56
+   },
+   "exp2/throughput": {
+    "insns": 988.88
+   },
+   "exp2f/latency": {
+    "insns": 706.12
+   },
+   "exp2f/throughput": {
+    "insns": 692.62
+   },
+   "exp2m1/latency": {
+    "insns": 4890.88
+   },
+   "exp2m1/throughput": {
+    "insns": 4886.81
+   },
+   "exp2m1f/latency": {
+    "insns": 152.19
+   },
+   "exp2m1f/throughput": {
+    "insns": 139.0
+   },
+   "expf/latency": {
+    "insns": 761.81
+   },
+   "expf/throughput": {
+    "insns": 748.0
+   },
+   "expm1/latency": {
+    "insns": 340.06
+   },
+   "expm1/throughput": {
+    "insns": 336.0
+   },
+   "expm1f/latency": {
+    "insns": 153.06
+   },
+   "expm1f/throughput": {
+    "insns": 141.06
+   },
+   "floor/latency": {
+    "insns": 98.06
+   },
+   "floor/throughput": {
+    "insns": 91.06
+   },
+   "floorf/latency": {
+    "insns": 77.38
+   },
+   "floorf/throughput": {
+    "insns": 62.0
+   },
+   "fmod/latency": {
+    "insns": 264.44
+   },
+   "fmod/throughput": {
+    "insns": 260.5
+   },
+   "fmodf/latency": {
+    "insns": 221.69
+   },
+   "fmodf/throughput": {
+    "insns": 208.5
+   },
+   "hypot/latency": {
+    "insns": 5401.38
+   },
+   "hypot/throughput": {
+    "insns": 5393.75
+   },
+   "hypotf/latency": {
+    "insns": 2956.62
+   },
+   "hypotf/throughput": {
+    "insns": 2941.62
+   },
+   "lgamma/latency": {
+    "insns": 15313.44
+   },
+   "lgamma/throughput": {
+    "insns": 15309.06
+   },
+   "lgammaf/latency": {
+    "insns": 15072.25
+   },
+   "lgammaf/throughput": {
+    "insns": 15060.19
+   },
+   "log/latency": {
+    "insns": 1313.88
+   },
+   "log/throughput": {
+    "insns": 1306.75
+   },
+   "log10/latency": {
+    "insns": 352.56
+   },
+   "log10/throughput": {
+    "insns": 345.62
+   },
+   "log10f/latency": {
+    "insns": 784.56
+   },
+   "log10f/throughput": {
+    "insns": 771.69
+   },
+   "log10p1/latency": {
+    "insns": 7276.94
+   },
+   "log10p1/throughput": {
+    "insns": 7273.0
+   },
+   "log10p1f/latency": {
+    "insns": 258.94
+   },
+   "log10p1f/throughput": {
+    "insns": 246.19
+   },
+   "log1p/latency": {
+    "insns": 364.38
+   },
+   "log1p/throughput": {
+    "insns": 360.56
+   },
+   "log1pf/latency": {
+    "insns": 257.19
+   },
+   "log1pf/throughput": {
+    "insns": 244.31
+   },
+   "log2/latency": {
+    "insns": 1594.25
+   },
+   "log2/throughput": {
+    "insns": 1588.75
+   },
+   "log2f/latency": {
+    "insns": 734.56
+   },
+   "log2f/throughput": {
+    "insns": 720.56
+   },
+   "log2p1/latency": {
+    "insns": 7272.88
+   },
+   "log2p1/throughput": {
+    "insns": 7269.62
+   },
+   "log2p1f/latency": {
+    "insns": 245.69
+   },
+   "log2p1f/throughput": {
+    "insns": 234.06
+   },
+   "logf/latency": {
+    "insns": 729.56
+   },
+   "logf/throughput": {
+    "insns": 715.75
+   },
+   "pow/latency": {
+    "insns": 3768.19
+   },
+   "pow/throughput": {
+    "insns": 3761.88
+   },
+   "powf/latency": {
+    "insns": 1608.88
+   },
+   "powf/throughput": {
+    "insns": 1596.12
+   },
+   "round/latency": {
+    "insns": 96.06
+   },
+   "round/throughput": {
+    "insns": 89.06
+   },
+   "roundf/latency": {
+    "insns": 71.38
+   },
+   "roundf/throughput": {
+    "insns": 56.0
+   },
+   "sin/latency": {
+    "insns": 747.88
+   },
+   "sin/throughput": {
+    "insns": 744.19
+   },
+   "sincos/latency": {
+    "insns": 1048.0
+   },
+   "sincos/throughput": {
+    "insns": 1048.44
+   },
+   "sincosf/latency": {
+    "insns": 1416.5
+   },
+   "sincosf/throughput": {
+    "insns": 1404.56
+   },
+   "sinf/latency": {
+    "insns": 855.06
+   },
+   "sinf/throughput": {
+    "insns": 840.75
+   },
+   "sinh/latency": {
+    "insns": 508.06
+   },
+   "sinh/throughput": {
+    "insns": 500.75
+   },
+   "sinhf/latency": {
+    "insns": 174.25
+   },
+   "sinhf/throughput": {
+    "insns": 158.31
+   },
+   "sinpi/latency": {
+    "insns": 5509.62
+   },
+   "sinpi/throughput": {
+    "insns": 5505.62
+   },
+   "sinpif/latency": {
+    "insns": 345.12
+   },
+   "sinpif/throughput": {
+    "insns": 332.62
+   },
+   "sqrt/latency": {
+    "insns": 1896.12
+   },
+   "sqrt/throughput": {
+    "insns": 1891.19
+   },
+   "sqrtf/latency": {
+    "insns": 472.38
+   },
+   "sqrtf/throughput": {
+    "insns": 459.75
+   },
+   "tan/latency": {
+    "insns": 992.06
+   },
+   "tan/throughput": {
+    "insns": 985.44
+   },
+   "tanf/latency": {
+    "insns": 571.5
+   },
+   "tanf/throughput": {
+    "insns": 556.81
+   },
+   "tanh/latency": {
+    "insns": 497.06
+   },
+   "tanh/throughput": {
+    "insns": 493.38
+   },
+   "tanhf/latency": {
+    "insns": 205.25
+   },
+   "tanhf/throughput": {
+    "insns": 191.12
+   },
+   "tanpi/latency": {
+    "insns": 10630.81
+   },
+   "tanpi/throughput": {
+    "insns": 10624.5
+   },
+   "tanpif/latency": {
+    "insns": 542.12
+   },
+   "tanpif/throughput": {
+    "insns": 527.25
+   },
+   "tgamma/latency": {
+    "insns": 20738.56
+   },
+   "tgamma/throughput": {
+    "insns": 20736.81
+   },
+   "tgammaf/latency": {
+    "insns": 22494.12
+   },
+   "tgammaf/throughput": {
+    "insns": 22480.44
+   }
+  },
+  "qsort": {
+   "bsearch/1024": {
+    "insns": 147.11
+   },
+   "qsort/equal/1024": {
+    "insns": 27.05
+   },
+   "qsort/random/1024": {
+    "insns": 273.96
+   },
+   "qsort/random/16": {
+    "insns": 128.12
+   },
+   "qsort/random/256": {
+    "insns": 215.74
+   },
+   "qsort/reversed/1024": {
+    "insns": 35.56
+   },
+   "qsort/sorted/1024": {
+    "insns": 27.05
+   },
+   "qsort/strings/256": {
+    "insns": 303.37
+   }
+  },
+  "softfloat": {
+   "d2f": {
+    "insns": 17.94
+   },
+   "d2i": {
+    "insns": 20.94
+   },
+   "d2l": {
+    "insns": 25.94
+   },
+   "dadd": {
+    "insns": 47.25
+   },
+   "dcmp": {
+    "insns": 21.19
+   },
+   "ddiv": {
+    "insns": 85.94
+   },
+   "dmul": {
+    "insns": 61.94
+   },
+   "dsub": {
+    "insns": 47.31
+   },
+   "f2d": {
+    "insns": 15.94
+   },
+   "f2i": {
+    "insns": 16.94
+   },
+   "f2l": {
+    "insns": 20.94
+   },
+   "fadd": {
+    "insns": 38.12
+   },
+   "fcmp": {
+    "insns": 21.31
+   },
+   "fdiv": {
+    "insns": 58.94
+   },
+   "fmul": {
+    "insns": 36.94
+   },
+   "fsub": {
+    "insns": 37.56
+   },
+   "i2d": {
+    "insns": 18.94
+   },
+   "i2f": {
+    "insns": 20.94
+   },
+   "l2d": {
+    "insns": 29.56
+   },
+   "l2f": {
+    "insns": 27.31
+   }
+  },
+  "stdio": {
+   "fprintf/mix": {
+    "insns": 2151.0
+   },
+   "fputs/line": {
+    "insns": 242.0
+   },
+   "snprintf/%-20s": {
+    "insns": 575.0
+   },
+   "snprintf/%.17g": {
+    "insns": 14846.0
+   },
+   "snprintf/%.3f": {
+    "insns": 14654.0
+   },
+   "snprintf/%08x": {
+    "insns": 469.0
+   },
+   "snprintf/%a": {
+    "insns": 862.0
+   },
+   "snprintf/%c": {
+    "insns": 261.0
+   },
+   "snprintf/%d": {
+    "insns": 455.0
+   },
+   "snprintf/%e": {
+    "insns": 13869.0
+   },
+   "snprintf/%f": {
+    "insns": 14669.0
+   },
+   "snprintf/%g": {
+    "insns": 15476.0
+   },
+   "snprintf/%lld": {
+    "insns": 1353.0
+   },
+   "snprintf/%p": {
+    "insns": 420.0
+   },
+   "snprintf/%s": {
+    "insns": 396.0
+   },
+   "snprintf/%u-small": {
+    "insns": 353.0
+   },
+   "snprintf/%x": {
+    "insns": 450.0
+   },
+   "snprintf/literal": {
+    "insns": 308.0
+   },
+   "snprintf/mix": {
+    "insns": 1837.0
+   },
+   "sscanf/%d": {
+    "insns": 364.0
+   },
+   "sscanf/%lf": {
+    "insns": 1855.0
+   },
+   "sscanf/%x": {
+    "insns": 423.0
+   },
+   "sscanf/mix": {
+    "insns": 1602.0
+   }
+  },
+  "string": {
+   "memchr/0/0": {
+    "insns": 24.0
+   },
+   "memchr/0/1": {
+    "insns": 24.0
+   },
+   "memchr/0/2": {
+    "insns": 24.0
+   },
+   "memchr/0/3": {
+    "insns": 24.0
+   },
+   "memchr/1/0": {
+    "insns": 35.0
+   },
+   "memchr/1/1": {
+    "insns": 28.0
+   },
+   "memchr/1/2": {
+    "insns": 28.0
+   },
+   "memchr/1/3": {
+    "insns": 28.0
+   },
+   "memchr/1024/0": {
+    "insns": 1821.0
+   },
+   "memchr/1024/1": {
+    "insns": 1850.0
+   },
+   "memchr/1024/2": {
+    "insns": 1848.0
+   },
+   "memchr/1024/3": {
+    "insns": 1846.0
+   },
+   "memchr/128/0": {
+    "insns": 253.0
+   },
+   "memchr/128/1": {
+    "insns": 282.0
+   },
+   "memchr/128/2": {
+    "insns": 280.0
+   },
+   "memchr/128/3": {
+    "insns": 278.0
+   },
+   "memchr/15/0": {
+    "insns": 72.0
+   },
+   "memchr/15/1": {
+    "insns": 84.0
+   },
+   "memchr/15/2": {
+    "insns": 76.0
+   },
+   "memchr/15/3": {
+    "insns": 74.0
+   },
+   "memchr/16/0": {
+    "insns": 57.0
+   },
+   "memchr/16/1": {
+    "insns": 86.0
+   },
+   "memchr/16/2": {
+    "insns": 84.0
+   },
+   "memchr/16/3": {
+    "insns": 82.0
+   },
+   "memchr/2/0": {
+    "insns": 43.0
+   },
+   "memchr/2/1": {
+    "insns": 38.0
+   },
+   "memchr/2/2": {
+    "insns": 38.0
+   },
+   "memchr/2/3": {
+    "insns": 45.0
+   },
+   "memchr/256/0": {
+    "insns": 477.0
+   },
+   "memchr/256/1": {
+    "insns": 506.0
+   },
+   "memchr/256/2": {
+    "insns": 504.0
+   },
+   "memchr/256/3": {
+    "insns": 502.0
+   },
+   "memchr/3/0": {
+    "insns": 51.0
+   },
+   "memchr/3/1": {
+    "insns": 48.0
+   },
+   "memchr/3/2": {
+    "insns": 55.0
+   },
+   "memchr/3/3": {
+    "insns": 53.0
+   },
+   "memchr/31/0": {
+    "insns": 100.0
+   },
+   "memchr/31/1": {
+    "insns": 112.0
+   },
+   "memchr/31/2": {
+    "insns": 104.0
+   },
+   "memchr/31/3": {
+    "insns": 102.0
+   },
+   "memchr/32/0": {
+    "insns": 85.0
+   },
+   "memchr/32/1": {
+    "insns": 114.0
+   },
+   "memchr/32/2": {
+    "insns": 112.0
+   },
+   "memchr/32/3": {
+    "insns": 110.0
+   },
+   "memchr/4/0": {
+    "insns": 40.0
+   },
+   "memchr/4/1": {
+    "insns": 65.0
+   },
+   "memchr/4/2": {
+    "insns": 63.0
+   },
+   "memchr/4/3": {
+    "insns": 61.0
+   },
+   "memchr/64/0": {
+    "insns": 141.0
+   },
+   "memchr/64/1": {
+    "insns": 170.0
+   },
+   "memchr/64/2": {
+    "insns": 168.0
+   },
+   "memchr/64/3": {
+    "insns": 166.0
+   },
+   "memchr/7/0": {
+    "insns": 58.0
+   },
+   "memchr/7/1": {
+    "insns": 70.0
+   },
+   "memchr/7/2": {
+    "insns": 62.0
+   },
+   "memchr/7/3": {
+    "insns": 60.0
+   },
+   "memchr/8/0": {
+    "insns": 43.0
+   },
+   "memchr/8/1": {
+    "insns": 72.0
+   },
+   "memchr/8/2": {
+    "insns": 70.0
+   },
+   "memchr/8/3": {
+    "insns": 68.0
+   },
+   "memcmp/0/0:0": {
+    "insns": 27.0
+   },
+   "memcmp/0/0:1": {
+    "insns": 27.0
+   },
+   "memcmp/0/1:1": {
+    "insns": 27.0
+   },
+   "memcmp/0/3:2": {
+    "insns": 27.0
+   },
+   "memcmp/1/0:0": {
+    "insns": 35.0
+   },
+   "memcmp/1/0:1": {
+    "insns": 35.0
+   },
+   "memcmp/1/1:1": {
+    "insns": 35.0
+   },
+   "memcmp/1/3:2": {
+    "insns": 35.0
+   },
+   "memcmp/1024/0:0": {
+    "insns": 8219.0
+   },
+   "memcmp/1024/0:1": {
+    "insns": 8219.0
+   },
+   "memcmp/1024/1:1": {
+    "insns": 8219.0
+   },
+   "memcmp/1024/3:2": {
+    "insns": 8219.0
+   },
+   "memcmp/128/0:0": {
+    "insns": 1051.0
+   },
+   "memcmp/128/0:1": {
+    "insns": 1051.0
+   },
+   "memcmp/128/1:1": {
+    "insns": 1051.0
+   },
+   "memcmp/128/3:2": {
+    "insns": 1051.0
+   },
+   "memcmp/15/0:0": {
+    "insns": 147.0
+   },
+   "memcmp/15/0:1": {
+    "insns": 147.0
+   },
+   "memcmp/15/1:1": {
+    "insns": 147.0
+   },
+   "memcmp/15/3:2": {
+    "insns": 147.0
+   },
+   "memcmp/16/0:0": {
+    "insns": 155.0
+   },
+   "memcmp/16/0:1": {
+    "insns": 155.0
+   },
+   "memcmp/16/1:1": {
+    "insns": 155.0
+   },
+   "memcmp/16/3:2": {
+    "insns": 155.0
+   },
+   "memcmp/2/0:0": {
+    "insns": 43.0
+   },
+   "memcmp/2/0:1": {
+    "insns": 43.0
+   },
+   "memcmp/2/1:1": {
+    "insns": 43.0
+   },
+   "memcmp/2/3:2": {
+    "insns": 43.0
+   },
+   "memcmp/256/0:0": {
+    "insns": 2075.0
+   },
+   "memcmp/256/0:1": {
+    "insns": 2075.0
+   },
+   "memcmp/256/1:1": {
+    "insns": 2075.0
+   },
+   "memcmp/256/3:2": {
+    "insns": 2075.0
+   },
+   "memcmp/3/0:0": {
+    "insns": 51.0
+   },
+   "memcmp/3/0:1": {
+    "insns": 51.0
+   },
+   "memcmp/3/1:1": {
+    "insns": 51.0
+   },
+   "memcmp/3/3:2": {
+    "insns": 51.0
+   },
+   "memcmp/31/0:0": {
+    "insns": 275.0
+   },
+   "memcmp/31/0:1": {
+    "insns": 275.0
+   },
+   "memcmp/31/1:1": {
+    "insns": 275.0
+   },
+   "memcmp/31/3:2": {
+    "insns": 275.0
+   },
+   "memcmp/32/0:0": {
+    "insns": 283.0
+   },
+   "memcmp/32/0:1": {
+    "insns": 283.0
+   },
+   "memcmp/32/1:1": {
+    "insns": 283.0
+   },
+   "memcmp/32/3:2": {
+    "insns": 283.0
+   },
+   "memcmp/4/0:0": {
+    "insns": 59.0
+   },
+   "memcmp/4/0:1": {
+    "insns": 59.0
+   },
+   "memcmp/4/1:1": {
+    "insns": 59.0
+   },
+   "memcmp/4/3:2": {
+    "insns": 59.0
+   },
+   "memcmp/64/0:0": {
+    "insns": 539.0
+   },
+   "memcmp/64/0:1": {
+    "insns": 539.0
+   },
+   "memcmp/64/1:1": {
+    "insns": 539.0
+   },
+   "memcmp/64/3:2": {
+    "insns": 539.0
+   },
+   "memcmp/7/0:0": {
+    "insns": 83.0
+   },
+   "memcmp/7/0:1": {
+    "insns": 83.0
+   },
+   "memcmp/7/1:1": {
+    "insns": 83.0
+   },
+   "memcmp/7/3:2": {
+    "insns": 83.0
+   },
+   "memcmp/8/0:0": {
+    "insns": 91.0
+   },
+   "memcmp/8/0:1": {
+    "insns": 91.0
+   },
+   "memcmp/8/1:1": {
+    "insns": 91.0
+   },
+   "memcmp/8/3:2": {
+    "insns": 91.0
+   },
+   "memcpy/0/0:0": {
+    "insns": 19.0
+   },
+   "memcpy/0/0:1": {
+    "insns": 19.0
+   },
+   "memcpy/0/1:1": {
+    "insns": 19.0
+   },
+   "memcpy/0/3:2": {
+    "insns": 19.0
+   },
+   "memcpy/1/0:0": {
+    "insns": 34.0
+   },
+   "memcpy/1/0:1": {
+    "insns": 34.0
+   },
+   "memcpy/1/1:1": {
+    "insns": 34.0
+   },
+   "memcpy/1/3:2": {
+    "insns": 34.0
+   },
+   "memcpy/1024/0:0": {
+    "insns": 174.0
+   },
+   "memcpy/1024/0:1": {
+    "insns": 441.0
+   },
+   "memcpy/1024/1:1": {
+    "insns": 194.0
+   },
+   "memcpy/1024/3:2": {
+    "insns": 439.0
+   },
+   "memcpy/128/0:0": {
+    "insns": 62.0
+   },
+   "memcpy/128/0:1": {
+    "insns": 105.0
+   },
+   "memcpy/128/1:1": {
+    "insns": 82.0
+   },
+   "memcpy/128/3:2": {
+    "insns": 103.0
+   },
+   "memcpy/15/0:0": {
+    "insns": 44.0
+   },
+   "memcpy/15/0:1": {
+    "insns": 44.0
+   },
+   "memcpy/15/1:1": {
+    "insns": 44.0
+   },
+   "memcpy/15/3:2": {
+    "insns": 44.0
+   },
+   "memcpy/16/0:0": {
+    "insns": 42.0
+   },
+   "memcpy/16/0:1": {
+    "insns": 42.0
+   },
+   "memcpy/16/1:1": {
+    "insns": 42.0
+   },
+   "memcpy/16/3:2": {
+    "insns": 42.0
+   },
+   "memcpy/2/0:0": {
+    "insns": 34.0
+   },
+   "memcpy/2/0:1": {
+    "insns": 34.0
+   },
+   "memcpy/2/1:1": {
+    "insns": 34.0
+   },
+   "memcpy/2/3:2": {
+    "insns": 34.0
+   },
+   "memcpy/256/0:0": {
+    "insns": 78.0
+   },
+   "memcpy/256/0:1": {
+    "insns": 153.0
+   },
+   "memcpy/256/1:1": {
+    "insns": 98.0
+   },
+   "memcpy/256/3:2": {
+    "insns": 151.0
+   },
+   "memcpy/3/0:0": {
+    "insns": 36.0
+   },
+   "memcpy/3/0:1": {
+    "insns": 36.0
+   },
+   "memcpy/3/1:1": {
+    "insns": 36.0
+   },
+   "memcpy/3/3:2": {
+    "insns": 36.0
+   },
+   "memcpy/31/0:0": {
+    "insns": 54.0
+   },
+   "memcpy/31/0:1": {
+    "insns": 54.0
+   },
+   "memcpy/31/1:1": {
+    "insns": 54.0
+   },
+   "memcpy/31/3:2": {
+    "insns": 54.0
+   },
+   "memcpy/32/0:0": {
+    "insns": 50.0
+   },
+   "memcpy/32/0:1": {
+    "insns": 69.0
+   },
+   "memcpy/32/1:1": {
+    "insns": 69.0
+   },
+   "memcpy/32/3:2": {
+    "insns": 67.0
+   },
+   "memcpy/4/0:0": {
+    "insns": 34.0
+   },
+   "memcpy/4/0:1": {
+    "insns": 34.0
+   },
+   "memcpy/4/1:1": {
+    "insns": 34.0
+   },
+   "memcpy/4/3:2": {
+    "insns": 34.0
+   },
+   "memcpy/64/0:0": {
+    "insns": 54.0
+   },
+   "memcpy/64/0:1": {
+    "insns": 81.0
+   },
+   "memcpy/64/1:1": {
+    "insns": 74.0
+   },
+   "memcpy/64/3:2": {
+    "insns": 79.0
+   },
+   "memcpy/7/0:0": {
+    "insns": 38.0
+   },
+   "memcpy/7/0:1": {
+    "insns": 38.0
+   },
+   "memcpy/7/1:1": {
+    "insns": 38.0
+   },
+   "memcpy/7/3:2": {
+    "insns": 38.0
+   },
+   "memcpy/8/0:0": {
+    "insns": 38.0
+   },
+   "memcpy/8/0:1": {
+    "insns": 38.0
+   },
+   "memcpy/8/1:1": {
+    "insns": 38.0
+   },
+   "memcpy/8/3:2": {
+    "insns": 38.0
+   },
+   "memmove-down/0/0:0": {
+    "insns": 23.0
+   },
+   "memmove-down/0/0:1": {
+    "insns": 23.0
+   },
+   "memmove-down/0/1:1": {
+    "insns": 23.0
+   },
+   "memmove-down/0/3:2": {
+    "insns": 23.0
+   },
+   "memmove-down/1/0:0": {
+    "insns": 38.0
+   },
+   "memmove-down/1/0:1": {
+    "insns": 38.0
+   },
+   "memmove-down/1/1:1": {
+    "insns": 38.0
+   },
+   "memmove-down/1/3:2": {
+    "insns": 38.0
+   },
+   "memmove-down/1024/0:0": {
+    "insns": 178.0
+   },
+   "memmove-down/1024/0:1": {
+    "insns": 445.0
+   },
+   "memmove-down/1024/1:1": {
+    "insns": 198.0
+   },
+   "memmove-down/1024/3:2": {
+    "insns": 443.0
+   },
+   "memmove-down/128/0:0": {
+    "insns": 66.0
+   },
+   "memmove-down/128/0:1": {
+    "insns": 109.0
+   },
+   "memmove-down/128/1:1": {
+    "insns": 86.0
+   },
+   "memmove-down/128/3:2": {
+    "insns": 107.0
+   },
+   "memmove-down/15/0:0": {
+    "insns": 48.0
+   },
+   "memmove-down/15/0:1": {
+    "insns": 48.0
+   },
+   "memmove-down/15/1:1": {
+    "insns": 48.0
+   },
+   "memmove-down/15/3:2": {
+    "insns": 48.0
+   },
+   "memmove-down/16/0:0": {
+    "insns": 46.0
+   },
+   "memmove-down/16/0:1": {
+    "insns": 46.0
+   },
+   "memmove-down/16/1:1": {
+    "insns": 46.0
+   },
+   "memmove-down/16/3:2": {
+    "insns": 46.0
+   },
+   "memmove-down/2/0:0": {
+    "insns": 38.0
+   },
+   "memmove-down/2/0:1": {
+    "insns": 38.0
+   },
+   "memmove-down/2/1:1": {
+    "insns": 38.0
+   },
+   "memmove-down/2/3:2": {
+    "insns": 38.0
+   },
+   "memmove-down/256/0:0": {
+    "insns": 82.0
+   },
+   "memmove-down/256/0:1": {
+    "insns": 157.0
+   },
+   "memmove-down/256/1:1": {
+    "insns": 102.0
+   },
+   "memmove-down/256/3:2": {
+    "insns": 155.0
+   },
+   "memmove-down/3/0:0": {
+    "insns": 40.0
+   },
+   "memmove-down/3/0:1": {
+    "insns": 40.0
+   },
+   "memmove-down/3/1:1": {
+    "insns": 40.0
+   },
+   "memmove-down/3/3:2": {
+    "insns": 40.0
+   },
+   "memmove-down/31/0:0": {
+    "insns": 58.0
+   },
+   "memmove-down/31/0:1": {
+    "insns": 58.0
+   },
+   "memmove-down/31/1:1": {
+    "insns": 58.0
+   },
+   "memmove-down/31/3:2": {
+    "insns": 58.0
+   },
+   "memmove-down/32/0:0": {
+    "insns": 54.0
+   },
+   "memmove-down/32/0:1": {
+    "insns": 73.0
+   },
+   "memmove-down/32/1:1": {
+    "insns": 73.0
+   },
+   "memmove-down/32/3:2": {
+    "insns": 71.0
+   },
+   "memmove-down/4/0:0": {
+    "insns": 38.0
+   },
+   "memmove-down/4/0:1": {
+    "insns": 38.0
+   },
+   "memmove-down/4/1:1": {
+    "insns": 38.0
+   },
+   "memmove-down/4/3:2": {
+    "insns": 38.0
+   },
+   "memmove-down/64/0:0": {
+    "insns": 58.0
+   },
+   "memmove-down/64/0:1": {
+    "insns": 85.0
+   },
+   "memmove-down/64/1:1": {
+    "insns": 78.0
+   },
+   "memmove-down/64/3:2": {
+    "insns": 83.0
+   },
+   "memmove-down/7/0:0": {
+    "insns": 42.0
+   },
+   "memmove-down/7/0:1": {
+    "insns": 42.0
+   },
+   "memmove-down/7/1:1": {
+    "insns": 42.0
+   },
+   "memmove-down/7/3:2": {
+    "insns": 42.0
+   },
+   "memmove-down/8/0:0": {
+    "insns": 42.0
+   },
+   "memmove-down/8/0:1": {
+    "insns": 42.0
+   },
+   "memmove-down/8/1:1": {
+    "insns": 42.0
+   },
+   "memmove-down/8/3:2": {
+    "insns": 42.0
+   },
+   "memmove-up/0/0:0": {
+    "insns": 23.0
+   },
+   "memmove-up/0/0:1": {
+    "insns": 23.0
+   },
+   "memmove-up/0/1:1": {
+    "insns": 23.0
+   },
+   "memmove-up/0/3:2": {
+    "insns": 23.0
+   },
+   "memmove-up/1/0:0": {
+    "insns": 38.0
+   },
+   "memmove-up/1/0:1": {
+    "insns": 38.0
+   },
+   "memmove-up/1/1:1": {
+    "insns": 38.0
+   },
+   "memmove-up/1/3:2": {
+    "insns": 38.0
+   },
+   "memmove-up/1024/0:0": {
+    "insns": 174.0
+   },
+   "memmove-up/1024/0:1": {
+    "insns": 407.0
+   },
+   "memmove-up/1024/1:1": {
+    "insns": 191.0
+   },
+   "memmove-up/1024/3:2": {
+    "insns": 405.0
+   },
+   "memmove-up/128/0:0": {
+    "insns": 62.0
+   },
+   "memmove-up/128/0:1": {
+    "insns": 99.0
+   },
+   "memmove-up/128/1:1": {
+    "insns": 79.0
+   },
+   "memmove-up/128/3:2": {
+    "insns": 97.0
+   },
+   "memmove-up/15/0:0": {
+    "insns": 46.0
+   },
+   "memmove-up/15/0:1": {
+    "insns": 46.0
+   },
+   "memmove-up/15/1:1": {
+    "insns": 46.0
+   },
+   "memmove-up/15/3:2": {
+    "insns": 46.0
+   },
+   "memmove-up/16/0:0": {
+    "insns": 44.0
+   },
+   "memmove-up/16/0:1": {
+    "insns": 44.0
+   },
+   "memmove-up/16/1:1": {
+    "insns": 44.0
+   },
+   "memmove-up/16/3:2": {
+    "insns": 44.0
+   },
+   "memmove-up/2/0:0": {
+    "insns": 38.0
+   },
+   "memmove-up/2/0:1": {
+    "insns": 38.0
+   },
+   "memmove-up/2/1:1": {
+    "insns": 38.0
+   },
+   "memmove-up/2/3:2": {
+    "insns": 38.0
+   },
+   "memmove-up/256/0:0": {
+    "insns": 78.0
+   },
+   "memmove-up/256/0:1": {
+    "insns": 143.0
+   },
+   "memmove-up/256/1:1": {
+    "insns": 95.0
+   },
+   "memmove-up/256/3:2": {
+    "insns": 141.0
+   },
+   "memmove-up/3/0:0": {
+    "insns": 40.0
+   },
+   "memmove-up/3/0:1": {
+    "insns": 40.0
+   },
+   "memmove-up/3/1:1": {
+    "insns": 40.0
+   },
+   "memmove-up/3/3:2": {
+    "insns": 40.0
+   },
+   "memmove-up/31/0:0": {
+    "insns": 54.0
+   },
+   "memmove-up/31/0:1": {
+    "insns": 54.0
+   },
+   "memmove-up/31/1:1": {
+    "insns": 54.0
+   },
+   "memmove-up/31/3:2": {
+    "insns": 54.0
+   },
+   "memmove-up/32/0:0": {
+    "insns": 50.0
+   },
+   "memmove-up/32/0:1": {
+    "insns": 66.0
+   },
+   "memmove-up/32/1:1": {
+    "insns": 66.0
+   },
+   "memmove-up/32/3:2": {
+    "insns": 64.0
+   },
+   "memmove-up/4/0:0": {
+    "insns": 38.0
+   },
+   "memmove-up/4/0:1": {
+    "insns": 38.0
+   },
+   "memmove-up/4/1:1": {
+    "insns": 38.0
+   },
+   "memmove-up/4/3:2": {
+    "insns": 38.0
+   },
+   "memmove-up/64/0:0": {
+    "insns": 54.0
+   },
+   "memmove-up/64/0:1": {
+    "insns": 77.0
+   },
+   "memmove-up/64/1:1": {
+    "insns": 71.0
+   },
+   "memmove-up/64/3:2": {
+    "insns": 75.0
+   },
+   "memmove-up/7/0:0": {
+    "insns": 42.0
+   },
+   "memmove-up/7/0:1": {
+    "insns": 42.0
+   },
+   "memmove-up/7/1:1": {
+    "insns": 42.0
+   },
+   "memmove-up/7/3:2": {
+    "insns": 42.0
+   },
+   "memmove-up/8/0:0": {
+    "insns": 42.0
+   },
+   "memmove-up/8/0:1": {
+    "insns": 42.0
+   },
+   "memmove-up/8/1:1": {
+    "insns": 42.0
+   },
+   "memmove-up/8/3:2": {
+    "insns": 40.0
+   },
+   "memset/0/0": {
+    "insns": 18.0
+   },
+   "memset/0/1": {
+    "insns": 18.0
+   },
+   "memset/0/2": {
+    "insns": 18.0
+   },
+   "memset/0/3": {
+    "insns": 18.0
+   },
+   "memset/1/0": {
+    "insns": 35.0
+   },
+   "memset/1/1": {
+    "insns": 35.0
+   },
+   "memset/1/2": {
+    "insns": 35.0
+   },
+   "memset/1/3": {
+    "insns": 35.0
+   },
+   "memset/1024/0": {
+    "insns": 177.0
+   },
+   "memset/1024/1": {
+    "insns": 178.0
+   },
+   "memset/1024/2": {
+    "insns": 178.0
+   },
+   "memset/1024/3": {
+    "insns": 179.0
+   },
+   "memset/128/0": {
+    "insns": 65.0
+   },
+   "memset/128/1": {
+    "insns": 66.0
+   },
+   "memset/128/2": {
+    "insns": 66.0
+   },
+   "memset/128/3": {
+    "insns": 67.0
+   },
+   "memset/15/0": {
+    "insns": 40.0
+   },
+   "memset/15/1": {
+    "insns": 40.0
+   },
+   "memset/15/2": {
+    "insns": 40.0
+   },
+   "memset/15/3": {
+    "insns": 40.0
+   },
+   "memset/16/0": {
+    "insns": 39.0
+   },
+   "memset/16/1": {
+    "insns": 39.0
+   },
+   "memset/16/2": {
+    "insns": 39.0
+   },
+   "memset/16/3": {
+    "insns": 39.0
+   },
+   "memset/2/0": {
+    "insns": 35.0
+   },
+   "memset/2/1": {
+    "insns": 35.0
+   },
+   "memset/2/2": {
+    "insns": 35.0
+   },
+   "memset/2/3": {
+    "insns": 35.0
+   },
+   "memset/256/0": {
+    "insns": 81.0
+   },
+   "memset/256/1": {
+    "insns": 82.0
+   },
+   "memset/256/2": {
+    "insns": 82.0
+   },
+   "memset/256/3": {
+    "insns": 83.0
+   },
+   "memset/3/0": {
+    "insns": 36.0
+   },
+   "memset/3/1": {
+    "insns": 36.0
+   },
+   "memset/3/2": {
+    "insns": 36.0
+   },
+   "memset/3/3": {
+    "insns": 36.0
+   },
+   "memset/31/0": {
+    "insns": 45.0
+   },
+   "memset/31/1": {
+    "insns": 45.0
+   },
+   "memset/31/2": {
+    "insns": 45.0
+   },
+   "memset/31/3": {
+    "insns": 45.0
+   },
+   "memset/32/0": {
+    "insns": 53.0
+   },
+   "memset/32/1": {
+    "insns": 54.0
+   },
+   "memset/32/2": {
+    "insns": 54.0
+   },
+   "memset/32/3": {
+    "insns": 55.0
+   },
+   "memset/4/0": {
+    "insns": 35.0
+   },
+   "memset/4/1": {
+    "insns": 35.0
+   },
+   "memset/4/2": {
+    "insns": 35.0
+   },
+   "memset/4/3": {
+    "insns": 35.0
+   },
+   "memset/64/0": {
+    "insns": 57.0
+   },
+   "memset/64/1": {
+    "insns": 58.0
+   },
+   "memset/64/2": {
+    "insns": 58.0
+   },
+   "memset/64/3": {
+    "insns": 59.0
+   },
+   "memset/7/0": {
+    "insns": 37.0
+   },
+   "memset/7/1": {
+    "insns": 37.0
+   },
+   "memset/7/2": {
+    "insns": 37.0
+   },
+   "memset/7/3": {
+    "insns": 37.0
+   },
+   "memset/8/0": {
+    "insns": 37.0
+   },
+   "memset/8/1": {
+    "insns": 37.0
+   },
+   "memset/8/2": {
+    "insns": 37.0
+   },
+   "memset/8/3": {
+    "insns": 37.0
+   },
+   "mix/memcpy": {
+    "insns": 54.12
+   },
+   "mix/memset": {
+    "insns": 41.71
+   },
+   "mix/strlen": {
+    "insns": 103.24
+   },
+   "strchr/0/0": {
+    "insns": 52.0
+   },
+   "strchr/0/1": {
+    "insns": 38.0
+   },
+   "strchr/0/2": {
+    "insns": 38.0
+   },
+   "strchr/0/3": {
+    "insns": 38.0
+   },
+   "strchr/1/0": {
+    "insns": 48.0
+   },
+   "strchr/1/1": {
+    "insns": 35.0
+   },
+   "strchr/1/2": {
+    "insns": 35.0
+   },
+   "strchr/1/3": {
+    "insns": 35.0
+   },
+   "strchr/1024/0": {
+    "insns": 2874.0
+   },
+   "strchr/1024/1": {
+    "insns": 2880.0
+   },
+   "strchr/1024/2": {
+    "insns": 2878.0
+   },
+   "strchr/1024/3": {
+    "insns": 2876.0
+   },
+   "strchr/128/0": {
+    "insns": 410.0
+   },
+   "strchr/128/1": {
+    "insns": 416.0
+   },
+   "strchr/128/2": {
+    "insns": 414.0
+   },
+   "strchr/128/3": {
+    "insns": 412.0
+   },
+   "strchr/15/0": {
+    "insns": 95.0
+   },
+   "strchr/15/1": {
+    "insns": 118.0
+   },
+   "strchr/15/2": {
+    "insns": 99.0
+   },
+   "strchr/15/3": {
+    "insns": 97.0
+   },
+   "strchr/16/0": {
+    "insns": 102.0
+   },
+   "strchr/16/1": {
+    "insns": 108.0
+   },
+   "strchr/16/2": {
+    "insns": 106.0
+   },
+   "strchr/16/3": {
+    "insns": 104.0
+   },
+   "strchr/2/0": {
+    "insns": 55.0
+   },
+   "strchr/2/1": {
+    "insns": 44.0
+   },
+   "strchr/2/2": {
+    "insns": 44.0
+   },
+   "strchr/2/3": {
+    "insns": 57.0
+   },
+   "strchr/256/0": {
+    "insns": 762.0
+   },
+   "strchr/256/1": {
+    "insns": 768.0
+   },
+   "strchr/256/2": {
+    "insns": 766.0
+   },
+   "strchr/256/3": {
+    "insns": 764.0
+   },
+   "strchr/3/0": {
+    "insns": 62.0
+   },
+   "strchr/3/1": {
+    "insns": 53.0
+   },
+   "strchr/3/2": {
+    "insns": 66.0
+   },
+   "strchr/3/3": {
+    "insns": 64.0
+   },
+   "strchr/31/0": {
+    "insns": 139.0
+   },
+   "strchr/31/1": {
+    "insns": 162.0
+   },
+   "strchr/31/2": {
+    "insns": 143.0
+   },
+   "strchr/31/3": {
+    "insns": 141.0
+   },
+   "strchr/32/0": {
+    "insns": 146.0
+   },
+   "strchr/32/1": {
+    "insns": 152.0
+   },
+   "strchr/32/2": {
+    "insns": 150.0
+   },
+   "strchr/32/3": {
+    "insns": 148.0
+   },
+   "strchr/4/0": {
+    "insns": 69.0
+   },
+   "strchr/4/1": {
+    "insns": 75.0
+   },
+   "strchr/4/2": {
+    "insns": 73.0
+   },
+   "strchr/4/3": {
+    "insns": 71.0
+   },
+   "strchr/64/0": {
+    "insns": 234.0
+   },
+   "strchr/64/1": {
+    "insns": 240.0
+   },
+   "strchr/64/2": {
+    "insns": 238.0
+   },
+   "strchr/64/3": {
+    "insns": 236.0
+   },
+   "strchr/7/0": {
+    "insns": 73.0
+   },
+   "strchr/7/1": {
+    "insns": 96.0
+   },
+   "strchr/7/2": {
+    "insns": 77.0
+   },
+   "strchr/7/3": {
+    "insns": 75.0
+   },
+   "strchr/8/0": {
+    "insns": 80.0
+   },
+   "strchr/8/1": {
+    "insns": 86.0
+   },
+   "strchr/8/2": {
+    "insns": 84.0
+   },
+   "strchr/8/3": {
+    "insns": 82.0
+   },
+   "strcmp/0/0:0": {
+    "insns": 27.0
+   },
+   "strcmp/0/0:1": {
+    "insns": 27.0
+   },
+   "strcmp/0/1:1": {
+    "insns": 27.0
+   },
+   "strcmp/0/3:2": {
+    "insns": 27.0
+   },
+   "strcmp/1/0:0": {
+    "insns": 33.0
+   },
+   "strcmp/1/0:1": {
+    "insns": 33.0
+   },
+   "strcmp/1/1:1": {
+    "insns": 33.0
+   },
+   "strcmp/1/3:2": {
+    "insns": 33.0
+   },
+   "strcmp/1024/0:0": {
+    "insns": 2160.0
+   },
+   "strcmp/1024/0:1": {
+    "insns": 6190.0
+   },
+   "strcmp/1024/1:1": {
+    "insns": 2176.0
+   },
+   "strcmp/1024/3:2": {
+    "insns": 6188.0
+   },
+   "strcmp/128/0:0": {
+    "insns": 368.0
+   },
+   "strcmp/128/0:1": {
+    "insns": 814.0
+   },
+   "strcmp/128/1:1": {
+    "insns": 384.0
+   },
+   "strcmp/128/3:2": {
+    "insns": 812.0
+   },
+   "strcmp/15/0:0": {
+    "insns": 123.0
+   },
+   "strcmp/15/0:1": {
+    "insns": 123.0
+   },
+   "strcmp/15/1:1": {
+    "insns": 123.0
+   },
+   "strcmp/15/3:2": {
+    "insns": 123.0
+   },
+   "strcmp/16/0:0": {
+    "insns": 144.0
+   },
+   "strcmp/16/0:1": {
+    "insns": 133.0
+   },
+   "strcmp/16/1:1": {
+    "insns": 133.0
+   },
+   "strcmp/16/3:2": {
+    "insns": 133.0
+   },
+   "strcmp/2/0:0": {
+    "insns": 39.0
+   },
+   "strcmp/2/0:1": {
+    "insns": 39.0
+   },
+   "strcmp/2/1:1": {
+    "insns": 39.0
+   },
+   "strcmp/2/3:2": {
+    "insns": 39.0
+   },
+   "strcmp/256/0:0": {
+    "insns": 624.0
+   },
+   "strcmp/256/0:1": {
+    "insns": 1582.0
+   },
+   "strcmp/256/1:1": {
+    "insns": 640.0
+   },
+   "strcmp/256/3:2": {
+    "insns": 1580.0
+   },
+   "strcmp/3/0:0": {
+    "insns": 45.0
+   },
+   "strcmp/3/0:1": {
+    "insns": 45.0
+   },
+   "strcmp/3/1:1": {
+    "insns": 45.0
+   },
+   "strcmp/3/3:2": {
+    "insns": 45.0
+   },
+   "strcmp/31/0:0": {
+    "insns": 168.0
+   },
+   "strcmp/31/0:1": {
+    "insns": 232.0
+   },
+   "strcmp/31/1:1": {
+    "insns": 192.0
+   },
+   "strcmp/31/3:2": {
+    "insns": 230.0
+   },
+   "strcmp/32/0:0": {
+    "insns": 176.0
+   },
+   "strcmp/32/0:1": {
+    "insns": 238.0
+   },
+   "strcmp/32/1:1": {
+    "insns": 192.0
+   },
+   "strcmp/32/3:2": {
+    "insns": 236.0
+   },
+   "strcmp/4/0:0": {
+    "insns": 53.0
+   },
+   "strcmp/4/0:1": {
+    "insns": 53.0
+   },
+   "strcmp/4/1:1": {
+    "insns": 53.0
+   },
+   "strcmp/4/3:2": {
+    "insns": 53.0
+   },
+   "strcmp/64/0:0": {
+    "insns": 240.0
+   },
+   "strcmp/64/0:1": {
+    "insns": 430.0
+   },
+   "strcmp/64/1:1": {
+    "insns": 256.0
+   },
+   "strcmp/64/3:2": {
+    "insns": 428.0
+   },
+   "strcmp/7/0:0": {
+    "insns": 71.0
+   },
+   "strcmp/7/0:1": {
+    "insns": 71.0
+   },
+   "strcmp/7/1:1": {
+    "insns": 71.0
+   },
+   "strcmp/7/3:2": {
+    "insns": 71.0
+   },
+   "strcmp/8/0:0": {
+    "insns": 79.0
+   },
+   "strcmp/8/0:1": {
+    "insns": 79.0
+   },
+   "strcmp/8/1:1": {
+    "insns": 79.0
+   },
+   "strcmp/8/3:2": {
+    "insns": 79.0
+   },
+   "strcpy/0/0:0": {
+    "insns": 62.0
+   },
+   "strcpy/0/0:1": {
+    "insns": 62.0
+   },
+   "strcpy/0/1:1": {
+    "insns": 52.0
+   },
+   "strcpy/0/3:2": {
+    "insns": 52.0
+   },
+   "strcpy/1/0:0": {
+    "insns": 62.0
+   },
+   "strcpy/1/0:1": {
+    "insns": 62.0
+   },
+   "strcpy/1/1:1": {
+    "insns": 57.0
+   },
+   "strcpy/1/3:2": {
+    "insns": 64.0
+   },
+   "strcpy/1024/0:0": {
+    "insns": 1356.0
+   },
+   "strcpy/1024/0:1": {
+    "insns": 1621.0
+   },
+   "strcpy/1024/1:1": {
+    "insns": 1385.0
+   },
+   "strcpy/1024/3:2": {
+    "insns": 1622.0
+   },
+   "strcpy/128/0:0": {
+    "insns": 236.0
+   },
+   "strcpy/128/0:1": {
+    "insns": 277.0
+   },
+   "strcpy/128/1:1": {
+    "insns": 265.0
+   },
+   "strcpy/128/3:2": {
+    "insns": 278.0
+   },
+   "strcpy/15/0:0": {
+    "insns": 80.0
+   },
+   "strcpy/15/0:1": {
+    "insns": 80.0
+   },
+   "strcpy/15/1:1": {
+    "insns": 99.0
+   },
+   "strcpy/15/3:2": {
+    "insns": 89.0
+   },
+   "strcpy/16/0:0": {
+    "insns": 90.0
+   },
+   "strcpy/16/0:1": {
+    "insns": 90.0
+   },
+   "strcpy/16/1:1": {
+    "insns": 101.0
+   },
+   "strcpy/16/3:2": {
+    "insns": 91.0
+   },
+   "strcpy/2/0:0": {
+    "insns": 64.0
+   },
+   "strcpy/2/0:1": {
+    "insns": 64.0
+   },
+   "strcpy/2/1:1": {
+    "insns": 64.0
+   },
+   "strcpy/2/3:2": {
+    "insns": 66.0
+   },
+   "strcpy/256/0:0": {
+    "insns": 396.0
+   },
+   "strcpy/256/0:1": {
+    "insns": 469.0
+   },
+   "strcpy/256/1:1": {
+    "insns": 425.0
+   },
+   "strcpy/256/3:2": {
+    "insns": 470.0
+   },
+   "strcpy/3/0:0": {
+    "insns": 62.0
+   },
+   "strcpy/3/0:1": {
+    "insns": 62.0
+   },
+   "strcpy/3/1:1": {
+    "insns": 74.0
+   },
+   "strcpy/3/3:2": {
+    "insns": 64.0
+   },
+   "strcpy/31/0:0": {
+    "insns": 106.0
+   },
+   "strcpy/31/0:1": {
+    "insns": 125.0
+   },
+   "strcpy/31/1:1": {
+    "insns": 144.0
+   },
+   "strcpy/31/3:2": {
+    "insns": 132.0
+   },
+   "strcpy/32/0:0": {
+    "insns": 116.0
+   },
+   "strcpy/32/0:1": {
+    "insns": 133.0
+   },
+   "strcpy/32/1:1": {
+    "insns": 144.0
+   },
+   "strcpy/32/3:2": {
+    "insns": 134.0
+   },
+   "strcpy/4/0:0": {
+    "insns": 65.0
+   },
+   "strcpy/4/0:1": {
+    "insns": 65.0
+   },
+   "strcpy/4/1:1": {
+    "insns": 76.0
+   },
+   "strcpy/4/3:2": {
+    "insns": 66.0
+   },
+   "strcpy/64/0:0": {
+    "insns": 156.0
+   },
+   "strcpy/64/0:1": {
+    "insns": 181.0
+   },
+   "strcpy/64/1:1": {
+    "insns": 185.0
+   },
+   "strcpy/64/3:2": {
+    "insns": 182.0
+   },
+   "strcpy/7/0:0": {
+    "insns": 67.0
+   },
+   "strcpy/7/0:1": {
+    "insns": 67.0
+   },
+   "strcpy/7/1:1": {
+    "insns": 86.0
+   },
+   "strcpy/7/3:2": {
+    "insns": 76.0
+   },
+   "strcpy/8/0:0": {
+    "insns": 77.0
+   },
+   "strcpy/8/0:1": {
+    "insns": 77.0
+   },
+   "strcpy/8/1:1": {
+    "insns": 88.0
+   },
+   "strcpy/8/3:2": {
+    "insns": 78.0
+   },
+   "strlen/0/0": {
+    "insns": 35.0
+   },
+   "strlen/0/1": {
+    "insns": 25.0
+   },
+   "strlen/0/2": {
+    "insns": 25.0
+   },
+   "strlen/0/3": {
+    "insns": 25.0
+   },
+   "strlen/1/0": {
+    "insns": 35.0
+   },
+   "strlen/1/1": {
+    "insns": 30.0
+   },
+   "strlen/1/2": {
+    "insns": 30.0
+   },
+   "strlen/1/3": {
+    "insns": 37.0
+   },
+   "strlen/1024/0": {
+    "insns": 1187.0
+   },
+   "strlen/1024/1": {
+    "insns": 1198.0
+   },
+   "strlen/1024/2": {
+    "insns": 1193.0
+   },
+   "strlen/1024/3": {
+    "insns": 1188.0
+   },
+   "strlen/128/0": {
+    "insns": 179.0
+   },
+   "strlen/128/1": {
+    "insns": 190.0
+   },
+   "strlen/128/2": {
+    "insns": 185.0
+   },
+   "strlen/128/3": {
+    "insns": 180.0
+   },
+   "strlen/15/0": {
+    "insns": 45.0
+   },
+   "strlen/15/1": {
+    "insns": 64.0
+   },
+   "strlen/15/2": {
+    "insns": 59.0
+   },
+   "strlen/15/3": {
+    "insns": 54.0
+   },
+   "strlen/16/0": {
+    "insns": 53.0
+   },
+   "strlen/16/1": {
+    "insns": 64.0
+   },
+   "strlen/16/2": {
+    "insns": 59.0
+   },
+   "strlen/16/3": {
+    "insns": 54.0
+   },
+   "strlen/2/0": {
+    "insns": 35.0
+   },
+   "strlen/2/1": {
+    "insns": 35.0
+   },
+   "strlen/2/2": {
+    "insns": 42.0
+   },
+   "strlen/2/3": {
+    "insns": 37.0
+   },
+   "strlen/256/0": {
+    "insns": 323.0
+   },
+   "strlen/256/1": {
+    "insns": 334.0
+   },
+   "strlen/256/2": {
+    "insns": 329.0
+   },
+   "strlen/256/3": {
+    "insns": 324.0
+   },
+   "strlen/3/0": {
+    "insns": 35.0
+   },
+   "strlen/3/1": {
+    "insns": 47.0
+   },
+   "strlen/3/2": {
+    "insns": 42.0
+   },
+   "strlen/3/3": {
+    "insns": 37.0
+   },
+   "strlen/31/0": {
+    "insns": 63.0
+   },
+   "strlen/31/1": {
+    "insns": 82.0
+   },
+   "strlen/31/2": {
+    "insns": 77.0
+   },
+   "strlen/31/3": {
+    "insns": 72.0
+   },
+   "strlen/32/0": {
+    "insns": 71.0
+   },
+   "strlen/32/1": {
+    "insns": 82.0
+   },
+   "strlen/32/2": {
+    "insns": 77.0
+   },
+   "strlen/32/3": {
+    "insns": 72.0
+   },
+   "strlen/4/0": {
+    "insns": 36.0
+   },
+   "strlen/4/1": {
+    "insns": 47.0
+   },
+   "strlen/4/2": {
+    "insns": 42.0
+   },
+   "strlen/4/3": {
+    "insns": 37.0
+   },
+   "strlen/64/0": {
+    "insns": 107.0
+   },
+   "strlen/64/1": {
+    "insns": 118.0
+   },
+   "strlen/64/2": {
+    "insns": 113.0
+   },
+   "strlen/64/3": {
+    "insns": 108.0
+   },
+   "strlen/7/0": {
+    "insns": 36.0
+   },
+   "strlen/7/1": {
+    "insns": 55.0
+   },
+   "strlen/7/2": {
+    "insns": 50.0
+   },
+   "strlen/7/3": {
+    "insns": 45.0
+   },
+   "strlen/8/0": {
+    "insns": 44.0
+   },
+   "strlen/8/1": {
+    "insns": 55.0
+   },
+   "strlen/8/2": {
+    "insns": 50.0
+   },
+   "strlen/8/3": {
+    "insns": 45.0
+   }
+  },
+  "strto": {
+   "atoi": {
+    "insns": 207.0
+   },
+   "strtod/17-digits": {
+    "insns": 1226.0
+   },
+   "strtod/exp-large": {
+    "insns": 1132.0
+   },
+   "strtod/exp-small": {
+    "insns": 1295.0
+   },
+   "strtod/fixed": {
+    "insns": 665.0
+   },
+   "strtod/hex": {
+    "insns": 943.0
+   },
+   "strtod/integer": {
+    "insns": 482.0
+   },
+   "strtod/long": {
+    "insns": 2248.0
+   },
+   "strtod/micro": {
+    "insns": 547.0
+   },
+   "strtod/min-normal": {
+    "insns": 1280.0
+   },
+   "strtod/short": {
+    "insns": 461.0
+   },
+   "strtod/subnormal": {
+    "insns": 1369.0
+   },
+   "strtof/9-digits": {
+    "insns": 930.0
+   },
+   "strtof/exp": {
+    "insns": 974.0
+   },
+   "strtof/short": {
+    "insns": 392.0
+   },
+   "strtol/hex": {
+    "insns": 322.0
+   },
+   "strtol/int": {
+    "insns": 305.0
+   },
+   "strtol/short": {
+    "insns": 135.0
+   },
+   "strtoll/long": {
+    "insns": 516.0
+   },
+   "strtoul/hex16": {
+    "insns": 309.0
+   },
+   "strtoull/hex": {
+    "insns": 508.0
+   }
+  }
+ },
+ "qemu": "8.2.2",
+ "substituted": {
+  "malloc": [],
+  "math": [
+   "__aeabi_d2f",
+   "__aeabi_d2iz",
+   "__aeabi_d2lz",
+   "__aeabi_dadd",
+   "__aeabi_dcmpeq",
+   "__aeabi_dcmpge",
+   "__aeabi_dcmpgt",
+   "__aeabi_dcmple",
+   "__aeabi_dcmplt",
+   "__aeabi_dcmpun",
+   "__aeabi_ddiv",
+   "__aeabi_dmul",
+   "__aeabi_drsub",
+   "__aeabi_dsub",
+   "__aeabi_f2d",
+   "__aeabi_f2iz",
+   "__aeabi_fadd",
+   "__aeabi_fcmpeq",
+   "__aeabi_fcmpge",
+   "__aeabi_fcmpgt",
+   "__aeabi_fcmple",
+   "__aeabi_fcmplt",
+   "__aeabi_fcmpun",
+   "__aeabi_fdiv",
+   "__aeabi_fmul",
+   "__aeabi_frsub",
+   "__aeabi_fsub",
+   "__aeabi_i2d",
+   "__aeabi_i2f",
+   "__aeabi_l2d",
+   "__aeabi_l2f",
+   "__aeabi_ui2d",
+   "__aeabi_ui2f",
+   "__aeabi_ul2d",
+   "__aeabi_ul2f",
+   "__dnan2",
+   "__dnorm2",
+   "__dunder",
+   "__fnan2",
+   "__fnorm2",
+   "__funder",
+   "arm_math_divzero",
+   "arm_math_divzerof",
+   "arm_math_erf_data",
+   "arm_math_erff_data",
+   "arm_math_exp2f_data",
+   "arm_math_exp_data",
+   "arm_math_inv_pio4",
+   "arm_math_invalid",
+   "arm_math_invalidf",
+   "arm_math_log2_data",
+   "arm_math_log2f_data",
+   "arm_math_log_data",
+   "arm_math_logf_data",
+   "arm_math_oflow",
+   "arm_math_oflowf",
+   "arm_math_pow_log_data",
+   "arm_math_powf_log2_data",
+   "arm_math_sincosf_table",
+   "arm_math_uflow",
+   "arm_math_uflowf",
+   "cosf",
+   "erf",
+   "erff",
+   "exp",
+   "exp10",
+   "exp2",
+   "exp2f",
+   "expf",
+   "log",
+   "log10f",
+   "log2",
+   "log2f",
+   "logf",
+   "pow",
+   "powf",
+   "sincosf",
+   "sinf"
+  ],
+  "qsort": [],
+  "softfloat": [
+   "__aeabi_d2f",
+   "__aeabi_d2iz",
+   "__aeabi_d2lz",
+   "__aeabi_dadd",
+   "__aeabi_dcmplt",
+   "__aeabi_ddiv",
+   "__aeabi_dmul",
+   "__aeabi_drsub",
+   "__aeabi_dsub",
+   "__aeabi_f2d",
+   "__aeabi_f2iz",
+   "__aeabi_f2lz",
+   "__aeabi_fadd",
+   "__aeabi_fcmplt",
+   "__aeabi_fdiv",
+   "__aeabi_fmul",
+   "__aeabi_frsub",
+   "__aeabi_fsub",
+   "__aeabi_i2d",
+   "__aeabi_i2f",
+   "__aeabi_l2d",
+   "__aeabi_l2f",
+   "__aeabi_ui2d",
+   "__aeabi_ul2f",
+   "__dnan2",
+   "__dnorm2",
+   "__dunder",
+   "__fnan2",
+   "__fnorm2",
+   "__funder"
+  ],
+  "stdio": [
+   "__aeabi_d2uiz",
+   "__aeabi_ddiv",
+   "__aeabi_dmul",
+   "__aeabi_fdiv",
+   "__aeabi_fmul",
+   "__aeabi_ui2f",
+   "__aeabi_ul2d",
+   "__dnan2",
+   "__dnorm2",
+   "__dunder",
+   "__fnan2",
+   "__fnorm2",
+   "__funder"
+  ],
+  "string": [],
+  "strto": [
+   "__aeabi_d2lz",
+   "__aeabi_ddiv",
+   "__aeabi_dmul",
+   "__aeabi_f2iz",
+   "__aeabi_f2uiz",
+   "__aeabi_fdiv",
+   "__aeabi_fmul",
+   "__aeabi_ui2f",
+   "__aeabi_ul2d",
+   "__dnan2",
+   "__dnorm2",
+   "__dunder",
+   "__fnan2",
+   "__fnorm2",
+   "__funder"
+  ]
+ }
+}

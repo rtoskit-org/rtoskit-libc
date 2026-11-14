@@ -1186,3 +1186,384 @@ Phase 8's decisions are D133, D136 and D137; its research is `docs/research/sinc
 ## P9.02, P9.03 — Float sine and cosine, and `tan`, through the D136 kernel (speed flavour, D141, D142)
 
 Instructions per call: `tan` 32,451 → 4,970, `tanf` 5,140 → 5,065, `sinf` 4,729 → 2,933, `cosf` 3,742 → 2,887, `sincosf` 5,505 → 4,418. `sin`, `cos` and `sincos` gain about 4 % from the inlined high product. No case is slower.
+
+## P11.02a — The `fast` build type (D162, D164)
+
+`docs/perf/baseline-<arch>-fast.json` holds the fast build's counts, equal case for case to the speed build's: no
+`libc/math/fast/` file yet. The release and speed counts are unchanged by the step (the same `libc.a`); their
+baselines still predate P10.07's `threads` cost (Q52).
+
+## D166 — Phase 10's `threads` cost, re-locked (Q52)
+
+P10.07 put `<threads.h>` over `<pthread.h>` (D156); the baselines, last recorded at P8.02, are re-locked for it in
+the release and speed build types alike. Instructions per operation: `mtx/plain` and `mtx/timed` 205 → 228, `mtx/recursive` 208 → 228, `mtx/trylock` 203 → 225, `mtx/nested` 275 → 312, `call_once/done` 22 → 25, `tss_get` 37 → 40. No other case changed. A direct
+uncontended path for plain mutexes is issue #144.
+
+## P11.03a — Fast `expf`, `exp2f`, `exp10f` (D168)
+
+Unchanged here: the cores without an FPU keep the speed files (the float-only `sp-nearest/fast/` files cost six software `fmaf` calls; P11.03e). Instructions per call (throughput), speed and fast; `test/bench/math` gains `exp10` and `exp10f`, recorded in
+the release and speed baselines with no other case changed.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expf` | 375 | 375 | 0 |
+| `exp2f` | 316 | 316 | 0 |
+| `exp10f` | 11,103 | 11,103 | 0 |
+
+## P11.03b — Fast `logf`, `log2f`, `log10f` (D169)
+
+Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `logf` | 2,210 | 2,210 | 0 |
+| `log2f` | 583 | 583 | 0 |
+| `log10f` | 678 | 678 | 0 |
+
+## P11.03c — Fast `powf` (D170)
+
+Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e); the strict `pow` fix makes `pow` shorter in every build type (a power of two tested before the size of y). Instructions per call (throughput).
+
+| Function | build | before | after | change |
+|---|---|---:|---:|---:|
+| `pow` | release | 31,592 | 31,522 | -0.2 % |
+| `pow` | speed | 31,592 | 31,522 | -0.2 % |
+| `pow` | fast | 31,592 | 31,522 | -0.2 % |
+
+## P11.03d — Fast m1 and p1 forms, `cbrtf` (D171)
+
+Unchanged here: the cores without an FPU keep the speed files (D168, P11.03e). Instructions per call (throughput), speed and fast. `test/bench/math` gains `exp2m1`, `exp10m1`, `log2p1` and
+`log10p1` (float and double) in every build type; nothing else changed in release and speed.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expm1f` | 12,310 | 12,310 | 0 |
+| `exp2m1f` | 10,068 | 10,068 | 0 |
+| `exp10m1f` | 12,406 | 12,406 | 0 |
+| `log1pf` | 12,789 | 12,789 | 0 |
+| `log2p1f` | 11,003 | 11,003 | 0 |
+| `log10p1f` | 13,202 | 13,202 | 0 |
+| `cbrtf` | 8,590 | 8,590 | 0 |
+
+## P11.03e — The cores without an FPU: fixed point without the test (D172)
+
+`nofp/fast/`: the fixed-point files without their rounding test, and a fixed-point `exp10f` (D172). Instructions per
+call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expf` | 375 | 368 | -2 % |
+| `exp2f` | 316 | 310 | -2 % |
+| `exp10f` | 11,103 | 367 | -97 % |
+| `logf` | 2,210 | 670 | -70 % |
+| `log2f` | 583 | 577 | -1 % |
+| `log10f` | 678 | 670 | -1 % |
+| `powf` | 1,222 | 1,216 | -0 % |
+
+## P11.03f — The cores without an FPU: fixed-point m1 forms (D173)
+
+`nofp/fast/`: fixed-point m1 forms over the exp2 core (D173). Instructions per call (throughput), speed and fast;
+release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `expm1f` | 12,310 | 461 | -96 % |
+| `exp2m1f` | 10,068 | 429 | -96 % |
+| `exp10m1f` | 12,406 | 463 | -96 % |
+
+## P11.03g — The cores without an FPU: fixed-point p1 forms, `cbrtf` (D174)
+
+`nofp/fast/`: fixed-point p1 forms over the log2 core and an integer `cbrtf` (D174). Instructions per call
+(throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `log1pf` | 12,789 | 699 | -95 % |
+| `log2p1f` | 11,003 | 608 | -94 % |
+| `log10p1f` | 13,202 | 699 | -95 % |
+| `cbrtf` | 8,590 | 630 | -93 % |
+
+The m1 forms' tiny path without a float constant costs `exp2m1f` 429 → 432, `exp10m1f` 463 → 466 (fast, P11.03f → P11.03g, within the 1 % gate).
+
+## P11.04a — Fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D175)
+
+Unchanged here: the cores without an FPU follow in P11.04e (D175). `test/bench/math` gains `sinpi`, `cospi`, `tanpi` in every
+build type.
+
+## P11.04b — Fast `asinf`, `acosf`, `atanf`, `atan2f` and the π forms (D176)
+
+The fast files are for the FPU cores; the cores without an FPU follow in P11.04f. The strict float-float atan core's index fix (D176: k from 16t exact, one soft-float addition fewer) in every build type, instructions per call (throughput):
+
+| Function | before | after | change |
+|---|---:|---:|---:|
+| `asinf` | 23011 | 22944 | -0.3 % |
+| `acosf` | 23828 | 23761 | -0.3 % |
+| `atanf` | 17750 | 17683 | -0.4 % |
+| `atan2f` | 18422 | 18355 | -0.4 % |
+
+## P11.04c — Fast `sinhf`, `coshf`, `tanhf`, `asinhf`, `acoshf`, `atanhf` (D177)
+
+Unchanged here: the cores without an FPU follow in P11.04g (D177).
+
+## P11.04d1 — Fast `erff`, and `erfcf` on the double-FPU cores (D178)
+
+Unchanged here: the cores without an FPU follow in P11.04e (D178).
+
+## P11.04d2 — Fast `erfcf` on the single-precision FPU cores (D179)
+
+Unchanged here: the cores without an FPU follow in P11.04e (D179).
+
+## P11.04e1 — The cores without an FPU: fast `sinf`, `cosf`, `sincosf`, `tanf` and the π forms (D180)
+
+`nofp/fast/`: a fixed-point reduction to kπ/32 + s, D87's kernel on that s, rounded to nearest; the π forms from an exact split of 32x (D180). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinf` | 2933 | 1090 | -63 % |
+| `cosf` | 2887 | 1100 | -62 % |
+| `sincosf` | 4418 | 1696 | -62 % |
+| `tanf` | 5065 | 2178 | -57 % |
+| `sinpif` | 17579 | 920 | -95 % |
+| `cospif` | 17172 | 900 | -95 % |
+| `tanpif` | 35613 | 2015 | -94 % |
+
+## P11.04e2 — The cores without an FPU: fast `erff` (D181)
+
+`nofp/fast/erff.c`: erf directly in seven pieces of degree 7 in Q31 from 1/2 to 3.92 (no exponential), x (2/√π + u q(u)) below; rounded to nearest once, no test (D181). Instructions per call (throughput), speed and fast; release and speed unchanged, `erfcf` too (D178).
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erff` | 2967 | 420 | -86 % |
+
+## P11.04f1 — The cores without an FPU: fast `atanf`, `atan2f` and their π forms (D182)
+
+`nofp/fast/`: a fixed-point quotient without a divide instruction and one atan kernel (series below 1/8, seven pieces above), rounded to nearest once (D182). Instructions per call (throughput), speed and fast; release and speed unchanged. The π forms have no bench case.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `atanf` | 17683 | 751 | -96 % |
+| `atan2f` | 18355 | 812 | -96 % |
+
+## P11.04f2 — The cores without an FPU: fast `asinf`, `acosf` and their π forms (D183)
+
+`nofp/fast/`: one arcsine kernel (the series in x² up to 1/2, the half-angle form with a fixed-point square root above), rounded to nearest once (D183). Instructions per call (throughput), speed and fast; release and speed unchanged. The π forms have no bench case.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asinf` | 22944 | 730 | -97 % |
+| `acosf` | 23761 | 749 | -97 % |
+
+## P11.04g1 — The cores without an FPU: fast `sinhf`, `coshf` and `tanhf` (D184)
+
+`nofp/fast/`: the odd series near 0, the exp2 core twice for sinh and cosh, and 1 − 2/(e^2x + 1) by the fixed-point quotient for tanh, rounded to nearest once (D184). Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinhf` | 15310 | 627 | -96 % |
+| `coshf` | 15181 | 622 | -96 % |
+| `tanhf` | 15977 | 742 | -95 % |
+
+## P11.04g2 — The cores without an FPU: fast `asinhf`, `acoshf` and `atanhf` (D185)
+
+`nofp/fast/`: series near 0 (and near 1 for acosh), above the log2 core on arguments formed exactly in integers (x² ± 1 with the fixed-point square root, or the quotient (1 − x)/(1 + x)), rounded to nearest once (D185). Instructions per call (throughput), speed and fast; release and speed unchanged, `asinf` and `acosf` too (their square root is now shared).
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asinhf` | 19353 | 1152 | -94 % |
+| `acoshf` | 19926 | 1182 | -94 % |
+| `atanhf` | 15868 | 877 | -94 % |
+
+## P11.05b — Fast `exp`, `exp2`, `exp10` and `expm1` in double (D187)
+
+`libc/math/fast/`: a 64-entry table of 2^(j/64) and its tail, degree-3 polynomials by Horner's rule, one rounding; the strict core for the slow path (D187). This core runs them on its soft-double helpers until P11.05c gives it fixed-point kernels. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `exp` | 10317 | 3648 | -65 % |
+| `exp2` | 14133 | 3233 | -77 % |
+| `exp10` | 14233 | 3917 | -72 % |
+| `expm1` | 10938 | 9720 | -11 % |
+
+## P11.05c1 — Fast `exp`, `exp2` and `exp10` in 64-bit fixed point (D188)
+
+`libc/math/dp-fixed/fast/`: x·log2(e) from x's significand in 64-bit fixed point, a 64-entry Q63 table of 2^(j/64), a degree-7 polynomial in Q64 and one rounding into the result's bits; no soft-double operation on the common path. Instructions per call (throughput): speed, P11.05b's fast (D187's double file on the soft-double helpers) and now; release and speed unchanged. `expm1` is P11.05c2.
+
+| Function | speed | P11.05b | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `exp` | 10317 | 3648 | 1410 | -86 % |
+| `exp2` | 14133 | 3233 | 1210 | -91 % |
+| `exp10` | 14233 | 3917 | 1412 | -90 % |
+
+AOR on this core: `exp` 3954, `exp2` 3335.
+
+## P11.05c2 — Fast `expm1` in 64-bit fixed point (D189)
+
+`libc/math/dp-fixed/fast/expm1.c`: a Q64 series below 1/16, relative however small x is; from 1/16, P11.05c1's kernel result in Q63 minus 1 exactly in integers. Instructions per call (throughput): speed, P11.05b's fast (D187's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05b | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `expm1` | 10938 | 9720 | 1468 | -87 % |
+
+## P11.05d — Fast `log`, `log2`, `log10` and `log1p` in double (D190)
+
+`libc/math/fast/`: a 128-entry table of invc and −log(invc), r = z·invc − 1 exact, a degree-5 polynomial and one rounding (D190). This core runs them on its soft-double helpers until P11.05e gives it fixed-point kernels. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `log` | 16964 | 4902 | -71 % |
+| `log2` | 21420 | 5441 | -75 % |
+| `log10` | 21066 | 8108 | -62 % |
+| `log1p` | 18025 | 5808 | -68 % |
+
+AOR on this core: `log` 4335, `log2` 5211.
+
+## P11.05e — Fast `log`, `log2`, `log10` and `log1p` in 64-bit fixed point (D192)
+
+`libc/math/dp-fixed/fast/`: a 90-entry table with invc in Q31 and −log(invc) in Q64, the series and the sum in 128 bits, a relative series within 2^-5 of 1, one rounding; no soft-double operation. Instructions per call (throughput): speed, P11.05d's fast (D190's double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05d | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `log` | 16964 | 4902 | 1454 | -91 % |
+| `log2` | 21420 | 5441 | 1535 | -93 % |
+| `log10` | 21066 | 8108 | 1601 | -92 % |
+| `log1p` | 18025 | 5808 | 1479 | -92 % |
+
+AOR on this core: `log` 4335, `log2` 5211.
+
+## P11.05f — Fast `pow` and `cbrt` in double (D193)
+
+`libc/math/fast/`: pow as the exp of y times a log pair from the logarithms' table, one rounding; cbrt by a polynomial, a Newton step and an exact-residual step (D193). This core runs them on its soft-double helpers until P11.05g. Instructions per call (throughput), speed and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `pow` | 31522 | 16457 | -48 % |
+| `cbrt` | 14702 | 6896 | -53 % |
+
+AOR on this core: `pow` 12178.
+
+## P11.05g1 — Fast `pow` in fixed point (D194)
+
+`libc/math/dp-fixed/fast/pow.c`: log2 x to about 2^-72 from the logarithms' table (Q126 sums, normalized 96-bit products), then P11.05c1's exp2 kernel; no soft-double operation. Instructions per call (throughput): speed, P11.05f's fast (D193's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05f | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `pow` | 31522 | 16457 | 3938 | -88 % |
+
+AOR on this core: `pow` 12178.
+
+## P11.05g2 — Fast `cbrt` in fixed point (D195)
+
+`libc/math/dp-fixed/fast/cbrt.c`: u ≈ f^(-1/3) by two Newton steps in Q31, T = f·u²·cbrt(2^j), then two corrections from exact integer residuals, one rounding; no soft-double operation. Instructions per call (throughput): speed, P11.05f's fast (D193's double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05f | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `cbrt` | 14702 | 6896 | 1230 | -92 % |
+
+AOR has no scalar double `cbrt`.
+
+## P11.05i — Fast `sin`, `cos`, `sincos` and `tan` without the rounding test (D197)
+
+`libc/math/dp-fixed/fast/`: D136's fixed-point kernel (D142's for `tan`) rounded to nearest with no test; the double-double path only where the kernel declines. Instructions per call (throughput): speed (the same kernel with its test, the fast flavour until now) and fast; release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sin` | 2833 | 2775 | -2 % |
+| `cos` | 3663 | 2779 | -24 % |
+| `sincos` | 5177 | 4248 | -18 % |
+| `tan` | 4970 | 4915 | -1 % |
+
+AOR has no scalar double `sin`, `cos` or `tan`.
+
+## P11.05j — Fast `asin`, `acos`, `atan` and `atan2` in double (D198)
+
+`libc/math/fast/`: on this core the double files run on the soft-double helpers until P11.05k gives it fixed-point kernels. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `asin` | 34625 | 20137 | -42 % |
+| `acos` | 35718 | 20151 | -44 % |
+| `atan` | 21175 | 17848 | -16 % |
+| `atan2` | 22603 | 18388 | -19 % |
+
+AOR has no scalar double `asin`, `acos`, `atan` or `atan2`.
+
+## P11.05k1 — Fast `atan` and `atan2` in fixed point (D199)
+
+`libc/math/dp-fixed/fast/`: one out-of-line kernel for atan(y/x), y <= x, with a 64-bit reciprocal, atan(j/16) in Q64 and a short series; no soft-double operation on the common path. Instructions per call (throughput): speed, P11.05j's fast (the double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05j | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `atan` | 21175 | 17848 | 2542 | -88 % |
+| `atan2` | 22603 | 18388 | 2565 | -89 % |
+
+AOR has no scalar double `atan` or `atan2`.
+
+## P11.05k2 — Fast `asin` and `acos` in fixed point (D200)
+
+`libc/math/dp-fixed/fast/`: one out-of-line kernel, a 15-term Q64 series up to 1/2 and the half-angle form above with a 64-bit square root; no soft-double operation on the common path. Instructions per call (throughput): speed, P11.05j's fast (the double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05j | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `asin` | 34625 | 20137 | 3293 | -90 % |
+| `acos` | 35718 | 20151 | 3293 | -91 % |
+
+AOR has no scalar double `asin` or `acos`.
+
+## P11.05l — Fast hyperbolic functions in double (D201)
+
+`libc/math/fast/`'s double files (P11.05l, the double-FPU cores' design) run here on the soft-double helpers until P11.05m gives these cores fixed-point kernels. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinh` | 17842 | 9200 | -48 % |
+| `cosh` | 16696 | 5297 | -68 % |
+| `tanh` | 20152 | 16684 | -17 % |
+| `asinh` | 39784 | 18468 | -54 % |
+| `acosh` | 34248 | 18611 | -46 % |
+| `atanh` | 25834 | 12620 | -51 % |
+
+AOR has no scalar double hyperbolic function.
+
+## P11.05m1 — Fast `sinh`, `cosh` and `tanh` in fixed point (D202)
+
+`libc/math/dp-fixed/fast/`: e^|x| and e^-|x| from exp's fixed-point kernel on one integer scale, the difference or sum exact; tanh from one exponential of 2|x| and the 64-bit reciprocal; Q64 series near 0 for sinh and tanh. No soft-double operation on the common path. Instructions per call (throughput): speed, P11.05l's fast (the double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05l | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `sinh` | 17842 | 9200 | 2490 | -86 % |
+| `cosh` | 16696 | 5297 | 2445 | -85 % |
+| `tanh` | 20152 | 16684 | 2534 | -87 % |
+
+AOR has no scalar double hyperbolic function.
+
+## P11.05m2 — Fast `asinh`, `acosh` and `atanh` in fixed point (D203)
+
+`libc/math/dp-fixed/fast/`: log1p's or log's argument formed in 64-bit fixed point (P11.05k2's square root, now shared, and P11.05k1's reciprocal), then P11.05e's relative series or table path. No soft-double operation on the common path. Instructions per call (throughput): speed, P11.05l's fast (the double files on the soft-double helpers) and now; release and speed unchanged, `asin` and `acos` within 1.5 instructions.
+
+| Function | speed | P11.05l | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `asinh` | 39784 | 18468 | 2415 | -94 % |
+| `acosh` | 34248 | 18611 | 2271 | -93 % |
+| `atanh` | 25834 | 12620 | 2532 | -90 % |
+
+AOR has no scalar double hyperbolic function.
+
+## P11.05n — Fast `erf` in double (D204)
+
+`libc/math/fast/erf.c`'s double file (P11.05n, the double-FPU cores' design) runs here on the soft-double helpers until P11.05o. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `erf` | 40655 | 9579 | -76 % |
+
+AOR's `erf`: 25491.
+
+## P11.05o — Fast `erf` in fixed point (D205)
+
+`libc/math/dp-fixed/fast/erf.c`: 22 pieces of width 1/4 from 1/2, erf(a) + u Q(u) in Q64 with u exact from x's bits and Q signed in Q63; x K(4x^2) in Q62 below 1/2. No soft-double operation on the common path. Instructions per call (throughput): speed, P11.05n's fast (the double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05n | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `erf` | 40655 | 9579 | 2049 | -95 % |
+
+AOR's `erf`: 25491.
