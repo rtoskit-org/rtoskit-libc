@@ -348,6 +348,9 @@ def command_markdown(args):
 COMPARE_PROGRAMS = ['string', 'stdio', 'strto', 'malloc', 'qsort', 'math']
 COMPARE_LIBRARIES = ['picolibc', 'newlib-nano']
 COMPARE_FLAGS = ['-Os', '-std=gnu23', '-fno-builtin', '-fno-tree-loop-distribute-patterns', '-ffunction-sections', '-fdata-sections']
+# The C23 functions neither library provides (P11.06a): the math program links the placeholders of
+# tools/bench-compare/c23-math.c, and their cases are left out of the table and the means
+COMPARE_ABSENT = {'exp2m1', 'exp10m1', 'log2p1', 'log10p1', 'sinpi', 'cospi', 'tanpi'}
 
 # The cases the table shows; every common case enters the geometric means
 COMPARE_CASES = {
@@ -372,6 +375,8 @@ def compare_build(report, roots, library, arch, program, work):
 	flags = report.cross_flags(arch) + COMPARE_FLAGS + ['-I' + os.path.join('test', 'bench', 'harness')]
 	sources = [os.path.join('tools', 'bench-compare', 'start.S'), os.path.join('tools', 'bench-compare', 'picolibc.c' if library == 'picolibc' else 'newlib.c'),
 		   os.path.join('test', 'bench', 'harness', 'bench.c'), os.path.join('test', 'bench', program, program + '.c')]
+	if program == 'math':
+		sources[-1:] = [os.path.join('tools', 'bench-compare', 'math.c'), os.path.join('tools', 'bench-compare', 'c23-math.c')]
 	directory = os.path.join(work, library, arch)
 	os.makedirs(directory, exist_ok=True)
 	elf = os.path.join(directory, f'bench-{program}.elf')
@@ -411,6 +416,7 @@ def command_compare(args):
 		theirs = {}
 		for library in COMPARE_LIBRARIES:
 			theirs[library] = {program: count_instructions(arch, compare_build(report, roots, library, arch, program, args.work)) for program in COMPARE_PROGRAMS}
+			theirs[library]['math'] = {case: figure for case, figure in theirs[library]['math'].items() if case.split('/')[0].removesuffix('f') not in COMPARE_ABSENT}
 			write_json(os.path.join(args.work, library, arch, 'results.json'), theirs[library])
 		print(f'### {arch}\n')
 		names = [flavour for flavour, build_type in flavours]

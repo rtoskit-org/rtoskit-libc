@@ -510,22 +510,40 @@ Split, as P11.04g was: the two halves rest on different kernels.
   note, §23): 12,171 → 518 instructions on armv7e-m and 40,655 → 2049 on
   armv6-m, at most 0.5044 ulp.
 
-## P11.06 — Comparison and wrap-up  `[ ]`
-- [ ] `bench-runner compare` and `bench-runner aor` with the fast build as
+## P11.06 — Comparison and wrap-up
+Split in four, as the size check needs the maintainer's decision (D191) before
+the docs and the phase exit.
+
+### P11.06a — Comparison against AOR and picolibc  `[x]`
+- [x] `bench-runner compare` and `bench-runner aor` with the fast build as
   reference on every Arm core; sampled accuracy of the fast build against
-  AOR's (P4.05's method); `docs/perf/phase-11.md`.
-- [ ] Exit check: on armv7e-m the fast build's maths throughput at or below
+  AOR's (P4.05's method); `docs/perf/phase-11.md`. The comparison builds
+  leave out the C23 functions picolibc and newlib-nano lack (D206).
+- [x] Exit check: on armv7e-m the fast build's maths throughput at or below
   picolibc's; at or below AOR's on every case AOR implements, on every Arm
-  core; any miss recorded as a Q*.
+  core; any miss recorded as a Q*. armv7e-m: picolibc takes 1.75 times the
+  fast build's instructions (geometric mean, 132 cases); 22 cases are slower
+  (Q54). AOR: no case slower on armv6-m, armv6s-m, armv7-m, armv7e-m and
+  armv8-m.main (AOR takes 4.3–6.1 times our instructions); on armv7e-m-dp 11
+  float functions are slower, AOR 0.55–0.96 of ours (Q55, for P11.06b).
+
+### P11.06b — Size  `[ ]`
 - [ ] Size: fast budget held, members recorded; `docs/size/`. After the final
   re-lock (D187), compare every core's fast `math-mix` and `math-float` with
   the fast flavour's original rule, +20 % over the speed figure (D191): a core
   still over it is the maintainer's decision before the phase exit, not
   re-locked silently. At P11.05d: armv7e-m-dp `math-mix` +54.5 %
   (12,174 → 18,806 bytes); armv6-m +11.3 %, armv7-m +12.3 %, armv7e-m and
-  armv8-m.main +16.2 % and +16.1 %.
+  armv8-m.main +16.2 % and +16.1 %. At P11.05o: armv7e-m-dp `math-mix` +65.3 %
+  (12,174 → 20,128); the soft-double cores +10.5 % to +13.5 %; `math-float`
+  at most +3.3 %. Q53 (selective inlining of the high product) is settled here
+  too.
+
+### P11.06c — Docs and the release archives  `[ ]`
 - [ ] README (Performance table gains a fast column; the accuracy
   paragraph states the fast contract), `docs/configuration.md`,
   `docs/release.md`: `release-package` adds the `fast` tree to each archive
   (D163), once the exit check above passes.
+
+### P11.06d — Phase exit  `[ ]`
 - [ ] Phase exit: PLAN's phase table, decisions, open questions.
