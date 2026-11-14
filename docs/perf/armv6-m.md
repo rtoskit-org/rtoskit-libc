@@ -1523,3 +1523,15 @@ AOR has no scalar double `asin` or `acos`.
 | `atanh` | 25834 | 12620 | -51 % |
 
 AOR has no scalar double hyperbolic function.
+
+## P11.05m1 — Fast `sinh`, `cosh` and `tanh` in fixed point (D202)
+
+`libc/math/dp-fixed/fast/`: e^|x| and e^-|x| from exp's fixed-point kernel on one integer scale, the difference or sum exact; tanh from one exponential of 2|x| and the 64-bit reciprocal; Q64 series near 0 for sinh and tanh. No soft-double operation on the common path. Instructions per call (throughput): speed, P11.05l's fast (the double files on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05l | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `sinh` | 17842 | 9200 | 2490 | -86 % |
+| `cosh` | 16696 | 5297 | 2445 | -85 % |
+| `tanh` | 20152 | 16684 | 2534 | -87 % |
+
+AOR has no scalar double hyperbolic function.

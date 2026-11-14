@@ -720,6 +720,14 @@ static void check_double_hyperbolic(void)
 	QUIET(near_double(acosh(268435456.0), 0x1.419ecb712c481p+4) && near_double(acosh(0x1.fffffffffffffp+1023), 0x1.633ce8fb9f87ep+9) && near_double(acosh(0x1.00003ecfe279fp+0), 0x1.66a9ac9f57e97p-9) && near_double(acosh(0x1.00003f79df1eep+0), 0x1.688db80250a35p-9));
 	QUIET(near_double(atanh(0x1.0000000000000p-27), 0x1.0000000000000p-27) && near_double(atanh(0x1.0000000000001p-27), 0x1.0000000000001p-27) && near_double(atanh(0x1.0000000000000p-1), 0x1.193ea7aad030bp-1) && near_double(atanh(0x1.fffffffffffffp-1), 0x1.2b708872320e2p+4));
 	QUIET(near_double(atanh(-0x1.fffffffffffffp-1), -0x1.2b708872320e2p+4) && near_double(atanh(-0x1.81addd31454f5p-10), -0x1.81adef6dfdbc5p-10) && near_double(atanh(0x1.6424848a9aee2p-10), 0x1.642492e6bd009p-10));
+	/*
+	 * P11.05m1 (the soft-double cores' fixed-point sinh, cosh and tanh, D202): each side of the series' ends (1/4 for sinh,
+	 * 1/8 for tanh), the e^-|x| term's shift reaching 64, and the sweeps' worst points
+	 */
+	QUIET(near_double(sinh(0x1.0000000000000p-2), 0x1.02accd9d08102p-2) && near_double(sinh(0x1.fffffffffffffp-3), 0x1.02accd9d08101p-2) && near_double(sinh(-0x1.b05054d30c4bcp-2), -0x1.bd4568aed0954p-2) && near_double(sinh(-0x1.3683e36e6ec9ep-2), -0x1.3b4bc11f47872p-2));
+	QUIET(near_double(cosh(-0x1.330cf48daaf9bp+2), 0x1.e4f101ed5a5f9p+5) && near_double(cosh(0x1.7343718b8e291p-1), 0x1.464ddfe8f0c2bp+0) && near_double(sinh(0x1.709d048b2a8c6p+8), 0x1.bcb061e40e697p+530) && near_double(cosh(0x1.709d048b2a8c6p+8), 0x1.bcb061e40e697p+530));
+	QUIET(near_double(tanh(0x1.0000000000000p-3), 0x1.fd5992bc4b835p-4) && near_double(tanh(0x1.fffffffffffffp-4), 0x1.fd5992bc4b834p-4) && near_double(tanh(-0x1.789a1cb1d52dcp-3), -0x1.7469eb6a1fb28p-3) && near_double(tanh(0x1.367301cbbeb91p-3), 0x1.3417cff2bd6a4p-3));
+	QUIET(near_double(tanh(0x1.5fffffffffff0p+4), 0x1.0000000000000p+0) && near_double(cosh(0x1.0000000000000p-26), 0x1.0000000000001p+0));
 }
 
 int main(void)

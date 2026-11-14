@@ -1442,3 +1442,65 @@ hyperbolic function.
 3 KiB log table that `exp`, `log` and `pow` already use. The strict files
 are smaller (392–582 bytes) but pull the double-double exp and log cores. No
 size program calls a hyperbolic function; every budget holds.
+
+## 20. sinh, cosh and tanh on the soft-double cores (P11.05m1)
+
+`libc/math/dp-fixed/fast/sinh.c`, `cosh.c` and `tanh.c`, shadowing §19's
+double files on the five soft-double cores. P11.05m is split as P11.04g was:
+m1 rests on the exponential's kernel, m2 (`asinh`, `acosh`, `atanh`) on the
+logarithm's and the square root. Sources: §19.1's (FreeBSD's expm1 forms,
+AOR's AdvSIMD `sinh`), and P11.04g1's float design, which takes 2^(z−1) ∓
+2^(−z−1) from the exp2 core twice; no new source was read.
+
+### 20.1 The method
+
+- **e^a and e^-a on one scale** (`__libc_dp_fixed_exp_pair`): t = a·log2 e
+  = n + f·2^-64 by §7's 128-bit product, and −t = n' + g·2^-64 by negation.
+  Y1 = 2^f and Y2 = 2^g in Q63 come from §7's kernel fraction
+  (`__libc_dp_fixed_exp2_fraction`), each within a few units of 2^-63. Then
+  e^a = 2^(n−63)·Y1 and e^-a = 2^(n−63)·(Y2 >> (2n + [f ≠ 0])): one integer
+  scale, so the sum and the difference are exact in integers.
+- **sinh:** from 1/4, (Y1 − Y2')·2^(n−1), normalized and rounded once. The
+  result is at least 0.25 of e^a's scale, so the kernels' errors stay below
+  2^-60 of it. Below 1/4, x·(1 + V) with V = x²/6 + x⁴/120 + … in Q64 from
+  w = 16x², six terms by unsigned Horner's rule (the seventh is below
+  2^-68), relative however small x is.
+- **cosh:** (Y1 + Y2')·2^(n−1) from 2^-27 up, the sum's carry into the
+  exponent: nothing cancels, so no series.
+- **Both** run to the overflow threshold 0x1.633ce8fb9f87dp+9 on one path:
+  beyond about 22, Y2's shift reaches 64 and only e^a remains.
+- **tanh:** one exponential, of 2|x|: e^(2|x|) = 2^(n−63)·Y and c = 2^(63−n),
+  so tanh = (Y − c)/(Y + c), both exact in integers. The quotient takes
+  P11.05k1's 64-bit reciprocal, now shared in `dp-fixed-fast.h`
+  (`__libc_dp_fixed_reciprocal`; the atan kernel is unchanged). It is good
+  to a few units of 2^-62 of the result, which is at least 0.12. Below 1/8,
+  x·(1 − V) with V = x²·G(x²), G = 1/3 − (2/15)u + … in Q64 from w = 64x²:
+  nine terms, alternating, by unsigned Horner's rule subtracting (each
+  nested value stays positive). From 22, ±(1 − tiny).
+
+### 20.2 Measured (P11.05m1)
+
+On the host (the speed files' `umull` product), against long double, with
+§19.3's sweep: 1.2·10^9 samples over the whole range, 2·10^8 below 0.6 and
+4·10^8 over [22, 710.5].
+
+| Function | worst | not correctly rounded |
+| --- | ---: | ---: |
+| `sinh` | 0.5044 | 0.03–0.04 % |
+| `cosh` | 0.5029 | 0.02–0.04 % |
+| `tanh` | 0.5083 | 0.06–0.10 % |
+
+Instructions per call (speed → §19's double files on the helpers → fast):
+
+| Core | `sinh` | `cosh` | `tanh` |
+| --- | ---: | ---: | ---: |
+| armv7e-m, armv8-m.main | 6367 → 3277 → 508 | 5954 → 1803 → 494 | 7193 → 5831 → 500 |
+| armv7-m | 6585 → 3328 → 511 | 6166 → 1838 → 496 | 7444 → 6115 → 502 |
+| armv6-m, armv6s-m | 17,842 → 9200 → 2490 | 16,696 → 5297 → 2445 | 20,152 → 16,684 → 2534 |
+
+AOR has no scalar double hyperbolic function. `atan` and `atan2` are
+unchanged by the reciprocal's move into the header.
+
+**Size:** `sinh` is 1214 bytes on armv7e-m, `cosh` 886 and `tanh` 1486 (each
+inlines exp's kernel fraction; 1042–1474 on armv6-m), over §7's 512-byte
+table. No size program calls them; every budget holds.

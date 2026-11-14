@@ -866,3 +866,7 @@ Release and speed unchanged (`size-report diff`). In fast, no size program calls
 ## P11.05l — Fast hyperbolic functions in double (D201)
 
 Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.
+
+## P11.05m1 — Fast `sinh`, `cosh` and `tanh` in fixed point (D202)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.

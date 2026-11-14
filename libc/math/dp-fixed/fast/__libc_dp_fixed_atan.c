@@ -15,21 +15,6 @@
 
 #include "dp-fixed-fast.h"
 
-/* 2^127 / d for d with bit 63 set, to about 2^-63 relatively: a 17-bit seed by one 32/16-bit division, two Newton steps */
-static inline uint64_t reciprocal(uint64_t d)
-{
-	uint64_t y = (uint64_t)(0xffffffffu / (uint32_t)(d >> 48)) << 47;
-
-	for (int i = 0; i < 2; ++i) {
-		/* d y 2^-64 is about 2^63; 2^64 minus it is the factor 2 - d y 2^-127 in units of 2^-63 */
-		uint64_t factor = 0 - __libc_trig_high64(d, y);
-		uint64_t next = __libc_trig_high64(y, factor);
-
-		y = (next >> 63) != 0 ? UINT64_MAX : next << 1;
-	}
-	return y;
-}
-
 /*
  * atan t = t (1 - V) for |t| <= 1/32 and a little past it (j's estimate): V = u G(u), u = t^2, G = 1/3 - u/5 + u^2/7 - ...
  * to u^5/13 (the next term is below 2^-70), by unsigned Horner's rule in w = 2^8 u (each nested term positive, w below
@@ -80,7 +65,7 @@ double __libc_dp_fixed_atan(uint64_t my, int32_t ey, uint64_t mx, int32_t ex, un
 
 	if (j == 0) {
 		/* t = y/x as q 2^(e - 63), q normalized: (my 2^11) 2^127/(mx 2^11) 2^-64 is the quotient in (2^62, 2^64) */
-		uint64_t q = __libc_trig_high64(my << 11, reciprocal(mx << 11));
+		uint64_t q = __libc_trig_high64(my << 11, __libc_dp_fixed_reciprocal(mx << 11));
 		int32_t e = ey - ex;
 		int32_t shift;
 		uint64_t w;
@@ -104,7 +89,7 @@ double __libc_dp_fixed_atan(uint64_t my, int32_t ey, uint64_t mx, int32_t ex, un
 		uint64_t den = x + (uint64_t)j * (y >> 4);
 		int s = (den >> 63) != 0 ? 0 : 1;
 		/* |t| 2^64 = |N| 2^(64 + s)/(D 2^s) = (|N| 2^(1 + s)) 2^127/(D 2^s) 2^-64 */
-		uint64_t t = __libc_trig_high64(a << (1 + s), reciprocal(den << s));
+		uint64_t t = __libc_trig_high64(a << (1 + s), __libc_dp_fixed_reciprocal(den << s));
 		uint64_t w = __libc_trig_high64(t, t) << 8;
 		uint64_t at = t - __libc_trig_high64(t, series(w));
 

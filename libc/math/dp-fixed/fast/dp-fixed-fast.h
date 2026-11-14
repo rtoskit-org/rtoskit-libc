@@ -120,6 +120,39 @@ static inline uint64_t __libc_dp_fixed_negate(int32_t *n, uint64_t f)
 	return -f;
 }
 
+/* 2^127 / d for d with bit 63 set, to about 2^-63 relatively: a 17-bit seed by one 32/16-bit division, two Newton steps */
+static inline uint64_t __libc_dp_fixed_reciprocal(uint64_t d)
+{
+	uint64_t y = (uint64_t)(0xffffffffu / (uint32_t)(d >> 48)) << 47;
+
+	for (int i = 0; i < 2; ++i) {
+		/* d y 2^-64 is about 2^63; 2^64 minus it is the factor 2 - d y 2^-127 in units of 2^-63 */
+		uint64_t factor = 0 - __libc_trig_high64(d, y);
+		uint64_t next = __libc_trig_high64(y, factor);
+
+		y = (next >> 63) != 0 ? UINT64_MAX : next << 1;
+	}
+	return y;
+}
+
+/*
+ * e^a and e^-a on one scale for the fast sinh and cosh of the soft-double cores (PLAN D202; docs/research/libm-fast-double.md,
+ * section 20), a = |x| from its bits, 2^-27 <= a < 2^10: t = a log2(e) = n + f 2^-64 (__libc_dp_fixed_scaled), Y1 = 2^f
+ * and Y2 = 2^g in Q63 by exp's kernel (__libc_dp_fixed_exp2_fraction) for -t = n' + g 2^-64, so e^a = 2^(n - 63) Y1 and
+ * e^-a = 2^(n - 63) (Y2 >> (n - n')), n - n' = 2n + (f != 0). Returns Y1, with Y2 so shifted in *minus (0 from a shift of
+ * 64, where e^-a is below 2^-64 of e^a) and n in *n; each to a few units of 2^-63 (the kernel's), floors included.
+ */
+static inline uint64_t __libc_dp_fixed_exp_pair(uint64_t bits, uint64_t *minus, int32_t *n)
+{
+	uint64_t f = __libc_dp_fixed_scaled((bits & 0x000fffffffffffffull) | 0x0010000000000000ull, (int)((bits >> 52) & 0x7ff) - 1023, 0xb8aa3b295c17f0bbull, 0xbe87fed0691d3e88ull, 63, n);
+	int32_t m = *n;
+	uint64_t g = __libc_dp_fixed_negate(&m, f);
+	int32_t shift = *n - m;
+
+	*minus = shift < 64 ? __libc_dp_fixed_exp2_fraction(g) >> shift : 0;
+	return __libc_dp_fixed_exp2_fraction(f);
+}
+
 /*
  * The fast logarithms of the soft-double cores (PLAN D192; docs/research/libm-fast-double.md, section 10): z in
  * [45/64, 90/64) in Q63, the entry by (z - 45/64) in steps of 2^-7, invc in Q31 and -log(invc) in Q64
@@ -147,6 +180,14 @@ uint64_t __libc_dp_fixed_log_near(uint64_t s, int32_t *e, bool negative);
 static inline double __libc_dp_fixed_double(uint64_t sign, int32_t e, uint64_t n)
 {
 	return __libc_double_from(sign | ((((uint64_t)(int64_t)(e + 1022) << 52) + (n >> 11) + ((n >> 10) & 1))));
+}
+
+/* The double of v 2^(e - 63), v nonzero, normalized by its leading zeros, with sign; rounded once */
+static inline double __libc_dp_fixed_normal(uint64_t sign, int32_t e, uint64_t v)
+{
+	int k = __builtin_clzll(v);
+
+	return __libc_dp_fixed_double(sign, e - k, v << k);
 }
 
 /* n c 2^-64 for n normalized and c of bit 63 set, renormalized: the significand, and 1 or 0 added to the exponent */
