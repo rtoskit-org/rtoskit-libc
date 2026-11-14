@@ -15,13 +15,33 @@
 #define _GNU_SOURCE
 
 #include <math.h>
+#include <stdint.h>
 
 #include "internal/math-fast.h"
 
 /*
- * The fast sincosf of the double-FPU cores (PLAN D162, D175): for |x| < 2^20, x = k pi/2 + r in double
- * (__libc_fast_rem_pio2, r to 2^-52 relative) and both Taylor polynomials in double, sin and cos picked by the quadrant; rounded once to float, below 0.51 ulp to nearest (the note,
- * section 3). Beyond 2^20, the infinities and NaNs, the double sin's and cos's slow path rounded once (__libc_fast_trig_large).
+ * Off the common path: a tiny x (sin x as the other build types, with underflow for a subnormal one; cos x exactly as
+ * cosf computes it, through the reduction, whose k may be -1 for a tiny negative x rounding downward), and from 2^20,
+ * the infinities and NaNs, the double functions' slow path rounded once
+ */
+[[gnu::noinline]] static void sincosf_unusual(float x, float *sinp, float *cosp)
+{
+	double r;
+	int k;
+
+	if (isless(__builtin_fabsf(x), 0x1p-30f)) {
+		*sinp = __libc_math_tinyf(x, -x);
+		k = __libc_fast_rem_pio2f((double)x, &r);
+		*cosp = (float)__libc_fast_sinf_quadrant(k + 1, r);
+		return;
+	}
+	*sinp = (float)__libc_fast_trig_large(x, 0);
+	*cosp = (float)__libc_fast_trig_large(x, 1);
+}
+
+/*
+ * The fast sincosf of the double-FPU cores (PLAN D162, D175, P11.06c; docs/research/libm-fast-float-trig.md section
+ * 22): sinf's and cosf's paths with one reduction and one integer test, bit for bit their results.
  */
 void sincosf(float x, float *sinp, float *cosp)
 {
@@ -30,16 +50,23 @@ void sincosf(float x, float *sinp, float *cosp)
 	double c;
 	int k;
 
-	/* A NaN compares quietly (isless): the relational operators would raise invalid */
-	if (!isless(__builtin_fabsf(x), 0x1p20f)) {
-		*sinp = (float)__libc_fast_trig_large(x, 0);
-		*cosp = (float)__libc_fast_trig_large(x, 1);
+	if ((__libc_float_bits(x) & 0x7fffffffu) - 0x30800000u >= 0x49800000u - 0x30800000u) {
+		sincosf_unusual(x, sinp, cosp);
 		return;
 	}
-	k = __libc_fast_rem_pio2((double)x, &r);
-	s = __libc_fast_sin_double(r);
-	c = __libc_fast_cos_double(r);
-	/* sinf: the tiny arguments as the other build types */
-	*sinp = isless(__builtin_fabsf(x), 0x1p-30f) ? __libc_math_tinyf(x, -x) : (float)((k & 2) == 0 ? ((k & 1) == 0 ? s : c) : ((k & 1) == 0 ? -s : -c));
-	*cosp = (float)((k & 2) == 0 ? ((k & 1) == 0 ? c : -s) : ((k & 1) == 0 ? -c : s));
+	k = __libc_fast_rem_pio2f((double)x, &r);
+	s = __libc_fast_sinf_poly(r);
+	c = __libc_fast_cosf_poly(r);
+	if ((k & 1) != 0) {
+		double t = s;
+
+		s = c;
+		c = -t;
+	}
+	if ((k & 2) != 0) {
+		s = -s;
+		c = -c;
+	}
+	*sinp = (float)s;
+	*cosp = (float)c;
 }

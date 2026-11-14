@@ -547,9 +547,15 @@ path faster rather than by a new layer (D207).
   `math-float` and `math-mix` +280 and +272 bytes (the table), re-locked
   with the maintainer's approval.
 
-### P11.06c — The double path's `erff`, `sinf`, `cosf`, `sincosf` (Q55)  `[ ]`
-- [ ] The same for the rest of AOR's float functions on the double path;
+### P11.06c — The double path's `erff`, `sinf`, `cosf`, `sincosf` (Q55)  `[x]`
+- [x] The same for the rest of AOR's float functions on the double path;
   at or below AOR's counts on armv7e-m-dp, or the remaining gap recorded.
+  D209: one integer test each, two parts of π/2 and shorter fitted
+  polynomials for the trigonometric floats, `erff` in eight pieces without
+  an exponential. armv7e-m-dp: `sinf` 58 → 43 (AOR 50.5), `cosf` 50 → 43
+  (47.2), `sincosf` 84 → 67 (80.8), `erff` 110 → 65 (67.1); at most 0.5095
+  ulp. With P11.06b, every function AOR provides is at or below its count
+  on every Arm core (P11.06a's exit check).
 
 ### P11.06d — Selective inlining in `dp-fixed/fast` (Q53)  `[ ]`
 - [ ] `[[gnu::always_inline]]` copies of the high product on the hot paths,

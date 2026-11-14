@@ -218,11 +218,11 @@
    },
    "cosf/latency": {
     "cycles": 48.48,
-    "insns": 56.06
+    "insns": 50.12
    },
    "cosf/throughput": {
     "cycles": 9.58,
-    "insns": 57.06
+    "insns": 51.12
    },
    "cosh/latency": {
     "cycles": 135.51,
@@ -282,11 +282,11 @@
    },
    "erff/latency": {
     "cycles": 66.46,
-    "insns": 101.38
+    "insns": 62.69
    },
    "erff/throughput": {
     "cycles": 19.08,
-    "insns": 102.38
+    "insns": 63.69
    },
    "exp/latency": {
     "cycles": 39.16,
@@ -450,19 +450,19 @@
    },
    "log/latency": {
     "cycles": 38.27,
-    "insns": 75.69
+    "insns": 74.69
    },
    "log/throughput": {
     "cycles": 10.68,
-    "insns": 76.69
+    "insns": 75.69
    },
    "log10/latency": {
     "cycles": 45.58,
-    "insns": 100.69
+    "insns": 99.69
    },
    "log10/throughput": {
     "cycles": 14.91,
-    "insns": 101.69
+    "insns": 100.69
    },
    "log10f/latency": {
     "cycles": 65.48,
@@ -506,11 +506,11 @@
    },
    "log2/latency": {
     "cycles": 40.64,
-    "insns": 86.69
+    "insns": 85.69
    },
    "log2/throughput": {
     "cycles": 13.77,
-    "insns": 87.69
+    "insns": 86.69
    },
    "log2f/latency": {
     "cycles": 59.48,
@@ -594,19 +594,19 @@
    },
    "sincosf/latency": {
     "cycles": 60.77,
-    "insns": 110.94
+    "insns": 87.38
    },
    "sincosf/throughput": {
     "cycles": 27.6,
-    "insns": 111.94
+    "insns": 88.38
    },
    "sinf/latency": {
     "cycles": 43.75,
-    "insns": 60.75
+    "insns": 49.25
    },
    "sinf/throughput": {
     "cycles": 11.01,
-    "insns": 61.75
+    "insns": 50.25
    },
    "sinh/latency": {
     "cycles": 140.5,
