@@ -12,33 +12,37 @@
  */
 
 #include <math.h>
+#include <stdint.h>
 
 #include "internal/math-fast.h"
 
+/* The special values and 1 (C23 F.10.3.10; __libc_fast_logf_special) */
+[[gnu::noinline]] static float log2f_special(float x)
+{
+	return __libc_fast_logf_special(x);
+}
+
 /*
- * The fast log2f of the double-FPU cores (PLAN D162, D168): x = 2^e m, e + log m / ln 2 in double with
- * __libc_fast_log_double (2^-39.5), rounded once to float: below 0.51 ulp to nearest, exact at the powers of two (m = 1); no hard-case
- * correction. Special values as C23 F.10.3.10.
+ * The fast log2f of the double-FPU cores (PLAN D162, D169, P11.06b; docs/research/libm-fast-float-exp-log.md
+ * section 18): x = 2^k z, log2f x = k + (log c + log1p r) / ln2 in double with __libc_fast_logf_step (a 16-step table) and
+ * __libc_fast_logf_log1p (degree 5, 2^-31.96 relative), no division, rounded once to float: below 0.51 ulp to nearest,
+ * no hard-case correction. One integer test sends every argument but the positive normal floats other than 1 off the
+ * common path; a positive subnormal comes back to it scaled by 2^23, its bits less 23 2^23 so that
+ * __libc_fast_logf_step finds k - 23 (P11.06b).
  */
 float log2f(float x)
 {
-	int e;
-	double m;
+	uint32_t ix = __libc_float_bits(x);
+	double r;
+	double l;
+	int k;
 
-	if (isnan(x))
-		return x + x;
-	if (x < 0)
-		return __libc_math_invalidf();
-	/* log2(+-0) is -infinity with divide-by-zero: a division at run time, not a folded constant */
-	if (x == 0)
-		return -1.0f / fabsf(x);
-	if (isinf(x))
-		return x;
-
-	/* +0 in every rounding direction: rounding downward, m - 1 would be -0 (C23 F.10.3.7) */
-	if (x == 1.0f)
-		return 0.0f;
-	m = __libc_fast_logf_split(x, &e);
-
-	return (float)((double)e + __libc_fast_log_double(m) * 0x1.71547652b82fep+0);
+	if (__builtin_expect(__libc_fast_logf_unusual(ix), 0)) {
+		if (ix - 1u >= 0x007fffffu)
+			return log2f_special(x);
+		ix = __libc_float_bits(x * 0x1p23f) - (23u << 23);
+	}
+	l = __libc_fast_logf_step(ix, &r, &k);
+	l += __libc_fast_logf_log1p(r);
+	return (float)((double)k + l * 0x1.71547652b82fep+0);
 }

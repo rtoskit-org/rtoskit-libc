@@ -17,6 +17,8 @@ LIBC_MATH_FAST_LAYERED := $(call libc_math_layer_stems,${LIBC_MATH_LAYERS})
 SRC := $(filter-out $(foreach stem,${LIBC_MATH_FAST_LAYERED},${SOURCE_DIR}/${stem}.c ${SOURCE_DIR}/${stem}.S),$(wildcard ${SOURCE_DIR}/*.c ${SOURCE_DIR}/*.S))
 # The 2^(j/32) table only where a user of __libc_fast_exp2 in this directory stays
 SRC := $(if $(filter %/expf.c %/exp2f.c %/exp10f.c %/expm1f.c %/exp2m1f.c %/exp10m1f.c %/powf.c %/sinhf.c %/coshf.c %/tanhf.c %/erff.c %/erfcf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp2_table.c,${SRC}))
+# The float logarithms' 16-step table only where logf, log2f, log10f or powf of this directory stays (P11.06b)
+SRC := $(if $(filter %/logf.c %/log2f.c %/log10f.c %/powf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_logf_table.c,${SRC}))
 # The atan(j/8) table only where an inverse trigonometric function of this directory stays
 SRC := $(if $(filter %/atanf.c %/atan2f.c %/asinf.c %/acosf.c %/atanpif.c %/atan2pif.c %/asinpif.c %/acospif.c,${SRC}),${SRC},$(filter-out %/__libc_fast_atan_table.c,${SRC}))
 # The erfc table only where erff or erfcf of this directory stays

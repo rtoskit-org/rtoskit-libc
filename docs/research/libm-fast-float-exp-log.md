@@ -636,3 +636,126 @@ Instructions per call (speed → fast):
 | `log2p1f` | 11,003 → 608 | 5,545 → 242 |
 | `log10p1f` | 13,202 → 699 | 6,619 → 255 |
 | `cbrtf` | 8,590 → 630 | 3,545 → 162 |
+
+## 18. The double path made faster (P11.06b, Q55, D207)
+
+P11.06a measured AOR's float functions ahead of the fast flavour on
+armv7e-m-dp (`powf` 0.55 of our instructions, the logarithms 0.57–0.60,
+`expf` and `exp2f` 0.78–0.81). That core runs this path (section 3, 7, 10),
+not the single-precision one, so the gap was in the code, not the precision.
+
+### Sources (ideas only)
+
+- **Arm Optimized Routines `logf.c`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/logf.c>,
+  read 2026-11-14 through a summary): 16 subintervals of the significand
+  from a fixed offset, so that the reduced z lies in [OFF, 2 OFF); the
+  offset's bits give the entry and, by an arithmetic shift, the exponent;
+  each entry holds 1/c and log c; r = z (1/c) − 1 in double and a short
+  polynomial; one unsigned range test on the bits catches zero, negative,
+  subnormal, infinity and NaN together, a separate test 1 only when
+  directed rounding matters. 0.818 ulp stated.
+- **Arm Optimized Routines `exp2f.c`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/exp2f.c>,
+  read 2026-11-14 through a summary): 32-entry table, a shift constant added
+  to x in double so that the sum's low bits hold the rounded k, the table
+  entry's bits plus the high part of k scale the result; a cubic; one compare
+  of the exponent bits against 128's for every special argument. 0.502 ulp.
+
+What we take: the one integer test, the table-driven logarithm without a
+division, and adding the shift to t directly. Where we differ: a degree 5
+(degree 6 for `powf`) polynomial fitted here, not AOR's degree 4, to keep the
+fast target of 0.55 ulp rather than 0.82; the step holding 1 has 1/c = 1
+exactly, so r = z − 1 is exact next to 1 without a fused multiply-add (x86_64
+has none); and the exponent field enters the table entry by one 32-bit
+addition to its high word.
+
+### What was slow
+
+On armv7e-m-dp (`objdump`, the bench's instruction counts):
+
+- **The special arguments** cost four or five floating-point compares, each
+  `vcmp`, `vmrs` and a branch, before any arithmetic: about 12 of `logf`'s 81
+  instructions and 11 of `expf`'s 52.
+- **`logf`** took log m = 2 atanh s, s = (m − 1)/(m + 1), a division and a
+  degree 6 polynomial in s².
+- **`__libc_fast_exp2`** scaled t by 32 and back, loading both constants,
+  and formed the exponent as (n − j)/32 shifted to bit 52, a 64-bit sum whose
+  low word is always zero.
+- **`powf`** ran `__libc_fast_powf_special`, a dozen float compares and a
+  `truncf` call, on every argument.
+- At `-Os`, a kernel with two call sites stays out of line, and an
+  out-parameter or a call on any path gives the common path a stack frame;
+  each costs 2–6 instructions.
+
+### The design
+
+- **One integer test** per function, the rest off the common path in a
+  `noinline` helper reached by a tail call:
+  - the exponentials: |x|'s bits against 88, 128 and 38 (`expf`, `exp2f`,
+    `exp10f`). The arguments between that edge and the overflow or underflow
+    threshold come back to the common path; every double result there is
+    normal, and the one rounding to float gives the subnormals;
+  - the logarithms: ix − 2^23 ≥ 0x7f000000 (zero, negative, subnormal,
+    infinity, NaN) or ix = 1. A positive subnormal comes back scaled by
+    2^23, its bits less 23·2^23: the step's arithmetic shift then gives
+    k − 23, and the step and z are unchanged;
+  - `powf`: x outside the positive normal floats, or y zero, infinite or a
+    NaN. A negative x to an integer power (the parity from y's bits, no call)
+    comes back with the result's sign, and a subnormal |x| as above. x = 1
+    and y = 1 need no test: log2 1 = 0 gives 2^±0 = 1 exactly, and
+    2^(log2 x) rounds to x.
+- **The logarithms** (`__libc_fast_logf_step`,
+  `libc/math/fast/__libc_fast_logf_table.c`, 256 bytes): tmp = ix −
+  0x3f330000; the entry is bits 19–22 of tmp, k = tmp >> 23 (arithmetic),
+  z = ix − (tmp & 0xff800000) as a float in [0.6992, 1.3984). Each entry
+  holds 1/c, with c the step's midpoint rounded to double, and log c,
+  correctly rounded. Step 9 holds 1, where 1/c = 1 and log c = 0. Then
+  r = z (1/c) − 1, |r| < 0.0297: exact in step 9, within 2^-53 elsewhere,
+  where |log x| ≥ 0.0195. log1p r = r + r² Q(r) with Q fitted here by
+  relative least squares on 400 Chebyshev nodes (mpmath, 60 digits):
+  - degree 3, 2^-31.96 relative, for `logf`, `log2f`, `log10f`;
+  - degree 4, 2^-37.92, for `powf`, whose t = y log2 |x| may reach 150, so
+    t is within 2^-29.6.
+- **`__libc_fast_exp2`**: shifted = t + 1.5·2^47, whose ulp is 2^-5, so the
+  low word is n = round(32 t) and r = t − (shifted − 1.5·2^47) is exact. The
+  table holds bits(2^(j/32)) − j·2^47, so the scale is that entry plus n·2^15
+  in its high word, with no sign extension (n's wrap is a multiple of 2^79).
+  The results are bit for bit those of section 3, for every caller.
+
+Found along the way:
+
+- The exponentials' check that sends an argument back from the unusual
+  branch first used `x <= over && x >= under`. A relational comparison
+  raises invalid for a NaN (`libm_vectors` and `libm_thresholds` caught
+  `expf(NaN)` on both cores). It is now `islessequal` and `isgreaterequal`.
+- Handing the subnormals back to the common path through a separate bias
+  cost three instructions there (a register to save and a subtraction). The
+  scaled bits less 23·2^23 cost none.
+- Each unusual helper first held its own copy of the kernel, for the
+  arguments between the test's edge and the true thresholds: +896 bytes on
+  armv7e-m-dp's `math-float`. Falling through to the one copy brought that
+  to +280, the table's 256 bytes and a few instructions.
+
+### Measured (P11.06b)
+
+On the host, every float the function computes (`powf`: 2·10^9 random
+pairs, x over every positive float with a negative x and an integer y one
+time in 16, y chosen so that |y log2 x| ≤ 150), against long double, on the
+SSE2 and the fma paths, which give the same figures for every float; `powf`'s
+two runs drew different samples, SSE2's shown (fma: 0.5104, 0.115 %):
+
+| Function | Arguments | max ulp | not correctly rounded |
+|---|---:|---:|---:|
+| `expf` | 2,355,335,191 | 0.5095 | 0.0150 % |
+| `exp2f` | 2,365,619,200 | 0.5096 | 0.0148 % |
+| `exp10f` | 2,335,495,814 | 0.5095 | 0.0151 % |
+| `logf` | 2,139,095,038 | 0.5038 | 0.0002 % |
+| `log2f` | 2,139,095,038 | 0.5038 | 0.0003 % |
+| `log10f` | 2,139,095,038 | 0.5039 | 0.0002 % |
+| `powf` (sampled) | 2,000,000,000 | 0.5122 | 0.115 % |
+
+The exponentials are section 6's results, bit for bit. The logarithms were
+0.5000 with the division, and are now 0.504. `powf` was 0.5096, and is now
+0.5122 at its worst, x = 0x1.03268ap+0 and y = 0x1.68a67p+12, where
+t = y log2 x is about 102 and multiplies the logarithm's relative error.
