@@ -24,7 +24,10 @@
 
 #include "internal/math.h"
 
-/* 2^(j/32) for j = 0..31, correctly rounded doubles, as bits (libc/math/fast/__libc_fast_exp2_table.c) */
+/*
+ * 2^(j/32) for j = 0..31, correctly rounded doubles, as bits less j 2^47 (libc/math/fast/__libc_fast_exp2_table.c), so
+ * that adding n 2^47 for n = 32 q + j puts q in the exponent field in one integer addition (P11.06b)
+ */
 extern const uint64_t __libc_fast_exp2_table[32];
 
 /*
@@ -32,14 +35,17 @@ extern const uint64_t __libc_fast_exp2_table[32];
  * |r| <= 1/64, 2^t = 2^(n div 32) * 2^((n mod 32)/32) * 2^r with the table and a degree 3 Taylor polynomial of 2^r,
  * relative error below 2^-30.5 (the note, section 3). Rounded to float, below 0.51 ulp.
  */
-static inline double __libc_fast_exp2(double t)
+[[gnu::always_inline]] static inline double __libc_fast_exp2(double t)
 {
-	/* round(32 t) by the 1.5 * 2^52 shift: the sum's low bits hold the integer, two's complement */
-	double shifted = t * 32.0 + 0x1.8p52;
-	int32_t n = (int32_t)(uint32_t)__libc_double_bits(shifted);
-	double r = t - (shifted - 0x1.8p52) * 0x1p-5;
-	int32_t j = n & 31;
-	uint64_t scale = __libc_fast_exp2_table[j] + ((uint64_t)(int64_t)((n - j) / 32) << 52);
+	/*
+	 * t rounded to a multiple of 1/32 by the 1.5 * 2^47 shift, whose ulp is 2^-5: the sum's low bits hold n = round(32 t),
+	 * two's complement, and r = t - n/32 is exact (P11.06b: no scaling by 32 and back)
+	 */
+	double shifted = t + 0x1.8p47;
+	uint32_t n = (uint32_t)__libc_double_bits(shifted);
+	double r = t - (shifted - 0x1.8p47);
+	/* n 2^47 modulo 2^64, which is n 2^15 modulo 2^32 in the high word: no sign extension, and the low word unchanged */
+	uint64_t scale = __libc_fast_exp2_table[n & 31] + ((uint64_t)(n << 15) << 32);
 	double p = 1.0 + r * (0x1.62e42fefa39efp-1 + r * (0x1.ebfbdff82c58fp-3 + r * 0x1.c6b08d704a0c0p-5));
 
 	return __libc_double_from(scale) * p;
@@ -52,11 +58,11 @@ static inline double __libc_fast_exp2(double t)
  */
 static inline double __libc_fast_exp2_accurate(double t)
 {
-	double shifted = t * 32.0 + 0x1.8p52;
-	int32_t n = (int32_t)(uint32_t)__libc_double_bits(shifted);
-	double r = t - (shifted - 0x1.8p52) * 0x1p-5;
-	int32_t j = n & 31;
-	uint64_t scale = __libc_fast_exp2_table[j] + ((uint64_t)(int64_t)((n - j) / 32) << 52);
+	double shifted = t + 0x1.8p47;
+	uint32_t n = (uint32_t)__libc_double_bits(shifted);
+	double r = t - (shifted - 0x1.8p47);
+	/* n 2^47 modulo 2^64, which is n 2^15 modulo 2^32 in the high word: no sign extension, and the low word unchanged */
+	uint64_t scale = __libc_fast_exp2_table[n & 31] + ((uint64_t)(n << 15) << 32);
 	double p = 1.0 + r * (0x1.62e42fefa39efp-1 + r * (0x1.ebfbdff82c58fp-3 + r * (0x1.c6b08d704a0c0p-5 + r * (0x1.3b2ab6fba4e77p-7 + r * 0x1.5d87fe78a6731p-10))));
 
 	return __libc_double_from(scale) * p;
@@ -215,24 +221,66 @@ static inline double __libc_fast_erf_small(double x)
 	return x * (0x1.20dd75041b4eap+0 + z * (-0x1.8127466f5b8a1p-2 + z * (0x1.ce2ef239ee029p-4 + z * (-0x1.b8203032a45abp-6 + z * (0x1.54d076df271bdp-8 + z * -0x1.936a4a7830bd8p-11)))));
 }
 
-/* A positive finite float as 2^e m, m in [sqrt(1/2), sqrt(2)), in double (subnormals first scaled by 2^23) */
-static inline double __libc_fast_logf_split(float x, int *e)
-{
-	uint32_t bits = __libc_float_bits(x);
-	int bias = 0;
+/*
+ * The double path's float logarithms (P11.06b, the note, section 18): (1/c, -log(1/c)) for the 16 steps of 2^19 ulps
+ * of z from 0x3f330000 (libc/math/fast/__libc_fast_logf_table.c); 1/c is 1 exactly for the step holding 1
+ */
+extern const double __libc_fast_logf_table[16][2];
 
-	if (bits < 0x00800000) {
-		bits = __libc_float_bits(x * 0x1p23f);
-		bias = 23;
-	}
-	/* m in [1, 2), then halved above sqrt(2) */
-	*e = __libc_float_exponent(bits) - 127 - bias;
-	bits = (bits & 0x007fffff) | 0x3f800000;
-	if (bits > 0x3fb504f3) {
-		bits -= 0x00800000;
-		*e += 1;
-	}
-	return (double)__libc_float_from(bits);
+/*
+ * A positive normal float's bits ix as 2^k z with z in [0.6992, 1.3984): returns -log(1/c) for z's step and sets
+ * r = z (1/c) - 1, |r| < 0.0297 (exact for the step holding 1, where 1/c = 1, and within 2^-53 elsewhere). ix less a
+ * multiple m of 2^23 (a scaled subnormal) gives k - m: the shift is arithmetic, and the step and z do not change.
+ */
+static inline double __libc_fast_logf_step(uint32_t ix, double *r, int *k)
+{
+	uint32_t tmp = ix - 0x3f330000u;
+	const double *row = __libc_fast_logf_table[(tmp >> 19) & 15];
+	double z = (double)__libc_float_from(ix - (tmp & 0xff800000u));
+
+	*k = (int32_t)tmp >> 23;
+	*r = z * row[0] - 1.0;
+	return row[1];
+}
+
+/* log1p r for |r| < 0.0297, r + r^2 Q(r) with Q of degree 3 fitted here: relative error 2^-31.96 */
+static inline double __libc_fast_logf_log1p(double r)
+{
+	double r2 = r * r;
+	double q = (-0x1.fffffd4dba291p-2 + r * 0x1.55555218ebcc2p-2) + r2 * (-0x1.002ffa9641cafp-2 + r * 0x1.99f5b9faba4d2p-3);
+
+	return r + r2 * q;
+}
+
+/* log1p r for |r| < 0.0297 as above with Q of degree 4 (powf): relative error 2^-37.92 */
+static inline double __libc_fast_powf_log1p(double r)
+{
+	double r2 = r * r;
+	double q = (-0x1.00000000145edp-1 + r * 0x1.55555218ebcc2p-2) + r2 * (-0x1.fffff4ac09218p-3 + r * (0x1.99f5b9faba4d2p-3 + r * -0x1.55ba1c3a613b5p-3));
+
+	return r + r2 * q;
+}
+
+/*
+ * The special arguments of the double path's float logarithms, off the common path (C23 F.10.3.7, F.10.3.8,
+ * F.10.3.10): a NaN, a zero (-infinity with divide-by-zero, a division at run time), a negative x (invalid),
+ * +infinity, and 1 (+0 in every direction: rounding downward, z (1/c) - 1 would be -0). The subnormals do not come here.
+ */
+static inline float __libc_fast_logf_special(float x)
+{
+	if (isnan(x))
+		return x + x;
+	if (x == 0)
+		return -1.0f / fabsf(x);
+	if (x < 0)
+		return __libc_math_invalidf();
+	return x == 1.0f ? 0.0f : x;
+}
+
+/* True when ix is not a positive normal float, or is 1: __libc_fast_logf_special's arguments and the subnormals */
+static inline bool __libc_fast_logf_unusual(uint32_t ix)
+{
+	return ix - 0x00800000u >= 0x7f800000u - 0x00800000u || ix == 0x3f800000u;
 }
 
 /*

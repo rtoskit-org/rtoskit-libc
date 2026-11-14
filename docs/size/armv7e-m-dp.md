@@ -719,3 +719,7 @@ Release and speed unchanged (`size-report diff`). In fast, no size program calls
 ## P11.05n — Fast `erf` in double (D204)
 
 Release and speed unchanged (`size-report diff`). In fast, `erf` is 3388 bytes on armv7e-m-dp with its 2.5 KiB table of pieces; no size program calls it, every budget holds and nothing is re-locked.
+
+## P11.06b — The double path's float exp, log and pow (D208)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-float` grows from 5710 to 5990 bytes of code (+280) and `math-mix` from 20128 to 20400 (+272): the logarithms' 256-byte table of 1/c and log c (`__libc_fast_logf_table`), for `logf` and `powf`; the exponentials shrink slightly (no scaling by 32 and back). `math-float` is +0.7 % over speed's 5950, inside D191's +20 % line; `math-mix` stays P11.06e's question. Both re-locked (`size-report --flavour fast --lock`) with the maintainer's approval (D208). A first version, whose unusual helpers each held a copy of the kernel, measured +896 bytes.

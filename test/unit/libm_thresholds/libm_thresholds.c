@@ -199,6 +199,50 @@ static bool within_ulp(float x, double want)
 	return within_ulps(x, want, 1.0);
 }
 
+/*
+ * The double path's one-test entries (P11.06b): each side of the integer tests that send an argument out of the
+ * common path (|x| = 88, 128 and 38 for the exponentials, the positive normal floats and 1 for the logarithms, and x
+ * and y for powf), each side of the 16 steps of the logarithms' table, and the arguments the common path takes
+ * without a test (powf(1, y) = 1, powf(x, 1) = x), within 1 ulp of a double reference in every build type
+ */
+static void check_one_test_edges(void)
+{
+	static const float exp_edges[] = { 88.0f, 128.0f, 38.0f };
+	static float (*const exps[])(float) = { expf, exp2f, exp10f };
+	static double (*const exp_references[])(double) = { exp, exp2, exp10 };
+	static float (*const logs[])(float) = { logf, log2f, log10f };
+	static double (*const log_references[])(double) = { log, log2, log10 };
+
+	for (unsigned int i = 0; i < 3; ++i) {
+		float edge = exp_edges[i];
+		float below = nextafterf(edge, 0.0f);
+
+		/* Below the edge the common path, at it the other (exp2f(128) overflows); the negative edges are subnormal */
+		QUIET(within_ulp(exps[i](below), exp_references[i](below)));
+		CHECK(i == 1 || within_ulp(exps[i](edge), exp_references[i](edge)));
+		CHECK(within_ulp(exps[i](-below), exp_references[i](-below)) && within_ulp(exps[i](-edge), exp_references[i](-edge)));
+	}
+	for (unsigned int i = 0; i < 3; ++i) {
+		/* The smallest normal (the common path) and the largest subnormal (scaled out of it), and each step's ends */
+		QUIET(within_ulp(logs[i](FLT_MIN), log_references[i](FLT_MIN)) && within_ulp(logs[i](0x1.fffffcp-127f), log_references[i](0x1.fffffcp-127f)));
+		for (unsigned int step = 0; step <= 16; ++step) {
+			union {
+				unsigned int bits;
+				float x;
+			} lo = { 0x3f330000u + (step << 19) }, hi = { 0x3f330000u + (step << 19) - 1u };
+
+			QUIET(within_ulp(logs[i](lo.x), log_references[i](lo.x)) && within_ulp(logs[i](hi.x), log_references[i](hi.x)));
+		}
+		/* Next to 1, in the step where 1/c = 1: r = z - 1 exactly */
+		QUIET(within_ulp(logs[i](0x1.000002p+0f), log_references[i](0x1.000002p+0)) && within_ulp(logs[i](0x1.fffffep-1f), log_references[i](0x1.fffffep-1)));
+	}
+	/* powf: no test for x = 1 or y = 1 on the common path; the subnormal x and the negative x scaled or signed out of it */
+	QUIET(is_one(powf(1.0f, 3.5f)) && is_one(powf(1.0f, -0x1p100f)) && is_one(powf(1.0f, 0x1p-149f)));
+	QUIET(powf(0x1.8p-1f, 1.0f) == 0x1.8p-1f && powf(FLT_MAX, 1.0f) == FLT_MAX && powf(FLT_MIN, 1.0f) == FLT_MIN && powf(-3.0f, 1.0f) == -3.0f);
+	QUIET(within_ulp(powf(0x1p-140f, -0.5f), 0x1p70) && within_ulp(powf(-0x1.8p-120f, -1.0f), -1.0 / 0x1.8p-120) && within_ulp(powf(0x1.fffffcp-127f, 0.75f), pow(0x1.fffffcp-127, 0.75)));
+	QUIET(within_ulp(powf(-0x1.000002p+0f, 3.0f), pow(-0x1.000002p+0, 3.0)) && within_ulp(powf(0x1.fffffep-1f, 0x1p20f), pow(0x1.fffffep-1, 0x1p20)));
+}
+
 static void check_minus_one(void)
 {
 	static float (*const functions[])(float) = { expm1f, exp2m1f, exp10m1f };
@@ -775,6 +819,7 @@ int main(void)
 	check_plus_one();
 	check_cube_root();
 	check_fixed_edges();
+	check_one_test_edges();
 	check_trigonometric();
 	check_inverse_trigonometric();
 	check_hyperbolic();

@@ -889,3 +889,7 @@ Release and speed unchanged (`size-report diff`). In fast, `erf` is one member w
 ## P11.05o — Fast `erf` in fixed point (D205)
 
 Release and speed unchanged (`size-report diff`). In fast, `erf` is 3802 bytes with its 2288-byte table; no size program calls it, every budget holds and nothing is re-locked.
+
+## P11.06b — The double path's float exp, log and pow (D208)
+
+Release and speed unchanged (`size-report diff`). The fast files changed are the double-FPU cores' (x86_64, armv7e-m-dp); on this core every fast budget holds and nothing is re-locked.

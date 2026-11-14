@@ -512,7 +512,7 @@ Split, as P11.04g was: the two halves rest on different kernels.
 
 ## P11.06 — Comparison and wrap-up
 Split in four, as the size check needs the maintainer's decision (D191) before
-the docs and the phase exit.
+the docs and the phase exit; then in eight (D207).
 
 ### P11.06a — Comparison against AOR and picolibc  `[x]`
 - [x] `bench-runner compare` and `bench-runner aor` with the fast build as
@@ -527,7 +527,42 @@ the docs and the phase exit.
   armv8-m.main (AOR takes 4.3–6.1 times our instructions); on armv7e-m-dp 11
   float functions are slower, AOR 0.55–0.96 of ours (Q55, for P11.06b).
 
-### P11.06b — Size  `[ ]`
+The maintainer's decisions on P11.06a's results (D207) add four sub-steps
+before the size check: Q55's armv7e-m-dp gap to AOR (b, c), Q53's selective
+inlining (d) and a reduction of armv7e-m-dp's `math-mix` (e), whose figures
+go back to the maintainer before the re-lock (f). P11.06a's Q55 said the
+double-FPU core used armv7e-m's float-float files; it uses the double path
+of `libc/math/fast/`, shared with x86_64, so Q55 is closed by making that
+path faster rather than by a new layer (D207).
+
+### P11.06b — The double path's float exp, log and pow (Q55)  `[x]`
+- [x] `libc/math/fast/` `expf`, `exp2f`, `exp10f`, `logf`, `log2f`,
+  `log10f`, `powf` (the double-FPU cores, x86_64 and armv7e-m-dp): one
+  integer test for every special argument, the logarithms table-driven
+  without a division; at or below AOR's instruction counts on armv7e-m-dp,
+  inside the fast contract (exhaustive sweeps; `powf` sampled), the
+  research note updated (§18, D208). armv7e-m-dp: `expf` 52 → 42 (AOR 42),
+  `exp2f` 50 → 39 (39), `logf` 81 → 45 (46), `log2f` 81 → 45 (48),
+  `log10f` 83 → 47 (50), `powf` 159 → 86 (88); at most 0.5122 ulp.
+  `math-float` and `math-mix` +280 and +272 bytes (the table), re-locked
+  with the maintainer's approval.
+
+### P11.06c — The double path's `erff`, `sinf`, `cosf`, `sincosf` (Q55)  `[ ]`
+- [ ] The same for the rest of AOR's float functions on the double path;
+  at or below AOR's counts on armv7e-m-dp, or the remaining gap recorded.
+
+### P11.06d — Selective inlining in `dp-fixed/fast` (Q53)  `[ ]`
+- [ ] `[[gnu::always_inline]]` copies of the high product on the hot paths,
+  kernel by kernel, measured against the fast budgets; keep only what fits
+  (D207).
+
+### P11.06e — Reducing armv7e-m-dp's `math-mix`  `[ ]`
+- [ ] Measure the bytes saved and the instructions lost for a shared
+  out-of-line trig kernel and slow paths that do not pull the strict cores;
+  the figures go to the maintainer, who decides the D191 line for that core
+  (D207).
+
+### P11.06f — Size  `[ ]`
 - [ ] Size: fast budget held, members recorded; `docs/size/`. After the final
   re-lock (D187), compare every core's fast `math-mix` and `math-float` with
   the fast flavour's original rule, +20 % over the speed figure (D191): a core
@@ -536,14 +571,14 @@ the docs and the phase exit.
   (12,174 → 18,806 bytes); armv6-m +11.3 %, armv7-m +12.3 %, armv7e-m and
   armv8-m.main +16.2 % and +16.1 %. At P11.05o: armv7e-m-dp `math-mix` +65.3 %
   (12,174 → 20,128); the soft-double cores +10.5 % to +13.5 %; `math-float`
-  at most +3.3 %. Q53 (selective inlining of the high product) is settled here
-  too.
+  at most +3.3 %. The figures after P11.06b–e, with the maintainer's
+  decision from P11.06e.
 
-### P11.06c — Docs and the release archives  `[ ]`
+### P11.06g — Docs and the release archives  `[ ]`
 - [ ] README (Performance table gains a fast column; the accuracy
   paragraph states the fast contract), `docs/configuration.md`,
   `docs/release.md`: `release-package` adds the `fast` tree to each archive
   (D163), once the exit check above passes.
 
-### P11.06d — Phase exit  `[ ]`
+### P11.06h — Phase exit  `[ ]`
 - [ ] Phase exit: PLAN's phase table, decisions, open questions.

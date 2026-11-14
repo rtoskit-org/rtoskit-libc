@@ -97,9 +97,13 @@ nearest, measured on the host with MPFR; the full table is below).
    armv6-m, armv6s-m, armv7-m, armv7e-m and armv8-m.main: no case is slower,
    in throughput or in latency.
 
-   Not met on armv7e-m-dp (Q55). There AOR's float functions evaluate in
-   double on the FPU, while ours use the single-precision files of
-   armv7e-m (float-float with `VFMA`). The cases where AOR is faster:
+   Not met on armv7e-m-dp (Q55). Both libraries evaluate the float functions in
+   double there; ours are the double path of `libc/math/fast/`, shared with
+   x86_64, whose special-argument tests and table-free logarithm cost the
+   difference (D207; P11.06b and c work on it). The cases where AOR was faster
+   at P11.06a (since P11.06b, D208, `expf`, `exp2f`, `logf`, `log2f`, `log10f`
+   and `powf` are at or below AOR's counts; `erff`, `sinf`, `cosf` and
+   `sincosf` are P11.06c's):
    - `powf`: AOR takes 0.55 of our instructions.
    - `logf`, `log2f`, `log10f`: 0.57–0.60.
    - `erff`: 0.59.

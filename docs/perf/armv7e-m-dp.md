@@ -1136,3 +1136,27 @@ AOR has no scalar double hyperbolic function.
 | `erf` | 418 | 68 | -84 % |
 
 AOR's `erf`: 69.
+
+## P11.06b — The double path's float exp, log and pow (D208)
+
+`libc/math/fast/`: one integer test per function for the special arguments, the logarithms from a 16-step table without a division, and `__libc_fast_exp2` rounding by the 1.5·2^47 shift (bit for bit the old results). Instructions per call (throughput), fast before → after; release and speed unchanged.
+
+| Function | before | after | change | AOR |
+|---|---:|---:|---:|---:|
+| `expf` | 52.3 | 42.3 | -19 % | 42.3 |
+| `exp2f` | 50.3 | 39.3 | -22 % | 39.3 |
+| `exp10f` | 52.3 | 42.3 | -19 % | — |
+| `logf` | 81.3 | 45.3 | -44 % | 46.3 |
+| `log2f` | 81.3 | 45.3 | -44 % | 48.3 |
+| `log10f` | 83.3 | 47.3 | -43 % | 50.3 |
+| `powf` | 159.4 | 86.4 | -46 % | 88.4 |
+| `expm1f` | 66.1 | 62.6 | -5 % | — |
+| `exp2m1f` | 55.5 | 52.2 | -6 % | — |
+| `exp10m1f` | 59.1 | 55.6 | -6 % | — |
+| `sinhf` | 68.4 | 64.6 | -5 % | — |
+| `coshf` | 55.3 | 51.3 | -7 % | — |
+| `tanhf` | 71.8 | 67.8 | -6 % | — |
+| `erff` | 113.1 | 109.6 | -3 % | 67.1 |
+| `erfcf` | 122.7 | 118.9 | -3 % | — |
+
+The AOR column is AOR's own function, where it has one (P11.06a's record, `docs/perf/aor-armv7e-m-dp-fast.json`); the m1, hyperbolic and error functions gain from the shared exponential kernel.
