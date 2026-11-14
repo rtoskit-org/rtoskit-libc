@@ -496,8 +496,10 @@ Split, as P11.04g was: the two halves rest on different kernels.
   quotient for tanh); tests, gains (D202; the note, §20): at most 0.5083 ulp;
   `tanh` 7193 → 500 instructions on armv7e-m.
 
-### P11.05m2 — `asinh`, `acosh`, `atanh` on the soft-double cores  `[ ]`
-- [ ] Over P11.05e's log kernel and P11.05k2's square root; tests, gains.
+### P11.05m2 — `asinh`, `acosh`, `atanh` on the soft-double cores  `[x]`
+- [x] Over P11.05e's log kernel and P11.05k2's square root; tests, gains
+  (D203; the note, §21): at most 0.5229 ulp; `asinh` 15,215 → 535
+  instructions on armv7e-m.
 
 ### P11.05n — `erf` on the double-FPU cores  `[ ]`
 - [ ] (AOR: 69 instructions on armv7e-m-dp); tests, gains.

@@ -870,3 +870,7 @@ Release and speed unchanged (`size-report diff`). In fast, no size program calls
 ## P11.05m1 — Fast `sinh`, `cosh` and `tanh` in fixed point (D202)
 
 Release and speed unchanged (`size-report diff`). In fast, no size program calls a hyperbolic function; every budget holds and nothing is re-locked.
+
+## P11.05m2 — Fast `asinh`, `acosh` and `atanh` in fixed point (D203)
+
+Release and speed unchanged (`size-report diff`). In fast, no size program calls these functions or `asin` and `acos`, whose square root moved into its own member; every budget holds and nothing is re-locked.

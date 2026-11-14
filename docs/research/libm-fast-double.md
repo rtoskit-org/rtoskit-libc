@@ -1504,3 +1504,77 @@ unchanged by the reciprocal's move into the header.
 **Size:** `sinh` is 1214 bytes on armv7e-m, `cosh` 886 and `tanh` 1486 (each
 inlines exp's kernel fraction; 1042–1474 on armv6-m), over §7's 512-byte
 table. No size program calls them; every budget holds.
+
+## 21. asinh, acosh and atanh on the soft-double cores (P11.05m2)
+
+`libc/math/dp-fixed/fast/asinh.c`, `acosh.c` and `atanh.c`, shadowing §19's
+double files on the five soft-double cores. Sources: §19.1's (FreeBSD's
+log1p rearrangements) and P11.04g2's float design (the argument exact in
+integers, a series near 0); no new source was read.
+
+### 21.1 The method
+
+- **The shape:** each function forms log1p's argument w, or log's argument v
+  where the result is at least 0.88, as a 64-bit fixed-point value to about
+  2^-62 relatively. That is §19's idea, an accurate argument instead of a
+  series, carried out in integers. Two new inlines in `dp-fixed-fast.h`
+  take the value as a significand and an exponent:
+  - `__libc_dp_fixed_log1p_scaled`: below 2^-5, §10's relative series
+    (`__libc_dp_fixed_log_near`); otherwise 1 + w in Q63 and
+    `__libc_dp_fixed_log_scaled`;
+  - `__libc_dp_fixed_log_scaled`: z into [45/64, 90/64), then k·ln 2 + ln z
+    from §10's table path in 128 bits, rounded once.
+- **The square root:** P11.05k2's 64-bit root moves out of the asin kernel
+  into a hidden function of its own (`__libc_dp_fixed_root.c`), which asin,
+  acos, asinh and acosh share; `asin` and `acos` measure the same
+  instruction counts within one. `__libc_dp_fixed_sqrt_scaled` evens the
+  exponent and calls it.
+- **asinh |x|:**
+  - below 1, w = |x| + x²/(1 + √(1 + x²)): 1 + x² in Q62, its root in Q63,
+    x² over (1 + r) by P11.05k1's reciprocal;
+  - from 1, v = |x| + √(x² + 1), with x² + 1 in Q61 at 2^2e;
+  - from 2^28, log 2|x| (the term 1/(4x²) is below 2^-58).
+- **acosh x:**
+  - below 2, w = t + √(t(2 + t)) with t = x − 1 exact and the product to
+    2^-63, relative however close x is to 1 (w is at least 2^-25.5);
+  - from 2, v = x + √(x² − 1);
+  - from 2^28, log 2x.
+- **atanh |x|:** log1p(s)/2 with s = 2|x|/(1 − |x|). 1 − |x| is taken in Q64,
+  exact from 2^-12, and the quotient comes from the reciprocal. The halving
+  is exact in the result's exponent.
+- **Found along the way:**
+  - The table path took 1 + w by a truncating shift. w's 64 bits, unlike
+    log1p's 53, lose up to 5 there, 2 units of 2^-64 in the logarithm:
+    0.533 ulp where the result is just above 2^-5, against 0.509 with
+    53-bit arguments. Rounded instead, 0.523.
+  - The 64-bit reciprocal measures 17 units of 2^-64 (2^-59 relatively) and
+    the root 8. Neither moves the results by more than 0.01 ulp.
+
+### 21.2 Measured (P11.05m2)
+
+On the host (the speed files' `umull` product), against long double, with
+§19.3's sweep (1.4·10^9 samples per function):
+
+| Function | worst | not correctly rounded |
+| --- | ---: | ---: |
+| `asinh` | 0.5229 | 0.04 % |
+| `acosh` | 0.5215 | 0.02 % |
+| `atanh` | 0.5229 | 0.05 % |
+
+The worst cases sit just above log1p's 2^-5 boundary, where the table
+path's few units of 2^-64 are largest against the result.
+
+Instructions per call (speed → §19's double files on the helpers → fast):
+
+| Core | `asinh` | `acosh` | `atanh` |
+| --- | ---: | ---: | ---: |
+| armv7e-m, armv8-m.main | 15,215 → 6943 → 535 | 13,378 → 7051 → 499 | 9286 → 4056 → 524 |
+| armv7-m | 15,719 → 7166 → 533 | 13,773 → 7265 → 499 | 9757 → 4390 → 524 |
+| armv6-m, armv6s-m | 39,784 → 18,468 → 2415 | 34,248 → 18,611 → 2271 | 25,834 → 12,620 → 2532 |
+
+`asin` and `acos` are within 1.5 instructions of P11.05k2's. AOR has no
+scalar double hyperbolic function.
+
+**Size:** `asinh` is 1446 bytes on armv7e-m, `acosh` 1228 and `atanh` 1066,
+with the 204-byte shared root (332 on armv6-m); the asin kernel shrinks to
+772. No size program calls them; every budget holds.

@@ -279,6 +279,48 @@ static inline uint64_t __libc_dp_fixed_log_reduce(uint64_t bits, int32_t *k)
 }
 
 /*
+ * log v for v = z 2^(k - 63), z normalized, v at least 1 + 2^-5 (the fast asinh, acosh and atanh, PLAN D203): z brought
+ * into [45/64, 90/64), then log's table path (k ln 2 + ln z in 128 bits, __libc_dp_fixed_log_core), rounded once; the
+ * result is at least 2^-5.02, so the core's few units of 2^-64 stay below 2^-58 of it
+ */
+static inline double __libc_dp_fixed_log_scaled(uint64_t z, int32_t k)
+{
+	uint64_t hi;
+	uint64_t lo;
+
+	if (z >= 0xb400000000000000ull) {
+		z >>= 1;
+		k++;
+	}
+	__libc_dp_fixed_k_signed(k, 0xb17217f7d1cf79acull, &hi, &lo);
+	__libc_dp_fixed_add128(&hi, &lo, __libc_dp_fixed_log_core(z));
+
+	return __libc_dp_fixed_from128(hi, lo);
+}
+
+/*
+ * log1p w for w = s 2^(e - 63), s normalized, 0 < w < 2^63: below 2^-5 the relative series (__libc_dp_fixed_log_near),
+ * otherwise 1 + w in Q63 (to 64 bits, a carry into a bit 64 taken back) and log v
+ */
+static inline double __libc_dp_fixed_log1p_scaled(uint64_t s, int32_t e)
+{
+	uint64_t z;
+
+	if (e < -5) {
+		z = __libc_dp_fixed_log_near(s, &e, false);
+		return __libc_dp_fixed_double(0, e, z);
+	}
+	/* 1 + w with w's shifted-out bits rounded, not dropped: a 64-bit w (unlike log1p's 53 bits) loses up to 5 */
+	if (e < 0)
+		return __libc_dp_fixed_log_scaled(0x8000000000000000ull + (((s >> (-e - 1)) + 1) >> 1), 0);
+	z = s + (0x8000000000000000ull >> e);
+	if (z < s)
+		return __libc_dp_fixed_log_scaled((z >> 1) | 0x8000000000000000ull, e + 1);
+
+	return __libc_dp_fixed_log_scaled(z, e);
+}
+
+/*
  * The double nearest D136's fixed-point result, (-1)^negative v 2^(exponent - 63), by its 54th bit with no rounding test
  * (D197): the kernel's error, below 18 units of v's last bit (56 for tan), is at most 0.03 ulp more. The kernel's results
  * are normal doubles for 2^-27 <= |x| < 2^20.
@@ -300,6 +342,27 @@ double __libc_dp_fixed_atan(uint64_t my, int32_t ey, uint64_t mx, int32_t ex, un
 
 /* 1/sqrt(t) on [(i + 8)/32, (i + 9)/32) in units of 2^-14, the value of least relative error, 2^-5.09 (D200) */
 extern const uint16_t __libc_dp_fixed_rsqrt_seed[24];
+
+/*
+ * sqrt(t 2^-64) 2^64 for t in [2^62, 2^64), within about 6 units of 2^-64 (PLAN D200; __libc_dp_fixed_root.c, shared by the
+ * asin kernel and the fast asinh and acosh)
+ */
+uint64_t __libc_dp_fixed_root(uint64_t t);
+
+/*
+ * sqrt(h 2^(e - 64)) for h normalized (bit 63 set) as r 2^(*f - 64), r in [2^63, 2^64): an odd e made even by halving h
+ * (the root takes [2^62, 2^64))
+ */
+static inline uint64_t __libc_dp_fixed_sqrt_scaled(uint64_t h, int32_t e, int32_t *f)
+{
+	if ((e & 1) != 0) {
+		*f = (e + 1) / 2;
+		return __libc_dp_fixed_root(h >> 1);
+	}
+	*f = e / 2;
+
+	return __libc_dp_fixed_root(h);
+}
 
 /*
  * asin |x| (acos false) or acos x (acos true) for a magnitude's bits, 2^-60 <= |x| < 1, x < 0 when negative, one rounding
