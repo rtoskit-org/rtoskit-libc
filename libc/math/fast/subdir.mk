@@ -21,9 +21,10 @@ SRC := $(if $(filter %/expf.c %/exp2f.c %/exp10f.c %/expm1f.c %/exp2m1f.c %/exp1
 SRC := $(if $(filter %/atanf.c %/atan2f.c %/asinf.c %/acosf.c %/atanpif.c %/atan2pif.c %/asinpif.c %/acospif.c,${SRC}),${SRC},$(filter-out %/__libc_fast_atan_table.c,${SRC}))
 # The erfc table only where erff or erfcf of this directory stays
 SRC := $(if $(filter %/erff.c %/erfcf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_erfc_table.c,${SRC}))
-SRC := $(if $(filter %/exp.c %/exp2.c %/exp10.c %/expm1.c %/pow.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp_pairs.c,${SRC}))
-# The log tables only where a logarithm or pow of this directory stays (the special values stay: dp-fixed/fast calls them too)
-SRC := $(if $(filter %/log.c %/log10.c %/log1p.c %/pow.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log_table.c,${SRC}))
+SRC := $(if $(filter %/exp.c %/exp2.c %/exp10.c %/expm1.c %/pow.c %/sinh.c %/cosh.c %/tanh.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp_pairs.c,${SRC}))
+# The log tables only where a logarithm, pow or an inverse hyperbolic function of this directory stays (the special values
+# stay: dp-fixed/fast calls them too)
+SRC := $(if $(filter %/log.c %/log10.c %/log1p.c %/pow.c %/asinh.c %/acosh.c %/atanh.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log_table.c,${SRC}))
 SRC := $(if $(filter %/log2.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log2_table.c,${SRC}))
 # The trigonometric table only where a double sin, cos, sincos or tan of this directory stays, the slow path also where a
 # float one does

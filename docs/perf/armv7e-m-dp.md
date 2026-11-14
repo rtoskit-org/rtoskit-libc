@@ -1111,3 +1111,18 @@ P11.04a's `sinf`, `cosf`, `sincosf` and `tanf` now reach the strict reduction fr
 | `atan2` | 360 | 141 | -61 % |
 
 AOR has no scalar double `asin`, `acos`, `atan` or `atan2`.
+
+## P11.05l — Fast hyperbolic functions in double (D201)
+
+`libc/math/fast/`: sinh, cosh and tanh over one kernel on P11.05b's exp table (e^x and e^-x from the same entries, the even and odd parts of exp's polynomial), odd series near 0 with an exact leading term; asinh, acosh and atanh as the logarithm of an exact-enough pair over P11.05d's table, with no log1p form. Instructions per call (throughput); release and speed unchanged.
+
+| Function | speed | fast | change |
+|---|---:|---:|---:|
+| `sinh` | 200 | 107 | -46 % |
+| `cosh` | 192 | 79 | -59 % |
+| `tanh` | 202 | 137 | -32 % |
+| `asinh` | 287 | 107 | -63 % |
+| `acosh` | 246 | 101 | -59 % |
+| `atanh` | 217 | 90 | -59 % |
+
+AOR has no scalar double hyperbolic function.

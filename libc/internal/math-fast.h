@@ -1335,6 +1335,88 @@ static inline double __libc_fast_exp_scale(int32_t k, double p)
 }
 
 /*
+ * x + x^3 (c + c_lo) + x^5 q as an unrounded pair, the high part returned and the low part in *lo, for the odd series of
+ * the fast sinh and tanh (PLAN D201): x^2 and x^3 = x x^2 as exact pairs (fma or Dekker), x^3 c by an exact product, x +
+ * x^3 c by a fast two-sum (|x^3 c| < |x|), and only the terms below 2^-8 of the result rounded in plain double. Rounded
+ * as a whole, the x^3 term (4 % of sinh at 1/2) cost 0.11 ulp.
+ */
+static inline double __libc_fast_odd_series(double x, double c, double c_lo, double q, double *lo)
+{
+	struct __libc_dd square = __libc_dd_product(x, x);
+	struct __libc_dd cube = __libc_dd_product(x, square.hi);
+	struct __libc_dd term = __libc_dd_product(cube.hi, c);
+	struct __libc_dd sum = __libc_dd_fast_sum(x, term.hi);
+
+	*lo = sum.lo + (term.lo + cube.hi * c_lo + (cube.lo + x * square.lo) * c + cube.hi * square.hi * q);
+	return sum.hi;
+}
+
+/*
+ * The hyperbolic kernel of the fast sinh, cosh and tanh (libc/math/fast/, PLAN D201; the note, section 19), for 0 <= a <=
+ * 22: e^a = S1 (1 + t1 + p(u)) and e^-a = S2 (1 + t2 + p(-u)) with P11.05b's reduction, S1 = 2^(k/64) and S2 = 2^(-k/64)
+ * from the same table (scaled by 2^-half), t1 and t2 their tails. p(u) = E + O, p(-u) = E - O, with E and O the even and
+ * odd parts of exp's polynomial (O within 2^-60.2 of sinh u - u relatively, E within 2^-57.4 of cosh u - 1): so
+ * S1 e^u - S2 e^-u = (S1 - S2) + S1 (t1 + E) - S2 (t2 + E) + (S1 + S2) O, and the sum likewise. S1 - S2 and S1 + S2 by
+ * fast two-sums (S1 >= S2), each as hi + lo, unrounded: E's error stays relative to the difference, O's to the sum. In
+ * the difference (S1 + S2) u, up to 2^-6.9 of it where sinh and tanh take the kernel (from 1/4), is an exact product
+ * added by a fast two-sum (|S1 - S2| >= |(S1 + S2) u| for k >= 1): rounded, it cost 0.04 ulp.
+ */
+static inline void __libc_fast_sinhcosh(double a, int32_t half, double *s_hi, double *s_lo, double *c_hi, double *c_lo)
+{
+	double kd;
+	int32_t k = __libc_fast_exp_index(a * 0x1.71547652b82fep+6, &kd);
+	double u = (a - kd * 0x1.62e42fee00000p-7) - kd * 0x1.a39ef35793c76p-39;
+	const uint64_t *plus = __libc_fast_exp_entry(k);
+	const uint64_t *minus = __libc_fast_exp_entry(-k);
+	double s1 = __libc_double_from(__libc_fast_exp_scale_bits(plus, (k >> 6) - half));
+	double s2 = __libc_double_from(__libc_fast_exp_scale_bits(minus, (-k >> 6) - half));
+	double u2 = u * u;
+	double even = u2 * (0x1.ffffffffff57fp-2 + u2 * 0x1.55556b3304ec0p-5);
+	double odd = u * u2 * (0x1.5555555555255p-3 + u2 * 0x1.11111d8fbe766p-7);
+	double t1 = __libc_double_from(plus[1]) + even;
+	double t2 = __libc_double_from(minus[1]) + even;
+	double sum = s1 + s2;
+	double diff = s1 - s2;
+	struct __libc_dd product = __libc_dd_product(sum, u);
+	struct __libc_dd s = __libc_dd_fast_sum(diff, product.hi);
+
+	*s_hi = s.hi;
+	*s_lo = s.lo + (((s1 - diff) - s2) + product.lo + (s1 * t1 - s2 * t2) + sum * odd);
+	*c_hi = sum;
+	*c_lo = ((s1 - sum) + s2) + (s1 * t1 + s2 * t2) + diff * (u + odd);
+}
+
+/*
+ * e^a/2 for 22 < a <= ln(2 DBL_MAX) - its last half ulp (sinh and cosh beyond the kernel, where e^-a is below 2^-63 of
+ * the result): exp's reduction and polynomial with the table's tail in its last step (as exp.c: adding the two apart
+ * cost 0.004 ulp), scaled by 2^((k - 64)/64) with the sign, the scale halved and the sum doubled above 2^1023; beyond,
+ * overflow
+ */
+static inline double __libc_fast_exp_half(double a, double sign)
+{
+	const uint64_t *entry;
+	double scale;
+	double kd;
+	int32_t k;
+	int32_t n;
+	double u;
+
+	if (a > 0x1.633ce8fb9f87dp+9)
+		return __libc_math_overflow(sign);
+	k = __libc_fast_exp_index(a * 0x1.71547652b82fep+6, &kd);
+	u = (a - kd * 0x1.62e42fee00000p-7) - kd * 0x1.a39ef35793c76p-39;
+	entry = __libc_fast_exp_entry(k);
+	n = (k >> 6) - 1;
+	if (n > 1022) {
+		scale = sign * __libc_double_from(__libc_fast_exp_scale_bits(entry, n - 1));
+		return 2.0 * (scale + scale * __libc_fast_expm1_tail(u, __libc_double_from(entry[1])));
+	}
+	scale = sign * __libc_double_from(__libc_fast_exp_scale_bits(entry, n));
+
+	return scale + scale * __libc_fast_expm1_tail(u, __libc_double_from(entry[1]));
+}
+
+/*
  * The slow paths of the fast exp, exp2 and exp10 (libc/math/fast/ and libc/math/dp-fixed/fast/, PLAN D187, D188): tiny
  * arguments, the ends, the infinities and NaN, by the strict file's double-double core (rare, and the core is shared with
  * pow, so in a program that calls both it costs no code). Out of line, in their own files, so that the common path saves
@@ -1415,6 +1497,47 @@ static inline bool __libc_fast_log_outside(double x, uint64_t *ix)
 	}
 
 	return false;
+}
+
+/*
+ * log(hi + lo) as an unrounded pair, the high part returned and the low part in *out, for a positive normal hi and |lo|
+ * at most an ulp of hi (the fast asinh, acosh and atanh, PLAN D201): log's evaluation (D190), with lo/hi added to its
+ * tail (the next term, (lo/hi)^2/2, is below 2^-104) and k + extra for k, so that extra = 1 gives log(2 hi). Near 1 (k =
+ * 0, invc = 1) w is 0 and the pair is r + r^2 P(r) + lo/hi, relative however small the logarithm is.
+ */
+static inline double __libc_fast_log_pair(double hi, double lo, int32_t extra, double *out)
+{
+	const struct __libc_fast_log_entry *entry;
+	double kd;
+	double r2;
+	double w;
+	double z;
+	double r;
+	double h;
+	int32_t k;
+
+	entry = __libc_fast_log_reduce(__libc_fast_log_table, __libc_double_bits(hi), &z, &k);
+	r = __libc_fast_log_r(z, entry->invc);
+	kd = (double)(k + extra);
+	w = kd * 0x1.62e42fefa3800p-1 + entry->logc;
+	h = w + r;
+	r2 = r * r;
+	*out = ((w - h) + r + (kd * 0x1.ef35793c76730p-45 + entry->tail + lo / hi)) + r2 * __libc_fast_log_poly(r, r2);
+
+	return h;
+}
+
+/*
+ * sqrt(h + l) as s + *lo for h + l a normalized positive pair: s = sqrt h correctly rounded, then the remainder
+ * (h - s^2 + l)/(2 s), with s^2 exact (fma or Dekker) and h - s^2 exact (Sterbenz): within about 2^-104 of the root
+ */
+static inline double __libc_fast_sqrt_pair(double h, double l, double *lo)
+{
+	double s = __builtin_sqrt(h);
+	struct __libc_dd square = __libc_dd_product(s, s);
+
+	*lo = (((h - square.hi) - square.lo) + l) / (s + s);
+	return s;
 }
 
 /* 0 for a non-integer y, 1 for an odd integer, 2 for an even one (|y| finite) */

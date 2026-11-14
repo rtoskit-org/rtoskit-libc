@@ -688,6 +688,40 @@ static void check_double_inverse_trigonometric(void)
 	QUIET(near_double(asin(0x1.99b41ee9b3ee8p-1), 0x1.daf2a6673616dp-1) && near_double(acos(0x1.a14710bf73068p-1), 0x1.3c745b0f762f5p-1) && near_double(acos(0x1.fffffbd411a02p-1), 0x1.056f08e97b2cp-11));
 }
 
+static void check_double_hyperbolic(void)
+{
+	/*
+	 * P11.05l (the double-FPU cores' sinh, cosh, tanh, asinh, acosh and atanh, D201; the strict files elsewhere): the
+	 * special values, the poles, overflow and the domain errors, each side of 2^-27, of the series' ends (1/2 for sinh, 1/4
+	 * for tanh), of 22 (the kernel's end) and of 2^28 (asinh's and acosh's log 2|x|), the largest finite sinh and cosh, the
+	 * doubles next to 1 for acosh and atanh, and the sweeps' worst points: sinh and tanh rounded the series' x^3 term (0.61
+	 * and 0.56 ulp next to 1/2 and 1/4) and the kernel's (S1 + S2) u (0.54 and 0.556 just above them), and acosh compared
+	 * a quiet NaN signalling (invalid)
+	 */
+	QUIET(sinh(0.0) == 0.0 && signbit(sinh(-0.0)) && sinh(-INFINITY) == -INFINITY && cosh(0.0) == 1.0 && cosh(-INFINITY) == INFINITY && tanh(INFINITY) == 1.0 && tanh(-INFINITY) == -1.0 && signbit(tanh(-0.0)));
+	QUIET(signbit(asinh(-0.0)) && asinh(-INFINITY) == -INFINITY && acosh(1.0) == 0.0 && !signbit(acosh(1.0)) && acosh(INFINITY) == INFINITY && signbit(atanh(-0.0)));
+	QUIET(isnan(sinh(NAN)) && isnan(cosh(NAN)) && isnan(tanh(NAN)) && isnan(asinh(NAN)) && isnan(acosh(NAN)) && isnan(atanh(NAN)));
+	RAISES(sinh(0x1.633ce8fb9f87ep+9) == INFINITY && sinh(-711.0) == -INFINITY && cosh(-0x1.633ce8fb9f87ep+9) == INFINITY, FE_OVERFLOW);
+	RAISES(isnan(acosh(0x1.fffffffffffffp-1)) && isnan(acosh(-INFINITY)) && isnan(atanh(0x1.0000000000001p+0)) && isnan(atanh(-INFINITY)), FE_INVALID);
+	RAISES(atanh(1.0) == INFINITY && atanh(-1.0) == -INFINITY, FE_DIVBYZERO);
+	RAISES(sinh(0x1p-1074) == 0x1p-1074 && tanh(-0x1p-1060) == -0x1p-1060 && asinh(0x1p-1050) == 0x1p-1050 && atanh(0x1p-1040) == 0x1p-1040, FE_UNDERFLOW);
+	QUIET(near_double(sinh(0x1.0000000000000p-27), 0x1.0000000000000p-27) && near_double(sinh(0x1.0000000000001p-27), 0x1.0000000000001p-27) && near_double(sinh(0x1.0000000000000p-1), 0x1.0acd00fe63b97p-1) && near_double(sinh(0x1.fffffffffffffp-2), 0x1.0acd00fe63b96p-1));
+	QUIET(near_double(sinh(-22.0), -0x1.ab5adb9c43600p+30) && near_double(sinh(0x1.6000000000001p+4), 0x1.ab5adb9c4361ap+30) && near_double(sinh(0x1.e566c45dc963cp-2), 0x1.f7c8f65b1b781p-2) && near_double(sinh(0x1.70bfdc8f25757p-1), 0x1.91772537e0223p-1));
+	QUIET(near_double(sinh(0x1.daae675affd90p+8), 0x1.c40a38f952c41p+683) && near_double(sinh(-0x1.0070a9ed604c0p+9), -0x1.e7a6416fdb39dp+738) && near_double(sinh(-0x1.633ce8fb9f87dp+9), -0x1.ffffffffffd3bp+1023));
+	QUIET(near_double(cosh(0x1.0000000000000p-27), 0x1.0000000000000p+0) && near_double(cosh(0x1.0000000000000p-1), 0x1.20ac1862ae8d0p+0) && near_double(cosh(0x1.fffffffffffffp-2), 0x1.20ac1862ae8d0p+0) && near_double(cosh(22.0), 0x1.ab5adb9c43600p+30));
+	QUIET(near_double(cosh(0x1.6000000000001p+4), 0x1.ab5adb9c4361ap+30) && near_double(cosh(-0x1.412fa76365ae1p+4), 0x1.f24b4f98433adp+27) && near_double(cosh(-0x1.70c1114ec3a75p-1), 0x1.455105b77ebcbp+0) && near_double(cosh(0x1.633ce8fb9f87dp+9), 0x1.ffffffffffd3bp+1023));
+	QUIET(near_double(cosh(0x1.0000000000000p-7), 0x1.00020000aaaacp+0) && near_double(cosh(0x1.62e42fefa39efp-8), 0x1.0000f5fe17617p+0));
+	QUIET(near_double(tanh(0x1.0000000000000p-27), 0x1.0000000000000p-27) && near_double(tanh(0x1.0000000000000p-2), 0x1.f597ea69a1c86p-3) && near_double(tanh(0x1.fffffffffffffp-3), 0x1.f597ea69a1c85p-3) && near_double(tanh(-0x1.0507d2c659529p-2), -0x1.ff0a21fb59783p-3));
+	QUIET(near_double(tanh(0x1.fc1fe8f68df40p-3), 0x1.f1f2e7b24701fp-3) && near_double(tanh(-0x1.4746787048c76p-2), -0x1.3c91afc43db57p-2) && near_double(tanh(0x1.5ffffffffffffp+4), 0x1.0000000000000p+0) && near_double(tanh(22.0), 0x1.0000000000000p+0));
+	QUIET(near_double(tanh(0x1.8000000000000p+0), 0x1.cf6f9786df577p-1));
+	QUIET(near_double(asinh(0x1.0000000000000p-27), 0x1.0000000000000p-27) && near_double(asinh(0x1.0000000000001p-27), 0x1.0000000000001p-27) && near_double(asinh(0x1.fffffffffffffp+27), 0x1.419ecb712c481p+4) && near_double(asinh(268435456.0), 0x1.419ecb712c481p+4));
+	QUIET(near_double(asinh(-0x1.fffffffffffffp+1023), -0x1.633ce8fb9f87ep+9) && near_double(asinh(-0x1.89d82e37a1140p-9), -0x1.89d807608ad4bp-9) && near_double(asinh(0x1.6a9cec9847f96p-9), 0x1.6a9cce480077bp-9) && near_double(asinh(0x1.8000000000000p+0), 0x1.31dc0090b63d8p+0));
+	QUIET(near_double(acosh(0x1.0000000000001p+0), 0x1.6a09e667f3bccp-26) && near_double(acosh(0x1.0000000000002p+0), 0x1.0000000000000p-25) && near_double(acosh(2.0), 0x1.5124271980435p+0) && near_double(acosh(0x1.fffffffffffffp+27), 0x1.419ecb712c481p+4));
+	QUIET(near_double(acosh(268435456.0), 0x1.419ecb712c481p+4) && near_double(acosh(0x1.fffffffffffffp+1023), 0x1.633ce8fb9f87ep+9) && near_double(acosh(0x1.00003ecfe279fp+0), 0x1.66a9ac9f57e97p-9) && near_double(acosh(0x1.00003f79df1eep+0), 0x1.688db80250a35p-9));
+	QUIET(near_double(atanh(0x1.0000000000000p-27), 0x1.0000000000000p-27) && near_double(atanh(0x1.0000000000001p-27), 0x1.0000000000001p-27) && near_double(atanh(0x1.0000000000000p-1), 0x1.193ea7aad030bp-1) && near_double(atanh(0x1.fffffffffffffp-1), 0x1.2b708872320e2p+4));
+	QUIET(near_double(atanh(-0x1.fffffffffffffp-1), -0x1.2b708872320e2p+4) && near_double(atanh(-0x1.81addd31454f5p-10), -0x1.81adef6dfdbc5p-10) && near_double(atanh(0x1.6424848a9aee2p-10), 0x1.642492e6bd009p-10));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -706,6 +740,7 @@ int main(void)
 	check_double_powers();
 	check_double_trigonometric();
 	check_double_inverse_trigonometric();
+	check_double_hyperbolic();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

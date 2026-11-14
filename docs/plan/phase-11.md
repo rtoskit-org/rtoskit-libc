@@ -482,8 +482,11 @@ P11.05k was split into k1 and k2 (CLAUDE.md workflow), as P11.04f was: each
 half needs its own fixed-point building block, a 64-bit quotient for the
 arctangent and a 64-bit square root for the half-angle forms.
 
-### P11.05l — The hyperbolic functions on the double-FPU cores  `[ ]`
-- [ ] Over P11.05b's and d's evaluations; tests, gains.
+### P11.05l — The hyperbolic functions on the double-FPU cores  `[x]`
+- [x] Over P11.05b's and d's evaluations; tests, gains (D201; the note, §19):
+  sinh, cosh and tanh over one kernel on P11.05b's table, asinh, acosh and
+  atanh as the logarithm of a pair over P11.05d's; at most 0.5493 ulp
+  (`sinh`, `cosh` above 22, exp's own error) and 0.52 for the rest.
 
 ### P11.05m — The hyperbolic functions on the soft-double cores  `[ ]`
 - [ ] Over P11.05c's and e's kernels; tests, gains.

@@ -1312,3 +1312,133 @@ AOR has no scalar double `asin` or `acos`.
 
 **Size:** the kernel is 988 bytes on armv7e-m, `asin` 248 and `acos` 152,
 with the 48-byte seed table. No size program calls them; every budget holds.
+
+## 19. The hyperbolic functions on the double-FPU cores (P11.05l)
+
+`libc/math/fast/sinh.c`, `cosh.c`, `tanh.c`, `asinh.c`, `acosh.c` and
+`atanh.c`, on x86_64 and armv7e-m-dp (the soft-double cores run them on
+their helpers until P11.05m). The strict files finish in double-double over
+`__libc_exp_dd`, `__libc_log1p_dd` and a double-double square root: 192–287
+instructions on armv7e-m-dp, 284–549 on x86_64.
+
+### 19.1 Sources (ideas only)
+
+Read 2026-11-14:
+
+- **FreeBSD msun `e_sinh.c`, `e_cosh.c`, `s_tanh.c`**
+  (<https://raw.githubusercontent.com/freebsd/freebsd-src/main/lib/msun/src/e_sinh.c>,
+  `.../e_cosh.c`, `.../s_tanh.c`): `expm1` of |x| up to 22 (rearranged
+  below 1 so that nothing cancels), e^|x|/2 from 22 to ln(DBL_MAX), a scaled
+  exponential up to the overflow threshold; `cosh` takes 1 + a term from
+  `expm1` below ln 2/2; `tanh` is −t/(t + 2) with t = expm1(−2|x|) below 1,
+  1 − 2/(expm1(2|x|) + 2) up to 22, ±1 beyond. No stated bounds.
+- **FreeBSD msun `s_asinh.c`, `e_acosh.c`, `e_atanh.c`**
+  (`.../s_asinh.c`, `.../e_acosh.c`, `.../e_atanh.c`): `asinh` as
+  log1p(|x| + x²/(1 + √(1 + x²))) up to 2, then log 2|x| + 1/(√(x² + 1) + |x|),
+  and log|x| + ln 2 from 2^28; `acosh` as log1p(t + √(2t + t²)), t = x − 1,
+  up to 2, log 2x − 1/(x + √(x² − 1)) up to 2^28; `atanh` as
+  log1p(2x + 2x²/(1 − x))/2 below 1/2, log1p(2x/(1 − x))/2 above. Each
+  rearranges the argument so that the logarithm near 0 goes through `log1p`.
+- **AOR's AdvSIMD `sinh` and `asinh`**
+  (<https://raw.githubusercontent.com/ARM-software/optimized-routines/master/math/aarch64/advsimd/sinh.c>,
+  `.../asinh.c`): `sinh` as (t + t/(t + 1))/2 with t = expm1|x|, a scaled
+  path from 709; `asinh` as a polynomial of order 17 below 1 and a table log
+  of |x| + √(x² + 1) above (2.52 and 2.87 ulp in their comments).
+
+### 19.2 The method
+
+- **sinh, cosh, tanh: one kernel over P11.05b's table**
+  (`__libc_fast_sinhcosh`, 0 ≤ a ≤ 22). P11.05b's reduction gives
+  a = k·ln 2/64 + u, and e^±a = S±(1 + t± + p(±u)), with S± = 2^(±k/64) and
+  their tails t± from the same table entries. p(u) = E + O with E and O the
+  even and odd parts of exp's polynomial: O is within 2^-60.2 of sinh u − u
+  relatively, E within 2^-57.4 of cosh u − 1 (measured here). So
+  - S+e^u − S−e^-u = (S+ − S−) + S+(t+ + E) − S−(t− + E) + (S+ + S−)·O;
+  - the sum likewise, with the signs exchanged.
+
+  S+ − S− and S+ + S− are fast two-sums (S+ ≥ S−). E's error stays relative
+  to the difference and O's to the sum, so nothing cancels badly. In the
+  difference, (S+ + S−)·u is up to 2^-6.9 of it where sinh and tanh use the
+  kernel; it is an exact product added by a fast two-sum. The halving of
+  sinh and cosh goes into the scales' exponents.
+- **sinh:** below 1/2 the odd series x + x³/6 + x⁵·Q(x²), with 1/6 as a pair
+  and Q of five terms fitted here (2^-63.4 relative); x² and x³ are exact
+  pairs and x³/6 an exact product added by a fast two-sum
+  (`__libc_fast_odd_series`). From 1/2 to 22 the kernel; beyond, e^|x|/2
+  with exp's polynomial and the table tail in its last step, the scale
+  halved and the sum doubled above 2^1023; overflow above
+  0x1.633ce8fb9f87dp+9, the last double whose result is finite.
+- **cosh:** the kernel from 2^-27 to 22 with no series (at k = 0 it is
+  1 + E), then sinh's e^|x|/2.
+- **tanh:** below 1/4 the odd series x − x³/3 + x⁵·Q(x²), Q of seven terms
+  (2^-61.0); up to 22 the kernel's two pairs, normalized, and their quotient
+  with its exact remainder; ±(1 − tiny) from 22.
+- **asinh, acosh, atanh: the logarithm of a pair** (`__libc_fast_log_pair`):
+  P11.05d's evaluation of log hi, with lo/hi added to its tail, and k + 1
+  for log 2·hi. The argument is formed accurately enough (to about 2^-104)
+  that no `log1p` rearrangement is needed: near a result of 0, hi is near 1,
+  where the table's entry has invc = 1 and the pair is r + r²·P(r) + lo/hi,
+  relative however small it is.
+  - asinh |x| = log(|x| + √(x² + 1)): x² exact, 1 + x² by a two-sum, the
+    square root with its remainder (`__libc_fast_sqrt_pair`), |x| + s by a
+    fast two-sum; log|x| + ln 2 from 2^28 (the term 1/(4x²) is below 2^-58).
+  - acosh x = log(x + √(x² − 1)): x² − 1 exact up to 2 (Sterbenz) and by a
+    fast two-sum above, normalized; log x + ln 2 from 2^28.
+  - atanh |x| = log((1 + |x|)/(1 − |x|))/2: both terms exact pairs, their
+    quotient with its exact remainder.
+- **Found along the way:**
+  - The series first rounded the x³ term with the rest: 4 % of sinh at 1/2
+    and 2 % of tanh at 1/4, 0.61 and 0.56 ulp next to them. With the exact
+    leading term, 0.54 and 0.556.
+  - The kernel first rounded (S+ + S−)·O whole: up to 2^-6.9 of the
+    difference just above the series' ends, 0.537 and 0.556 ulp there. With
+    its leading product exact, 0.537 and 0.520.
+  - e^|x|/2 first added the table's tail and the polynomial apart, through
+    `__libc_fast_exp_scale`: 0.5503 ulp near 514. With the tail in the
+    polynomial's last step, as `exp.c` does, 0.5493.
+  - `acosh` tested 1 < x < 2^28 by relational comparisons, which raise
+    invalid for a quiet NaN; `libm_vectors` caught it in `acosh`, and in
+    `acoshl` and `acoshf`, which reach the double `acosh` for a NaN. The
+    comparisons are now quiet.
+
+### 19.3 Measured (P11.05l)
+
+On the host, against long double, 1.4·10^9 samples per function on the
+SSE2 and the fma paths, which agree bit for bit (|x| uniform in [0, 1],
+log-uniform over 2^-27 to 2^5 and uniform in [0, 22] for sinh, cosh and
+tanh, plus [22, 710.5] for sinh and cosh; log-uniform to 2^40 and 2^1023 for
+asinh and acosh, 1 + 2^-k·u for acosh, 1 − 2^-k·u for atanh), and 4·10^8
+more over [22, 710.5] after e^|x|/2's fix:
+
+| Function | worst | not correctly rounded |
+| --- | ---: | ---: |
+| `sinh` | 0.5493 (above 22; 0.5371 below) | 0.19–0.59 % |
+| `cosh` | 0.5493 (above 22; 0.5317 below) | 0.42–0.59 % |
+| `tanh` | 0.5215 | 0.15–0.20 % |
+| `asinh` | 0.5151 | 0.006 % |
+| `acosh` | 0.5166 | 0.006 % |
+| `atanh` | 0.5161 | 0.008 % |
+
+The worst `sinh` and `cosh` results are e^|x|/2's, exp's own error (P11.05b
+measured 0.547 for `exp`).
+
+Instructions per call (speed → fast):
+
+| Function | armv7e-m-dp | x86_64 | armv7e-m (helpers) | armv7-m (helpers) | armv6-m (helpers) |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `sinh` | 200 → 107 | 305 → 134 | 6367 → 3277 | 6585 → 3328 | 17,842 → 9200 |
+| `cosh` | 192 → 79 | 284 → 82 | 5954 → 1803 | 6166 → 1838 | 16,696 → 5297 |
+| `tanh` | 202 → 137 | 331 → 193 | 7193 → 5831 | 7444 → 6115 | 20,152 → 16,684 |
+| `asinh` | 287 → 107 | 549 → 183 | 15,215 → 6943 | 15,719 → 7166 | 39,784 → 18,468 |
+| `acosh` | 246 → 101 | 479 → 177 | 13,378 → 7051 | 13,773 → 7265 | 34,248 → 18,611 |
+| `atanh` | 217 → 90 | 383 → 138 | 9286 → 4056 | 9757 → 4390 | 25,834 → 12,620 |
+
+armv8-m.main equals armv7e-m and armv6s-m armv6-m. The soft-double cores run
+these double files on their helpers until P11.05m. AOR has no scalar double
+hyperbolic function.
+
+**Size:** on armv7e-m-dp `sinh` is 1094 bytes, `cosh` 720, `tanh` 1002,
+`asinh` 686, `acosh` 560 and `atanh` 584, over the 1 KiB exp table and the
+3 KiB log table that `exp`, `log` and `pow` already use. The strict files
+are smaller (392–582 bytes) but pull the double-double exp and log cores. No
+size program calls a hyperbolic function; every budget holds.
