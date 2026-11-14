@@ -488,8 +488,16 @@ arctangent and a 64-bit square root for the half-angle forms.
   atanh as the logarithm of a pair over P11.05d's; at most 0.5493 ulp
   (`sinh`, `cosh` above 22, exp's own error) and 0.52 for the rest.
 
-### P11.05m — The hyperbolic functions on the soft-double cores  `[ ]`
-- [ ] Over P11.05c's and e's kernels; tests, gains.
+### P11.05m — The hyperbolic functions on the soft-double cores
+Split, as P11.04g was: the two halves rest on different kernels.
+
+### P11.05m1 — `sinh`, `cosh`, `tanh` on the soft-double cores  `[x]`
+- [x] Over P11.05c's exp kernel (e^|x| and e^-|x| on one integer scale, a 64-bit
+  quotient for tanh); tests, gains (D202; the note, §20): at most 0.5083 ulp;
+  `tanh` 7193 → 500 instructions on armv7e-m.
+
+### P11.05m2 — `asinh`, `acosh`, `atanh` on the soft-double cores  `[ ]`
+- [ ] Over P11.05e's log kernel and P11.05k2's square root; tests, gains.
 
 ### P11.05n — `erf` on the double-FPU cores  `[ ]`
 - [ ] (AOR: 69 instructions on armv7e-m-dp); tests, gains.
