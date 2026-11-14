@@ -1340,3 +1340,13 @@ AOR has no scalar double hyperbolic function.
 | `erf` | 12171 | 3206 | -74 % |
 
 AOR's `erf`: 8263.
+
+## P11.05o — Fast `erf` in fixed point (D205)
+
+`libc/math/dp-fixed/fast/erf.c`: 22 pieces of width 1/4 from 1/2, erf(a) + u Q(u) in Q64 with u exact from x's bits and Q signed in Q63; x K(4x^2) in Q62 below 1/2. No soft-double operation on the common path. Instructions per call (throughput): speed, P11.05n's fast (the double file on the soft-double helpers) and now; release and speed unchanged.
+
+| Function | speed | P11.05n | fast | change from speed |
+|---|---:|---:|---:|---:|
+| `erf` | 12171 | 3206 | 518 | -96 % |
+
+AOR's `erf`: 8263.

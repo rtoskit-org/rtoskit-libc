@@ -943,3 +943,7 @@ Release and speed unchanged (`size-report diff`). In fast, no size program calls
 ## P11.05n — Fast `erf` in double (D204)
 
 Release and speed unchanged (`size-report diff`). In fast, `erf` is 4916 bytes on armv6-m with its 2.5 KiB table of pieces; no size program calls it, every budget holds and nothing is re-locked.
+
+## P11.05o — Fast `erf` in fixed point (D205)
+
+Release and speed unchanged (`size-report diff`). In fast, `erf` is 3852 bytes with its 2288-byte table; no size program calls it, every budget holds and nothing is re-locked.

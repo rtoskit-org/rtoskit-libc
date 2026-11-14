@@ -757,6 +757,13 @@ static void check_double_error_function(void)
 	QUIET(near_double(erf(0x1.4000000000001p-1), 0x1.3f196dcd0f136p-1) && near_double(erf(0x1.c000000000000p-1), 0x1.91724951b8fc6p-1) && near_double(erf(0x1.2000000000000p+0), 0x1.c6dad2829ec62p-1) && near_double(erf(0x1.7000000000000p+1), 0x1.fff9ba420e834p-1));
 	QUIET(near_double(erf(0x1.8000000000000p+1), 0x1.fffd1ac4135f9p-1) && near_double(erf(0x1.7800000000000p+2), 0x1.fffffffffffffp-1) && near_double(erf(0x1.7ffffffffffffp+2), 0x1.0000000000000p+0) && near_double(erf(-0x1.3333333333333p-2), -0x1.50838881dea0fp-2));
 	QUIET(near_double(erf(0x1.1bb8874e36d08p+0), 0x1.c4144a3af4197p-1) && near_double(erf(0x1.1b66f7c6b691ap+0), 0x1.c3de52d6984dfp-1) && near_double(erf(-0x1.d59d70884fd86p-2), -0x1.eefc28d3f3ae9p-2) && near_double(erf(0x1.caa205731e295p-2), 0x1.e4e4f27a916c3p-2));
+	/*
+	 * P11.05o (the soft-double cores' fixed-point erf, D205): each side of the pieces' edges at 3/4, 1, 2 and 4 (the
+	 * index from x's bits changes there), the last piece, and the sweeps' worst points
+	 */
+	QUIET(near_double(erf(0x1.8000000000000p-1), 0x1.6c1c9759d0e5fp-1) && near_double(erf(0x1.7ffffffffffffp-1), 0x1.6c1c9759d0e5fp-1) && near_double(erf(0x1.0000000000000p+0), 0x1.af767a741088bp-1) && near_double(erf(0x1.fffffffffffffp-1), 0x1.af767a741088ap-1));
+	QUIET(near_double(erf(0x1.0000000000000p+1), 0x1.fd9ae142795e3p-1) && near_double(erf(0x1.fffffffffffffp+0), 0x1.fd9ae142795e3p-1) && near_double(erf(0x1.0000000000000p+2), 0x1.ffffff7b91176p-1) && near_double(erf(0x1.fffffffffffffp+1), 0x1.ffffff7b91176p-1));
+	QUIET(near_double(erf(0x1.7000000000000p+2), 0x1.ffffffffffffcp-1) && near_double(erf(0x1.7ffffffffffffp+2), 0x1.0000000000000p+0) && near_double(erf(0x1.bf47914be88f1p+1), 0x1.ffffe606932f0p-1) && near_double(erf(-0x1.bf478084cca96p+1), -0x1.ffffe6067a7b7p-1));
 }
 
 int main(void)
