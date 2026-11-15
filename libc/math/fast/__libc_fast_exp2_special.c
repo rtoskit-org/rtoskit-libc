@@ -17,13 +17,13 @@
 
 /*
  * The slow path of the fast exp2 (libc/math/fast/exp2.c and libc/math/dp-fixed/fast/exp2.c, PLAN D187, D188): tiny
- * arguments, the ends, the infinities and NaN, by the strict file's double-double core (rare; the core is shared with pow)
+ * arguments, the ends, the infinities and NaN; between the common path's edge and the ends, the common path's own
+ * reduction and polynomial with __libc_fast_exp_scale's two-step scaling (P11.06h, D211 D), no strict core
  */
 double __libc_fast_exp2_special(double x)
 {
-	struct __libc_dd value;
-	struct __libc_dd z;
-	int exponent;
+	double kd;
+	int32_t k;
 
 	if (isnan(x))
 		return x + x;
@@ -36,8 +36,7 @@ double __libc_fast_exp2_special(double x)
 	/* Integers exactly, with no exception (the strict file's rule: 2^-1074 is not an underflow) */
 	if (x == trunc(x))
 		return scalbn(1.0, (int)x);
-	z = __libc_dd_product(x, __LIBC_LN2.hi);
-	z = __libc_dd_fast_sum(z.hi, z.lo + x * __LIBC_LN2.lo);
-	value = __libc_exp_core(z.hi, z.lo, &exponent);
-	return __libc_exp_scale(value, exponent);
+	/* From 512 to the ends: the common path's reduction (x - k/64 exact) and polynomial, scaled in two steps (P11.06h) */
+	k = __libc_fast_exp_index(x * 64.0, &kd);
+	return __libc_fast_exp_scale(k, __libc_fast_exp2m1_tail(x - kd * 0x1p-6, 0.0));
 }

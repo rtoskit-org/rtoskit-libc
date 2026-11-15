@@ -739,3 +739,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks fr
 ## P11.06g — `atan2`'s slow path by scaling (D213)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 20112 to 18758 bytes of code (-1354): `atan2`'s slow path no longer links the strict `atan2` core, its table, `atan_unit`, the double-double division or `__libc_exp_scale`. The locked figures are left for P11.06j.
+
+## P11.06h — The exponentials' ends on the fast kernel (D214)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 18758 to 17520 bytes of code (-1238): `exp`'s special path takes the common path's kernel with `__libc_fast_exp_scale`, in place of `__libc_exp_core`, its table and `__libc_exp_scale`. The locked figures are left for P11.06j.

@@ -682,6 +682,11 @@ static void check_double_powers(void)
 	QUIET(near_double(cbrt(0x1.ffffffffffffdp+2), 0x1.fffffffffffffp+0) && near_double(cbrt(0x1.0000000000001p+3), 0x1p+1) && near_double(cbrt(0x1.fffffffffffffp-1), 0x1p+0) && near_double(cbrt(0x1.fffffffffffffp+0), 0x1.428a2f98d728bp+0));
 	QUIET(near_double(cbrt(0x1.fffffffffffffp+1), 0x1.965fea53d6e3cp+0) && near_double(cbrt(0x1p-1022), 0x1.428a2f98d728bp-341) && near_double(cbrt(0x0.fffffffffffffp-1022), 0x1.428a2f98d728ap-341) && near_double(cbrt(0x1p-1073), 0x1.428a2f98d728bp-358));
 	QUIET(near_double(cbrt(-0x1.fa7265fd9d029p+416), -0x1.fe2468c2b1ec5p+138) && near_double(cbrt(-0x1.c54bcf4dbdb0fp-1), -0x1.eba1effdff152p-1));
+	/*
+	 * Subnormal results through __libc_fast_exp_scale (P11.06h, D214): rounded to 53 bits at the 2^1022 scale and then
+	 * to the subnormal grid, pow reached 0.77 ulp and exp2's slow path 0.76 (regression); now rounded once
+	 */
+	CHECK(pow(0x1.96c60c2041e36p+0, -0x1.7e73d85f285bep+10) == 0x0.f9291f5a8e9bdp-1022 && exp2(-0x1.ff26fefca1f4dp+9) == 0x0.cf443beaf436dp-1022);
 }
 
 static void check_double_trigonometric(void)

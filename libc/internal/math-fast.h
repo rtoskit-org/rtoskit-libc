@@ -1416,9 +1416,9 @@ static inline uint64_t __libc_fast_exp_scale_bits(const uint64_t *entry, int32_t
  * 2^(k/64) (1 + p) rounded once for |p| < 2^-6, as scale + scale (tail + p), the ends tested (the common paths, below
  * 2^1014 in magnitude, build the scale themselves from __libc_fast_exp_entry with no test): the tail is below 2^-53 and its product with p below 2^-59, so before the last
  * addition the error is about 2^-57 of the result. From 2^1023 the scale is halved and the sum doubled (exact, or the
- * overflow); below 2^-1014 it is scaled by 2^1022 and the sum multiplied by 2^-1022, a second rounding only to the
- * subnormal grid (and the underflow when it is inexact): unscaled, scale tmp would already be subnormal there and lose
- * bits (0.76 ulp measured at 2^-1020).
+ * overflow); below 2^-1014 it is scaled by 2^1022 and the sum multiplied by 2^-1022 (unscaled, scale tmp would already
+ * be subnormal there and lose bits, 0.76 ulp measured at 2^-1020), a subnormal result rounded once onto its grid at
+ * that scale (P11.06h).
  */
 
 /*
@@ -1442,8 +1442,34 @@ static inline double __libc_fast_exp_scale(int32_t k, double p)
 		return 2.0 * (scale + scale * tmp);
 	}
 	if (n < -1014) {
+		double y;
+
 		scale = __libc_double_from(__libc_fast_exp_scale_bits(entry, n + 1022));
-		return (scale + scale * tmp) * 0x1p-1022;
+		y = scale + scale * tmp;
+		/*
+		 * Below 2^-1022 the result's grid is 2^-52 at this scale: 1 + y rounds y onto it once, with y's own rounding
+		 * error carried in (P11.06h; rounded to 53 bits first, then to the grid, it reached 0.76 ulp), then the scaling
+		 * is exact, so underflow is raised by hand when the result is not the sum as rounded to 53 bits. The sum is +0, not -0, rounding downward.
+		 */
+		if (y < 1.0) {
+			double lo = (scale - y) + scale * tmp;
+			double hi = 1.0 + y;
+
+			double sum;
+
+			lo = ((1.0 - hi) + y) + lo;
+			sum = hi + lo;
+			/*
+			 * Underflow when the result is not y as summed (y off the grid, or moved by its error): an exact result
+			 * (pow(0x1.8p-1070, 1)) is within 2^-58 of the grid point but not on it as computed, and raises none
+			 */
+			if (sum - 1.0 != y)
+				__libc_math_raise_underflow();
+			y = sum - 1.0;
+			if (y == 0)
+				y = 0.0;
+		}
+		return y * 0x1p-1022;
 	}
 	scale = __libc_double_from(__libc_fast_exp_scale_bits(entry, n));
 	return scale + scale * tmp;
