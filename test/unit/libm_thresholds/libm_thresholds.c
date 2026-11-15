@@ -627,6 +627,16 @@ static void check_double_logarithms(void)
 	QUIET(near_double(log1p(1.0), 0x1.62e42fefa39efp-1) && near_double(log1p(-0x1.6a09e667b433dp-8), -0x1.6b0ad8c4c5c1fp-8) && log1p(0x1p-61) == 0x1p-61);
 	CHECK(log1p(-0x1p-1074) == -0x1p-1074 && log1p(0x1p-1074) == 0x1p-1074);
 	/*
+	 * P11.06i (the 64-entry table, D215): each side of its ends (0x1.6a041p-1 and its double) and of the edges of the
+	 * entry holding 1, whose neighbours' r^3/log z sets pow's error; the powers of 2, which log now takes out of line, and
+	 * pow's worst point with 1 two thirds into its entry (0.6045 ulp, regression) and the sweeps' worst
+	 */
+	QUIET(near_double(log(0x1.6a041p-1), -0x1.62f4b2e34a3fbp-2) && near_double(log(0x1.6a040ffffffffp-1), -0x1.62f4b2e34a3fep-2) && near_double(log(0x1.6a041p+0), 0x1.62d3acfbfcfe3p-2) && near_double(log(0x1.6a040ffffffffp+0), 0x1.62d3acfbfcfe1p-2));
+	QUIET(near_double(log(0x1.fe041p-1), -0x1.fcec9b3f849ccp-9) && near_double(log(0x1.fe040ffffffffp-1), -0x1.fcec9b3f84acdp-9) && near_double(log(0x1.02041p+0), 0x1.010547587e661p-7) && near_double(log(0x1.02040ffffffffp+0), 0x1.010547587e5e2p-7));
+	QUIET(near_double(log2(0x1.02041p+0), 0x1.72cd685d72ba2p-7) && near_double(log2(0x1.fe040ffffffffp-1), -0x1.6f1c7a51804b7p-8) && near_double(log10(0x1.fe041p-1), -0x1.ba0bc5744d6b6p-10) && near_double(log10(0x1.02040ffffffffp+0), 0x1.be7d948ae4342p-9));
+	QUIET(near_double(log(2.0), 0x1.62e42fefa39efp-1) && near_double(log(0.5), -0x1.62e42fefa39efp-1) && near_double(log(0x1p-1022), -0x1.6232bdd7abcd2p+9) && near_double(log(0x1p1023), 0x1.628b76e3a7b61p+9));
+	QUIET(near_double(log1p(0x1.041p-7), 0x1.03093338db0d9p-7) && near_double(pow(0x1.017f01fb5ffdep+0, -0x1.c9b96f7b35c99p+16), 0x1.ddd32a4c6048ep-986) && near_double(pow(0x1.441353fc50994p+0, 0x1.b8c929fa7e018p+9), 0x1.dd32c27c597e9p+299));
+	/*
 	 * P11.05e (the soft-double cores' fixed-point logarithms, D192): each side of the series' band around 1 (open at
 	 * 1 - 2^-5 and 1 + 2^-5) and of its table's ends (45/64 and 90/64), log1p each side of 2^-5 and of the carry into a bit
 	 * 64 at 2^63, the sweeps' worst points, and the regression: 1 - 2^-5 itself went to the series with |s| = 2^-5, where

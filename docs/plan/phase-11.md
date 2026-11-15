@@ -607,11 +607,15 @@ the exit follow (j, k, l).
   rounded once (`pow` 0.7683 → 0.5483 ulp there); `math-mix` armv7e-m-dp
   18,758 → 17,520, the soft-double cores −744 to −864.
 
-### P11.06i — A 64-entry double log table (D211 E)  `[ ]`
-- [ ] `__libc_fast_log_table` halved (1,536 bytes), the polynomial one term
+### P11.06i — A 64-entry double log table (D211 E)  `[x]`
+- [x] `__libc_fast_log_table` halved (1,536 bytes), the polynomial one term
   longer, r = z·invc − 1 still exact (a new grid for invc, or a correction
   term); `log`, `log10`, `log1p` and `pow` inside the fast contract, the
-  instruction cost recorded.
+  instruction cost recorded. D215: both double log tables at 64 entries, 1
+  half way into its entry and each invc chosen for the smallest
+  |r|³/|log z| (`pow` 0.6045 ulp with the old placement, 0.5547 now; `log`
+  0.5063); armv7e-m-dp `log` 66.69 → 65.69 instructions, `log2` and `pow`
+  unchanged, the rest +2, all below AOR; `math-mix` 17,520 → 16,032.
 
 ### P11.06j — Size  `[ ]`
 - [ ] Size: fast budget held, members recorded; `docs/size/`. After the final

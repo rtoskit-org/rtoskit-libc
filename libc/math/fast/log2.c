@@ -17,12 +17,13 @@
 #include "internal/math-fast.h"
 
 /*
- * (log2(1 + r) - r/ln 2)/r^2 for |r| <= 2^-7.47 by its Chebyshev fit of degree 5 in double (r^2 times it within 2^-59.7
- * of log2(1 + r), relatively)
+ * (log2(1 + r) - r/ln 2)/r^2 for |r| <= 2^-6.607 by its Chebyshev fit of degree 6 in double (r^2 times it within
+ * 2^-61.61 of log2(1 + r), relatively; PLAN D215), in Horner's order: on x86_64 the order of
+ * __libc_fast_log_poly took one more register move (P11.06i)
  */
-static inline double log2_poly(double r, double r2)
+static inline double log2_poly(double r)
 {
-	return -0x1.71547652b8300p-1 + r * 0x1.ec709dc3a0400p-2 + r2 * (-0x1.71547650f4a2ep-2 + r * 0x1.2776c50d685efp-2 + r2 * (-0x1.ec7520d6b23b6p-3 + r * 0x1.a61b656377ec0p-3));
+	return -0x1.71547652b82fep-1 + r * (0x1.ec709dc3a056ep-2 + r * (-0x1.71547652b8449p-2 + r * (0x1.2776c4f4484d0p-2 + r * (-0x1.ec709d9394027p-3 + r * (0x1.a626dd95a107bp-3 + r * -0x1.716264f77e824p-3)))));
 }
 
 /*
@@ -68,5 +69,5 @@ double log2(double x)
 	lo = (w - hi) + t + (te + entry->tail);
 	r2 = r * r;
 
-	return lo + r2 * log2_poly(r, r2) + hi;
+	return lo + r2 * log2_poly(r) + hi;
 }

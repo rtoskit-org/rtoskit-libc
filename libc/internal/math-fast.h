@@ -1568,10 +1568,11 @@ double __libc_fast_exp2_special(double x);
 double __libc_fast_exp10_special(double x);
 
 /*
- * The fast double logarithms (libc/math/fast/, PLAN D190): x = 2^k z with z in [0x1.6955p-1, 0x1.6955p+0), the
- * entry by the top 7 bits of z's fraction, r = z invc - 1 exactly (invc of at most 10 bits, chosen per entry so that
- * |r| <= 2^-7.47 and r fits 53 bits), and -log(invc) in the table's units as logc, a multiple of 2^-43 (2^-42 for log2)
- * so that k ln 2 + logc is exact, plus its tail
+ * The fast double logarithms (libc/math/fast/, PLAN D190, D215): x = 2^k z with z in [0x1.6a041p-1, 0x1.6a041p+0), the
+ * entry by the top 6 bits of z's fraction (64 entries, P11.06i), r = z invc - 1 exactly (invc of at most 10 bits, chosen
+ * per entry for the smallest |r|^3/|log z|, the share of pow's error that cancellation amplifies, among those that keep
+ * r within 53 bits: |r| <= 2^-6.607), and -log(invc) in the table's units as logc, a multiple of 2^-43 (2^-42 for log2) so
+ * that k ln 2 + logc is exact, plus its tail
  */
 struct __libc_fast_log_entry {
 	double invc;
@@ -1580,24 +1581,25 @@ struct __libc_fast_log_entry {
 };
 
 /* In natural logarithms (__libc_fast_log_table.c) and in base 2 (__libc_fast_log2_table.c) */
-extern const struct __libc_fast_log_entry __libc_fast_log_table[128];
-extern const struct __libc_fast_log_entry __libc_fast_log2_table[128];
+extern const struct __libc_fast_log_entry __libc_fast_log_table[64];
+extern const struct __libc_fast_log_entry __libc_fast_log2_table[64];
 
 /* The logarithms of x <= 0, +inf and NaN (C23 7.12.6.11, F.10.3.7): -inf with divide-by-zero, invalid, inf, NaN */
 double __libc_fast_log_special(double x);
 
 /*
  * The entry for a positive normal x's bits (or a subnormal's, scaled by 2^52 and the exponent taken back): z and k with
- * x = 2^k z, the offset putting 1 two thirds of the way into its entry, whose invc is 1
+ * x = 2^k z, the offset putting 1 half way into its entry, whose invc is 1 (P11.06i: next to it |log z| >= 2^-8, so that
+ * r^3/log z, the share of pow's error that the log's cancellation amplifies, stays within 2^-13.97)
  */
 static inline const struct __libc_fast_log_entry *__libc_fast_log_reduce(const struct __libc_fast_log_entry *table, uint64_t ix, double *z, int32_t *k)
 {
-	uint64_t tmp = ix - 0x3fe68aaa00000000ull;
+	uint64_t tmp = ix - 0x3fe6a04100000000ull;
 
 	*k = (int32_t)((int64_t)tmp >> 52);
 	*z = __libc_double_from(ix - (tmp & 0xfff0000000000000ull));
 
-	return &table[(tmp >> 45) & 127];
+	return &table[(tmp >> 46) & 63];
 }
 
 /*
@@ -1616,12 +1618,14 @@ static inline double __libc_fast_log_r(double z, double invc)
 }
 
 /*
- * (log1p(r) - r)/r^2 for |r| <= 2^-7.47 by its Chebyshev fit of degree 5 in double (r^2 times it within 2^-60.1 of
- * log1p(r), relatively), in Estrin's order: log, log10 and log1p
+ * (log1p(r) - r)/r^2 for |r| <= 2^-6.607 by its Chebyshev fit of degree 6 in double (r^2 times it within 2^-62.04 of
+ * log1p(r), relatively; degree 5 would be 2^-54.24): log, log10 and log1p. The first two terms, then r^2 times the rest
+ * in Horner's order: one multiply-add a term, no r^4 (P11.06i: one instruction fewer than Estrin's order). Always
+ * inline: at seven terms GCC put it out of line in log1p, which calls it on both of its paths
  */
-static inline double __libc_fast_log_poly(double r, double r2)
+[[gnu::always_inline]] static inline double __libc_fast_log_poly(double r, double r2)
 {
-	return -0x1.0000000000001p-1 + r * 0x1.5555555555557p-2 + r2 * (-0x1.fffffffd8e049p-3 + r * 0x1.999999976d2bcp-3 + r2 * (-0x1.555875f84f672p-3 + r * 0x1.249510d200b2dp-3));
+	return (-0x1.0000000000000p-1 + r * 0x1.5555555555655p-2) + r2 * (-0x1.00000000000e6p-2 + r * (0x1.99999974986dbp-3 + r * (-0x1.555555340774fp-3 + r * (0x1.249d0409485c2p-3 + r * -0x1.0009a835806ccp-3))));
 }
 
 /*

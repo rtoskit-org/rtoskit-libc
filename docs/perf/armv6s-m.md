@@ -1571,3 +1571,7 @@ Unchanged: no bench case reaches the slow path (subnormal, tiny or huge coordina
 ## P11.06h — The exponentials' ends on the fast kernel (D214)
 
 Unchanged: no bench case reaches the special paths (|x| from 512, or 256 for `exp10`), nor a subnormal result.
+
+## P11.06i — A 64-entry double log table (D215)
+
+Unchanged: the soft-double cores' logarithms are fixed-point and do not use the table.
