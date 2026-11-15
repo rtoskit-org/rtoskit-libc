@@ -1174,3 +1174,7 @@ The AOR column is AOR's own function, where it has one (P11.06a's record, `docs/
 | `log` | 67.6 | 65.6 | -3 % | 67.6 |
 | `log2` | 71.6 | 69.6 | -3 % | 72.6 |
 | `log10` | 76.6 | 74.6 | -3 % | — |
+
+## P11.06f — The trigonometric slow path on polynomials in r (D212)
+
+Unchanged: no bench argument reaches the slow path (from 2^20, or next to a zero); the common path is untouched.

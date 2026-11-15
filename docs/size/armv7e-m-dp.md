@@ -731,3 +731,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-float` shrinks 
 ## P11.06d — The high product inlined on the hot chains (D210)
 
 Unchanged: `libc/math/dp-fixed/fast/` is the soft-double cores' only.
+
+## P11.06f — The trigonometric slow path on polynomials in r (D212)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 20312 to 20112 bytes of code (−200) and `math-float` from 5910 to 5654 (−256): the slow path no longer links `__libc_sin_core`, `__libc_cos_core` or the double-double division, and its own polynomials need no table. The locked figures are left for P11.06j.

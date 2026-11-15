@@ -959,3 +959,7 @@ Release and speed unchanged (`size-report diff`). The fast files changed are the
 ## P11.06d — The high product inlined on the hot chains (D210)
 
 Release, speed and fast unchanged: on Armv6-M the hot chains keep calling the out-of-line high product (`muls/fast-high.h`).
+
+## P11.06f — The trigonometric slow path on polynomials in r (D212)
+
+Unchanged: the slow path is the double-FPU cores' only.
