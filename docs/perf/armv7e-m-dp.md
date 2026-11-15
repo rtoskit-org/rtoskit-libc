@@ -1182,3 +1182,7 @@ Unchanged: no bench argument reaches the slow path (from 2^20, or next to a zero
 ## P11.06g — `atan2`'s slow path by scaling (D213)
 
 Unchanged: no bench case reaches the slow path (subnormal, tiny or huge coordinates, or exponents more than 60 apart).
+
+## P11.06h — The exponentials' ends on the fast kernel (D214)
+
+Unchanged: no bench case reaches the special paths (|x| from 512, or 256 for `exp10`), nor a subnormal result.

@@ -598,11 +598,14 @@ the exit follow (j, k, l).
   recorded. D213: at most 0.5010 ulp on 4·10^8 slow-path pairs; `math-mix`
   armv7e-m-dp 20,112 → 18,758, the soft-double cores −2,560 to −2,720.
 
-### P11.06h — `exp`'s and `pow`'s ends on the fast kernel (D211 D)  `[ ]`
-- [ ] The results next to overflow and underflow (`__libc_fast_exp_special`,
+### P11.06h — `exp`'s and `pow`'s ends on the fast kernel (D211 D)  `[x]`
+- [x] The results next to overflow and underflow (`__libc_fast_exp_special`,
   `pow`'s ends) by the fast exponential with a two-step scaling, without
   `__libc_exp_core`, its table and `__libc_exp_scale`; inside the fast
-  contract, bytes recorded.
+  contract, bytes recorded. D214: `exp`, `exp2` and `exp10`'s special paths
+  (`pow`'s ends already were); `__libc_fast_exp_scale`'s subnormal results
+  rounded once (`pow` 0.7683 → 0.5483 ulp there); `math-mix` armv7e-m-dp
+  18,758 → 17,520, the soft-double cores −744 to −864.
 
 ### P11.06i — A 64-entry double log table (D211 E)  `[ ]`
 - [ ] `__libc_fast_log_table` halved (1,536 bytes), the polynomial one term

@@ -1971,3 +1971,73 @@ On the soft-double cores the strict core was soft-float code, hence the
 larger saving; P11.06e estimated about 1,600 bytes for armv7e-m-dp. The
 exactness test costs about 120 bytes on armv7e-m-dp and 370 on the
 soft-double cores. No bench case reaches the slow path.
+
+## 28. exp's ends on the fast kernel (P11.06h, D211 D, D214)
+
+`__libc_fast_exp_special`, `__libc_fast_exp2_special` and
+`__libc_fast_exp10_special` are the slow paths of both fast families: the
+double-FPU cores' `exp`, `exp2` and `exp10` (`libc/math/fast/`) and the
+soft-double cores' fixed-point ones (`dp-fixed/fast/`). They handle the tiny
+arguments, the infinities and NaN, and |x| from the common path's edge (512
+for `exp` and `exp2`, 256 for `exp10`) to the ends. In that last range they
+ran the strict file's double-double core: `__libc_exp_core` (332 bytes), its
+1,024-byte table and `__libc_exp_scale` (272).
+
+`pow`'s ends (P11.05f) already use the common path's reduction and
+polynomial with `__libc_fast_exp_scale`, which scales in two steps. The three
+special paths now do the same:
+- `exp`: k = round(64 x/ln 2), u = x − k ln2/64 in two parts,
+  `__libc_fast_expm1_poly`;
+- `exp2`: k = round(64 x), r = x − k/64 exactly, the 2^r − 1 polynomial
+  (integers still exact by `scalbn`);
+- `exp10`: log10 2 / 64 in two parts, as its common path.
+
+On the soft-double cores this is soft-float code on a rare path. It pulls
+the fast exponential's 1,024-byte table of pairs, which `subdir.mk` now keeps
+for the special paths, in place of the strict core.
+
+### A defect of `__libc_fast_exp_scale`, found and fixed
+
+The first sweep found `exp2` at 0.762 ulp just below 2^-1022. Below 2^-1014
+the helper scales by 2^1022: the sum scale + scale·tmp rounds to 53 bits
+there, and the final multiplication by 2^-1022 rounds it again, onto the
+subnormal grid. `pow`'s ends share the helper: committed since P11.05f, they
+reached 0.7683 ulp for subnormal results (10^8 samples between 2^-1074 and
+2^-1000), which P11.05f's record of 0.5498 missed.
+
+At the 2^1022 scale, the subnormal grid is the multiples of 2^-52, so for
+y < 1:
+- 1 + y rounds y onto that grid once, with y's own rounding error carried
+  in by a fast two-sum (the idea of AOR's `exp`, which handles its special
+  case the same way);
+- then the scaling is exact, so underflow is raised by hand. It is raised
+  only when the result differs from the sum as rounded to 53 bits, the old
+  path's rule. Raised whenever the one rounding is inexact, it flagged exact
+  results: `pow(0x1.8p-1070, 1)` lands within 2^-58 of its grid point,
+  but not on it as computed (`libm_exp`);
+- a zero sum is +0, not −0, rounding downward.
+
+### Measured
+
+2·10^8 samples from the common path's edge to each end, both signs,
+subnormal results included, against long double; and 10^8 `pow` arguments
+with results from 2^-1074 to 2^-1000:
+
+| Function | max ulp |
+|---|---:|
+| `exp` | 0.5483 |
+| `exp2` | 0.5479 |
+| `exp10` | 0.5542 |
+| `pow`, subnormal results | 0.5483 (was 0.7683) |
+
+That matches the common paths' 0.5469, 0.5464 and 0.5527.
+
+`math-mix` (code bytes):
+
+| Core | before | after |
+|---|---:|---:|
+| armv7e-m-dp | 18,758 | 17,520 |
+| armv7e-m | 32,574 | 31,710 |
+| armv8-m.main | 32,486 | 31,622 |
+| armv7-m | 38,608 | 37,848 |
+| armv6-m, armv6s-m | 43,388 | 42,644 |
