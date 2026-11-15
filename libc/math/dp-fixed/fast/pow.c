@@ -145,23 +145,23 @@ static inline struct pow_wide pow_log_table(uint64_t z)
 	uint64_t s;
 
 	if (rh < 0) {
-		s = 0x0000000000000ccdull + __libc_trig_high64(y, 0x0000000000000017ull);
-		s = 0x0000000000071c72ull + __libc_trig_high64(y, s);
-		s = 0x0000000004000000ull + __libc_trig_high64(y, s);
-		s = 0x0000000249249249ull + __libc_trig_high64(y, s);
-		s = 0x0000015555555555ull + __libc_trig_high64(y, s);
-		s = 0x0000cccccccccccdull + __libc_trig_high64(y, s);
-		s = 0x0080000000000000ull + __libc_trig_high64(y, s);
-		s = 0x5555555555555555ull + __libc_trig_high64(y, s);
+		s = 0x0000000000000ccdull + __libc_dp_fixed_hot_high(y, 0x0000000000000017ull);
+		s = 0x0000000000071c72ull + __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000000004000000ull + __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000000249249249ull + __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000015555555555ull + __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000cccccccccccdull + __libc_dp_fixed_hot_high(y, s);
+		s = 0x0080000000000000ull + __libc_dp_fixed_hot_high(y, s);
+		s = 0x5555555555555555ull + __libc_dp_fixed_hot_high(y, s);
 	} else {
-		s = 0x0000000000000ccdull - __libc_trig_high64(y, 0x0000000000000017ull);
-		s = 0x0000000000071c72ull - __libc_trig_high64(y, s);
-		s = 0x0000000004000000ull - __libc_trig_high64(y, s);
-		s = 0x0000000249249249ull - __libc_trig_high64(y, s);
-		s = 0x0000015555555555ull - __libc_trig_high64(y, s);
-		s = 0x0000cccccccccccdull - __libc_trig_high64(y, s);
-		s = 0x0080000000000000ull - __libc_trig_high64(y, s);
-		s = 0x5555555555555555ull - __libc_trig_high64(y, s);
+		s = 0x0000000000000ccdull - __libc_dp_fixed_hot_high(y, 0x0000000000000017ull);
+		s = 0x0000000000071c72ull - __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000000004000000ull - __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000000249249249ull - __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000015555555555ull - __libc_dp_fixed_hot_high(y, s);
+		s = 0x0000cccccccccccdull - __libc_dp_fixed_hot_high(y, s);
+		s = 0x0080000000000000ull - __libc_dp_fixed_hot_high(y, s);
+		s = 0x5555555555555555ull - __libc_dp_fixed_hot_high(y, s);
 	}
 	/* |r|^3 S = y^3 S 2^-21: in Q126, (y^3 S in Q64) 2^41 */
 	y3 = __libc_trig_high64(square.hi, y);

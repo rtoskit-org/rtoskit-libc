@@ -955,3 +955,7 @@ Release and speed unchanged (`size-report diff`). The fast files changed are the
 ## P11.06c — The double path's `sinf`, `cosf`, `sincosf` and `erff` (D209)
 
 Release and speed unchanged (`size-report diff`). The fast files changed are the double-FPU cores' (x86_64, armv7e-m-dp); on this core every fast budget holds and nothing is re-locked.
+
+## P11.06d — The high product inlined on the hot chains (D210)
+
+Release, speed and fast unchanged: on Armv6-M the hot chains keep calling the out-of-line high product (`muls/fast-high.h`).

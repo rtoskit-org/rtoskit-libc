@@ -406,3 +406,7 @@ Release and speed unchanged (`size-report diff`). The fast files changed are the
 ## P11.06c — The double path's `sinf`, `cosf`, `sincosf` and `erff` (D209)
 
 Release and speed unchanged (`size-report diff`). The fast files changed are the double-FPU cores' (x86_64, armv7e-m-dp); on this core every fast budget holds and nothing is re-locked.
+
+## P11.06d — The high product inlined on the hot chains (D210)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` grows from 40192 to 41328 bytes of code (+1136): the inlined high product on the atan series, the log core, `pow`'s logarithm chains and the exp2 fraction. That is within the locked fast figure (41392) and +13.6 % over speed's 36376, inside D191's +20 % line; nothing is re-locked. `pow`'s two products after its chains stay calls, which keeps armv7-m within its lock.

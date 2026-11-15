@@ -42,19 +42,19 @@ int64_t __libc_dp_fixed_log_core(uint64_t z)
 	uint64_t p;
 
 	if (r < 0) {
-		p = B6 + __libc_trig_high64(y, B7);
-		p = B5 + __libc_trig_high64(y, p);
-		p = B4 + __libc_trig_high64(y, p);
-		p = B3 + __libc_trig_high64(y, p);
-		p = B2 + __libc_trig_high64(y, p);
-		p = B1 + __libc_trig_high64(y, p);
+		p = B6 + __libc_dp_fixed_hot_high(y, B7);
+		p = B5 + __libc_dp_fixed_hot_high(y, p);
+		p = B4 + __libc_dp_fixed_hot_high(y, p);
+		p = B3 + __libc_dp_fixed_hot_high(y, p);
+		p = B2 + __libc_dp_fixed_hot_high(y, p);
+		p = B1 + __libc_dp_fixed_hot_high(y, p);
 	} else {
-		p = B6 - __libc_trig_high64(y, B7);
-		p = B5 - __libc_trig_high64(y, p);
-		p = B4 - __libc_trig_high64(y, p);
-		p = B3 - __libc_trig_high64(y, p);
-		p = B2 - __libc_trig_high64(y, p);
-		p = B1 - __libc_trig_high64(y, p);
+		p = B6 - __libc_dp_fixed_hot_high(y, B7);
+		p = B5 - __libc_dp_fixed_hot_high(y, p);
+		p = B4 - __libc_dp_fixed_hot_high(y, p);
+		p = B3 - __libc_dp_fixed_hot_high(y, p);
+		p = B2 - __libc_dp_fixed_hot_high(y, p);
+		p = B1 - __libc_dp_fixed_hot_high(y, p);
 	}
 
 	return entry->logc + r - (int64_t)__libc_trig_high64(a, __libc_trig_high64(y, p));

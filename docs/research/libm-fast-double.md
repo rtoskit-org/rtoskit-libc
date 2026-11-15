@@ -1715,3 +1715,80 @@ with AOR's:
 AOR has no record for armv7-m (518). **Size:** `erf` is 3802 bytes on
 armv7e-m and 3852 on armv6-m, the table 2288 of them. No size program calls
 it; every budget holds.
+
+## 24. Selective inlining of the high product (P11.06d, Q53, D207)
+
+Q53: `libc/math/dp-fixed/fast/` builds at `-Os`, so each object keeps one
+out-of-line copy of `__libc_trig_high64`, the high 64 bits of a 64 × 64
+product, and calls it from every step of its Horner chains: 43 call sites in
+`pow`, 13 in the atan kernel, 12 in the log core. P11.05k1 measured the
+whole module at `-O2`: 7–20 % faster, but 2.6 KB more `math-mix` on
+armv7e-m and 16 KB on armv6-m. The maintainer chose to inline selectively,
+kernel by kernel, and keep only what fits the fast budgets.
+
+### What decides it, core by core
+
+- **On the Thumb-2 cores** (armv7-m, armv7e-m, armv8-m.main) a 32 × 32 → 64
+  product is one `UMULL` (`speed/umull/trig-wide.h`). The high product is
+  two or four of them and a few additions, about the size of the call's
+  argument moves, branch and return. Inlining roughly halves each step.
+- **On Armv6-M** each 32 × 32 product is four 16-bit `MULS` with their
+  carries (`speed/muls/`). The body is several times the call, so an
+  inlined copy costs much more and saves little.
+- **The slack:** the fast budgets give an image no growth over its locked
+  figure. At P11.06c, `math-mix` was 828 bytes below its lock on armv6-m
+  and armv6s-m, 1200 on armv7-m, 1246 on armv7e-m and 1222 on
+  armv8-m.main.
+
+### What was tried
+
+- **A loop** over a coefficient table with one inlined product, the sign of
+  the alternating chains by a mask: one copy per chain, but the mask and the
+  64-bit accumulator spill to the stack on every step. `log` measured 333.6
+  → 438.7 instructions on armv7e-m without the shortcut for a 32-bit b (see
+  below), and 429.2 with it: slower.
+- **The unrolled chains with the product inlined** (kept): one copy per
+  call site, the coefficients still immediates. Where b is a constant, or
+  fits 32 bits as the early Horner terms do, the `b1 == 0` shortcut
+  (`__libc_trig_high64`'s own: two products, the same value) folds or takes
+  two `UMULL`s.
+
+### The design
+
+- `__libc_dp_fixed_hot_high` (`fast-high.h`) in a directory per product
+  variant, picked by `fast.mk` as `speed/` picks `trig-wide.h`: in `umull/`,
+  `__libc_trig_high64`'s body, always inlined; in `muls/`, a call to it, as
+  before. No `#if`: the variant is a header the build selects (D22).
+- Used on the hot chains only, in order of instructions saved per byte:
+  - the atan kernel's series (`atan2` −36 instructions for 152 bytes);
+  - the log core's two chains (`log` −38 for 256);
+  - `pow`'s logarithm chains (−61 for 400);
+  - the exp2 fraction's chain (`exp` −55 for 376; `pow`, `expm1` and the
+    hyperbolic functions through it).
+- `pow`'s two products after its chains (y³ and y³S) stay calls: inlined
+  they took armv7-m 16 bytes over its lock for about 16 instructions.
+
+### Measured
+
+Bit for bit the same results: the inlined body is the called one (the libm
+vectors, the threshold tests and `make check` in all 28 configurations agree).
+Instructions per call on armv7e-m (armv7-m and armv8-m.main within two of
+it), fast before → after:
+
+| Function | before | after |
+|---|---:|---:|
+| `exp` | 315.6 | 260.6 |
+| `exp2` | 279.9 | 224.9 |
+| `expm1` | 345.6 | 292.2 |
+| `log` | 333.6 | 295.3 |
+| `log2` | 348.9 | 310.6 |
+| `pow` | 923.3 | 816.9 |
+| `atan2` | 524.1 | 488.1 |
+| `sinh` | 508.0 | 394.0 |
+| `cosh` | 494.2 | 380.2 |
+| `tanh` | 500.5 | 445.5 |
+
+`math-mix` (code bytes): armv7-m 40,192 → 41,328 (lock 41,392), armv7e-m
+34,006 → 35,134 (35,252), armv8-m.main 33,926 → 35,046 (35,148): +13.6 %,
++17.2 % and +17.2 % over speed, inside D191's +20 % line. armv6-m and
+armv6s-m are unchanged, byte for byte.

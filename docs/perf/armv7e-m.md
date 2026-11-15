@@ -1350,3 +1350,27 @@ AOR's `erf`: 8263.
 | `erf` | 12171 | 3206 | 518 | -96 % |
 
 AOR's `erf`: 8263.
+
+## P11.06d — The high product inlined on the hot chains (D210)
+
+`libc/math/dp-fixed/fast/`: `__libc_dp_fixed_hot_high` (`umull/fast-high.h`), the high product always inlined, on the atan series, the log core, `pow`'s logarithm chains and the exp2 fraction; the results bit for bit the same. Instructions per call (throughput), fast before → after; release and speed unchanged.
+
+| Function | before | after | change |
+|---|---:|---:|---:|
+| `exp` | 315.6 | 260.6 | -17 % |
+| `exp2` | 279.9 | 224.9 | -20 % |
+| `exp10` | 315.1 | 260.1 | -17 % |
+| `expm1` | 345.6 | 292.2 | -15 % |
+| `log` | 333.6 | 295.3 | -11 % |
+| `log2` | 348.9 | 310.6 | -11 % |
+| `log10` | 353.6 | 315.3 | -11 % |
+| `log1p` | 367.1 | 329.6 | -10 % |
+| `pow` | 923.3 | 816.9 | -12 % |
+| `atan` | 523.1 | 487.1 | -7 % |
+| `atan2` | 524.1 | 488.1 | -7 % |
+| `sinh` | 508.0 | 394.0 | -22 % |
+| `cosh` | 494.2 | 380.2 | -23 % |
+| `tanh` | 500.5 | 445.5 | -11 % |
+| `asinh` | 534.8 | 496.8 | -7 % |
+| `acosh` | 498.9 | 460.9 | -8 % |
+| `atanh` | 523.7 | 486.7 | -7 % |

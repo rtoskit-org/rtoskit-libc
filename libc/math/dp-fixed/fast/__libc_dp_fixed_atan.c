@@ -22,14 +22,14 @@
  */
 static inline uint64_t series(uint64_t w)
 {
-	uint64_t g = 0x000000001745d174ull - __libc_trig_high64(w, 0x000000000013b13bull);
+	uint64_t g = 0x000000001745d174ull - __libc_dp_fixed_hot_high(w, 0x000000000013b13bull);
 
-	g = 0x0000001c71c71c72ull - __libc_trig_high64(w, g);
-	g = 0x0000249249249249ull - __libc_trig_high64(w, g);
-	g = 0x0033333333333333ull - __libc_trig_high64(w, g);
-	g = 0x5555555555555555ull - __libc_trig_high64(w, g);
+	g = 0x0000001c71c71c72ull - __libc_dp_fixed_hot_high(w, g);
+	g = 0x0000249249249249ull - __libc_dp_fixed_hot_high(w, g);
+	g = 0x0033333333333333ull - __libc_dp_fixed_hot_high(w, g);
+	g = 0x5555555555555555ull - __libc_dp_fixed_hot_high(w, g);
 
-	return __libc_trig_high64(w, g) >> 8;
+	return __libc_dp_fixed_hot_high(w, g) >> 8;
 }
 
 /* The double of v 2^(e - 63), v nonzero, normalized by its leading zeros, with sign; rounded once */

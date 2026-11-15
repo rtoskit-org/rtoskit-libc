@@ -23,5 +23,7 @@ CFLAGS += ${LIBC_CFLAGS} -fno-math-errno
 # The 32 x 32 -> 64 product of the speed files (UMULL inline, four 16-bit products on Armv6-M, PLAN D136)
 DP_FIXED_WIDE := $(if $(filter armv6-m armv6s-m,${ARCH_CROSS}),muls,umull)
 CPPFLAGS += -I${SOURCE_DIR}/../speed -I${SOURCE_DIR}/../speed/${DP_FIXED_WIDE}
+# The hot chains' high product: inlined where UMULL makes it short, called on Armv6-M (P11.06d)
+CPPFLAGS += -I${SOURCE_DIR}/${DP_FIXED_WIDE}
 
 endif

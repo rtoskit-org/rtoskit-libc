@@ -557,10 +557,13 @@ path faster rather than by a new layer (D207).
   ulp. With P11.06b, every function AOR provides is at or below its count
   on every Arm core (P11.06a's exit check).
 
-### P11.06d — Selective inlining in `dp-fixed/fast` (Q53)  `[ ]`
-- [ ] `[[gnu::always_inline]]` copies of the high product on the hot paths,
+### P11.06d — Selective inlining in `dp-fixed/fast` (Q53)  `[x]`
+- [x] `[[gnu::always_inline]]` copies of the high product on the hot paths,
   kernel by kernel, measured against the fast budgets; keep only what fits
-  (D207).
+  (D207). D210: on the Thumb-2 cores, the atan series, the log core, `pow`'s
+  logarithm and the exp2 fraction; armv7e-m `exp` 316 → 261, `log` 334 →
+  295, `pow` 923 → 817, `atan2` 524 → 488; `math-mix` +1.1 KB, within the
+  locks. Armv6-M keeps the calls.
 
 ### P11.06e — Reducing armv7e-m-dp's `math-mix`  `[ ]`
 - [ ] Measure the bytes saved and the instructions lost for a shared
