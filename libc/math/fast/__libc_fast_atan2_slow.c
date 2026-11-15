@@ -16,64 +16,53 @@
 
 #include "internal/math-fast.h"
 
+/* +-k pi/4 with y's sign, from the pair, rounded once */
+static double signed_pi(double y, double quarters)
+{
+	return copysign(__LIBC_PI.hi * quarters, y) + copysign(__LIBC_PI.lo * quarters, y);
+}
+
 /*
- * The fast atan2's slow path (PLAN D198): the strict file's code, unchanged, for the zeros, infinities, NaN,
- * subnormal and huge coordinates and the far exponents that the fast path leaves.
- *
- * C23 7.12.4.4, F.10.1.4: the special cases first; then the coordinates are
- * scaled by a power of two (the angle does not change) and the core does the
- * rest. A tiny quotient with x > 0 is y/x, rounded once; a quotient beyond
- * 2^60 (or below 2^-60 with x < 0) leaves +-pi/2 (+-pi) once rounded.
+ * The fast atan2's slow path (PLAN D198, D211; docs/research/libm-fast-double.md section 27), for the double-FPU and
+ * the soft-double cores' fast atan2 alike, without the strict core (P11.06g). C23 7.12.4.4, F.10.1.4: the zeros,
+ * infinities and NaN first. Then, for finite nonzero coordinates:
+ * - exponents more than 60 apart: +-pi/2 when y is the larger (pi/2 - x/y rounds to pi/2), +-pi when x < 0 is, and
+ *   for x > 0 atan(y/x) = q - q^3/3 with |q| < 2^-59: the quotient rounded once, or when it is exact (q x == y as a
+ *   pair) nudged toward 0 by __libc_math_tiny, so that inexact and underflow are raised as for the function;
+ * - otherwise one of them is subnormal, below 2^-959 or from 2^960: both scaled by the same power of two (exact: the
+ *   smaller stays normal within 61 binades of 1), which both fast paths then take, through atan2 itself.
  */
 double __libc_fast_atan2_slow(double y, double x)
 {
-	struct __libc_dd value;
+	struct __libc_dd product;
+	int difference;
 	int scale;
-	int mode;
+	double q;
 
 	if (isnan(x) || isnan(y))
 		return x + y;
-	if (y == 0) {
-		if (signbit(x))
-			return copysign(__LIBC_PI.hi, y) + copysign(__LIBC_PI.lo, y);
-		return y;
-	}
+	if (y == 0)
+		return signbit(x) ? signed_pi(y, 1.0) : y;
 	if (x == 0)
-		return copysign(__LIBC_PI_2.hi, y) + copysign(__LIBC_PI_2.lo, y);
-	if (isinf(y)) {
-		if (isinf(x)) {
-			double quarter = x > 0 ? 0.25 : 0.75;
-
-			return copysign(__LIBC_PI.hi * quarter, y) + copysign(__LIBC_PI.lo * quarter, y);
-		}
-		return copysign(__LIBC_PI_2.hi, y) + copysign(__LIBC_PI_2.lo, y);
+		return signed_pi(y, 0.5);
+	if (isinf(y))
+		return signed_pi(y, isinf(x) ? (x > 0 ? 0.25 : 0.75) : 0.5);
+	if (isinf(x))
+		return x > 0 ? copysign(0.0, y) : signed_pi(y, 1.0);
+	difference = ilogb(y) - ilogb(x);
+	if (difference > 60)
+		return signed_pi(y, 0.5);
+	if (difference < -60) {
+		if (x < 0)
+			return signed_pi(y, 1.0);
+		q = y / x;
+		product = __libc_dd_product(q, x);
+		/* An exact quotient: atan(q) lies just inside it, nudged with inexact (and underflow when subnormal) */
+		if (product.hi == y && product.lo == 0)
+			return __libc_math_tiny(q, -q);
+		/* Otherwise the division's rounding, flags and zero sign are atan's (q^3/3 is far below half an ulp) */
+		return q;
 	}
-	if (isinf(x)) {
-		if (x > 0)
-			return copysign(0.0, y);
-		return copysign(__LIBC_PI.hi, y) + copysign(__LIBC_PI.lo, y);
-	}
-	if (ilogb(y) - ilogb(x) > 60)
-		return copysign(__LIBC_PI_2.hi, y) + copysign(__LIBC_PI_2.lo, y);
-	if (x < 0 && ilogb(y) - ilogb(x) < -60)
-		return copysign(__LIBC_PI.hi, y) + copysign(__LIBC_PI.lo, y);
-
-	scale = -(ilogb(fabs(x) > fabs(y) ? x : y));
-	if (x > 0 && ilogb(y) - ilogb(x) < -1080)
-		return __libc_math_underflow(copysign(1.0, y));
-	if (x > 0 && ilogb(y) - ilogb(x) < -60) {
-		/* atan(q) = q - q^3/3: an exact quotient is nudged toward zero, then one rounding */
-		mode = __libc_math_nearest();
-		value = __libc_dd_divide((struct __libc_dd){ .hi = scalbn(y, scale + 200), .lo = 0.0 }, (struct __libc_dd){ .hi = scalbn(x, scale), .lo = 0.0 });
-		if (value.lo == 0)
-			value.lo = -value.hi * 0x1p-80;
-		__libc_math_restore(mode);
-		return __libc_exp_scale(value, -200);
-	}
-
-	mode = __libc_math_nearest();
-	value = __libc_atan2_core((struct __libc_dd){ .hi = scalbn(y, scale), .lo = 0.0 }, (struct __libc_dd){ .hi = scalbn(x, scale), .lo = 0.0 });
-	__libc_math_restore(mode);
-
-	return value.hi + value.lo;
+	scale = -ilogb(fabs(x) > fabs(y) ? x : y);
+	return atan2(scalbn(y, scale), scalbn(x, scale));
 }

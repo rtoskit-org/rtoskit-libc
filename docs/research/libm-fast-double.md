@@ -1906,3 +1906,68 @@ unchanged.
 armv7e-m-dp: `math-mix` 20,312 → 20,112 bytes (−200), `math-float` 5,910 →
 5,654 (−256). The exact tail terms cost about 140 bytes of the plain
 version's saving. P11.06e estimated about 450 bytes for this option.
+
+## 27. atan2's slow path by scaling (P11.06g, D211 C, D213)
+
+`__libc_fast_atan2_slow` serves both fast `atan2`s: the double-FPU cores'
+(`libc/math/fast/`, normal coordinates in [2^-959, 2^960) at most 60 binades
+apart) and the soft-double cores' (`dp-fixed/fast/`, any normal pair at most
+60 apart). It was the strict file's code: `__libc_atan2_core` with its
+double-double table, `atan_unit`, a double-double division and
+`__libc_exp_scale` for the tiny quotients.
+
+### The design
+
+- **The special cases** (C23 F.10.1.4) as before, from π as a pair.
+- **Exponents more than 60 apart:**
+  - y the larger: ±π/2, since π/2 − x/y rounds to it;
+  - x < 0 the larger: ±π;
+  - x > 0 the larger: atan(y/x) = q − q³/3 with |q| < 2^-59, so the quotient
+    rounded once is atan's, with its flags and its zero's sign. When it is
+    exact (q·x == y as a pair), `__libc_math_tiny` nudges it toward 0, so that
+    inexact, and underflow for a subnormal, are raised as for the function.
+- **Otherwise** one coordinate is subnormal, below 2^-959, or from 2^960:
+  both are scaled by the same power of two, so that the larger is near 1. The
+  scaling is exact (the smaller stays normal within 61 binades of 1), the
+  angle does not change, and `atan2` itself, with either core's fast path,
+  takes the call.
+
+### Found along the way
+
+The first version returned q − q·2^-80 for the far quotients, to raise
+inexact for an exact one:
+- it raised underflow for a normal result below 2^-942
+  (`atan2(0x1p-1000, 3.0)`, `libm_thresholds`);
+- it turned −0 into +0 rounding to nearest and +0 into −0 rounding downward
+  (`libm_trig`, `libm_vectors`).
+
+Hence the exactness test and `__libc_math_tiny`, which leave every inexact
+quotient as the division rounded it.
+
+### Measured
+
+4·10^8 random pairs on the host against `atan2l`:
+
+| Coordinates | max ulp |
+|---|---:|
+| both exponents below 2^-959 (subnormals included) | 0.5010 |
+| both from 2^960 | 0.5010 |
+| exponents 61–200 apart | 0.5000 |
+| exponents 50–70 apart | 0.5000 |
+
+That is the fast path's 0.5010, which these now go through.
+
+`math-mix` (code bytes):
+
+| Core | before | after |
+|---|---:|---:|
+| armv7e-m-dp | 20,112 | 18,758 |
+| armv7e-m | 35,134 | 32,574 |
+| armv8-m.main | 35,046 | 32,486 |
+| armv7-m | 41,328 | 38,608 |
+| armv6-m, armv6s-m | 46,100 | 43,388 |
+
+On the soft-double cores the strict core was soft-float code, hence the
+larger saving; P11.06e estimated about 1,600 bytes for armv7e-m-dp. The
+exactness test costs about 120 bytes on armv7e-m-dp and 370 on the
+soft-double cores. No bench case reaches the slow path.

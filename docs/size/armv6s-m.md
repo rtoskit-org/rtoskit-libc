@@ -963,3 +963,7 @@ Release, speed and fast unchanged: on Armv6-M the hot chains keep calling the ou
 ## P11.06f — The trigonometric slow path on polynomials in r (D212)
 
 Unchanged: the slow path is the double-FPU cores' only.
+
+## P11.06g — `atan2`'s slow path by scaling (D213)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 46100 to 43388 bytes of code (-2712): `atan2`'s slow path no longer links the strict `atan2` core, its table, `atan_unit`, the double-double division or `__libc_exp_scale`. The locked figures are left for P11.06j.

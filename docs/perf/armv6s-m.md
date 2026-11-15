@@ -1563,3 +1563,7 @@ AOR's `erf`: 25491.
 ## P11.06d — The high product inlined on the hot chains (D210)
 
 Unchanged: on Armv6-M the hot chains keep calling the out-of-line high product (`muls/fast-high.h`), whose body is several times the call.
+
+## P11.06g — `atan2`'s slow path by scaling (D213)
+
+Unchanged: no bench case reaches the slow path (subnormal, tiny or huge coordinates, or exponents more than 60 apart).

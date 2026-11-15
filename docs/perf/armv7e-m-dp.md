@@ -1178,3 +1178,7 @@ The AOR column is AOR's own function, where it has one (P11.06a's record, `docs/
 ## P11.06f — The trigonometric slow path on polynomials in r (D212)
 
 Unchanged: no bench argument reaches the slow path (from 2^20, or next to a zero); the common path is untouched.
+
+## P11.06g — `atan2`'s slow path by scaling (D213)
+
+Unchanged: no bench case reaches the slow path (subnormal, tiny or huge coordinates, or exponents more than 60 apart).

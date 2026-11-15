@@ -765,6 +765,14 @@ static void check_double_inverse_trigonometric(void)
 	QUIET(near_double(asin(0x1.ffffffffffffep-1), 0x1.921fb4e9c057fp+0) && near_double(acos(0x1.ffffffffffffep-1), 0x1.6a09e667f3bcdp-26) && near_double(acos(-0x1.ffffffffffffep-1), 0x1.921fb5170194bp+1));
 	QUIET(near_double(asin(0.75), 0x1.b235315c680dcp-1) && near_double(acos(0.75), 0x1.720a392c1d955p-1) && near_double(acos(-0.75), 0x1.359d26f93b6c3p+1));
 	QUIET(near_double(asin(0x1.99b41ee9b3ee8p-1), 0x1.daf2a6673616dp-1) && near_double(acos(0x1.a14710bf73068p-1), 0x1.3c745b0f762f5p-1) && near_double(acos(0x1.fffffbd411a02p-1), 0x1.056f08e97b2cp-11));
+	/*
+	 * atan2's slow path by scaling (P11.06g, D211 C, D213): subnormal and huge coordinates within 60 binades, the
+	 * quotient past 60 binades, and the regressions of the first version, whose q - q 2^-80 raised underflow for a normal
+	 * result, turned -0 into +0, and gave an exact subnormal quotient no flags
+	 */
+	QUIET(near_double(atan2(0x1p-1074, 0x1p-1073), 0x1.dac670561bb4fp-2) && near_double(atan2(-0x1p1023, -0x1p1000), -0x1.921fb74442d18p+0) && near_double(atan2(0x1.8p-1050, 0x1p-1040), 0x1.7fffee000184dp-10));
+	CHECK(signbit(atan2(-0x1p-1022, DBL_MAX)) && atan2(-0x1p-1022, DBL_MAX) == 0 && near_double(atan2(0x1p-1000, 0x1p-920), 0x1p-80));
+	RAISES(atan2(0x1p-1074, 1.0) == 0x1p-1074 && atan2(-0x1p-1060, 0x1p10) == -0x1p-1070, FE_UNDERFLOW);
 }
 
 static void check_double_hyperbolic(void)
