@@ -1186,3 +1186,7 @@ Unchanged: no bench case reaches the slow path (subnormal, tiny or huge coordina
 ## P11.06h — The exponentials' ends on the fast kernel (D214)
 
 Unchanged: no bench case reaches the special paths (|x| from 512, or 256 for `exp10`), nor a subnormal result.
+
+## P11.06i — A 64-entry double log table (D215)
+
+Fast, instructions per call (latency): `log` 66.69 → 65.69 (AOR 68.62), `log2` 70.69 unchanged (AOR 73.62), `pow` 133.75 unchanged (AOR 135.69); `log10` 75.69 → 77.69, `log1p` 86.81 → 88.81, `asinh` 107.69 → 109.69, `acosh` 101.69 → 103.69, `atanh` 90.69 → 92.69: the polynomial's extra term, inside the gate. `log` saves its test for 1 (r == 0 in place of the 64-bit compare). Baselines unchanged.

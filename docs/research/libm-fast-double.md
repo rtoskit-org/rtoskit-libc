@@ -2041,3 +2041,113 @@ That matches the common paths' 0.5469, 0.5464 and 0.5527.
 | armv8-m.main | 32,486 | 31,622 |
 | armv7-m | 38,608 | 37,848 |
 | armv6-m, armv6s-m | 43,388 | 42,644 |
+
+## 29. A 64-entry double log table (P11.06i, D211 E, D215)
+
+`__libc_fast_log_table` and `__libc_fast_log2_table` (§9) had 128 entries of
+three doubles each, 3 KiB apiece. `log`, `log10`, `log1p`, `pow` and the
+inverse hyperbolic functions share the first, `log2` has the second. Both now
+have 64 entries, indexed by the top 6 bits of z's fraction: 1,536 bytes off
+each.
+
+### The constraint
+
+r = z·invc − 1 must be exact (§9.2): with an fma it is then a single
+rounding-free operation, and without one z splits after its 43rd bit. invc
+has at most 10 bits and r must fit 53 bits. An entry above 1 is 2^-6 wide, so
+|r| needs about 2^-7. A z of ulp 2^-52 times an invc on a grid of 2^-g gives
+a product on 2^-(52+g), and an r up to 2^-6.5 then takes 46 + g bits. So
+g ≤ 7 above 1: invc on a grid of 2^-7, whose rounding adds up to 2^-8 to |r|.
+
+The best invc per entry under that rule (§9's generator, rerun at 64) gives
+|r| ≤ 2^-6.497. The polynomial needs one more term for the same accuracy:
+
+| Fit for (log1p r − r)/r² | degree 5 | degree 6 |
+|---|---:|---:|
+| \|r\| ≤ 2^-6.497 | 2^-53.48 | 2^-61.15 |
+| \|r\| ≤ 2^-6.607 (the table kept) | 2^-54.24 | 2^-62.04 |
+
+`log2`'s fit at degree 6 is 2^-61.61, and `pow`'s Q (degree 6, its error
+otherwise bounded by the rounding of 1/3) 2^-67.80.
+
+### What cancellation costs pow
+
+The first 64-entry table put 1 two thirds of the way into its entry, as the
+128-entry one did. `log` measured 0.5229 ulp and `pow` 0.6045 (was 0.5449),
+for x just above 1 with |y log x| near 700.
+
+The cause is the entry next to 1's, where w = log c and r have opposite
+signs. There |log x| can be half of |r|, and the absolute error of r³Q(r)
+(four roundings of about 2^-54 of r³/3) is amplified by |y| ≤ 745/|log x|. So
+the measure of an entry is max |r|³/|log z|:
+- the 128-entry table: 2^-14.15;
+- the first 64-entry table: 2^-12.13, four times worse.
+
+No per-entry choice of invc alone recovers it, since the rule above fixes
+invc's grid. Moving 1 within its entry does:
+- with 1 half way into it (z in [0x1.6a041p-1, 0x1.6a041p+0)), the
+  neighbours start 2^-8 below 1 and 2^-7 above;
+- choosing each invc for the smallest |r|³/|log z| (|r| breaking ties)
+  among those that keep r exact gives 2^-13.97 and |r| ≤ 2^-6.607.
+
+1's own entry has invc = 1, w = 0 and no cancellation. The scan covered a
+from 0.29 to 0.53 of the entry; below 0.29, 1's entry has r beyond the fit.
+
+### The instructions
+
+D211 estimated about +2 instructions. One more polynomial term in Estrin's
+order cost 3 on armv7e-m-dp (a constant, a multiply-add and r⁴), which took
+`log` from 66.69 to 69.69, above AOR's 68.62. Two changes win the cost back
+without touching the error:
+- **The polynomial** as (a0 + a1 r) + r²·(a2 + r(a3 + r(a4 + r(a5 + r a6)))):
+  one multiply-add a term and no r⁴, one fewer than Estrin's order. GCC
+  already contracts these into `vmla` on the Arm FPU (two roundings, one
+  instruction).
+- **`log`'s test for 1** (+0 rounding downward, D190) is now r == 0, one
+  floating-point compare where comparing the 64-bit pattern took five
+  instructions on Arm. A power of 2 returns k ln 2 from a cold, out-of-line
+  helper. Inline, GCC shared k·ln2_hi between the two returns and split two
+  `vmla` into `vmul` and `vadd`.
+- **Always inline.** At seven terms GCC put `__libc_fast_log_poly` out of
+  line on x86_64 in `log1p`, which calls it on both paths (+4 instructions);
+  it is `always_inline` now. `log2`'s polynomial is in plain Horner's order,
+  which saved a register move on x86_64.
+
+### Measured
+
+On the host, against long double, on the SSE2 and the fma paths (which
+agree bit for bit), with the sampling of §9.3 and §11.3:
+
+| Function | samples | 128 entries | 64 entries |
+|---|---:|---:|---:|
+| `log` | 10^9 | 0.5151 | 0.5063 |
+| `log2` | 10^9 | 0.5249 | 0.5063 |
+| `log10` | 10^9 | 0.5132 | 0.5112 |
+| `log1p` | 10^9 | 0.5059 | 0.5063 |
+| `pow` | 3·10^8 a family | 0.5513 | 0.5547 |
+| `asinh`, `acosh`, `atanh` | 2·10^8 | 0.5151, 0.5166, 0.5161 | 0.5098, 0.5103, 0.5103 |
+
+2·10^4 doubles on each side of every entry boundary: at most 0.5093. Every
+power of 2 in `log2` and of 10 in `log10` is exact; `log(1)` is +0. `pow`'s
+worst is in the family whose results lie near 2^±1000 from x next to 1
+(§11.3's fifth), the one where cancellation counts. The logarithms gain
+because 1's own entry, where w = 0, now reaches 2^-7 above 1.
+
+Instructions per call (fast, before → after):
+
+| Function | armv7e-m-dp | x86_64 |
+|---|---:|---:|
+| `log` | 66.69 → 65.69 (AOR 68.62) | 75.69 → 77.69 |
+| `log2` | 70.69 → 70.69 (AOR 73.62) | 86.69 → 88.69 |
+| `log10` | 75.69 → 77.69 | 100.69 → 101.69 |
+| `log1p` | 86.81 → 88.81 | 91.56 → 92.56 |
+| `pow` | 133.75 (AOR 135.69) | 203.62 |
+| `asinh`, `acosh`, `atanh` | +2 | +1 to +2 |
+
+The functions AOR implements stay below its counts on armv7e-m-dp, so
+P11.06a's exit check holds. The soft-double cores' logarithms are
+fixed-point (§10) and unchanged.
+
+**Size:** armv7e-m-dp's `math-mix` 17,520 → 16,032 bytes (−1,488: the
+table's 1,536 less the extra term and `log`'s cold helper). `log2`'s table
+saves another 1,536 where it is linked; `math-float` is unchanged.

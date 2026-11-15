@@ -743,3 +743,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks fr
 ## P11.06h — The exponentials' ends on the fast kernel (D214)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 18758 to 17520 bytes of code (-1238): `exp`'s special path takes the common path's kernel with `__libc_fast_exp_scale`, in place of `__libc_exp_core`, its table and `__libc_exp_scale`. The locked figures are left for P11.06j.
+
+## P11.06i — A 64-entry double log table (D215)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 17520 to 16032 bytes of code (-1488): `__libc_fast_log_table` has 64 entries (3072 → 1536 bytes); the polynomial's extra term and `log`'s cold helper for powers of 2 take back 48. `math-float` is unchanged (5654). The locked figures are left for P11.06j.

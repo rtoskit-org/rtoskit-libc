@@ -18,12 +18,13 @@
 #include "internal/math-fast.h"
 
 /*
- * (log1p(r) - r + r^2/2)/r^3 for |r| <= 2^-7.47 by its Chebyshev fit of degree 6 in double (2^-54 relatively, the
- * rounding of 1/3 itself: times |y log|x|| at most 745 and r^2/3, below 2^-61 of the result; degree 5 measured 0.559 ulp)
+ * (log1p(r) - r + r^2/2)/r^3 for |r| <= 2^-6.607 by its Chebyshev fit of degree 6 in double (r^3 times it within
+ * 2^-67.80 of log1p(r); 2^-54 relatively, the rounding of 1/3 itself: times |y log|x|| at most 745 and r^2/3, below
+ * 2^-58 of the result; PLAN D215)
  */
 static inline double pow_log_q(double r, double r2)
 {
-	return 0x1.5555555555555p-2 + r * -0x1.0000000000006p-2 + r2 * (0x1.99999999999a5p-3 + r * -0x1.555555524a540p-3 + r2 * (0x1.24924921ce195p-3 + r * -0x1.0002eb43a3fc0p-3 + r2 * 0x1.c721c070d115fp-4));
+	return 0x1.5555555555555p-2 + r * -0x1.00000000000e6p-2 + r2 * (0x1.9999999999b3bp-3 + r * -0x1.555555340774fp-3 + r2 * (0x1.249249064b78dp-3 + r * -0x1.0009a835806ccp-3 + r2 * 0x1.c72e00b5f6ce0p-4));
 }
 
 /*
@@ -52,7 +53,7 @@ static inline double pow_log_q(double r, double r2)
 /*
  * The fast pow of the double-FPU cores (PLAN D162, D193): e^(y log|x|) with one rounding. log|x| as hi + lo from the
  * logarithms' table (D190: r = z invc - 1 exact, k ln 2_hi + logc exact), r^2/2 exact by a fused multiply-add (or
- * Dekker's product), r^3 Q(r) and the tails in lo (unnormalized: up to 2^-16 of hi): its error times |y| is at most
+ * Dekker's product), r^3 Q(r) and the tails in lo (unnormalized: up to 2^-14.5 of hi): its error times |y| is at most
  * 2^-58 of the result. y (hi + lo) as a
  * pair (the product's error exact), then exp's reduction of the pair (the low part added to the reduced argument) and
  * its table and polynomial (D187), the sign in the scale, so that only the last addition rounds. Out of line: the special
@@ -114,7 +115,7 @@ double pow(double x, double y)
 	product = __libc_dd_product(y, hi);
 	zh = product.hi;
 	zl = product.lo + y * lo;
-	/* lo carries r^3 Q, up to 2^-16 of hi: the index from zh + zl keeps the reduced argument within exp's range */
+	/* lo carries r^3 Q, up to 2^-14.5 of hi: the index from zh + zl keeps the reduced argument within exp's range */
 	z = zh + zl;
 	/* Below 700 in magnitude the result is normal and the scale's exponent within its field */
 	if (!(__builtin_fabs(z) <= 700.0))
