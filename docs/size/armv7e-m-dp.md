@@ -735,3 +735,7 @@ Unchanged: `libc/math/dp-fixed/fast/` is the soft-double cores' only.
 ## P11.06f — The trigonometric slow path on polynomials in r (D212)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 20312 to 20112 bytes of code (−200) and `math-float` from 5910 to 5654 (−256): the slow path no longer links `__libc_sin_core`, `__libc_cos_core` or the double-double division, and its own polynomials need no table. The locked figures are left for P11.06j.
+
+## P11.06g — `atan2`'s slow path by scaling (D213)
+
+Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks from 20112 to 18758 bytes of code (-1354): `atan2`'s slow path no longer links the strict `atan2` core, its table, `atan_unit`, the double-double division or `__libc_exp_scale`. The locked figures are left for P11.06j.

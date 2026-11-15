@@ -591,11 +591,12 @@ the exit follow (j, k, l).
   path's table kernel saved less); `sin` 0.5918, `cos` 0.5830, `tan` 0.6489
   ulp on 10^8 samples; armv7e-m-dp `math-mix` −200 bytes, `math-float` −256.
 
-### P11.06g — `atan2`'s slow path by scaling (D211 C)  `[ ]`
-- [ ] `__libc_fast_atan2_slow` without the strict `atan2` core: subnormal
+### P11.06g — `atan2`'s slow path by scaling (D211 C)  `[x]`
+- [x] `__libc_fast_atan2_slow` without the strict `atan2` core: subnormal
   coordinates and exponents more than 60 apart scaled into the fast path's
   domain or answered from the quotient; inside the fast contract, bytes
-  recorded.
+  recorded. D213: at most 0.5010 ulp on 4·10^8 slow-path pairs; `math-mix`
+  armv7e-m-dp 20,112 → 18,758, the soft-double cores −2,560 to −2,720.
 
 ### P11.06h — `exp`'s and `pow`'s ends on the fast kernel (D211 D)  `[ ]`
 - [ ] The results next to overflow and underflow (`__libc_fast_exp_special`,

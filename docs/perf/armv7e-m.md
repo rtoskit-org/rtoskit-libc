@@ -1374,3 +1374,7 @@ AOR's `erf`: 8263.
 | `asinh` | 534.8 | 496.8 | -7 % |
 | `acosh` | 498.9 | 460.9 | -8 % |
 | `atanh` | 523.7 | 486.7 | -7 % |
+
+## P11.06g — `atan2`'s slow path by scaling (D213)
+
+Unchanged: no bench case reaches the slow path (subnormal, tiny or huge coordinates, or exponents more than 60 apart).

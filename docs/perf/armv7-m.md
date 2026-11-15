@@ -1201,3 +1201,7 @@ AOR has no record for this core.
 | `asinh` | 532.8 | 494.8 | -7 % |
 | `acosh` | 498.8 | 460.8 | -8 % |
 | `atanh` | 523.6 | 486.6 | -7 % |
+
+## P11.06g — `atan2`'s slow path by scaling (D213)
+
+Unchanged: no bench case reaches the slow path (subnormal, tiny or huge coordinates, or exponents more than 60 apart).
