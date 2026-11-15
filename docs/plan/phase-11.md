@@ -512,7 +512,7 @@ Split, as P11.04g was: the two halves rest on different kernels.
 
 ## P11.06 — Comparison and wrap-up
 Split in four, as the size check needs the maintainer's decision (D191) before
-the docs and the phase exit; then in eight (D207).
+the docs and the phase exit; then in eight (D207), then in twelve (D211).
 
 ### P11.06a — Comparison against AOR and picolibc  `[x]`
 - [x] `bench-runner compare` and `bench-runner aor` with the fast build as
@@ -565,13 +565,49 @@ path faster rather than by a new layer (D207).
   295, `pow` 923 → 817, `atan2` 524 → 488; `math-mix` +1.1 KB, within the
   locks. Armv6-M keeps the calls.
 
-### P11.06e — Reducing armv7e-m-dp's `math-mix`  `[ ]`
-- [ ] Measure the bytes saved and the instructions lost for a shared
+### P11.06e — Reducing armv7e-m-dp's `math-mix`  `[x]`
+- [x] Measure the bytes saved and the instructions lost for a shared
   out-of-line trig kernel and slow paths that do not pull the strict cores;
   the figures go to the maintainer, who decides the D191 line for that core
-  (D207).
+  (D207). `docs/research/libm-fast-double.md` §25: a shared `sin`/`cos`
+  kernel saves 272 bytes for +19 instructions each (prototyped, reverted);
+  the trigonometric, `atan2` and `exp`/`pow` slow paths without the strict
+  cores about 450, 1,600 and 1,400 bytes at no cost on the common path; a
+  64-entry log table 1,536 bytes for about +2 instructions in `log` and
+  `pow`. All four would leave about 15,300 bytes (+26 %); none reaches +20 %.
+  The maintainer chose all four and a line of the core's own (D211).
 
-### P11.06f — Size  `[ ]`
+The maintainer's decision on P11.06e (D211) adds four sub-steps before the
+size check, each with its sweeps and gates: the slow paths without the strict
+cores (f, g, h) and the smaller log table (i). The size check, the docs and
+the exit follow (j, k, l).
+
+### P11.06f — The trigonometric slow path on the fast kernels (D211 B)  `[ ]`
+- [ ] `__libc_fast_trig_slow`: from 2^20 and next to a zero, the strict
+  reduction (`__libc_rem_pio2`, its r as a pair) and the fast kernels in
+  place of `__libc_sin_core` and `__libc_cos_core`; inside the fast
+  contract (sampled sweeps at large arguments and next to the zeros), bytes
+  recorded.
+
+### P11.06g — `atan2`'s slow path by scaling (D211 C)  `[ ]`
+- [ ] `__libc_fast_atan2_slow` without the strict `atan2` core: subnormal
+  coordinates and exponents more than 60 apart scaled into the fast path's
+  domain or answered from the quotient; inside the fast contract, bytes
+  recorded.
+
+### P11.06h — `exp`'s and `pow`'s ends on the fast kernel (D211 D)  `[ ]`
+- [ ] The results next to overflow and underflow (`__libc_fast_exp_special`,
+  `pow`'s ends) by the fast exponential with a two-step scaling, without
+  `__libc_exp_core`, its table and `__libc_exp_scale`; inside the fast
+  contract, bytes recorded.
+
+### P11.06i — A 64-entry double log table (D211 E)  `[ ]`
+- [ ] `__libc_fast_log_table` halved (1,536 bytes), the polynomial one term
+  longer, r = z·invc − 1 still exact (a new grid for invc, or a correction
+  term); `log`, `log10`, `log1p` and `pow` inside the fast contract, the
+  instruction cost recorded.
+
+### P11.06j — Size  `[ ]`
 - [ ] Size: fast budget held, members recorded; `docs/size/`. After the final
   re-lock (D187), compare every core's fast `math-mix` and `math-float` with
   the fast flavour's original rule, +20 % over the speed figure (D191): a core
@@ -580,14 +616,14 @@ path faster rather than by a new layer (D207).
   (12,174 → 18,806 bytes); armv6-m +11.3 %, armv7-m +12.3 %, armv7e-m and
   armv8-m.main +16.2 % and +16.1 %. At P11.05o: armv7e-m-dp `math-mix` +65.3 %
   (12,174 → 20,128); the soft-double cores +10.5 % to +13.5 %; `math-float`
-  at most +3.3 %. The figures after P11.06b–e, with the maintainer's
-  decision from P11.06e.
+  at most +3.3 %. The figures after P11.06b–i; armv7e-m-dp's `math-mix` gets
+  a line of its own at its figure after P11.06f–i (D211).
 
-### P11.06g — Docs and the release archives  `[ ]`
+### P11.06k — Docs and the release archives  `[ ]`
 - [ ] README (Performance table gains a fast column; the accuracy
   paragraph states the fast contract), `docs/configuration.md`,
   `docs/release.md`: `release-package` adds the `fast` tree to each archive
   (D163), once the exit check above passes.
 
-### P11.06h — Phase exit  `[ ]`
+### P11.06l — Phase exit  `[ ]`
 - [ ] Phase exit: PLAN's phase table, decisions, open questions.

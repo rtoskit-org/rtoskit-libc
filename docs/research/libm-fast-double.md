@@ -1792,3 +1792,56 @@ it), fast before → after:
 34,006 → 35,134 (35,252), armv8-m.main 33,926 → 35,046 (35,148): +13.6 %,
 +17.2 % and +17.2 % over speed, inside D191's +20 % line. armv6-m and
 armv6s-m are unchanged, byte for byte.
+
+## 25. armv7e-m-dp's `math-mix`: what a reduction would save and cost (P11.06e, D207)
+
+The maintainer asked, before settling D191's line for this core, what a
+shared trigonometric kernel and slow paths that do not pull the strict cores
+would save, and what they would cost (D207). At P11.06d, armv7e-m-dp's fast
+`math-mix` is 20,312 bytes of code against speed's 12,174 (+66.8 %).
+D191's line, +20 %, is 14,609: 5,703 bytes away.
+
+### Where the 8,138 bytes go (`nm` on the image)
+
+- **The fast files themselves:**
+  - `pow` 836 bytes, `__libc_fast_pow_special` 568, `pow_exp_ends` 388;
+  - `sin` 676, `cos` 592 and `tan` 772, each inlining its reduction and
+    kernel (speed's 304, 236 and 432 share one double-double core);
+  - `atan2` 540, `log` 332, `exp` 220;
+  - the tables: log 3,072 (128 entries of 1/c, log c and its tail; speed's
+    is 1,472), exp pairs 1,024, sin 272, atan pairs 272.
+- **The strict code the fast slow paths keep:**
+  - the trigonometric functions from 2^20 and next to a zero:
+    `__libc_fast_trig_slow` 242, `__libc_rem_pio2` 788, `two_over_pi` 160,
+    `__libc_sin_core` 304, `__libc_cos_core` 208;
+  - `atan2`'s extremes: `__libc_fast_atan2_slow` 736, `__libc_atan2_core`
+    272, `atan_unit` 316, the strict atan table 528;
+  - `exp`'s and `pow`'s results next to overflow and underflow:
+    `__libc_exp_core` 332, its table 1,024, `__libc_exp_scale` 272 (which
+    the `atan2` slow path also calls).
+- **The float functions** (`sinf`, `cosf`, `expf`, `logf`, `powf`) as in
+  `math-float`, which is below speed's.
+
+### The options
+
+| Option | Bytes saved | Instructions per call | Measured or estimated |
+|---|---:|---|---|
+| A. One out-of-line kernel for `sin` and `cos` (`tan` needs two turns and keeps its own) | 272 | `sin` 96.1 → 115.1, `cos` 93.3 → 111.3 | prototyped and measured, then reverted |
+| B. The trigonometric slow path on the fast kernels, keeping the strict reduction | about 400–500 (512 removable, less the glue) | none on the common path | estimated from the members' sizes |
+| C. `atan2`'s slow path by scaling into the fast path's domain (subnormals, exponents more than 60 apart, near the overflow) | about 1,600 (1,852 removable, a replacement of about 250) | none on the common path | estimated |
+| D. `exp`'s and `pow`'s ends on the fast kernel with a two-step scaling | about 1,400 (1,628 removable once C is done, the replacements about 250) | none on the common path | estimated |
+| E. A 64-entry log table | 1,536 | about +2 in `log`, `log10`, `log1p` and `pow` (one more polynomial term for the same 2^-60) | estimated; the exact r = z·invc − 1 needs invc of at most 10 bits with \|r\| ≤ 2^-7.47 (§9.2), so twice the step needs a new argument, or a correction term |
+
+The shared kernel (A) costs more than it saves: the call and the results
+passed through memory add 18–19 instructions (+20 %) to `sin` and `cos`, for
+272 bytes. B, C and D touch only the slow paths: they cost no instructions
+on the arguments the benchmark and most programs use, but they are new code
+for the extremes, each with its own sweeps.
+
+Together, B, C, D and E would leave `math-mix` at about 15,300 bytes, still
++26 % over speed; adding A, about 15,050 (+24 %). No set of these reaches
+D191's +20 % on this core. The rest of the excess is the fast files'
+speed itself: inline reductions and kernels, and tables larger than speed's.
+
+The maintainer's decision (D211): B, C, D and E, in P11.06f–i, then a
+`math-mix` line of this core's own at the figure they leave.
