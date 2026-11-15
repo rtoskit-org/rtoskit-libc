@@ -18,6 +18,7 @@
 #include <stdint.h>
 
 #include "internal/math.h"
+#include "fast-high.h"
 #include "trig-fixed.h"
 
 /*
@@ -56,15 +57,15 @@ static inline uint64_t __libc_dp_fixed_exp2_fraction(uint64_t f)
 	uint64_t u = f << 6;
 	uint64_t p;
 
-	p = a6 + __libc_trig_high64(u, a7);
-	p = a5 + __libc_trig_high64(u, p);
-	p = a4 + __libc_trig_high64(u, p);
-	p = a3 + __libc_trig_high64(u, p);
-	p = a2 + __libc_trig_high64(u, p);
-	p = a1 + __libc_trig_high64(u, p);
-	p = __libc_trig_high64(u, p);
+	p = a6 + __libc_dp_fixed_hot_high(u, a7);
+	p = a5 + __libc_dp_fixed_hot_high(u, p);
+	p = a4 + __libc_dp_fixed_hot_high(u, p);
+	p = a3 + __libc_dp_fixed_hot_high(u, p);
+	p = a2 + __libc_dp_fixed_hot_high(u, p);
+	p = a1 + __libc_dp_fixed_hot_high(u, p);
+	p = __libc_dp_fixed_hot_high(u, p);
 
-	return t + __libc_trig_high64(t, p);
+	return t + __libc_dp_fixed_hot_high(t, p);
 }
 
 /*

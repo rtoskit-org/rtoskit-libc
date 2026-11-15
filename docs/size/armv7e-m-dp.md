@@ -727,3 +727,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-float` grows fr
 ## P11.06c — The double path's `sinf`, `cosf`, `sincosf` and `erff` (D209)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-float` shrinks from 5990 to 5910 bytes of code (−80) and `math-mix` from 20400 to 20312 (−88): `sinf` and `cosf` drop a reduction constant and a polynomial term each, and the double logarithms' range test takes the high word only. The locked figures are left at P11.06b's (`budget.json` unchanged); P11.06f re-locks them all. `erff`, with its 512-byte table of pieces, is in no size program.
+
+## P11.06d — The high product inlined on the hot chains (D210)
+
+Unchanged: `libc/math/dp-fixed/fast/` is the soft-double cores' only.
