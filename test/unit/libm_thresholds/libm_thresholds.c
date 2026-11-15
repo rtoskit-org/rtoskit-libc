@@ -708,6 +708,12 @@ static void check_double_trigonometric(void)
 	QUIET(near_double(sin(1e300), -0x1.a2c16b010e385p-1) && near_double(cos(1e300), -0x1.2699022adc4c1p-1) && near_double(tan(1e300), 0x1.6be411f37ac77p+0) && near_double(sin(0x1.bd0a14269acdfp+707), 0x1.6e1cbd6c025f7p-1));
 	QUIET(near_double(sin(0x1.a94666d39717ep+5), 0x1.f61dda514f931p-3) && near_double(cos(-0x1.dcb93aa159b5ap+10), -0x1.ff4b26db560c5p-1) && near_double(tan(0x1.8d7989a8f2812p+15), -0x1.fc69756b245cap+1));
 	CHECK(near_double(sin(-0x1.fb530144d26dap+19), 0x1.922f9b04d95f5p-5) && near_double(cos(-0x1.fb530144d26dap+19), 0x1.ff61f13782899p-1) && near_double(tan(-0x1.fb530144d26dap+19), 0x1.92abe9b2589ffp-5));
+	/*
+	 * The slow path on the fast kernels (P11.06f, D211): from 2^20, r near pi/4 where the tails are largest; the first
+	 * version rounded r^2 and r^3/6 in plain double and missed by 2 ulp (regression)
+	 */
+	CHECK(near_double(sin(-0x1.6c87396fa11c6p+716), 0x1.70896e2e96bb7p-1) && near_double(cos(0x1.f6ad070a5e76dp+992), 0x1.73b6ae2400f75p-1) && near_double(tan(0x1.8a00d4a898abep+470), -0x1.f9526fde57bc6p-1));
+	CHECK(near_double(sin(-0x1.6cc40e19e6788p+604), 0x1.67219dd542c2bp-1) && near_double(tan(0x1.cd0e206bb0a3ep+375), 0x1.ee6c6813cdc91p-1) && near_double(sin(-0x1.06be672f31889p+354), 0x1.6918da3daf7d4p-1) && near_double(tan(0x1.a32ee4ab1235fp+168), -0x1.f9f3b2d7e83a1p-1));
 	/* sincos equals sin and cos, bit for bit */
 	sincos(-4.0, &s, &c);
 	CHECK(s == sin(-4.0) && c == cos(-4.0));

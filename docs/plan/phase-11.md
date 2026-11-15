@@ -582,12 +582,14 @@ size check, each with its sweeps and gates: the slow paths without the strict
 cores (f, g, h) and the smaller log table (i). The size check, the docs and
 the exit follow (j, k, l).
 
-### P11.06f — The trigonometric slow path on the fast kernels (D211 B)  `[ ]`
-- [ ] `__libc_fast_trig_slow`: from 2^20 and next to a zero, the strict
+### P11.06f — The trigonometric slow path on the fast kernels (D211 B)  `[x]`
+- [x] `__libc_fast_trig_slow`: from 2^20 and next to a zero, the strict
   reduction (`__libc_rem_pio2`, its r as a pair) and the fast kernels in
   place of `__libc_sin_core` and `__libc_cos_core`; inside the fast
   contract (sampled sweeps at large arguments and next to the zeros), bytes
-  recorded.
+  recorded. D212: polynomials in r with exact leading terms (the common
+  path's table kernel saved less); `sin` 0.5918, `cos` 0.5830, `tan` 0.6489
+  ulp on 10^8 samples; armv7e-m-dp `math-mix` −200 bytes, `math-float` −256.
 
 ### P11.06g — `atan2`'s slow path by scaling (D211 C)  `[ ]`
 - [ ] `__libc_fast_atan2_slow` without the strict `atan2` core: subnormal

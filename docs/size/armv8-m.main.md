@@ -894,3 +894,7 @@ Release and speed unchanged (`size-report diff`). The fast files changed are the
 ## P11.06d — The high product inlined on the hot chains (D210)
 
 Release and speed unchanged (`size-report diff`). In fast, `math-mix` grows from 33926 to 35046 bytes of code (+1120): the inlined high product on the atan series, the log core, `pow`'s logarithm chains and the exp2 fraction. That is within the locked fast figure (35148) and +17.2 % over speed's 29896, inside D191's +20 % line; nothing is re-locked. `pow`'s two products after its chains stay calls, which keeps armv7-m within its lock.
+
+## P11.06f — The trigonometric slow path on polynomials in r (D212)
+
+Unchanged: the slow path is the double-FPU cores' only.

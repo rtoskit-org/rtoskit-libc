@@ -1845,3 +1845,64 @@ speed itself: inline reductions and kernels, and tables larger than speed's.
 
 The maintainer's decision (D211): B, C, D and E, in P11.06f–i, then a
 `math-mix` line of this core's own at the figure they leave.
+
+## 26. The trigonometric slow path on fast polynomials (P11.06f, D211 B, D212)
+
+`__libc_fast_trig_slow` takes `sin`, `cos` and `tan` from 2^20 and next to a
+zero, and `sinf`, `cosf` and `tanf` from 2^20 (`__libc_fast_trig_large`). It
+was the strict file's code: `__libc_rem_pio2`, then `__libc_sin_core` and
+`__libc_cos_core` (512 bytes) and a double-double division in a
+round-to-nearest section.
+
+### What was tried
+
+- **The common path's table kernel:** r by π/32 once more, and
+  `__libc_fast_sin_turn`. `math-mix` lost only 104 bytes and `math-float`
+  gained 120: the table (272 bytes) and the turn came back, and
+  `math-float`'s floats had never needed them.
+- **Plain polynomials in r**, |r| ≤ π/4, with z = r² rounded: 1.28 ulp
+  (`sin`), 1.58 (`tan`) on 10^5 samples. Near π/4, r³/6 is 0.11 of sin r and
+  r²/2 0.43 of cos r, so their roundings show. Making z exact took the error
+  to 0.86, and −r³/6 exact to 0.68. The last 0.1 ulp was a missing term:
+  r_lo·cos r_hi, not r_lo, is sin's first-order correction.
+
+### The design (kept)
+
+- x = q π/2 + r by `__libc_rem_pio2` (r as a pair, about 2^-109 here), unchanged.
+- **sin r** = r_hi − r³/6 + r⁵ S(r²) + r_lo (1 − r²/2):
+  - z = r² and r³ are exact pairs (`__libc_dd_product`);
+  - −r³/6 is formed from r³'s high part with its own error, short only by
+    1/6's rounding (2^-55 of itself);
+  - r_hi − r³/6 is a fast two-sum;
+  - S has six terms, fitted here on 400 Chebyshev nodes (2^-57.1 relative to
+    sin r).
+- **cos r** = (1 − z/2, a fast two-sum, exact since 1 ≥ z/2) + z² C(z) −
+  r_hi r_lo, with C of six terms (2^-60.5).
+- **tan**: tan r, or −cot r in an odd quadrant. Both pairs are normalized,
+  then the quotient and its remainder are taken to first order, as in the
+  common path's `tan`.
+- No table, no rounding-mode section (the fast contract rounds to nearest),
+  and no strict core.
+
+### Measured
+
+From 2^20 to the largest double, log-uniform with both signs, and the
+doubles within 2·10^6 ulps of k π/2 for 0 < |k| ≤ 2^19, against long double
+(checked against mpmath at the worst points):
+
+| Function | samples | max ulp | not correctly rounded |
+|---|---:|---:|---:|
+| `sin` | 10^8 | 0.5918 | 0.46 % |
+| `cos` | 10^8 | 0.5830 | 0.46 % |
+| `tan` | 10^8 | 0.6489 | 0.65 % |
+| `sinf`, `cosf`, `tanf` from 2^20 | every float | 0.5000 | |
+
+That is inside the bounds (1 ulp, 1.5 for `tan`), and level with what the
+strict code gave there (0.59–0.61 for the strict `sin` and `tan` from 2^20).
+The fma path draws its products from the same exact `__libc_dd_product`;
+10^7 other samples gave 0.5791, 0.5732 and 0.6494. The common path is
+unchanged.
+
+armv7e-m-dp: `math-mix` 20,312 → 20,112 bytes (−200), `math-float` 5,910 →
+5,654 (−256). The exact tail terms cost about 140 bytes of the plain
+version's saving. P11.06e estimated about 450 bytes for this option.
