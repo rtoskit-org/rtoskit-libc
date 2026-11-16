@@ -430,3 +430,7 @@ Unchanged: the soft-double cores' logarithms are fixed-point (`libc/math/dp-fixe
 ## P11.06j — The final fast figures (D216)
 
 Fast re-locked at its final figures (D187): `math-mix` 41392 → 37848 bytes of code, `math-float` 11456 (unchanged). Against speed (36376 and 13516): `math-mix` +4.0 %, `math-float` −15.2 %, inside D191's +20 % line. In `math-mix` the library's share is 35410 bytes in speed and 36874 in fast: `pow.o` 1368 → 4360, `__libc_dp_fixed_log_table.o` 1440, `__libc_dp_fixed_atan.o` 1108 and `__libc_fast_exp_pairs.o` 1024 added; the strict log, atan2 and exp cores (2832, 2404, 1924), `__libc_exact_fma.o` (974) and `fma.o` no longer linked.
+
+## P11.07b — Correctly rounded fast hypot and hypotf (D222)
+
+Release and speed unchanged (`size-report diff`); no size program calls `hypot`, so every image and budget is unchanged. Fast member: `hypot.o` (fixed point, `dp-fixed/fast/`) 1364 bytes of code against speed's 908.

@@ -418,11 +418,11 @@
    },
    "hypot/latency": {
     "cycles": 97.97,
-    "insns": 247.12
+    "insns": 173.12
    },
    "hypot/throughput": {
     "cycles": 47.98,
-    "insns": 248.12
+    "insns": 174.12
    },
    "hypotf/latency": {
     "cycles": 17.74,

@@ -2151,3 +2151,140 @@ fixed-point (§10) and unchanged.
 **Size:** armv7e-m-dp's `math-mix` 17,520 → 16,032 bytes (−1,488: the
 table's 1,536 less the extra term and `log`'s cold helper). `log2`'s table
 saves another 1,536 where it is linked; `math-float` is unchanged.
+
+## 30. hypot and hypotf, correctly rounded (P11.07b, D219, D222)
+
+D219 keeps `hypot` and `hypotf` correctly rounded in `fast` and takes them
+from 2–4 times picolibc's instructions (`fast-math.md` §12) to below it.
+Three files, ideas from musl's `hypot` (exact squares, one root) and `sqrt`
+(the rounding by an exact integer comparison):
+- `libc/math/sp-nearest/fast/hypotf.c` (armv7e-m, armv8-m.main);
+- `libc/math/fast/hypot.c` (x86_64, armv7e-m-dp);
+- `libc/math/dp-fixed/fast/hypot.c` (the five soft-double cores).
+
+The strict files are not correctly rounded: `hypotf` within 0.509 ulp, at
+most 2 in 10^5 misrounded (D59).
+
+### 30.1 hypotf in float
+
+For a and b in [2^-20, 2^62), every piece is normal:
+- the squares as exact pairs (one fused multiply-add each for the error);
+- h + l, the high parts' sum by a two-sum that needs no ordering, plus
+  the low parts;
+- s = sqrtf(h), d = h − s² (exact by an fma) + l, and c = d/(2s), so that
+  s + c is within about 2^-46 of the root.
+
+Outside that range a slow path takes the infinities and NaN (an infinity
+wins), a zero, b below 2^-12 a (the result rounds to a), and otherwise
+scales by powers of two, exactly, and back with one rounding.
+
+**Ties.** √(x² + y²) can be exactly a midpoint between two floats:
+Pythagorean triples with an odd 25-bit hypotenuse and legs below 2^24. The
+correction's rounding then sends it either way, so the first version
+rounded 129,452 of 260,004 such ties away from even (0.5 ulp each). Now a
+result whose |c| is within 64 units of the bits of u/2 (about 2^-17 either
+side) is decided exactly: a² + b² against (s ± u/2)², as 128-bit integers
+at the lowest of the exponents.
+
+Each step cost instructions on armv7e-m (bench, throughput; picolibc 53.9):
+
+| Version | instructions |
+|---|---:|
+| strict | 161.4 |
+| first fast version, rounding out of line | 69.4 |
+| rounding forced inline, the window as an integer distance | 56.4 |
+| no ordering (an unordered two-sum), no gap test on the common path | **52.4** |
+
+A far-apart pair can no longer reach the tie test, because c is then far
+below half an ulp. Both operands are in range, so b² and its error stay
+normal at any gap.
+
+### 30.2 hypot in double (x86_64, armv7e-m-dp)
+
+The same in double: `__libc_dd_product` for the exact squares (an fma on
+armv7e-m-dp, Dekker's product on SSE2), a in [2^-400, 2^500) with b within
+2^27. Near a midpoint (2^-40 ulp) the sign of H − (s ± u/2)² comes from a
+seven-part exact expansion (Shewchuk's grow-expansion over h − s²'s parts,
+the squares' parts, ∓su and −u²/4).
+
+A subnormal result is rounded once onto the subnormal grid g at the scaled
+size: s rounded to a multiple of g by adding and subtracting 2^52·g, then
+the remainder (s − that) + c. An exact tie cannot happen there: H is a
+multiple of 2^-2148, and a midpoint's square is not.
+
+### 30.3 hypot in fixed point (the soft-double cores)
+
+Integers only, no soft-double operation on the common path:
+- a ≥ b as 53-bit significands; b below 2^-61 a gives a.
+- W = 4S, with S = ma² + mb²·4^-(ea−eb) exactly but for a sticky bit:
+  b's square is shifted by 2(ea − eb) − 2, so that W keeps S's two
+  fractional bits.
+- The root of W's top 64 bits by `__libc_dp_fixed_root` (D200), within
+  about 8 units of sqrt(S)·2^11, rounded at its bit 11 (more for a
+  subnormal result).
+- Within 32 units of a midpoint, (2q + 1)²·4^p is compared with W exactly;
+  ties go to even.
+
+The first version compared against S shifted right with a sticky bit,
+which loses exactly the fraction that decides a midpoint one unit away. W
+keeps it.
+
+### 30.4 Bugs found before the commit
+
+- **The far-apart path returned a + b**, not a: 1024 ulp at
+  `hypotf(0x1.ffddfep-31, -0x1.ffc018p-45)`. Now a + b·2^-24, which rounds
+  to a and raises inexact.
+- **The tie test's base assumed the midpoint above b's exponent.** A near-tie
+  with s in b's binade compared at a negative shift and was decided wrongly
+  (56 in 10^9). The base is now the lowest exponent.
+- **The scaled slow path skipped the tie test** (8 in 10^9, tiny pairs).
+  It now shares the rounding and scales back exactly when the result is
+  normal.
+- **Both arguments zero looped forever in the scaling.** A zero b returns
+  a first.
+- **The subnormal grid's magic constant was 1.5·2^52·g,** whose sum
+  crosses into the next binade when s exceeds 2^51·g: 1 in 10^8 on SSE2.
+  It is now 2^52·g.
+- **The FPU cores' flags** (`libm_exp`, `libm_vectors`): 0.5/s raised
+  inexact for exact results (hypot(3, 4)), and the exact rescaling of a
+  rounded subnormal result raised no underflow. The correction is now the
+  quotient d/(2s), exact when d is 0, and underflow is raised by hand.
+
+### 30.5 Measured
+
+Against binary128 (`__float128`), random pairs at every gap and exponent
+(an eighth across the whole range, subnormals included), the Pythagorean
+ties, and every pair of special values:
+
+| File and path | samples | misrounded | exact ties not to even |
+|---|---:|---:|---:|
+| `hypotf` (fma) | 10^10 | 0 | 0 of 260,004 |
+| `hypot`, double, SSE2 | 2·10^9 | 0 | 0 of 7,876,938 |
+| `hypot`, double, fma | 2·10^9 | 0 | 0 |
+| `hypot`, fixed point (`umull`) | 2·10^9 | 0 | 0 |
+| `hypot`, fixed point (`muls`, Armv6-M) | 3·10^8 | 0 | 0 |
+
+Instructions per call (fast, throughput; picolibc 1.8.6):
+
+| Core | `hypot` | picolibc | `hypotf` | picolibc |
+|---|---:|---:|---:|---:|
+| armv7e-m | 5835 → 346 | 1443 | 161.4 → 52.4 | 53.9 |
+| armv8-m.main | 5835 → 344 | 1443 | 158.4 → 52.4 | 53.9 |
+| armv7-m | 5956 → 346 | 1448 | 3336 (strict) | 767 |
+| armv6-m, armv6s-m | 14,773 → 1177 | 2645 | 6293 (strict) | 1251 |
+| armv7e-m-dp | 137.7 → 108.7 | 61.9 | 35.4 (strict) | 53.9 |
+| x86_64 | 248.1 → 174.1 | — | 37.6 (strict) | — |
+
+**Not closed here**, outside P11.07's exit check (armv7e-m) and recorded as
+Q61:
+- `hypotf` on the soft-float cores (armv6-m, armv6s-m, armv7-m) keeps the
+  strict file, 4–5 times picolibc's count; an integer `hypotf` would be
+  correctly rounded by construction.
+- armv7e-m-dp's `hypot`, whose correct rounding costs the exact squares
+  and the window, is still 1.75 times picolibc's.
+
+**Size.** No size program calls `hypot` or `hypotf`. The members:
+- the fixed-point `hypot` is 1276–1412 bytes (speed's 908–956);
+- `hypotf` on the single-precision FPU 966 (376);
+- the double-FPU `hypot` 1214 (388): the tie expansion and the subnormal
+  rounding, out of line.

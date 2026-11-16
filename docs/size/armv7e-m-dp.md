@@ -751,3 +751,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks fr
 ## P11.06j — The final fast figures (D216)
 
 Fast re-locked at its final figures (D187): `math-mix` 20400 → 16032 bytes of code, `math-float` 5990 → 5654. Against speed (12174 and 9582): `math-float` −41.0 %, inside D191's +20 % line; `math-mix` +31.7 %, over it, so its locked figure is this core's own line (D211: the figure P11.06f–i leave; D211 estimated about 15,300, +26 %). In `math-mix` the library's share is 11460 bytes in speed and 15306 in fast. Added: `__libc_fast_log_table.o` 1536, `__libc_fast_exp_pairs.o` 1024, the slow paths `__libc_fast_exp_special.o` 572, `__libc_fast_pow_special.o` 568, `__libc_fast_atan2_slow.o` 560 and `__libc_fast_trig_slow.o` 546. Grown: `powf.o` 20 → 996 (speed calls `pow`), `pow.o` 940 → 1328, `tan.o` 432 → 772, `sin.o` 304 → 676, `cos.o` 236 → 592. No longer linked: `__libc_log_core.o` 2036, `__libc_exp_core.o` 1356, `__libc_atan2_core.o` 1170, `__libc_sin_core.o` 304, `__libc_exp_scale.o` 272, `__libc_cos_core.o` 208. The rest of the excess is the fast files' speed: kernels in line and tables larger than speed's cores.
+
+## P11.07b — Correctly rounded fast hypot and hypotf (D222)
+
+Release and speed unchanged (`size-report diff`); no size program calls `hypot`, so every image and budget is unchanged. Fast member: `hypot.o` (`fast/`) 1214 bytes of code against speed's 388 (the exact midpoint test and the subnormal rounding, out of line).

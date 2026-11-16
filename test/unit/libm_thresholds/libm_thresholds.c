@@ -868,6 +868,27 @@ static void check_double_error_function(void)
 	QUIET(near_double(erf(0x1.7000000000000p+2), 0x1.ffffffffffffcp-1) && near_double(erf(0x1.7ffffffffffffp+2), 0x1.0000000000000p+0) && near_double(erf(0x1.bf47914be88f1p+1), 0x1.ffffe606932f0p-1) && near_double(erf(-0x1.bf478084cca96p+1), -0x1.ffffe6067a7b7p-1));
 }
 
+static void check_hypot(void)
+{
+	/*
+	 * P11.07b (the fast hypotf on the single-precision FPU cores, the fast hypot in double and in fixed point, D219; the
+	 * strict files elsewhere): the special values (an infinity wins over a NaN, F.10.4.4), zeros, overflow, subnormal
+	 * results, exact Pythagorean ties to even, and the regressions of the development: b below 2^-12 a gave a + b (1024
+	 * ulp), a near-tie was decided at the wrong base, a tiny pair skipped the tie test, and a subnormal double result was
+	 * rounded on twice its grid
+	 */
+	QUIET(hypotf(INFINITY, NAN) == INFINITY && hypotf(NAN, -INFINITY) == INFINITY && isnan(hypotf(NAN, 1.0f)) && is_positive_zero(hypotf(-0.0f, -0.0f)));
+	QUIET(hypot(INFINITY, NAN) == INFINITY && hypot(NAN, -INFINITY) == INFINITY && isnan(hypot(NAN, 1.0)) && is_positive_zero((float)hypot(-0.0, -0.0)));
+	QUIET(hypotf(-3.0f, 4.0f) == 5.0f && hypot(5.0, -12.0) == 13.0 && hypotf(0x1p-149f, 0x0p0f) == 0x1p-149f && hypot(0x1p-1074, 0.0) == 0x1p-1074);
+	QUIET(hypotf(0x1.fffffep127f, 1.0f) == 0x1.fffffep127f && hypot(0x1.fffffffffffffp1023, 1.0) == 0x1.fffffffffffffp1023);
+	RAISES(hypotf(0x1.fffffep127f, 0x1.fffffep127f) == INFINITY && hypot(0x1.fffffffffffffp1023, 0x1.fffffffffffffp1023) == INFINITY, FE_OVERFLOW);
+	QUIET(hypotf(7674599.0f, 16552800.0f) == 18245400.0f && hypot(3695999895999999.0, 8320000160000000.0) == 9104000104000000.0);
+	CHECK(hypotf(0x1.ffddfep-31f, -0x1.ffc018p-45f) == 0x1.ffddfep-31f && hypotf(0x1.4ecbap+4f, 0x1.4077f2p+4f) == 0x1.cf73ccp+4f);
+	CHECK(near(hypotf(-0x1.302552p-39f, 0x1.e2c518p-34f), 0x1.e2dd0ap-34f) && hypotf(0x1.05564p-128f, 0x1.5c72f8p-128f) == 0x1.b38fb8p-128f);
+	CHECK(hypot(0x0.20b6311aecd4dp-1022, 0x0.d587aaa0be5cep-1022) == 0x0.d805635a57072p-1022 && hypot(0x1p-1074, 0x1p-1074) == 0x1p-1074);
+	CHECK(near_double(hypot(0x1.6a09e667f3bccp+511, 0x1.6a09e667f3bccp+511), 0x1.fffffffffffffp+511) && near_double(hypot(1e-300, 1e-300), 0x1.e4e8d12762225p-997));
+}
+
 int main(void)
 {
 	check_exponentials();
@@ -890,6 +911,7 @@ int main(void)
 	check_double_inverse_trigonometric();
 	check_double_hyperbolic();
 	check_double_error_function();
+	check_hypot();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

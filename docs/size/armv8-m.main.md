@@ -914,3 +914,7 @@ Unchanged: the soft-double cores' logarithms are fixed-point (`libc/math/dp-fixe
 ## P11.06j — The final fast figures (D216)
 
 Fast re-locked at its final figures (D187): `math-mix` 35148 → 31622 bytes of code, `math-float` 4892 (unchanged). Against speed (29896 and 4746): `math-mix` +5.8 %, `math-float` +3.1 %, inside D191's +20 % line. The members as armv7e-m's (`pow.o` 1576 → 4388; the library's share 29072 → 30786).
+
+## P11.07b — Correctly rounded fast hypot and hypotf (D222)
+
+Release and speed unchanged (`size-report diff`); no size program calls `hypot` or `hypotf`, so every image and budget is unchanged. Fast members: `hypot.o` (fixed point) 1396 bytes of code against speed's 956, `hypotf.o` (`sp-nearest/fast/`) 964 against 368.
