@@ -975,3 +975,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks fr
 ## P11.06i — A 64-entry double log table (D215)
 
 Unchanged: the soft-double cores' logarithms are fixed-point (`libc/math/dp-fixed/fast/`) and never link `__libc_fast_log_table`.
+
+## P11.06j — The final fast figures (D216)
+
+Fast re-locked at its final figures (`size-report --build-type fast budget --flavour fast --lock`, D187): `math-mix` 46928 → 42644 bytes of code, `math-float` 12684 (unchanged). Against speed (41340 and 15456), D191's +20 % line: `math-mix` +3.2 %, `math-float` −17.9 %. In `math-mix` the library's share is 33848 bytes in speed and 35168 in fast: `pow.o` 1400 → 4118 (its fixed-point log and exp in line), `__libc_dp_fixed_log_table.o` 1440, `__libc_fast_exp_pairs.o` 1024 and `__libc_dp_fixed_atan.o` 974 added; `__libc_log_core.o` (2800), `__libc_atan2_core.o` (2396), `__libc_exp_core.o` (1904), `__libc_exact_fma.o` (872), `__libc_sinf_fixed.o` and `fma.o` no longer linked.
