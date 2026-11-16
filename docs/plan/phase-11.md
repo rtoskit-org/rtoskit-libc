@@ -384,7 +384,7 @@ for the half-angle forms.
 P11.04g was split into g1 and g2 (CLAUDE.md workflow): the first three rest
 on the exponential, the last three on the logarithm.
 
-## P11.05 — Double functions  `[~]`
+## P11.05 — Double functions  `[x]`
 
 Split (CLAUDE.md workflow), as P11.03 and P11.04: by family, each with the
 double-FPU cores (x86_64, armv7e-m-dp: double only, no double-double finish)
@@ -644,5 +644,13 @@ the exit follow (j, k, l).
   `release-package` and the release workflow package `release`, `speed` and
   `fast` (tested on armv7e-m: three trees, fast's `libc.a` its own).
 
-### P11.06l — Phase exit  `[ ]`
-- [ ] Phase exit: PLAN's phase table, decisions, open questions.
+### P11.06l — Phase exit  `[x]`
+- [x] Phase exit: PLAN's phase table, decisions, open questions. D217: the
+  exit criterion met point by point (armv7e-m against picolibc on the
+  aggregate, the 22 slower cases Q54; AOR at or below on every Arm core;
+  the size budget at D216's figures); open for later: Q54, and two defects
+  of the strict library seen on the way, Q56 (double `sin` and `tan` beyond
+  2^20) and Q57 (`erf` below 2^-28). PLAN's phase table and index unchanged
+  in wording: the criterion stands as written.
+
+**Phase 11 is done (D217).**
