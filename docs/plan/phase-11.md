@@ -658,7 +658,7 @@ reopened the phase for Q54 (D218): P11.07.
 
 ---
 
-## P11.07 — Q54: the fast cases still slower than picolibc (D218)  `[ ]`
+## P11.07 — Q54: the fast cases still slower than picolibc (D218)  `[~]`
 
 On armv7e-m, 22 fast maths cases take more instructions than picolibc's
 (P11.06a). Two groups, one sub-step per family, armv7e-m and armv8-m.main
@@ -674,7 +674,7 @@ On armv7e-m, 22 fast maths cases take more instructions than picolibc's
 
 Phase 11's rules hold: `fast` changes alone, debug, release and speed
 byte-identical, and every sub-step meets the definition of done at the top
-of this file. The fast contract widens only as Q58 and Q59 decide. `sqrt`
+of this file. The fast contract widens only as Q58 and Q59 decided (D219, D220). `sqrt`
 stays correctly rounded (C23 F.3, IEEE 754), so it can only be made faster
 in `fast` while staying exact.
 
@@ -683,43 +683,57 @@ the maintainer excludes; every Arm core still at or below AOR's count for
 every function AOR implements; the fast size budget held (D187's re-lock,
 armv7e-m-dp's own line, D211).
 
-### P11.07a — Research and decisions  `[ ]`
-- [ ] The strict-only functions: what a fast `hypot`/`hypotf`, `erfc`/`erfcf`,
+### P11.07a — Research and decisions  `[x]`
+- [x] The strict-only functions: what a fast `hypot`/`hypotf`, `erfc`/`erfcf`,
   `lgamma`/`lgammaf` and `tgamma`/`tgammaf` would cost and gain on every
   core (armv7e-m and armv8-m.main first), each against picolibc's count and
   bound; whether a correctly rounded `sqrt` can be faster in `fast` (the
   double one runs on the soft-double helpers there).
-- [ ] The single-precision FPU's float functions (`sinf`, `cosf`, `sincosf`,
+- [x] The single-precision FPU's float functions (`sinf`, `cosf`, `sincosf`,
   `tanf`, `atanf`, `asinf`, `acosf`, `atan2f`, `cbrtf`, `expm1f`, `log1pf`,
   `asinhf`, `acoshf`, `atanhf`): evaluation in float within the bound (1
   ulp; 1.5 for `tanf` and the hyperbolic functions), and the instruction
   counts each target (0.55, 0.75, the bound) reaches against picolibc's.
-- [ ] `docs/research/fast-math.md` (the contract as it may widen) and
+- [x] `docs/research/fast-math.md` (the contract as it may widen) and
   `libm-fast-float-trig.md`, `libm-fast-float-exp-log.md`; the maintainer's
   answers to Q58 and Q59, recorded as D*; the sub-steps below adjusted to
-  them (split, dropped or added).
+  them (split, dropped or added). Done: `fast-math.md` §12 (the 22
+  functions measured; musl's and picolibc's methods; prototypes: `sinf` 0.86
+  ulp in about 50 instructions, `hypotf` correctly rounded in about 30, a
+  cheap `tanf` 2.7 ulp); D219 (all the strict-only functions, `sqrt` and
+  `hypot`/`hypotf` correctly rounded, the rest at 1 ulp, `lgamma`'s zeros
+  by an absolute error) and D220 (a 0.9-ulp target on the
+  single-precision FPU); every sub-step below kept.
 
 ### P11.07b — `hypot`, `hypotf`  `[ ]`
-- [ ] Fast files at Q58's bound; a new fast-contract entry
-  (`test/unit/include/fast_contract.h`, `fast-math.md` §4) and fast
-  expectation files where a strict test checks the last bit; tests, gains.
+- [ ] Fast files, correctly rounded (D219): `hypotf` in float with exact
+  squares and one root correction (`sp-nearest/fast/`), `hypot` in fixed
+  point on the soft-double cores (`dp-fixed/fast/`) and in double on the
+  double-FPU cores where it beats the strict file; every test unchanged;
+  tests, gains. (The steps below that relax a function add its entry to
+  `test/unit/include/fast_contract.h` and `fast-math.md` §4, and fast
+  expectation files where a strict test checks the last bit.)
 
 ### P11.07c — `erfc`, `erfcf`  `[ ]`
-- [ ] `erfc` (and `erfcf` only if Q58 drops D178's correctly rounded
-  `erfcf`); as P11.07b.
+- [ ] `erfc` and `erfcf` at 1 ulp (D219; `erfcf` gives up D178's correct
+  rounding in `fast`); as P11.07b.
 
 ### P11.07d — `lgamma`, `lgammaf`  `[ ]`
-- [ ] As P11.07b; the poles, zeros and `signgam` as in speed.
+- [ ] At 1 ulp, and an absolute error (2^-60 double, 2^-28 float) within
+  2^-6 of a zero (D219); the poles and `signgam` as in speed; as P11.07b.
 
 ### P11.07e — `tgamma`, `tgammaf`  `[ ]`
 - [ ] As P11.07b; overflow, underflow and the poles as in speed.
 
 ### P11.07f — `sqrt` in `fast`, still correctly rounded  `[ ]`
-- [ ] Only if P11.07a finds a faster exact method and Q58 takes it.
+- [ ] Fixed point on the soft-double cores (`dp-fixed/fast/`): the rsqrt
+  seed and Newton steps, the rounding by an exact integer test (D219);
+  correctly rounded, every test unchanged; gains.
 
 ### P11.07g — `sinf`, `cosf`, `sincosf`, `tanf` on the single-precision FPU  `[ ]`
-- [ ] `libc/math/fpv4-sp/fast/` and `fpv5-sp/fast/` (armv7e-m,
-  armv8-m.main) at Q59's target; every float checked; tests, gains.
+- [ ] `libc/math/sp-nearest/fast/` (the fast layer armv7e-m and
+  armv8-m.main share) at D220's 0.9-ulp target, `tanf` at its 1.5 bound;
+  every float checked; tests, gains.
 
 ### P11.07h — `atanf`, `asinf`, `acosf`, `atan2f` on the single-precision FPU  `[ ]`
 - [ ] As P11.07g.
