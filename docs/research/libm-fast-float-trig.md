@@ -1111,3 +1111,41 @@ instructions per call against AOR's 67.56. Its range test
 subtraction with borrow. A double is a positive normal exactly when its high
 word lies in [0x00100000, 0x7ff00000), so it now tests that word alone, with
 the same classification: `log` 65.62, `log2` 69.62, `log10` 74.62.
+
+## 23. erfcf at 1 ulp on the single-precision FPU cores (P11.07c1, D219, D223)
+
+D178 kept `erfcf` correctly rounded in `fast`. §15's file did it with:
+- an accurate kernel (`__libc_fast_erfcf_accurate`, 2^-32: every
+  coefficient of R(t) up to t⁴ as a pair, e^u to the fourth power, a
+  32-entry table of 2^(j/32) pairs);
+- a rounding test;
+- the strict file's float-float code as the fallback for about 1.6 % of
+  arguments and both ends.
+
+That was 233 instructions on armv7e-m, against picolibc's 169. D219 gives
+`erfcf` the same 1-ulp bound as the other relaxed functions, so all three
+pieces go.
+
+**The method.** No new kernel:
+- **from 1/2:** the pair kernel `erff` already uses,
+  `__libc_fast_erfcf_kernel` (§13): e^(−a²) from a² as an exact pair, R
+  from degree-7 pieces with c0 + c1 t exact. 2 − erfc|x| for a negative x;
+  a subnormal result (above 9.19) scaled in two steps, hi + lo rounded once
+  first.
+- **below 1/2:** 1 − erf x, with erf x = (2/√π) x + x³ Q(x²) as in `erff`.
+  The leading product is exact by a fused multiply-add, and 1 minus it is a
+  two-sum.
+- **the ends, out of line:** NaN; erfc(+∞) = +0 and erfc(−∞) = 2 exactly
+  (the old fallback raised underflow for +∞); below −3.9, 2; above 10.06,
+  +0 with underflow.
+
+The accurate kernel, its 420-byte table of R pieces and the 256-byte
+table of 2^(j/32) pairs had no other user and are gone.
+
+**Measured.** Every float against the double `erfc`: at most 0.8018 ulp, at
+x = 0x1.26d3bcp+3. That is in the subnormal tail, where hi + lo is rounded
+before the scaling into the subnormals rounds again. 1,060,377 of 4.28·10^9
+results are not correctly rounded (0.025 %), none at 1 ulp.
+
+**Instructions** (armv7e-m, throughput): 233.3 → 131.3, below picolibc's
+168.75; armv8-m.main alike.

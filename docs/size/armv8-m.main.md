@@ -918,3 +918,7 @@ Fast re-locked at its final figures (D187): `math-mix` 35148 → 31622 bytes of 
 ## P11.07b — Correctly rounded fast hypot and hypotf (D222)
 
 Release and speed unchanged (`size-report diff`); no size program calls `hypot` or `hypotf`, so every image and budget is unchanged. Fast members: `hypot.o` (fixed point) 1396 bytes of code against speed's 956, `hypotf.o` (`sp-nearest/fast/`) 964 against 368.
+
+## P11.07c1 — erfcf at 1 ulp on the single-precision FPU (D223)
+
+Release and speed unchanged (`size-report diff`); no size program calls `erfcf`, so every image and budget is unchanged. Fast: `erfcf.o` 884 bytes of code (speed's 598); `__libc_fast_erfcf_r_table.o` (420) and `__libc_fast_exp2f_table.o` (256), the accurate kernel's, removed.

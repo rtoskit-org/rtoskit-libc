@@ -16,7 +16,7 @@
  * A relaxed function to nearest may return either float around the exact value, which lies within half an ulp of
  * result toward direction (below 1 ulp), and with a 1.5 ulp bound also the float on the other side of result; in a
  * directed mode it promises no bound, only a finite result of the correctly rounded one's sign. The other functions
- * (erfcf, lgammaf, tgammaf) keep the correctly rounded result in every mode.
+ * (lgammaf, tgammaf; erfcf until D219) keep the correctly rounded result in every mode.
  */
 
 #include <math.h>

@@ -868,6 +868,20 @@ static void check_double_error_function(void)
 	QUIET(near_double(erf(0x1.7000000000000p+2), 0x1.ffffffffffffcp-1) && near_double(erf(0x1.7ffffffffffffp+2), 0x1.0000000000000p+0) && near_double(erf(0x1.bf47914be88f1p+1), 0x1.ffffe606932f0p-1) && near_double(erf(-0x1.bf478084cca96p+1), -0x1.ffffe6067a7b7p-1));
 }
 
+static void check_erfcf_ends(void)
+{
+	/*
+	 * P11.07c1 (the fast erfcf of the single-precision FPU cores at 1 ulp, D219; the strict files elsewhere): each side
+	 * of the switch at 1/2 and of -3.9, the subnormal results down to 10.06, the worst point of the sweep (9.21, the
+	 * subnormal tail's double rounding, 0.80 ulp), and the infinities exactly (+0 and 2; not QUIET: the strict file's
+	 * +0 for +inf raises underflow)
+	 */
+	CHECK(within_ulp(erfcf(0x1.fffffep-2f), 0x1.eb02163ed2107p-2) && within_ulp(erfcf(0.5f), 0x1.eb02147ce245cp-2) && within_ulp(erfcf(-0x1.fffffep-2f), 0x1.853f7a704b7bep+0));
+	CHECK(within_ulp(erfcf(0x1.26d3bcp+3f), 0x1.6982c4caf32e4p-127) && within_ulp(erfcf(9.0f), 0x1.198d422be3f8cp-121) && within_ulp(erfcf(10.0f), 0x1.7d8a7f2a8a2d0p-149));
+	CHECK(within_ulp(erfcf(0x1.4189p+3f), 0x1.2248202fe72ddp-150) && erfcf(-0x1.f33334p+1f) == 2.0f && erfcf(-0x1.f33332p+1f) == 2.0f && erfcf(0x1p-25f) == 0x1.fffffep-1f);
+	CHECK(is_positive_zero(erfcf(INFINITY)) && erfcf(-INFINITY) == 2.0f && is_positive_zero(erfcf(10.1f)) && isnan(erfcf(NAN)));
+}
+
 static void check_hypot(void)
 {
 	/*
@@ -912,6 +926,7 @@ int main(void)
 	check_double_hyperbolic();
 	check_double_error_function();
 	check_hypot();
+	check_erfcf_ends();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

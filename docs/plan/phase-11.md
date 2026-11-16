@@ -719,9 +719,21 @@ armv7e-m-dp's own line, D211).
   (picolibc 1443), `hypotf` 161 → 52.4 (53.9). Q61: the soft-float cores'
   `hypotf` and armv7e-m-dp's `hypot` stay above picolibc.
 
-### P11.07c — `erfc`, `erfcf`  `[ ]`
-- [ ] `erfc` and `erfcf` at 1 ulp (D219; `erfcf` gives up D178's correct
-  rounding in `fast`); as P11.07b.
+### P11.07c — `erfc`, `erfcf`  `[~]`
+Split: the float function rests on an existing kernel, the double needs new
+ones (fixed point on the soft-double cores, double on the double-FPU cores).
+
+### P11.07c1 — `erfcf` at 1 ulp  `[x]`
+- [x] `sp-nearest/fast/erfcf.c` without its rounding test and float-float
+  fallback (D219: `erfcf` gives up D178's correct rounding in `fast`); the
+  fast contract's `erfc` entry (1 ulp, `erfc` and `erfcf`); tests, gains.
+  D223: `erff`'s pair kernel from 1/2, 1 − erf below; every float within
+  0.8018 ulp; armv7e-m 233.3 → 131.3 instructions (picolibc 168.75); the
+  accurate kernel and two tables (676 bytes) removed.
+
+### P11.07c2 — `erfc` at 1 ulp  `[ ]`
+- [ ] The double `erfc` in fixed point on the soft-double cores and in
+  double on the double-FPU cores, at 1 ulp (D219); as P11.07b.
 
 ### P11.07d — `lgamma`, `lgammaf`  `[ ]`
 - [ ] At 1 ulp, and an absolute error (2^-60 double, 2^-28 float) within
