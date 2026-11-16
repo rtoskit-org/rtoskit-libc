@@ -1583,3 +1583,7 @@ Unchanged: no bench case reaches the special paths (|x| from 512, or 256 for `ex
 ## P11.06i — A 64-entry double log table (D215)
 
 Unchanged: the soft-double cores' logarithms are fixed-point and do not use the table.
+
+## P11.07b — Correctly rounded fast hypot and hypotf (D222)
+
+Fast, instructions per call (throughput): `hypot` 14,772.88 → 1176.88 (picolibc 2644.94); `hypotf` unchanged (strict). The fast baselines take the `hypot`/`hypotf` cases only.

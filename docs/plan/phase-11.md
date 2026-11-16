@@ -705,14 +705,19 @@ armv7e-m-dp's own line, D211).
   by an absolute error) and D220 (a 0.9-ulp target on the
   single-precision FPU); every sub-step below kept.
 
-### P11.07b — `hypot`, `hypotf`  `[ ]`
-- [ ] Fast files, correctly rounded (D219): `hypotf` in float with exact
+### P11.07b — `hypot`, `hypotf`  `[x]`
+- [x] Fast files, correctly rounded (D219): `hypotf` in float with exact
   squares and one root correction (`sp-nearest/fast/`), `hypot` in fixed
   point on the soft-double cores (`dp-fixed/fast/`) and in double on the
   double-FPU cores where it beats the strict file; every test unchanged;
   tests, gains. (The steps below that relax a function add its entry to
   `test/unit/include/fast_contract.h` and `fast-math.md` §4, and fast
   expectation files where a strict test checks the last bit.)
+  D222: correctly rounded in all three (float, double, fixed point), exact
+  midpoint tests, ties to even; 0 misrounded in 10^10 and 2·10^9 samples
+  and every Pythagorean tie; armv7e-m `hypot` 5835 → 346 instructions
+  (picolibc 1443), `hypotf` 161 → 52.4 (53.9). Q61: the soft-float cores'
+  `hypotf` and armv7e-m-dp's `hypot` stay above picolibc.
 
 ### P11.07c — `erfc`, `erfcf`  `[ ]`
 - [ ] `erfc` and `erfcf` at 1 ulp (D219; `erfcf` gives up D178's correct

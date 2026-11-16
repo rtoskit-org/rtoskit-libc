@@ -315,10 +315,10 @@
     "insns": 273.06
    },
    "hypot/latency": {
-    "insns": 14811.75
+    "insns": 1215.75
    },
    "hypot/throughput": {
-    "insns": 14772.88
+    "insns": 1176.88
    },
    "hypotf/latency": {
     "insns": 6294.19
