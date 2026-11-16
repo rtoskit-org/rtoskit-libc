@@ -529,3 +529,175 @@ by line. Each check was read against section 4.1:
   bound table, `fabs(...) <=`, every exception bit), so debug, release and
   speed check what they checked before; with no `fast/` libm file the fast
   header passes everywhere too.
+
+## 12. Q54: the cases still slower than picolibc (P11.07a)
+
+On armv7e-m and armv8-m.main, 22 fast maths functions (44 cases with their
+latencies) take more instructions than picolibc 1.8.6. Measured on the
+current tree (throughput, armv7e-m; armv8-m.main within 2 %):
+
+| Function | fast | picolibc | ratio | Where the fast build takes it |
+|---|---:|---:|---:|---|
+| `erfc` | 37,968 | 6630 | 5.73 | strict, on the soft-double helpers |
+| `lgamma` | 17,366 | 3901 | 4.45 | strict, soft-double |
+| `hypot` | 5835 | 1443 | 4.04 | strict, soft-double |
+| `tgamma` | 23,498 | 6023 | 3.90 | strict, soft-double |
+| `lgammaf` | 572 | 147 | 3.89 | strict (`sp-nearest`) |
+| `tgammaf` | 846 | 238 | 3.56 | strict (`sp-nearest`) |
+| `hypotf` | 161 | 54 | 3.00 | strict (`sp-nearest`) |
+| `tanf` | 216 | 96 | 2.25 | `sp-nearest/fast`, float-float |
+| `sqrt` | 1968 | 884 | 2.23 | strict, soft-double (correctly rounded) |
+| `cbrtf` | 81 | 53 | 1.53 | `sp-nearest/fast` |
+| `atanf` | 92 | 65 | 1.42 | `sp-nearest/fast` |
+| `erfcf` | 233 | 169 | 1.38 | `sp-nearest/fast`, correctly rounded (D178) |
+| `expm1f` | 78 | 61 | 1.29 | `sp-nearest/fast` |
+| `sinf` | 128 | 101 | 1.27 | `sp-nearest/fast`, float-float |
+| `acosf` | 63 | 50 | 1.26 | `sp-nearest/fast` |
+| `cosf` | 123 | 100 | 1.23 | `sp-nearest/fast`, float-float |
+| `asinhf` | 135 | 112 | 1.21 | `sp-nearest/fast` |
+| `acoshf` | 125 | 106 | 1.19 | `sp-nearest/fast` |
+| `log1pf` | 96 | 82 | 1.18 | `sp-nearest/fast` |
+| `asinf` | 64 | 57 | 1.12 | `sp-nearest/fast` |
+| `atan2f` | 118 | 109 | 1.09 | `sp-nearest/fast` |
+| `atanhf` | 111 | 107 | 1.04 | `sp-nearest/fast` |
+
+The single-precision fast files live in `libc/math/sp-nearest/fast/`, which
+both cores share (P11.07's plan named `fpv4-sp/fast/` and `fpv5-sp/fast/`;
+`sp-nearest/fast/` is the right place). armv7-m's fixed-point fast files are
+no alternative here: on armv7-m they take 2–4 times armv7e-m's current
+counts (`sinf` 379, `tanf` 569).
+
+### 12.1 Sources (ideas only)
+
+Read for this section (2026-11-16):
+- musl `src/math/hypot.c`, `hypotf.c`, `tgamma.c`, `lgamma_r.c`, `erf.c`
+  (erfc), `sqrt.c` (git.musl-libc.org, `plain/` paths);
+- picolibc `libm/math/kf_sin.c`, `sf_sin.c`, `kf_tan.c` and `libm/common/sinf.c`
+  (raw.githubusercontent.com, `main`).
+
+CORE-MATH's `tgammaf.c` and `lgammaf.c` were not readable (the host refused
+automated fetching); nothing here comes from them.
+
+What they do:
+- **`hypot` (musl):** order by magnitude, give up on an exponent gap
+  above 64, scale by 2^±700 at the ends, square both operands as exact
+  pairs (Dekker's split), add the pairs, one square root. `hypotf`: the
+  squares in double, a float square root of the double sum.
+- **`sqrt` (musl, software):** a 128-entry reciprocal square root seed,
+  two 32-bit Goldschmidt steps and one 64-bit Newton step, then the
+  rounding decided by an exact integer comparison of (s + ½ ulp)² with
+  the operand: correctly rounded, no division.
+- **`erfc` (musl, fdlibm):** below 0.84375, 1 − erf by a rational in x²;
+  then a rational about 1; from 1.25, exp(−x² − 0.5625 + R(1/x²))/x with x²
+  split so that the exponential's argument is exact, two rationals of
+  degree 6–8, underflow from 28. Two `exp` calls and two divisions.
+- **`lgamma` (musl, fdlibm):** pieces by |x|: −log|x| when tiny,
+  reflection by sin(πx) for negative x, rationals about the minimum near
+  1.46 and on [2, 3], the recurrence lgamma(x) = log(product) + lgamma
+  in [2, 3) below 8, Stirling's series in 1/x from 8, x(log x − 1) from
+  2^58. One or two logarithms.
+- **`tgamma` (musl):** a Lanczos sum (a 13-term rational) times
+  e^−y y^(x−½), the power split to avoid overflow, a factorial table to
+  23, reflection for negative x.
+- **picolibc's `sinf`:** on these cores picolibc builds the fdlibm float
+  kernel (its default `sinf`, AOR's double one at 0.56 ulp, needs a double
+  FPU to be fast): a degree-13 odd polynomial, the cosine as
+  w = 1 − z/2 with its error, w + (((1 − w) − z/2) + ...), a two-sum of the
+  leading terms. `tanf`: a 13-term polynomial, reflection about π/4 above
+  0.67, one division for the cotangent.
+
+### 12.2 Calibration (prototypes, not committed)
+
+Written for this note in `float` with explicit fused multiply-adds, each
+swept on the host over every float from 2^-12 to 128 against double, and
+compiled for armv7e-m (`-Os`, FPv4-SP) to count its instructions
+(statically, both branches; a call runs about 45–55 with the bench's
+overhead). Reduction in all of them: k = round(2x/π) by the 1.5·2^23 shift
+in one fma, r = x − k·P1 exact by an fma (P1 = π/2 to 24 bits), then
+−k·P2 and −k·P3:
+
+| Prototype | max ulp | misrounded | instructions |
+|---|---:|---:|---:|
+| `sinf`/`cosf` A: r rounded once, plain polynomials | 1.4646 | 6.5 % | — |
+| B: r as hi + lo | 1.3848 | 2.8 % | — |
+| C: B, and cos r = 1 − z/2 by a two-sum (fdlibm's idea) | 0.9050 | 1.7 % | 63 |
+| D: C with fused multiply-adds in the polynomials | 0.8642 | 1.7 % | 62 |
+| `tanf`: sin r/cos r from D's pieces | 2.4025 | 30.6 % | 62 |
+| `tanf`: r + r³T(r²), degree 6, −1/t for odd k | 2.7077 (even k 1.56) | 12.7 % | 58 |
+| `hypotf`: sqrt of fma(x, x, y·y) | 1.0193 | 13.1 % | 4 + specials |
+| `hypotf`: exact squares as pairs, one root correction | **0.5000** | **0** (10^9 pairs) | 19 + specials |
+
+What follows:
+- **Plain float does not meet even the 1-ulp bound** for the
+  trigonometric functions: cos r's 1 + z·C loses up to 0.6 ulp to z's
+  rounding. With the two cheap corrections (r as a pair, 1 − z/2 by a
+  two-sum) `sinf` and `cosf` reach 0.86 ulp in about 50 instructions a
+  call, half of picolibc's 101. The 0.55 target needs the current
+  files' float-float (128).
+- **`tanf` is harder.** Its bound is already 1.5 ulp, and neither cheap
+  form meets it: the derivative 1 + t² doubles every error near π/4, and
+  the cotangent's reciprocal adds its own. Meeting 1.5 needs r³ carried
+  exactly and a corrected reciprocal: an estimated 80–100 instructions,
+  about picolibc's 96.
+- **`hypotf` can be correctly rounded and still cheap:** about 30–35
+  instructions with ordering, specials and scaling, against picolibc's 54
+  and today's 161. No contract change is needed.
+
+### 12.3 Estimates for the rest
+
+From the prototypes and the fast build's own kernels on armv7e-m (`exp`
+260, `log` 295, `erf` 518, `cbrt` 296 instructions, all fixed point on the
+soft-double cores):
+
+| Function | today | picolibc | estimate | How | Contract |
+|---|---:|---:|---:|---|---|
+| `sqrt` | 1968 | 884 | 150–200 | fixed point: the `dp-fixed` rsqrt seed and Newton steps, then an exact integer test for the rounding (musl's idea) | correctly rounded, unchanged |
+| `hypot` | 5835 | 1443 | 250–350 | exact 128-bit squares and sum, the same square root | correctly rounded or within 0.5 + ε |
+| `hypotf` | 161 | 54 | 30–35 | exact float pairs, one correction (12.2) | correctly rounded |
+| `erfc` | 37,968 | 6630 | 700–1000 | 1 − erf below about 0.5 (the fast `erf`), else e^−x² by the fixed exp with x² exact, times fitted pieces in 1/x | new entry, 1 ulp |
+| `erfcf` | 233 | 169 | 140–170 | e^−x² by the float exp kernel, fitted pieces | drops D178's correct rounding |
+| `lgamma` | 17,366 | 3901 | 600–900 | the fixed log kernel, fitted pieces, the recurrence below 8, Stirling above, reflection for x < 0 | new entry: 1 ulp, absolute error near the zeros (below) |
+| `lgammaf` | 572 | 147 | 120–160 | the same in float with the float log kernel | as `lgamma` |
+| `tgamma` | 23,498 | 6023 | 800–1200 | e^(fixed lgamma) on [1, 2] and above, the product recurrence, reflection | new entry, 1 ulp |
+| `tgammaf` | 846 | 238 | 150–220 | float, as `tgamma` | new entry, 1 ulp |
+| `sinf`, `cosf` | 128, 123 | 101, 100 | about 50 | prototype D | target 0.55 → 0.9 |
+| `sincosf` | 212 | 214 | about 75 | D's two polynomials on one reduction | as `sinf` |
+| `tanf` | 216 | 96 | 80–100 | r³ exact, corrected reciprocal | bound 1.5 kept |
+| `atanf`, `asinf`, `acosf` | 92, 64, 63 | 65, 57, 50 | 40–50 | one polynomial per range in float, the leading term as a pair | target 0.55 → 0.9 |
+| `atan2f` | 118 | 109 | 65–80 | `atanf`'s kernel on the quotient, one division | as `atanf` |
+| `cbrtf` | 81 | 53 | about 40 | a float seed, two Newton steps, one correction | target 0.55 → 0.9 |
+| `expm1f`, `log1pf` | 78, 96 | 61, 82 | 45–55, 55–65 | the float exp and log kernels with plain polynomials | target 0.55 → 0.9 |
+| `asinhf`, `acoshf`, `atanhf` | 135, 125, 111 | 112, 106, 107 | 75–90 | the float log kernel on a plain argument | bound 1.5 kept |
+
+**`lgamma`'s zeros.** lgamma has zeros at 1 and 2 and two between each pair
+of negative integers. Near them the result is far smaller than the terms it
+is made of, and no fixed-point or float evaluation of the usual pieces keeps
+a relative error of 1 ulp there without special expansions about each zero.
+The strict file has them (`libm-special.md`). picolibc's fdlibm `lgamma`
+keeps the zeros at 1 and 2 (dedicated pieces) but loses relative accuracy
+near the negative ones. A fast `lgamma` can either keep expansions about the
+zeros (larger and slower), or promise an absolute error there (below 2^-60
+for the double, 2^-28 for the float, within about 2^-6 of a zero) and 1 ulp
+elsewhere.
+
+**Size.** Every replacement of a strict function is smaller than what it
+replaces in that image: `erfc`, `lgamma` and `tgamma`'s strict files pull
+the double-double cores and the soft-double helpers. The float files at the
+looser target drop their float-float code; `sinf`'s `__libc_fast_sinf_table`
+(256 bytes) and the four-piece reduction go.
+
+### 12.4 The choices (Q58, Q59)
+
+- **Q58, the strict-only functions.** `sqrt` stays correctly rounded (C23
+  F.3), so only its method changes: no decision needed beyond taking it.
+  `hypot` and `hypotf` can be correctly rounded at a fraction of today's
+  cost: again no contract change. `erfc`, `lgamma`, `tgamma` and their float
+  forms need new fast-contract entries (1 ulp), `erfcf` gives up D178's
+  correct rounding, and `lgamma` needs a rule near its zeros.
+- **Q59, the single-precision FPU's float functions.** A 0.9-ulp target in
+  plain float with two cheap corrections halves `sinf` and `cosf` (128 →
+  about 50) and brings most of the list below picolibc. The 0.55 target
+  costs what it costs today. A middle target (0.75) would keep part of the
+  float-float code; from the prototypes, roughly 65–75 instructions for
+  `sinf`. `tanf` and the inverse hyperbolic functions are already at the
+  1.5 bound, where the gain comes from the method, not the target.
