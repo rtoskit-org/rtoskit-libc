@@ -30,6 +30,7 @@ and builds for x86-64 as well, which is where it is developed and tested.
    exactly, at any precision. The float maths functions are correctly
    rounded, and the double functions are below 0.53 ulp. Floating-point
    exceptions are raised on every core, including those without an FPU.
+   The `fast` build relaxes this for speed: below 1 ulp, to nearest.
 
 4. **Small by construction.** Each function lives in its own file and
    section, so `--gc-sections` keeps only what a program calls. There is no
@@ -43,27 +44,30 @@ and builds for x86-64 as well, which is where it is developed and tested.
    them in its own archive. Two ports are included: `port/none` for bare
    metal and `port/linux`, which the test suite runs on.
 
-6. **A size build and a speed build.** The `release` build is as small as we
-   can make it. The `speed` build compiles the same sources with faster
-   string routines, conversions and, on cores without an FPU, fixed-point
-   maths. Drop-in archives trim `printf` further (`libc-nofloat.a`,
+6. **A size build, a speed build and a fast build.** The `release` build is
+   as small as we can make it. The `speed` build compiles the same sources
+   with faster string routines, conversions and, on cores without an FPU,
+   fixed-point maths. The `fast` build is the speed build with a maths
+   library that is less accurate (below 1 ulp, 1.5 for `tan`, the hyperbolic
+   functions and `erf`) and rounds to nearest only, in exchange for a
+   fraction of the instructions (a quarter on the Cortex-M4F). Drop-in archives trim `printf` further (`libc-nofloat.a`,
    `libc-minimal-printf.a`) or swap in the smallest allocator
    (`libc-tinymalloc.a`), and `libc.a` itself can use any of three
    allocators: nano, TLSF or tiny.
 
 The project's goals, architecture and every design decision (numbered D1 to
-D160) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
+D216) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
 done in phases: conformance first, then size, then speed, then a comparison
 with Arm Optimized Routines, then a round of speed work that the size
 budgets had held back, then the POSIX subset and C++ support, faster sine
-and cosine, and POSIX threads.
+and cosine, POSIX threads, and the fast build.
 
 ## Getting it
 
 Each [release](https://github.com/rtoskit-org/rtoskit-libc/releases) carries
 one prebuilt archive per architecture, `rtoskit-libc-<version>-<arch>.tar.xz`,
-holding the headers and archives of the `release` and `speed` builds, with
-`SHA256SUMS` and a build-provenance attestation for each
+holding the headers and archives of the `release`, `speed` and `fast` builds
+(from the first release after phase 11), with `SHA256SUMS` and a build-provenance attestation for each
 (`gh attestation verify <archive> --repo rtoskit-org/rtoskit-libc`). Unpack one
 and use its `release/include` and `release/lib` wherever this README uses
 `images/<arch>/release/`. Releases are 0.x for now: the ABI and the OS
@@ -114,12 +118,15 @@ All of this runs as part of `make check`. See
 | Float functions, directed rounding | Correctly rounded | not measured | Up to 2 ulp; up to 35 % misrounded upward |
 | Double functions | Below 0.53 ulp, at most 0.023 % misrounded | Up to about 1 ulp | Below 0.53 ulp, except `erf` at 0.89 ulp |
 | Floating-point exceptions | Raised on every core, including the soft `<fenv.h>` on Armv6-M | — | AOR's Arm soft-float raises none |
+| The `fast` build, round to nearest | Below 1 ulp (1.5 for `tan`, the hyperbolic functions and `erf`), checked by the same tests; `erfc`, `lgamma`, `tgamma` and the rest as above. Each function's measured worst case is in the `libm-fast-*.md` notes. Directed rounding is not supported. | — | — |
 
 The method and the per-function results are in
 [`docs/research/optimized-routines.md`](docs/research/optimized-routines.md)
 and [`docs/research/float-hard-cases.md`](docs/research/float-hard-cases.md),
 and each family of maths functions has its own `libm-*.md` note in
-[`docs/research/`](docs/research/).
+[`docs/research/`](docs/research/). The fast build's contract and its
+measurements are in [`docs/research/fast-math.md`](docs/research/fast-math.md)
+and [`docs/perf/phase-11.md`](docs/perf/phase-11.md).
 
 ### Size
 
@@ -162,13 +169,13 @@ geometric mean over each benchmark program. The table divides every column
 by the count for our speed build, so that column reads 1.00 and anything
 above 1 took more instructions.
 
-| Cortex-M4F (`armv7e-m`) | rtoskit size build | rtoskit speed build | rtoskit + AOR | picolibc | newlib-nano |
-|---|---:|---:|---:|---:|---:|
-| string (603 cases) | 1.51 | 1.00 | 1.03 | 1.48 | 1.18 |
-| stdio (23) | 1.22 | 1.00 | 1.00 | 1.16 | 0.94 |
-| `strto*` (21) | 6.17 | 1.00 | 0.97 | 1.00 | 1.77 |
-| malloc (9) | 1.07 | 1.00 | 1.00 | 7.21 | 0.68 |
-| maths, throughput | 1.00 | 1.00 | 0.95 | 0.39 | 0.42 |
+| Cortex-M4F (`armv7e-m`) | rtoskit size build | rtoskit speed build | rtoskit fast build | rtoskit + AOR | picolibc | newlib-nano |
+|---|---:|---:|---:|---:|---:|---:|
+| string (603 cases) | 1.51 | 1.00 | 1.00 | 1.03 | 1.48 | 1.18 |
+| stdio (23) | 1.22 | 1.00 | 1.00 | 1.00 | 1.16 | 0.94 |
+| `strto*` (21) | 6.17 | 1.00 | 1.00 | 0.97 | 1.00 | 1.77 |
+| malloc (9) | 1.07 | 1.00 | 1.00 | 1.00 | 7.21 | 0.68 |
+| maths, throughput | 1.00 | 1.00 | 0.25 | 0.95 | 0.39 | 0.42 |
 
 The figures were measured on the current tree with `bench-runner compare`
 (picolibc and newlib-nano) and `bench-runner aor`; the original comparisons
@@ -179,14 +186,21 @@ other case counts as 1.00. Over the string cases it does change, it takes
 1.08 of our instructions: it is still ahead on long `strlen` and `memchr`
 (0.87 and 0.73 at 1 KiB), we are ahead on short strings and on `memset`.
 Over the maths cases it changes it takes 0.93 of ours, and its double `exp`,
-`exp2`, `log`, `log2` and `pow` take 0.18–0.31.
+`exp2`, `log`, `log2` and `pow` take 0.18–0.31. The fast build differs from
+the speed build in its maths library only; it is measured against AOR's
+fast-math routines with its own build in
+[`docs/perf/phase-11.md`](docs/perf/phase-11.md), where it is at or below
+AOR's count for every function AOR provides, on every Arm core.
 
 Our speed build is the fastest of the three at bulk `memcpy` and `memset`,
 at `strtod` and integer `printf`, and at `realloc` (against picolibc), and its
 introsort `qsort` saves the others' 38–49 % extra. On single-precision and
 soft-float cores AOR's float maths takes 4–7 times our instructions. We are
 slower where we chose exactness: our maths functions take 2–3 times
-picolibc's instructions because they are correctly rounded, and `%f` and
+picolibc's instructions because they are correctly rounded. The fast build
+gives up that exactness: picolibc took 1.75 times its maths instructions on
+this core when they were compared (22 of 132 cases were still slower, mostly
+the functions it leaves exact, such as `sqrt`, `hypot` and `lgamma`). `%f` and
 `%g` cost more because they format exactly. newlib-nano's allocator is
 faster because it takes no lock; ours is always thread-safe.
 
@@ -269,9 +283,9 @@ Without it, `make` builds all four, each in its own tree.
 | `debug` | `-O0 -g3`, `assert` enabled | Stepping through the library in a debugger |
 | `release` | `-Os -g3`, `NDEBUG` | The size build, and the one to ship. A size budget ([`docs/size/budget.json`](docs/size/budget.json)) keeps it from growing. |
 | `speed` | `-Os -g3`, `NDEBUG`, plus faster routines | The speed build. It adds 32-byte-per-iteration `memcpy`, `memmove` and `memset`, word-at-a-time `strlen`, `strcmp`, `strchr` and `memchr` on Thumb-2, block copies on Armv6-M, fast paths in `strtol`, `printf` and `strtod`, and fixed-point float maths on the cores without an FPU. |
-| `fast` | as `speed` | The speed build with a faster maths library that is less accurate and rounds to nearest only (phase 11, in progress). Until that work lands it is the speed build, and the release archives leave it out. |
+| `fast` | as `speed`, plus faster maths | The speed build with a faster maths library that is less accurate (below 1 ulp to nearest; 1.5 for `tan`, the hyperbolic functions and `erf`) and rounds to nearest only. Exceptions, `errno` and the special values are as in the other builds. On the Cortex-M4F its maths take a quarter of the speed build's instructions. |
 
-Both optimised builds install the same headers and archive names, so a
+The three optimised builds install the same headers and archive names, so a
 program switches between them by pointing at the other install. One caution:
 the speed build's Thumb-2 string routines use unaligned `LDR` and `STR`, as
 GCC's own code does, so use the size build if your system sets
@@ -541,7 +555,7 @@ For more detail:
   [armv7e-m](docs/size/armv7e-m.md), [armv7e-m-dp](docs/size/armv7e-m-dp.md),
   [armv8-m.main](docs/size/armv8-m.main.md).
 - Performance reports: [phase 3](docs/perf/phase-3.md),
-  [phase 4 (AOR)](docs/perf/phase-4.md), and one per architecture:
+  [phase 4 (AOR)](docs/perf/phase-4.md), [phase 11 (the fast build)](docs/perf/phase-11.md), and one per architecture:
   [x86_64](docs/perf/x86_64.md), [armv6-m](docs/perf/armv6-m.md),
   [armv6s-m](docs/perf/armv6s-m.md), [armv7-m](docs/perf/armv7-m.md),
   [armv7e-m](docs/perf/armv7e-m.md), [armv7e-m-dp](docs/perf/armv7e-m-dp.md),
@@ -551,7 +565,7 @@ For more detail:
   [4](docs/plan/phase-4.md), [5](docs/plan/phase-5.md),
   [6](docs/plan/phase-6.md) (planned), [7](docs/plan/phase-7.md),
   [8](docs/plan/phase-8.md), [9](docs/plan/phase-9.md),
-  [10](docs/plan/phase-10.md).
+  [10](docs/plan/phase-10.md), [11](docs/plan/phase-11.md).
 - [`CLAUDE.md`](CLAUDE.md): how we work on the code: the workflow, the
   coding style and the tests.
 - [`docs/standard/`](docs/standard/): the standard text the clean-room work

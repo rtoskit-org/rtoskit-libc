@@ -15,10 +15,10 @@
 #
 #   tools/scripts/release-package <version> <arch> [<output directory>]
 #
-# installs the headers and the libc*.a, libm.a and port archives of the release (size) and speed builds with
-# "make library" into a staging directory, then writes <output directory>/rtoskit-libc-<version>-<arch>.tar.xz
-# (default dist/) holding rtoskit-libc-<version>-<arch>/{release,speed}/{include,lib}, LICENSE, README.md and
-# VERSION. Run it from the project root after a build of that architecture (make check builds every build type).
+# installs the headers and the libc*.a, libm.a and port archives of the release (size), speed and fast builds
+# with "make library" into a staging directory, then writes <output directory>/rtoskit-libc-<version>-<arch>.tar.xz
+# (default dist/) holding rtoskit-libc-<version>-<arch>/{release,speed,fast}/{include,lib}, LICENSE, README.md
+# and VERSION. Run it from the project root after a build of that architecture (make check builds every build type).
 
 set -eu
 
@@ -42,8 +42,8 @@ output=$(cd "${output}" && pwd)
 stage=$(mktemp -d)
 trap 'rm -rf "${stage}"' EXIT
 
-# Not the fast build type until phase 11 meets its exit criterion (P11.06, PLAN D163)
-for build_type in release speed; do
+# The fast build type since phase 11 met its exit criterion (P11.06k, PLAN D163)
+for build_type in release speed fast; do
 	make --no-print-directory ARCH_CROSS="${arch}" BUILD_TYPE="${build_type}" PREFIX="${stage}/prefix" library >/dev/null
 	mkdir -p "${stage}/${name}/${build_type}"
 	cp -R "${stage}/prefix/${arch}/${build_type}/include" "${stage}/prefix/${arch}/${build_type}/lib" "${stage}/${name}/${build_type}/"
