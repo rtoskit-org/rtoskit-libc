@@ -15,8 +15,8 @@
  * The dense sweeps' and near-halfway cases' expectation in the fast build type (PLAN D162, D163, D164; in place of
  * ../expect.c, subdir.mk): a relaxed float function's results within its bound of the double function, which is
  * good to far below a float ulp; a relaxed double function's near-halfway result the correctly rounded one or a
- * neighbour (the reference here is the correctly rounded value, so this is its bound plus half an ulp); erfcf as in
- * ../expect.c
+ * neighbour (the reference here is the correctly rounded value, so this is its bound plus half an ulp); erfcf is
+ * relaxed since D219
  */
 
 #include <math.h>

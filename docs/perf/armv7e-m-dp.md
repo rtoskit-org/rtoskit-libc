@@ -1194,3 +1194,7 @@ Fast, instructions per call (latency): `log` 66.69 → 65.69 (AOR 68.62), `log2`
 ## P11.07b — Correctly rounded fast hypot and hypotf (D222)
 
 Fast, instructions per call (throughput): `hypot` 137.69 → 108.69 (picolibc 61.94); `hypotf` unchanged (strict, 35.38). The fast baselines take the `hypot`/`hypotf` cases only.
+
+## P11.07c1 — erfcf at 1 ulp on the single-precision FPU (D223)
+
+Unchanged: `sp-nearest/fast/` is the single-precision FPU cores' only.

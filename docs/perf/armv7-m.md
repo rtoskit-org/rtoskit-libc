@@ -1217,3 +1217,7 @@ Unchanged: the soft-double cores' logarithms are fixed-point and do not use the 
 ## P11.07b — Correctly rounded fast hypot and hypotf (D222)
 
 Fast, instructions per call (throughput): `hypot` 5956.38 → 345.88 (picolibc 1448.38); `hypotf` unchanged (strict). The fast baselines take the `hypot`/`hypotf` cases only.
+
+## P11.07c1 — erfcf at 1 ulp on the single-precision FPU (D223)
+
+Unchanged: `sp-nearest/fast/` is the single-precision FPU cores' only.
