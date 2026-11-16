@@ -633,11 +633,16 @@ the exit follow (j, k, l).
   armv7e-m-dp's `math-mix` +31.7 % (16,032 bytes), locked as its own line
   (D211; estimated there at about 15,300). No core needs a new decision.
 
-### P11.06k — Docs and the release archives  `[ ]`
-- [ ] README (Performance table gains a fast column; the accuracy
+### P11.06k — Docs and the release archives  `[x]`
+- [x] README (Performance table gains a fast column; the accuracy
   paragraph states the fast contract), `docs/configuration.md`,
   `docs/release.md`: `release-package` adds the `fast` tree to each archive
   (D163), once the exit check above passes.
+  Done: the README's build types, accuracy table (the fast contract) and
+  Cortex-M4F performance table (fast: maths 0.25 of speed's instructions,
+  every other program 1.00); `docs/configuration.md`'s build types;
+  `release-package` and the release workflow package `release`, `speed` and
+  `fast` (tested on armv7e-m: three trees, fast's `libc.a` its own).
 
 ### P11.06l — Phase exit  `[ ]`
 - [ ] Phase exit: PLAN's phase table, decisions, open questions.

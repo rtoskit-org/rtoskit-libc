@@ -10,9 +10,10 @@ Pushing a tag that matches `vX.Y.Z` runs `.github/workflows/release.yml`:
 
 1. On every architecture, the same gate as a pull request: `make check` in all four build types and, on
    Arm, the size gates. A failure stops the release; nothing is published.
-2. `tools/scripts/release-package` installs the headers and archives of the `release` and `speed` builds
-   (`make library`) into `rtoskit-libc-X.Y.Z-<arch>.tar.xz`, with `LICENSE`, `README.md` and `VERSION`.
-   The `fast` build type joins the archives only once phase 11 meets its exit criterion (P11.06, D163).
+2. `tools/scripts/release-package` installs the headers and archives of the `release`, `speed` and `fast`
+   builds (`make library`) into `rtoskit-libc-X.Y.Z-<arch>.tar.xz`, one directory each, with `LICENSE`,
+   `README.md` and `VERSION`. `fast` joined the archives when phase 11 met its exit criterion (P11.06k,
+   D163).
 3. It writes `SHA256SUMS` and a signed build-provenance attestation for each archive
    (`gh attestation verify <archive> --repo rtoskit-org/rtoskit-libc`). Archives of 0.5.0 to 0.5.2 were
    attested before the repository moved to rtoskit-org; verify them with `--repo sgstreet/rtoskit-libc`.
