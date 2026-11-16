@@ -265,12 +265,12 @@
     "insns": 98.0
    },
    "erfc/latency": {
-    "cycles": 1135.8,
-    "insns": 1441.88
+    "cycles": 84.32,
+    "insns": 207.94
    },
    "erfc/throughput": {
-    "cycles": 1060.89,
-    "insns": 1442.88
+    "cycles": 42.15,
+    "insns": 208.94
    },
    "erfcf/latency": {
     "cycles": 62.39,

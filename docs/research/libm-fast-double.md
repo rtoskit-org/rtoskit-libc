@@ -2288,3 +2288,133 @@ Q61:
 - `hypotf` on the single-precision FPU 966 (376);
 - the double-FPU `hypot` 1214 (388): the tie expansion and the subnormal
   rounding, out of line.
+
+## 31. erfc at 1 ulp (P11.07c2, D219, D224)
+
+Until this step the fast flavour kept the strict `erfc` (the double-double
+`__libc_erfc_*` cores), which on the soft-double cores ran every step as
+soft calls: 37,968 instructions a call on armv7e-m against picolibc's 6630,
+and 783 against 159 on armv7e-m-dp (`fast-math.md` §12).
+
+### 31.1 Sources
+
+- musl and fdlibm (`src/math/erf.c`): below 0.84375, 1 − erf by a
+  rational in x²; to 1.25, a rational about 1; beyond, e^(−z² − 0.5625) ·
+  e^((z − x)(z + x) + R/S), with z = x truncated to 32 bits so that z² is
+  exact, and rationals in 1/x² on [1.25, 1/0.35] and beyond. The error is
+  about 1 ulp, with divisions.
+- CORE-MATH (`erfc.c`, Zimmermann and Sibidanov): correctly rounded, with
+  piecewise polynomials for erfc(x)·e^(x²) and double-double arithmetic,
+  plus a rounding test and a slow path.
+- The fast flavour's own pieces: `erf`'s (§ on erf, D204, D205) and
+  `erfcf`'s kernel (`libm-fast-float-trig.md` §23).
+
+No code was copied. The approach below is written from the identity
+erfc(a) = e^(−a²) R(a), with R smooth and slowly varying (R ~ 1/(a √π) as
+a grows), and from this project's exponential kernels.
+
+### 31.2 Method
+
+Both files share the shape:
+- below 1/2 in magnitude, 1 − erf(x) from the fast `erf`'s series;
+- from 1/2, e^(−a²) R(a) with a = |x|, a² carried exactly into the
+  exponential's reduction;
+- R by pieces in a below 4, and from 4 as v G(v²), v = 1/a, where
+  G(w) = R(1/√w)/√w is close to 1/√π and analytic at w = 0;
+- for a negative x, 2 − erfc(a), at least 1.5, so the subtraction loses
+  nothing; below −6 the result rounds to 2;
+- from 27.3 the result is below 2^-1075 (the cut is 27.2260), so +0 with
+  underflow.
+
+**Double (`libc/math/fast/erfc.c`, x86_64 and armv7e-m-dp).**
+- Below 1/2: 1 − x·2/√π and then − x³p0 by two fast two-sums of exact
+  products; the rest (below 2^-7 of the result) in plain double.
+- e^(−a²): a² as an exact pair z_hi + z_lo; k = round(−64 z_hi/ln 2) by
+  the shift constant; u = −z_hi − k ln2/64 (two parts, as `pow`) − z_lo;
+  S = 2^(k/64) from the table, τ = its tail + (e^u − 1).
+- R below 4: seven pieces of width 1/2, degree 13 in t = a − m (2^-57.24
+  relatively), c0 and c1 as pairs, c0 + c1 t exact (two fused
+  multiply-adds, or an exact product and a fast two-sum).
+- From 4: v = 1/a with its remainder, w = v², three pieces of degree 10
+  split at w = 1/100 and 1/36 (2^-57.68).
+- The result: S R_hi as an exact product, plus S (R_lo + (R_hi + R_lo) τ),
+  rounded once.
+- From 26, S is scaled by 2^200 and the sum by 2^-200: one more rounding,
+  onto the subnormal grid, which raises underflow itself.
+
+**Fixed point (`libc/math/dp-fixed/fast/erfc.c`, the soft-double cores).**
+- Below 1/2: 1 ∓ x K(w) in Q62, x K(w) as the fixed-point `erf`'s
+  (w = 4x² in Q64).
+- a²·log2(e): m² is exact in 106 bits (H 2^64 + L); times log2(e) in Q127
+  as T = H c_hi + high(L c_hi) + high(H c_lo). Every dropped term is below
+  one unit of T, which keeps 31 to 41 bits more than the fraction f of
+  t = n + f 2^-64. Then −t = n' + g and 2^(g 2^-64) by exp's kernel
+  (`__libc_dp_fixed_exp2_fraction`, Q63).
+- R below 4: fourteen pieces of width 1/4 in u = 4a − ⌊4a⌋, exact from
+  a's bits (as `erf`), b0 in Q64 and b1..b11 signed in Q63. The fit is
+  within 2^-60.42 absolutely, with the evaluation's truncations
+  simulated, which is 2^-57.6 relatively where R is least (0.137 at 4).
+- From 4: v = 1/a by `__libc_dp_fixed_reciprocal` (2^-63 relatively),
+  w = v² in Q64 (below 2^60), four pieces of width 1/64 indexed by w's top
+  bits, degree 9 (2^-61.10).
+- The products' high halves, rounded once by the result's 54th bit, onto
+  the subnormal grid below 2^-1022 (by hand: these cores raise no flags,
+  D44).
+
+### 31.3 The bug the sweep found
+
+R's pieces return c0 + c1 t as the high part and leave the t² terms (up to
+2^-6 of R) in the low part. Multiplied by e^(−a²) = S (1 + τ), the first
+draft dropped the low part's product with τ: a relative error of 2^-16.
+The sum now multiplies (R_hi + R_lo) by τ (`regression` in
+`check_erfc_ends`: erfc(1) and the switch points).
+
+The G fit had also been built as R·√w rather than R/√w, which made it
+proportional to w rather than nearly constant; refitted.
+
+### 31.4 Measured
+
+Against binary128 (`erfcq`), 4·10^6 random points in each range:
+
+| Range | double (SSE2 and fma) | fixed point |
+|---|---:|---:|
+| [−6, −4] | 0.5000 | 0.5010 |
+| [−4, −1/2] | 0.5282 | 0.5027 |
+| [−1/2, 1/2] | 0.5179 | 0.5036 |
+| [1/2, 1] | 0.6311 | 0.5082 |
+| [1, 4] | 0.5563 | 0.5172 |
+| [4, 6] | 0.5931 | 0.5054 |
+| [6, 26] | 0.5453 | 0.5074 |
+| [26, 27.3] (subnormal results) | 0.7633 | 0.5085 |
+
+Both files are within the 1-ulp bound everywhere. The fixed-point file is
+closer to correct rounding, because its 64-bit products carry about 10
+bits more than double.
+
+Instructions per call (fast, throughput; picolibc 1.8.6):
+
+| Core | `erfc` | picolibc |
+|---|---:|---:|
+| armv7e-m, armv8-m.main | 37,968 → 843 | 6630 |
+| armv7-m | 40,682 → 844 | — |
+| armv6-m, armv6s-m | 112,956 → 3988 | 15,567 |
+| armv7e-m-dp | 783 → 133.4 | 159 |
+| x86_64 | 1443 → 208.9 | — |
+
+On armv7e-m, a double first measured 7100 instructions: it was the double
+file running on the soft-double helpers, still above picolibc's 6630. That
+is why the soft-double cores take the fixed-point file.
+
+**Size.** No size program calls `erfc`, so the size gates do not change.
+The members, against speed's `erfc.o`, which also pulls in the
+`__libc_erfc_*` double-double cores:
+
+| Member | bytes | speed's `erfc.o` |
+|---|---:|---:|
+| fixed point, armv6-m | 3740 | 824 |
+| fixed point, armv7e-m | 3928 | 900 |
+| double, armv7e-m-dp | 2564 | 516 |
+| double, x86_64 | 3916 | 813 |
+
+The tables are most of each: 14 × 12 + 4 × 10 words in fixed point, and
+7 × 16 + 3 × 14 doubles in double.

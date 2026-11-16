@@ -882,6 +882,23 @@ static void check_erfcf_ends(void)
 	CHECK(is_positive_zero(erfcf(INFINITY)) && erfcf(-INFINITY) == 2.0f && is_positive_zero(erfcf(10.1f)) && isnan(erfcf(NAN)));
 }
 
+static void check_erfc_ends(void)
+{
+	/*
+	 * P11.07c2 (the fast double erfc at 1 ulp, D224; the strict file elsewhere): each side of the switches at 1/2, 4 (R's
+	 * pieces to v G(v^2)) and 26 (the 2^200 scaling), the sweep's worst points (0.63 ulp at 1/2, 0.76 ulp in the
+	 * subnormal tail), the ends at -6, 2^-56 and 27.3, and the infinities exactly (+0 and 2), with the regression of the
+	 * development: R's t^2 terms in its low part lost their product with the exponential's tail (2^-16 relatively)
+	 */
+	CHECK(near_double(erfc(0x1.fffffffffffffp-2), 0x1.eb02147ce245dp-2) && near_double(erfc(0.5), 0x1.eb02147ce245cp-2) && near_double(erfc(-0x1.fffffffffffffp-2), 0x1.853f7ae0c76e9p+0));
+	CHECK(near_double(erfc(0x1.fffffffffffffp+1), 0x1.08ddd13bd35f8p-26) && near_double(erfc(4.0), 0x1.08ddd13bd35e7p-26) && near_double(erfc(-4.0), 0x1.ffffffbdc88bbp+0));
+	CHECK(near_double(erfc(0x1.9ffffffffffffp+4), 0x1.284bfe1cdede7p-981) && near_double(erfc(26.0), 0x1.284bfe1cdea24p-981) && near_double(erfc(1.0), 0x1.4226162fbddd5p-3));
+	CHECK(near_double(erfc(0x1.0057a2df335bap-1), 0x1.ea681aec6de63p-2) && near_double(erfc(0x1.a8b16cf9783a2p+4), 0x0.ff351f693fd01p-1022));
+	CHECK(near_double(erfc(-0x1.7ffffffffffffp+2), 2.0) && erfc(-6.0) == 2.0 && erfc(0x1p-56) == 1.0 && near_double(erfc(0x1.b39dc41e48bf0p+4), 0x1p-1074));
+	CHECK(is_positive_zero((float)erfc(INFINITY)) && erfc(-INFINITY) == 2.0 && isnan(erfc(NAN)));
+	RAISES(is_positive_zero((float)erfc(0x1.b4cccccccccccp+4)), FE_UNDERFLOW);
+}
+
 static void check_hypot(void)
 {
 	/*
@@ -927,6 +944,7 @@ int main(void)
 	check_double_error_function();
 	check_hypot();
 	check_erfcf_ends();
+	check_erfc_ends();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");
