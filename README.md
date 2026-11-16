@@ -56,7 +56,7 @@ and builds for x86-64 as well, which is where it is developed and tested.
    allocators: nano, TLSF or tiny.
 
 The project's goals, architecture and every design decision (numbered D1 to
-D216) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
+D217) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
 done in phases: conformance first, then size, then speed, then a comparison
 with Arm Optimized Routines, then a round of speed work that the size
 budgets had held back, then the POSIX subset and C++ support, faster sine
