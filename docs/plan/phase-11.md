@@ -731,8 +731,8 @@ ones (fixed point on the soft-double cores, double on the double-FPU cores).
   0.8018 ulp; armv7e-m 233.3 → 131.3 instructions (picolibc 168.75); the
   accurate kernel and two tables (676 bytes) removed.
 
-### P11.07c2 — `erfc` at 1 ulp  `[ ]`
-- [ ] The double `erfc` in fixed point on the soft-double cores and in
+### P11.07c2 — `erfc` at 1 ulp  `[x]`
+- [x] The double `erfc` in fixed point on the soft-double cores and in
   double on the double-FPU cores, at 1 ulp (D219); as P11.07b.
 
 ### P11.07d — `lgamma`, `lgammaf`  `[ ]`

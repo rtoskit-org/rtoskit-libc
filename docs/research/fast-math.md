@@ -242,7 +242,7 @@ in ulps of its binade (the subnormal ulp below the normal range), like D124.
 | trig | `sin`, `cos`, `tan`, `sincos`, `sinpi`, `cospi`, `tanpi` | < 1 ulp (`tan` < 1.5 ulp) | same | Cody–Waite reduction in working precision for small |x|, the existing exact reduction above |
 | inverse trig | `asin`, `acos`, `atan`, `atan2`, the `pi` forms | < 1 ulp | same | |
 | hyperbolic | `sinh`, `cosh`, `tanh`, `asinh`, `acosh`, `atanh` | < 1.5 ulp | same | built on the fast exp and log1p |
-| error and gamma | `erf`, `erfc`, `lgamma`, `tgamma` | `erf` < 1.5 ulp; `erfc` < 1 ulp (D219, D223; D178 had kept `erfcf` correctly rounded); `lgamma`, `tgamma` strict as speed until P11.07d–e (D219: 1 ulp, an absolute error near `lgamma`'s zeros) | same | AOR's `erff` is 1.09; `lgamma` near its zeros needs high precision in any contract |
+| error and gamma | `erf`, `erfc`, `lgamma`, `tgamma` | `erf` < 1.5 ulp; `erfc` < 1 ulp (D219, D223, D224; D178 had kept `erfcf` correctly rounded); `lgamma`, `tgamma` strict as speed until P11.07d–e (D219: 1 ulp, an absolute error near `lgamma`'s zeros) | same | AOR's `erff` is 1.09; `lgamma` near its zeros needs high precision in any contract |
 | everything else (`hypot`, `fdim`, `nan`, complex functions, C23 additions not listed) | | as speed | | inherited until a later step measures a gain worth a fast file |
 
 - **Rounding: round to nearest only** (the maintainer's decision, D162):
