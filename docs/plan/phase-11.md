@@ -617,8 +617,8 @@ the exit follow (j, k, l).
   0.5063); armv7e-m-dp `log` 66.69 → 65.69 instructions, `log2` and `pow`
   unchanged, the rest +2, all below AOR; `math-mix` 17,520 → 16,032.
 
-### P11.06j — Size  `[ ]`
-- [ ] Size: fast budget held, members recorded; `docs/size/`. After the final
+### P11.06j — Size  `[x]`
+- [x] Size: fast budget held, members recorded; `docs/size/`. After the final
   re-lock (D187), compare every core's fast `math-mix` and `math-float` with
   the fast flavour's original rule, +20 % over the speed figure (D191): a core
   still over it is the maintainer's decision before the phase exit, not
@@ -628,6 +628,10 @@ the exit follow (j, k, l).
   (12,174 → 20,128); the soft-double cores +10.5 % to +13.5 %; `math-float`
   at most +3.3 %. The figures after P11.06b–i; armv7e-m-dp's `math-mix` gets
   a line of its own at its figure after P11.06f–i (D211).
+  D216: every core re-locked at its final fast figures; `math-mix` +3.2 % to
+  +5.8 % over speed on the soft-double cores, `math-float` at most +3.3 %;
+  armv7e-m-dp's `math-mix` +31.7 % (16,032 bytes), locked as its own line
+  (D211; estimated there at about 15,300). No core needs a new decision.
 
 ### P11.06k — Docs and the release archives  `[ ]`
 - [ ] README (Performance table gains a fast column; the accuracy

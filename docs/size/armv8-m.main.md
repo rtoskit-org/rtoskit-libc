@@ -910,3 +910,7 @@ Release and speed unchanged (`size-report diff`). In fast, `math-mix` shrinks fr
 ## P11.06i — A 64-entry double log table (D215)
 
 Unchanged: the soft-double cores' logarithms are fixed-point (`libc/math/dp-fixed/fast/`) and never link `__libc_fast_log_table`.
+
+## P11.06j — The final fast figures (D216)
+
+Fast re-locked at its final figures (D187): `math-mix` 35148 → 31622 bytes of code, `math-float` 4892 (unchanged). Against speed (29896 and 4746): `math-mix` +5.8 %, `math-float` +3.1 %, inside D191's +20 % line. The members as armv7e-m's (`pow.o` 1576 → 4388; the library's share 29072 → 30786).
