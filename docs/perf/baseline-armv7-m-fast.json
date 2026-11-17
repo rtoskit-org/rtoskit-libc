@@ -327,10 +327,10 @@
     "insns": 3335.94
    },
    "lgamma/latency": {
-    "insns": 5132.5
+    "insns": 690.31
    },
    "lgamma/throughput": {
-    "insns": 5143.75
+    "insns": 701.56
    },
    "lgammaf/latency": {
     "insns": 18350.12

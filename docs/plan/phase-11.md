@@ -744,8 +744,8 @@ P11.07c was: one function and core family a step.
 - [x] `libc/math/fast/lgamma.c` in double (x86_64, armv7e-m-dp; the
   soft-double cores run it on their helpers until d2).
 
-### P11.07d2 — the double `lgamma` in fixed point  `[ ]`
-- [ ] `libc/math/dp-fixed/fast/lgamma.c` on the soft-double cores.
+### P11.07d2 — the double `lgamma` in fixed point  `[x]`
+- [x] `libc/math/dp-fixed/fast/lgamma.c` on the soft-double cores.
 
 ### P11.07d3 — `lgammaf`  `[ ]`
 - [ ] On the single-precision FPU cores (`sp-nearest/fast/`), and in
