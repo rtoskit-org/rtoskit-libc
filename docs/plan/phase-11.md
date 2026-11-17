@@ -746,6 +746,14 @@ ones (fixed point on the soft-double cores, double on the double-FPU cores).
 - [x] The double `erfc` in fixed point on the soft-double cores and in
   double on the double-FPU cores, at 1 ulp (D219); as P11.07b.
 
+### P11.07m — The strict `sin`, `cos`, `tan` below 0.53 ulp (bug fix)  `[x]`
+- [x] Report: `sin(0x1.bd0a14269acdfp+707)` 0.593 ulp, `tan(0x1.f3605e569c782p+525)`
+  0.606 ulp, 0.3–0.4 % misrounded beyond 2^20, against README's 0.53 ulp. Cause:
+  the cores, not Payne–Hanek, and below 2^20 too (D228,
+  `docs/research/trig-cores.md`). New cores (cos: half angle in release, series in
+  `libc/math/speed/`); `regression_trig_cores`; sampled
+  sweep with none above 0.53 ulp (worst 0.5006); size and bench rebaselined (growth and slowdown accepted).
+
 ### P11.07d — `lgamma`, `lgammaf`  `[~]`
 At 1 ulp, and an absolute error (2^-60 double, 2^-28 float) within 2^-6 of
 a zero (D219); the poles and `signgam` as in speed; as P11.07b. Split, as

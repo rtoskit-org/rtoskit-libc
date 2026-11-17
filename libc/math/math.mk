@@ -13,7 +13,7 @@
 
 ifeq ($(findstring ${BUILD_ROOT},${CURDIR}),)
 # The FPU layers, and the fast flavour's generic files (built in every build type, archived in fast only, D162)
-SUBDIRS := ${LIBC_MATH_LAYERS} fast
+SUBDIRS := ${LIBC_MATH_LAYERS} speed fast
 include ${PROJECT_ROOT}/tools/makefiles/target.mk
 else
 

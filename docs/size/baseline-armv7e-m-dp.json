@@ -599,7 +599,7 @@
   },
   "math-float": {
    "main": {
-    "depth": 268,
+    "depth": 336,
     "notes": [
      "assembly: memset"
     ],
@@ -607,8 +607,8 @@
      "main",
      "sinf",
      "sin",
-     "__libc_rem_pio2",
-     "libc/math/__libc_rem_pio2.c:bits_at.constprop.0"
+     "__libc_cos_core",
+     "__libc_sin_core"
     ]
    },
    "origin": {
@@ -618,7 +618,7 @@
      "rodata": 2760,
      "tbss": 0,
      "tdata": 0,
-     "text": 6296,
+     "text": 6248,
      "unwind": 0
     },
     "libgcc": {
@@ -664,7 +664,7 @@
     "rodata": 2760,
     "tbss": 0,
     "tdata": 0,
-    "text": 6766,
+    "text": 6718,
     "unwind": 0
    }
   },
@@ -689,7 +689,7 @@
      "rodata": 3288,
      "tbss": 0,
      "tdata": 0,
-     "text": 8112,
+     "text": 8064,
      "unwind": 0
     },
     "libgcc": {
@@ -735,7 +735,7 @@
     "rodata": 3288,
     "tbss": 0,
     "tdata": 0,
-    "text": 8830,
+    "text": 8782,
     "unwind": 0
    }
   }
@@ -946,7 +946,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 208,
+    "text": 104,
     "unwind": 0
    },
    "__libc_cosf_cases.o": {
@@ -1729,7 +1729,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 304,
+    "text": 360,
     "unwind": 0
    },
    "__libc_sinf_cases.o": {
@@ -8732,7 +8732,7 @@
    "rodata": 8983,
    "tbss": 362,
    "tdata": 8,
-   "text": 81208,
+   "text": 81160,
    "unwind": 36
   }
  },
@@ -8798,14 +8798,14 @@
     ]
    },
    "cos": {
-    "depth": 212,
+    "depth": 280,
     "notes": [
      "assembly: memset"
     ],
     "path": [
      "cos",
-     "__libc_rem_pio2",
-     "libc/math/__libc_rem_pio2.c:bits_at.constprop.0"
+     "__libc_cos_core",
+     "__libc_sin_core"
     ]
    },
    "cpow": {
@@ -9151,26 +9151,26 @@
     ]
    },
    "sin": {
-    "depth": 212,
+    "depth": 280,
     "notes": [
      "assembly: memset"
     ],
     "path": [
      "sin",
-     "__libc_rem_pio2",
-     "libc/math/__libc_rem_pio2.c:bits_at.constprop.0"
+     "__libc_cos_core",
+     "__libc_sin_core"
     ]
    },
    "sinf": {
-    "depth": 236,
+    "depth": 304,
     "notes": [
      "assembly: memset"
     ],
     "path": [
      "sinf",
      "sin",
-     "__libc_rem_pio2",
-     "libc/math/__libc_rem_pio2.c:bits_at.constprop.0"
+     "__libc_cos_core",
+     "__libc_sin_core"
     ]
    },
    "snprintf": {
@@ -9267,14 +9267,14 @@
     ]
    },
    "tan": {
-    "depth": 228,
+    "depth": 296,
     "notes": [
      "assembly: memset"
     ],
     "path": [
      "tan",
-     "__libc_rem_pio2",
-     "libc/math/__libc_rem_pio2.c:bits_at.constprop.0"
+     "__libc_cos_core",
+     "__libc_sin_core"
     ]
    },
    "tgamma": {
@@ -9400,7 +9400,7 @@
    "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 8,
    "__libc_call_once_eh.o:__libc_call_once_eh": 24,
    "__libc_call_once_eh.o:libc/threads/__libc_call_once_eh.c:once_guard_finish": 0,
-   "__libc_cos_core.o:__libc_cos_core": 56,
+   "__libc_cos_core.o:__libc_cos_core": 88,
    "__libc_cosh_core.o:__libc_cosh_core": 32,
    "__libc_cxa_thread_run.o:libc/stdlib/__libc_cxa_thread_run.c:__libc_cxa_thread_run": 16,
    "__libc_decimal_round.o:__libc_decimal_round": 20,
@@ -9510,7 +9510,7 @@
    "__libc_scan_store.o:__libc_scan_store": 16,
    "__libc_secs_to_tm.o:__libc_secs_to_tm": 32,
    "__libc_secs_to_tm.o:libc/time/__libc_secs_to_tm.c:__libc_floor_divmod64": 16,
-   "__libc_sin_core.o:__libc_sin_core": 64,
+   "__libc_sin_core.o:__libc_sin_core": 104,
    "__libc_sinh_core.o:__libc_sinh_core": 40,
    "__libc_start_main.o:__libc_start_main": 8,
    "__libc_stdio_flush_all.o:__libc_stdio_flush_all": 16,

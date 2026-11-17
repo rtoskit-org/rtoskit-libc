@@ -1595,3 +1595,7 @@ Unchanged: `sp-nearest/fast/` is the single-precision FPU cores' only.
 ## P11.05d1 — `log1p`, `log2p1` and `log10p1` as `log`, `log2` and `log10` from 2^100 (D227)
 
 Release and speed, instructions per call (latency): `log1p` 18070.4 → 18040.2, `log2p1` 22192.6 → 22158.4 (`log10p1` the same), and `log1pf` and the float pairs follow: the test of 2^100 is shorter than the infinity test it replaces. Release and speed baselines take these cases; the fast baselines are left as they were.
+
+## P11.07m — The strict sin and cos cores below 0.53 ulp (D228)
+
+Instructions per call (throughput), slower by the accuracy the old cores lacked (accepted by the maintainer; the size flavour's cos is 1 − 2 sin²(r/2), the speed and fast flavours' the series with exact squares). Release (size): `sin` 17669.3 → 25801.1 (+46.0 %), `cos` 17660.2 → 25855.3 (+46.4 %), `tanpi` 34136.4 → 50489.6 (+47.9 %), `sinpi` 16829 → 24994.6 (+48.5 %), `cospi` 16791.5 → 24957.1 (+48.6 %), `tan` 32464.9 → 48688.6 (+50.0 %), `sincos` 29654.3 → 45981.1 (+55.1 %). Speed: `sincos` 5176.88 → 5712.56 (+10.3 %), `cos` 3662.88 → 4198.56 (+14.6 %), `tanpi` 34136.4 → 44101.5 (+29.2 %), `sinpi` 16829 → 21815.2 (+29.6 %), `cospi` 16791.5 → 21777.8 (+29.7 %). Fast: `tanpi` 34136.4 → 44101.5 (+29.2 %), `sinpi` 16829 → 21815.2 (+29.6 %), `cospi` 16791.5 → 21777.8 (+29.7 %). No other case changed.
