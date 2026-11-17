@@ -520,7 +520,7 @@ AOR's `log2` has its own table and r/ln 2 as a pair.
 - **log1p's ends:** quiet comparisons (`isgreater`, `isless`), so that a quiet
   NaN raises nothing; above 2^53 u = x and e = 1 (1 + x rounding upward would
   overflow DBL_MAX to infinity), and from 2^60 e = 0, so that e/u never goes
-  subnormal (the strict file raises a spurious underflow there).
+  subnormal (the strict file raised a spurious underflow there until D227).
 - **Found along the way:**
   - A first build returned 0 from the scaling helper for the special values;
     2^-1023, scaled, has the bit pattern 0, and log2 returned the argument

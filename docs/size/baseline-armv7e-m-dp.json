@@ -9897,7 +9897,7 @@
    "log10p1.o:log10p1": 40,
    "log10p1f.o:log10p1f": 16,
    "log10p1l.o:log10p1l": 0,
-   "log1p.o:log1p": 32,
+   "log1p.o:log1p": 40,
    "log1pf.o:log1pf": 16,
    "log1pl.o:log1pl": 0,
    "log2.o:log2": 40,

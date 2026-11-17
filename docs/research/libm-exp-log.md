@@ -89,7 +89,11 @@ second rounding from double to float is then correct except within
   exact) plus 0x1.ef35793c76730p-45. Near 1 (e = 0, c = 1) the result keeps
   its relative accuracy.
 - **`__libc_log1p_core(x)`** forms 1 + x = s + t exactly (TwoSum), then
-  log(s) + t/s. Its correction term is below 2^-53 relative.
+  log(s) + t/s. Its correction term is below 2^-53 relative. From
+  x = 2^100 `log1p`, `log2p1` and `log10p1` call `log`, `log2` and `log10`
+  instead (D227): there t = 1 and 1/x < 2^-100, under 2^-54 ulp of the
+  result (log x > 69) and far under the core's 2^-68, while near DBL_MAX
+  1/x is subnormal and raised an undeserved underflow.
 - **`__libc_expm1_core`**: for |z| < 2^-10 the Taylor series to z^7.
   Otherwise exp(z) - 1, with the subtraction exact on the high part
   (Sterbenz when the scale is 1, TwoSum after scaling) and the low part

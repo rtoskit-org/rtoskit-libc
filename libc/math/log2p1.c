@@ -27,8 +27,12 @@ double log2p1(double x)
 		return __libc_math_divbyzero(-1.0);
 	if (x < -1.0)
 		return __libc_math_invalid();
-	if (isinf(x))
-		return x;
+	/*
+	 * From 2^100 (infinity included) the core's correction 1/x is below 2^-54 ulp of the result, and near DBL_MAX it
+	 * is subnormal and would raise an undeserved underflow (PLAN D227): log2p1(x) is log2(x)
+	 */
+	if (x > 0x1p100)
+		return log2(x);
 	if (fabs(x) < 0x1p-60)
 		return x * __LIBC_INV_LN2.hi;
 

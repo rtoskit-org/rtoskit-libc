@@ -1221,3 +1221,7 @@ Fast, instructions per call (throughput): `hypot` 5956.38 → 345.88 (picolibc 1
 ## P11.07c1 — erfcf at 1 ulp on the single-precision FPU (D223)
 
 Unchanged: `sp-nearest/fast/` is the single-precision FPU cores' only.
+
+## P11.05d1 — `log1p`, `log2p1` and `log10p1` as `log`, `log2` and `log10` from 2^100 (D227)
+
+Release and speed, instructions per call (latency): `log1p` 6949.88 → 6929.88, `log2p1` 8451.94 → 8427.94 (`log10p1` the same), and `log1pf` and the float pairs follow: the test of 2^100 is shorter than the infinity test it replaces. Release and speed baselines take these cases; the fast baselines are left as they were.
