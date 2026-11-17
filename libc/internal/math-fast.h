@@ -778,6 +778,15 @@ static inline double __libc_fast_signed_sum(double hi, double lo, bool negative)
 	return negative ? -hi - lo : hi + lo;
 }
 
+/*
+ * The fast double lgamma's paths in double (libc/math/fast/__libc_fast_lgamma_*.c, PLAN D225): the positive x from
+ * 2^-60 below 2^60 as hi + *lo, the negative x from 2^-60 in magnitude (the recurrence and the reflection), and the
+ * ends; libc/math/fast/lgamma.c calls all three, the soft-double cores' fixed-point file the last two
+ */
+double __libc_fast_lgamma_positive(double x, double *lo);
+double __libc_fast_lgamma_negative(double x);
+double __libc_fast_lgamma_ends(double x);
+
 /* atan(j/16) for j = 0..16 as exact pairs (libc/math/fast/__libc_fast_atan_pairs.c, D198) */
 extern const struct __libc_dd __libc_fast_atan_pairs[17];
 

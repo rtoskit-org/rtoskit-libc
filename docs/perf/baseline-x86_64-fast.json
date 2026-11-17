@@ -433,12 +433,12 @@
     "insns": 37.62
    },
    "lgamma/latency": {
-    "cycles": 66.89,
-    "insns": 182.25
+    "cycles": 63.55,
+    "insns": 174.5
    },
    "lgamma/throughput": {
-    "cycles": 27.76,
-    "insns": 183.25
+    "cycles": 26.32,
+    "insns": 175.5
    },
    "lgammaf/latency": {
     "cycles": 74.68,

@@ -2509,3 +2509,48 @@ absolutely. The soft-double cores run this file on their helpers until
 P11.07d2: on armv7e-m and armv8-m.main it is 3 times the strict count
 lower, but still above picolibc. On those cores the near-zero results
 reach 2^-63 absolutely, inside the bound.
+
+## 33. lgamma in fixed point on the soft-double cores (P11.07d2, D226)
+
+P11.07d1's double file ran on the soft-double helpers at 5006 instructions
+a call on armv7e-m, still above picolibc's 3901. `dp-fixed/fast/lgamma.c`
+takes positive x into 64-bit integers. Negative x and the ends call the
+double file's paths, which moved into their own files for that
+(`__libc_fast_lgamma_positive.c`, `_negative.c`, `_ends.c`; `fast/lgamma.c`
+is now their dispatch). They are not in the bench, and keep D225's
+recurrence and its accuracy near the negative zeros.
+
+Positive x needs only 1 ulp, because the zeros come from an exact product,
+so the fixed-point pieces are fitted for absolute 2^-59.39 (degree 10),
+not the double file's 2^-62.48.
+
+- **From 1/2 to 8:** (x − 1)(x − 2)·h(x). Both factors are exact integers
+  in units of x's last place; their product is exact in 128 bits, then
+  its top 64 bits times h in Q64. h comes from 32 pieces of eight a binade
+  (widths 1/16 to 1/2). The binade [1/2, 1) joins the pieces, since h's
+  singularity at 0 is far enough at width 1/16; u is x's fraction bits
+  below the top three.
+- **Below 1/2:** −log x − x(1 − x)h(1 + x). 1 + x is in Q63, and its
+  truncation only picks the piece and moves u. 1 − x is in Q64, and log x
+  comes from the fixed log kernel (`__libc_dp_fixed_log_core`) plus
+  e ln 2, in 128-bit Q64. The result is at least 0.57, so the absolute
+  error stays relative.
+- **From 8, Stirling:** (x − ½)(log x − 1) as a 128-bit product of Q63 and
+  Q58, plus ½log 2π − ½ + S(1/x²)/x in Q64 (S of degree 6 in 64/x²,
+  2^-60.38), with 1/x from `__libc_dp_fixed_reciprocal`.
+
+Against binary128, 4·10^6 points a range:
+
+| Range | worst |
+|---|---:|
+| [10^-300, 10^-10], [10^-10, 0.001], [0.001, 1/2] | 0.5001, 0.5003, 0.5012 ulp |
+| [1/2, 1], [1, 2], [2, 4], [4, 8] | 0.5145, 0.5178, 0.5240, 0.5286 |
+| [8, 16], [16, 1000], [1000, 10^15], [10^15, 10^18] | 0.5198, 0.5126, 0.5007, 0.5006 |
+
+Instructions per call (fast, throughput):
+
+| Core | `lgamma` before P11.07d | after d1 (on the helpers) | now | picolibc |
+|---|---:|---:|---:|---:|
+| armv7e-m, armv8-m.main | 17,366 | 5006 | 699.6 | 3901 |
+| armv7-m | 17,908 | 5144 | 701.6 | — |
+| armv6-m, armv6s-m | 47,083 | 14,761 | 3323 | — |
