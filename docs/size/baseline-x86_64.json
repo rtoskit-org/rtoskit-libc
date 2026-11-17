@@ -5037,10 +5037,10 @@
    "log10p1.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 64,
+    "rodata": 48,
     "tbss": 0,
     "tdata": 0,
-    "text": 303,
+    "text": 292,
     "unwind": 0
    },
    "log10p1f.o": {
@@ -5064,10 +5064,10 @@
    "log1p.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 72,
+    "rodata": 48,
     "tbss": 0,
     "tdata": 0,
-    "text": 251,
+    "text": 240,
     "unwind": 0
    },
    "log1pf.o": {
@@ -5118,10 +5118,10 @@
    "log2p1.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 64,
+    "rodata": 48,
     "tbss": 0,
     "tdata": 0,
-    "text": 303,
+    "text": 292,
     "unwind": 0
    },
    "log2p1f.o": {
@@ -8674,10 +8674,10 @@
   "totals": {
    "bss": 2888,
    "data": 204,
-   "rodata": 17995,
+   "rodata": 17939,
    "tbss": 626,
    "tdata": 8,
-   "text": 106822,
+   "text": 106789,
    "unwind": 88
   }
  },

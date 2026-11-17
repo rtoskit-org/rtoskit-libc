@@ -929,3 +929,7 @@ Release and speed unchanged (`size-report diff`); no size program calls `hypot` 
 ## P11.07c1 — erfcf at 1 ulp on the single-precision FPU (D223)
 
 Release and speed unchanged (`size-report diff`); no size program calls `erfcf`, so every image and budget is unchanged. Fast: `erfcf.o` 888 bytes of code (speed's 598); `__libc_fast_erfcf_r_table.o` (420) and `__libc_fast_exp2f_table.o` (256), the accurate kernel's, removed.
+
+## P11.05d1 — `log1p`, `log2p1` and `log10p1` as `log`, `log2` and `log10` from 2^100 (D227)
+
+Release: `log1p.o` 308 → 288, `log2p1.o` and `log10p1.o` 584 → 568 bytes of code. The test of 2^100 replaces the infinity test; every image unchanged (no size program calls these functions), so no budget moves; baselines re-recorded.

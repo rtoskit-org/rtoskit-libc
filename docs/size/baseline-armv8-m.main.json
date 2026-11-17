@@ -5553,7 +5553,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 584,
+    "text": 568,
     "unwind": 0
    },
    "log10p1f.o": {
@@ -5580,7 +5580,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 308,
+    "text": 288,
     "unwind": 0
    },
    "log1pf.o": {
@@ -5634,7 +5634,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 584,
+    "text": 568,
     "unwind": 0
    },
    "log2p1f.o": {
@@ -9190,7 +9190,7 @@
    "rodata": 10215,
    "tbss": 362,
    "tdata": 8,
-   "text": 151306,
+   "text": 151254,
    "unwind": 36
   }
  },
@@ -10553,7 +10553,7 @@
    "log10p1.o:log10p1": 88,
    "log10p1f.o:log10p1f": 24,
    "log10p1l.o:log10p1l": 0,
-   "log1p.o:log1p": 40,
+   "log1p.o:log1p": 32,
    "log1pf.o:log1pf": 24,
    "log1pl.o:log1pl": 0,
    "log2.o:log2": 88,

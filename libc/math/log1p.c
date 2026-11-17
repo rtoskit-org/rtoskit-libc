@@ -19,7 +19,7 @@
 /* C23 7.12.6.14: log1p(-1) is -infinity (divide-by-zero), below -1 a domain error */
 double log1p(double x)
 {
-	struct __libc_dd log;
+	struct __libc_dd value;
 
 	if (isnan(x))
 		return x + x;
@@ -27,11 +27,15 @@ double log1p(double x)
 		return __libc_math_divbyzero(-1.0);
 	if (x < -1.0)
 		return __libc_math_invalid();
-	if (isinf(x))
-		return x;
+	/*
+	 * From 2^100 (infinity included) the core's correction 1/x is below 2^-54 ulp of the result, and near DBL_MAX it
+	 * is subnormal and would raise an undeserved underflow (PLAN D227): log1p(x) is log(x)
+	 */
+	if (x > 0x1p100)
+		return log(x);
 	if (fabs(x) < 0x1p-60)
 		return __libc_math_tiny(x, -1.0);
 
-	log = __libc_log1p_core(x);
-	return log.hi + log.lo;
+	value = __libc_log1p_core(x);
+	return value.hi + value.lo;
 }

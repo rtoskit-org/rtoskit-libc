@@ -137,7 +137,10 @@ case for it.
   `__libc_softdouble_d2f` put the double's bits from 29 upwards into the
   payload unmasked, so an exponent bit landed on the sign. The
   `copysignf(x, NaN)` vectors caught it.
-- **Undeserved underflow:** `log1p(DBL_MAX)` raises one, which F.10 allows.
+- **Undeserved underflow:** `log1p(DBL_MAX)` raised one, which F.10 allows.
+  Fixed later (D227): from 2^100 the three functions are `log`, `log2` and
+  `log10`, without the core's 1/x correction; `regression_log1p_large`
+  checks `log1p`, `log2p1` and `log10p1`.
 
 ### The fixes
 

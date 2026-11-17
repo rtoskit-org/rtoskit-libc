@@ -759,3 +759,7 @@ Release and speed unchanged (`size-report diff`); no size program calls `hypot`,
 ## P11.07c1 — erfcf at 1 ulp on the single-precision FPU (D223)
 
 Unchanged: `sp-nearest/fast/` is the single-precision FPU cores' only.
+
+## P11.05d1 — `log1p`, `log2p1` and `log10p1` as `log`, `log2` and `log10` from 2^100 (D227)
+
+Release: members unchanged in size; `log1p`'s frame 32 → 40 bytes (+8), the stack depths of the entry points unchanged. The test of 2^100 replaces the infinity test; every image unchanged (no size program calls these functions), so no budget moves; baselines re-recorded.

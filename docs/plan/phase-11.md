@@ -426,6 +426,17 @@ the kernel's absolute accuracy where 2^(k/64) − 1 and the polynomial cancel.
   68, `log2` 73); tests, gains. Done (D190): `log` 150 → 68, `log2` 200 → 72
   on armv7e-m-dp; at most 0.5249 ulp.
 
+### P11.05d1 — The strict `log1p`'s undeserved underflow (found in P11.05d)  `[x]`
+- [x] `log1p(DBL_MAX)` raised underflow in the strict build: the core's
+  correction t/s = 1/x is subnormal there. D227: from 2^100 `log1p`,
+  `log2p1` and `log10p1` are `log`, `log2` and `log10` (in place of their
+  `isinf` test, so the common path keeps its length);
+  `regression_log1p_large` (`log1p`, `log2p1`, `log10p1` of DBL_MAX, 2^1000
+  and next to 2^1022 and 2^100); `libm_thresholds`' line back under QUIET.
+  Gates: release members 12–35 bytes smaller (armv7e-m-dp: `log1p`'s frame
+  +8), every budget held; release and speed 1–2 instructions per call faster
+  on the FPU cores, about 30 on armv6-m; `docs/size/`, `docs/perf/`.
+
 ### P11.05e — `log`, `log2`, `log10`, `log1p` on the soft-double cores  `[x]`
 - [x] A 64-bit fixed-point log2 kernel (AOR: `log` 1245 and 4335, `log2` 1514
   and 5211); tests, gains. Done (D192): `log` 6184 → 334 on armv7e-m and

@@ -1372,3 +1372,7 @@ Fast, instructions per call (throughput): `hypot` 5835.19 → 344.31 (picolibc 1
 ## P11.07c1 — erfcf at 1 ulp on the single-precision FPU (D223)
 
 Fast, instructions per call (throughput): `erfcf` 233.31 → 130.56 (picolibc 168.56). The fast baselines take the `erfcf` cases only.
+
+## P11.05d1 — `log1p`, `log2p1` and `log10p1` as `log`, `log2` and `log10` from 2^100 (D227)
+
+Release and speed, instructions per call (latency): `log1p` 6722.81 → 6702.81, `log2p1` 8200.88 → 8178.88 (`log10p1` the same), and `log1pf` and the float pairs follow: the test of 2^100 is shorter than the infinity test it replaces. Release and speed baselines take these cases; the fast baselines are left as they were.
