@@ -75,6 +75,7 @@ static inline double fast_relaxed_bound(const char *name, size_t length)
 		{ "erf", 1.5 },
 		{ "erfc", 1.0 },
 		{ "lgamma", 1.0 },
+		{ "tgamma", 1.0 },
 	};
 
 	for (size_t i = 0; i < sizeof(relaxed) / sizeof(relaxed[0]); ++i)

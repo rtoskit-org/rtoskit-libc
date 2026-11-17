@@ -920,6 +920,25 @@ static void check_lgamma_paths(void)
 	CHECK(lgamma(-INFINITY) == INFINITY && isnan(lgamma(NAN)));
 }
 
+static void check_tgamma_paths(void)
+{
+	/*
+	 * P11.07e1 (the fast double tgamma, D230; the strict file elsewhere): the factorials exactly, each side of the switches
+	 * at 1 and 8 (the pieces, the quotient below 1, Stirling's exponential), the largest finite result, and on the
+	 * negative side each side of -1 and -8 (the recurrence, the reflection), the subnormal results from -170.5, with the
+	 * regression of the development: Stirling's pair entered the exponential unnormalized (147 ulp)
+	 */
+	QUIET(tgamma(1.0) == 1.0 && tgamma(2.0) == 1.0 && tgamma(8.0) == 5040.0 && tgamma(23.0) == 0x1.e77526159f06cp+69);
+	CHECK(near_double(tgamma(0x1.fffffffffffffp-1), 1.0) && near_double(tgamma(0x1.0000000000001p+0), 0x1.fffffffffffffp-1) && near_double(tgamma(1.5), 0x1.c5bf891b4ef6bp-1));
+	CHECK(near_double(tgamma(0x1.fffffffffffffp+2), 0x1.3affffffffff6p+12) && near_double(tgamma(0x1.0000000000001p+3), 0x1.3b00000000014p+12) && near_double(tgamma(0x1.e057d69af98d3p+2), 0x1.d8b901efe561dp+10));
+	CHECK(near_double(tgamma(0x1.21fcab1002047p+7), 0x1.8044aa898f2c9p+829) && near_double(tgamma(0x1.573fae561f647p+7), 0x1.ffffffffffe51p+1023) && near_double(tgamma(0x1p-60), 0x1p+60));
+	CHECK(near_double(tgamma(-0x1.0000000000001p+0), 0x1.fffffffffffffp+51) && near_double(tgamma(-0.5), -0x1.c5bf891b4ef6bp+1) && near_double(tgamma(-1.5), 0x1.2e7fb0bcdf4f2p+1));
+	CHECK(near_double(tgamma(-0x1.fffffffffffffp+2), 0x1.a01a01a01a028p+34) && near_double(tgamma(-0x1.0000000000001p+3), -0x1.a01a01a019ffep+33) && near_double(tgamma(-2.5), -0x1.e3ff812e32183p-1));
+	CHECK(near_double(tgamma(-170.5), -0x1.7d2374dfcda7ap-1022) && near_double(tgamma(-172.5), -0x0.00034c532409ap-1022) && near_double(tgamma(-176.5), -0x0.00000000000f2p-1022));
+	RAISES(tgamma(0x1.573fae561f648p+7) == INFINITY && tgamma(172.0) == INFINITY, FE_OVERFLOW);
+	RAISES(isnan(tgamma(-3.0)) && isnan(tgamma(-0x1p52)) && isnan(tgamma(-INFINITY)), FE_INVALID);
+}
+
 static void check_hypot(void)
 {
 	/*
@@ -967,6 +986,7 @@ int main(void)
 	check_erfcf_ends();
 	check_erfc_ends();
 	check_lgamma_paths();
+	check_tgamma_paths();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

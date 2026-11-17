@@ -331,6 +331,15 @@ supersedes it; do not edit history.
 | D225 | **The fast double `lgamma` of the double-FPU cores** (P11.07d1, D219; `docs/research/libm-fast-double.md` §32). `libc/math/fast/lgamma.c` in place of the strict file (x86_64 and armv7e-m-dp; the soft-double cores run it on their helpers until P11.07d2):
 | D226 | **The fast `lgamma` of the soft-double cores in fixed point** (P11.07d2, D219, D225; `docs/research/libm-fast-double.md` §33). `dp-fixed/fast/lgamma.c` takes positive x into 64-bit integers:
 | D229 | **The fast `lgammaf` at 1 ulp** (P11.07d3, D219; `docs/research/libm-fast-float-trig.md` §24):
+| D230 | **The fast double `tgamma` of the double-FPU cores** (P11.07e1, D219; `docs/research/libm-fast-double.md` §34). `libc/math/fast/tgamma.c` in place of the strict file (x86_64, armv7e-m-dp; the soft-double cores run it on their helpers until P11.07e2):
+- the factorials to 23 exactly;
+- on [1, 8), 32 pieces of Γ of degree 11 (2^-58.11);
+- below 1, Γ(1 + x)/x as one quotient;
+- below 2^-54, the strict file's 1/x − γ;
+- from 8, e^E with Stirling's exponent as a normalized pair (log x by the fast log's pair kernel);
+- negative x by the recurrence above −8, and by the reflection as one exponential below.
+
+The fast contract gains `tgamma` at 1 ulp (`tgamma` and `tgammaf`). At most 0.5886 ulp against binary128. armv7e-m-dp `tgamma` 718.6 → 167.1 instructions (`tgammaf`, through it, 731.3 → 179.8), x86_64 1141 → 208; armv7e-m 23,498 → 5167 on the helpers. The fast bench baselines take the `tgamma` and `tgammaf` cases only. | Γ itself is smooth enough for pieces below 8; above, the exponent must be good absolutely, which the log's pair kernel and an exact product give. |
 - `fast/lgammaf.c` and `nofp/fast/lgammaf.c` are `(float)lgamma(x)` on every core but the single-precision FPU's: the fast double `lgamma` is good to 0.53 ulp of double;
 - `sp-nearest/fast/lgammaf.c` uses the double file's method in float with fused multiply-adds: (x − 1)(x − 2)·h(x) on [1/2, 32) with 48 binade-aligned pieces of degree 5, the log form below 1/2, Stirling from 32, the recurrence in (−16, −1) and the reflection elsewhere (sin(πg) to 1/4, cos(π(1/2 − g)) beyond).
 
