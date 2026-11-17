@@ -441,12 +441,12 @@
     "insns": 175.5
    },
    "lgammaf/latency": {
-    "cycles": 74.68,
-    "insns": 197.25
+    "cycles": 65.19,
+    "insns": 181.5
    },
    "lgammaf/throughput": {
-    "cycles": 32.61,
-    "insns": 198.25
+    "cycles": 26.87,
+    "insns": 182.5
    },
    "log/latency": {
     "cycles": 38.27,

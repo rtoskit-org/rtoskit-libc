@@ -333,10 +333,10 @@
     "insns": 701.56
    },
    "lgammaf/latency": {
-    "insns": 18350.12
+    "insns": 706.38
    },
    "lgammaf/throughput": {
-    "insns": 18356.75
+    "insns": 713.0
    },
    "log/latency": {
     "insns": 289.31

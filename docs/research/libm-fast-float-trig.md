@@ -1149,3 +1149,50 @@ results are not correctly rounded (0.025 %), none at 1 ulp.
 
 **Instructions** (armv7e-m, throughput): 233.3 → 131.3, below picolibc's
 168.75; armv8-m.main alike.
+
+## 24. lgammaf at 1 ulp (P11.07d3, D219, D229)
+
+The fast flavour had kept the strict `lgammaf`: a float-float core on the
+single-precision FPU and soft-float cores (572 instructions a call on
+armv7e-m, 36,729 on armv6-m), and the double `lgamma` rounded to float
+on the double-FPU cores.
+
+**Every core but the single-precision FPU's** (`fast/lgammaf.c`, and the
+same two lines in `nofp/fast/lgammaf.c`, so that they beat the soft-float
+cores' earlier `sp-nearest` layer): `(float)lgamma(x)`. The fast double
+`lgamma` (D225, D226) is within 0.53 ulp of double and 2^-60 absolutely
+near the zeros, so the float result is within 1 ulp. The strict file's
+two halfway corrections (D98) are not needed in the fast contract.
+
+**The single-precision FPU** (`sp-nearest/fast/lgammaf.c`): the double
+file's method in float, with fused multiply-adds.
+- (x − 1)(x − 2)·h(x) on [1/2, 32), from 48 pieces of eight a binade of
+  degree 5 (2^-31.3 relatively; c0 and c1 as pairs). x − 2 is a pair below
+  1, where it is not exact in float.
+- Below 1/2, x(x − 1)h(1 + x) − log x, with log x from the extended log2
+  kernel (`__libc_fast_log2f_extended`, 2^-35) times ln 2 as a pair.
+- Stirling from 32, with S of degree 2.
+- Negative x by the recurrence in (−16, −1), and the reflection elsewhere.
+  The reflection's sin(πg) is a polynomial in g to 1/4 (π as a pair), and
+  cos(π(1/2 − g)) beyond (1 + c1·d² + d⁴·C(d²), c1·d² exact).
+
+Bugs found by the sweep and fixed before the commit:
+- sin(πg) near g = 1/2 rounded its large correction to 2^-25 (1.4 ulp near
+  x = −1/2), hence the cosine form;
+- the sine pair carried d⁴ terms of up to 2^-7 in its low part, which the
+  log takes to first order only (2^-15): it is renormalized first;
+- x − 2 was treated as exact below 1.
+
+Extending the pieces from 8 to 32 spared the log over most of the bench's
+range [0.1, 30]: 162.5 → 97.3 instructions on armv7e-m.
+
+Every float, against the host's `lgamma` in double: at most 0.6532 ulp,
+and within 2^-28 absolutely near the zeros where that is looser.
+`float_accuracy`'s fast expectation takes the same rule for `lgammaf`.
+
+| Core | `lgammaf` before | now | picolibc |
+|---|---:|---:|---:|
+| armv7e-m, armv8-m.main | 572.3 | 97.3 | 147 |
+| armv7e-m-dp | 511.9 (142.3 after P11.07d1) | 133.3 | — |
+| armv7-m | 18,357 | 713 | — |
+| armv6-m, armv6s-m | 36,729 | 3360 | — |
