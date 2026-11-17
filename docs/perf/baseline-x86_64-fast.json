@@ -713,12 +713,12 @@
     "insns": 181.19
    },
    "tgammaf/latency": {
-    "cycles": 78.94,
-    "insns": 195.19
+    "cycles": 78.35,
+    "insns": 187.19
    },
    "tgammaf/throughput": {
-    "cycles": 34.27,
-    "insns": 196.19
+    "cycles": 32.85,
+    "insns": 188.19
    }
   },
   "qsort": {

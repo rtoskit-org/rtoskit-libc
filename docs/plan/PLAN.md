@@ -333,6 +333,11 @@ supersedes it; do not edit history.
 | D229 | **The fast `lgammaf` at 1 ulp** (P11.07d3, D219; `docs/research/libm-fast-float-trig.md` §24):
 | D230 | **The fast double `tgamma` of the double-FPU cores** (P11.07e1, D219; `docs/research/libm-fast-double.md` §34). `libc/math/fast/tgamma.c` in place of the strict file (x86_64, armv7e-m-dp; the soft-double cores run it on their helpers until P11.07e2):
 | D231 | **The fast `tgamma` of the soft-double cores in fixed point** (P11.07e2, D219, D230; `docs/research/libm-fast-double.md` §35). `dp-fixed/fast/tgamma.c` handles positive x below 64 in 64-bit integers:
+| D232 | **The fast `tgammaf` at 1 ulp** (P11.07e3, D219; `docs/research/libm-fast-float-trig.md` §25):
+- `fast/tgammaf.c` and `nofp/fast/tgammaf.c` are `(float)tgamma(x)` on every core but the single-precision FPU's;
+- `sp-nearest/fast/tgammaf.c` uses the double file's method in float with fused multiply-adds: the factorials to 13, 32 pieces of Γ of degree 6 on [1, 8), Γ(1 + x)/x below 1, e^E with Stirling's exponent as a float pair through `__libc_fast_expf_kernel` to the overflow, the recurrence above −16 and the reflection below.
+
+Every float: at most 0.9267 ulp. armv7e-m `tgammaf` 846.2 → 174.2 instructions (picolibc 238), armv6-m 55,326 → 4080, armv7-m 27,683 → 831.4. The fast bench baselines take the `tgammaf` cases only. P11.07e is done. | The recurrence to −16 rather than −8 keeps the float reflection's Stirling exponent away from small arguments (0.974 ulp near −8.75). |
 - on [1, 8), Γ·2^-s from 32 pieces in Q64 (degree 11, s per piece);
 - below 1, the quotient by the fixed reciprocal;
 - on [8, 64), Stirling's exponent in 128-bit Q64 (the fixed log kernel, a 64 × 128-bit product), times log2 e, then exp's kernel.

@@ -770,7 +770,7 @@ P11.07c was: one function and core family a step.
 - [x] On the single-precision FPU cores (`sp-nearest/fast/`), and in
   double on the double-FPU cores.
 
-### P11.07e — `tgamma`, `tgammaf`  `[~]`
+### P11.07e — `tgamma`, `tgammaf`  `[x]`
 As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
 
 ### P11.07e1 — the double `tgamma` on the double-FPU cores  `[x]`
@@ -780,8 +780,8 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
 ### P11.07e2 — the double `tgamma` in fixed point  `[x]`
 - [x] `libc/math/dp-fixed/fast/tgamma.c` on the soft-double cores.
 
-### P11.07e3 — `tgammaf`  `[ ]`
-- [ ] On the single-precision FPU cores, and from the fast `tgamma`
+### P11.07e3 — `tgammaf`  `[x]`
+- [x] On the single-precision FPU cores, and from the fast `tgamma`
   elsewhere.
 
 ### P11.07f — `sqrt` in `fast`, still correctly rounded  `[ ]`
