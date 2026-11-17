@@ -705,20 +705,20 @@
     "insns": 76.69
    },
    "tgamma/latency": {
-    "cycles": 77.46,
-    "insns": 207.19
+    "cycles": 71.85,
+    "insns": 180.19
    },
    "tgamma/throughput": {
-    "cycles": 34.95,
-    "insns": 208.19
+    "cycles": 29.67,
+    "insns": 181.19
    },
    "tgammaf/latency": {
-    "cycles": 80.77,
-    "insns": 222.19
+    "cycles": 78.94,
+    "insns": 195.19
    },
    "tgammaf/throughput": {
-    "cycles": 37.97,
-    "insns": 223.19
+    "cycles": 34.27,
+    "insns": 196.19
    }
   },
   "qsort": {

@@ -1609,4 +1609,102 @@ static inline int __libc_fast_pow_integer_kind(uint64_t iy)
  */
 double __libc_fast_pow_special(double x, double y);
 
+/*
+ * The fast double tgamma's shared pieces (libc/math/fast/__libc_fast_tgamma_*.c, PLAN D230, D231): Gamma on [1, 8) in 32
+ * pieces of degree 11 (centre, c0 and c1 as pairs, c2..c11) and (n - 1)! for n = 1..23, then the paths in double that
+ * libc/math/fast/tgamma.c and the soft-double cores' fixed-point file share
+ */
+extern const double __libc_fast_tgamma_pieces[32][15];
+extern const double __libc_fast_tgamma_factorials[23];
+double __libc_fast_tgamma_large(double x);
+double __libc_fast_tgamma_negative(double x);
+double __libc_fast_tgamma_ends(double x);
+
+/* The piece of y in [1, 8): three fraction bits on [1, 4), four on [4, 8) */
+static inline const double *__libc_fast_tgamma_piece(double y)
+{
+	uint64_t bits = __libc_double_bits(y);
+
+	if (bits < 0x4010000000000000ull)
+		return __libc_fast_tgamma_pieces[(bits - 0x3ff0000000000000ull) >> 49];
+
+	return __libc_fast_tgamma_pieces[16 + ((bits - 0x4010000000000000ull) >> 48)];
+}
+
+/* Gamma at t from its piece's centre as hi + *lo: c0 + c1 t exactly (two fused multiply-adds, or an exact product and a fast two-sum), the rest in plain double */
+[[gnu::always_inline]] static inline double __libc_fast_tgamma_eval(const double *c, double t, double *lo)
+{
+	double q = c[4] + t * (c[5] + t * (c[6] + t * (c[7] + t * (c[8] + t * (c[9] + t * (c[10] + t * (c[11] + t * (c[12] + t * (c[13] + t * c[14])))))))));
+	struct __libc_dd product;
+	struct __libc_dd sum;
+	double r;
+
+	if (__libc_fpu_fma) {
+		r = __builtin_fma(c[3], t, c[1]);
+		*lo = __builtin_fma(c[3], t, c[1] - r) + (c[2] + t * q);
+		return r;
+	}
+	product = __libc_fast_product(c[3], t);
+	sum = __libc_dd_fast_sum(c[1], product.hi);
+	*lo = sum.lo + product.lo + (c[2] + t * q);
+
+	return sum.hi;
+}
+
+/* (n_hi + n_lo)/(d_hi + d_lo), rounded once: the quotient and its remainder (exact by fma or Dekker), the low parts to first order */
+static inline double __libc_fast_tgamma_divide(double n_hi, double n_lo, double d_hi, double d_lo)
+{
+	double q = n_hi / d_hi;
+	struct __libc_dd p = __libc_fast_product(q, d_hi);
+
+	return q + (((n_hi - p.hi) - p.lo) + n_lo - q * d_lo) / d_hi;
+}
+
+/*
+ * The exponent of Stirling's form, (a - 1/2) log a - a + log(2 pi)/2 + S(1/a^2)/a for 8 <= a < 2^52, as hi + *lo: a - 1/2
+ * exact, log a as a pair (__libc_fast_log_pair: about 2^-66 absolutely), their product exact, S of degree 6 (lgamma's,
+ * 2^-57.59 absolutely, below 2^-60 once divided by a); about 2^-58.5 absolutely up to 171.6, so that e^E is within
+ * 2^-58 relatively
+ */
+static inline double __libc_fast_tgamma_stirling(double a, double *lo)
+{
+	double y = a - 0.5;
+	double v = 1.0 / a;
+	double z = v * v;
+	double l_lo;
+	double l = __libc_fast_log_pair(a, 0.0, 0, &l_lo);
+	struct __libc_dd p = __libc_fast_product(y, l);
+	struct __libc_dd s = __libc_dd_sum(p.hi, -a);
+	struct __libc_dd t = __libc_dd_fast_sum(s.hi, 0x1.d67f1c864beb5p-1);
+
+	*lo = t.lo + (s.lo + p.lo + y * l_lo + -0x1.65b5a1b7ff5dfp-55 + v * (0x1.5555555555555p-4 + z * (-0x1.6c16c16c149f4p-9 + z * (0x1.a01a017dcf9e1p-11 + z * (-0x1.38134d4f8896fp-11 + z * (0x1.b92c33f9445e5p-11 + z * (-0x1.ef8d748aeb0f2p-10 + z * 0x1.4bffc9d8b455bp-8)))))));
+	return t.hi;
+}
+
+/* sign e^(hi + lo) by the fast exp's reduction and table, the scale's ends (overflow, subnormal results rounded once) by __libc_fast_exp_scale */
+static inline double __libc_fast_tgamma_exp(double hi, double lo, double sign)
+{
+	/* Normalized first: lo holds S/a and the like, up to 2^-7, beyond the polynomial's |u| <= ln 2/128 */
+	struct __libc_dd e = __libc_dd_fast_sum(hi, lo);
+	double kd;
+	int32_t k = __libc_fast_exp_index(e.hi * 0x1.71547652b82fep+6, &kd);
+	double u = ((e.hi - kd * 0x1.62e42fee00000p-7) - kd * 0x1.a39ef35793c76p-39) + e.lo;
+
+	return sign * __libc_fast_exp_scale(k, __libc_fast_expm1_poly(u));
+}
+
+/* floor(a) for a positive finite a, by masking its fraction bits: exact in every rounding direction */
+static inline double __libc_fast_tgamma_floor(double a)
+{
+	uint64_t bits = __libc_double_bits(a);
+	int32_t e = (int32_t)(bits >> 52) - 1023;
+
+	if (e < 0)
+		return 0.0;
+	if (e >= 52)
+		return a;
+
+	return __libc_double_from(bits & ~((1ull << (52 - e)) - 1));
+}
+
 #endif /* _MATH_FAST_H */

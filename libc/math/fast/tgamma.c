@@ -17,246 +17,14 @@
 #include "internal/math-fast.h"
 
 /*
- * Gamma on [1, 8) in 32 pieces: eight of width 1/8 on [1, 2), eight of 1/4 on [2, 4), sixteen of 1/4 on [4, 8),
- * indexed by y's exponent and top fraction bits: the centre m, then a polynomial in t = y - m of degree 11 fitted here
- * (Chebyshev, 200-bit arithmetic; within 2^-58.11 of Gamma relatively, the coefficients' rounding included), c0 and c1
- * as pairs, then c2..c11
- */
-static const double pieces[32][15] = {
-	{ 0x1.1000000000000p+0, 0x1.ef66a79533ee7p-1, 0x1.8f6fdcb873c25p-56, -0x1.da72f10a8e942p-2, 0x1.c2c6ff7de8348p-64, 0x1.adf05a9ad5b69p-1, -0x1.645f5dabed156p-1, 0x1.7373e6d815f9fp-1, -0x1.5bd0b9a2dfab3p-1, 0x1.4c3b4f1b6e288p-1, -0x1.399cbecb0ee03p-1, 0x1.27f449f17f3dcp-1, -0x1.16dcd9f047b0ep-1, 0x1.09628e2318299p-1, -0x1.f3b55bac85283p-2 },
-	{ 0x1.3000000000000p+0, 0x1.d7d9d427cf767p-1, -0x1.e828a4252b7ffp-55, -0x1.1fd3e8cdfc7e7p-2, -0x1.fa1f2121c44c1p-59, 0x1.455f6bc183607p-1, -0x1.ac87a4086d5f7p-2, 0x1.ad51be3cc33d9p-2, -0x1.6030bf6c79adep-2, 0x1.3068b872ae243p-2, -0x1.00d222a688761p-2, 0x1.b27856e10f5c0p-3, -0x1.6e711cb98218ep-3, 0x1.3780730123546p-3, -0x1.0674d39627586p-3 },
-	{ 0x1.5000000000000p+0, 0x1.ca931e2a3738ep-1, -0x1.4a0c3f1fcdda4p-56, -0x1.1c828cb1680b0p-3, 0x1.85809de34ea0ap-57, 0x1.06319532f9104p-1, -0x1.02e21a64f80abp-2, 0x1.0a1aabfe6ff1bp-2, -0x1.7a11ceaec1981p-3, 0x1.2e28fd978ac89p-3, -0x1.cb1b604c42822p-4, 0x1.607c819a170b9p-4, -0x1.0d06d27bd0e4bp-4, 0x1.9d747b37a224ep-5, -0x1.3b42f57608cc9p-5 },
-	{ 0x1.7000000000000p+0, 0x1.c58ebc9f050b8p-1, -0x1.53928143ebed5p-55, -0x1.56b926daaf1e4p-6, 0x1.c0a7d64737626p-60, 0x1.c10ca7f954c7ep-2, -0x1.2ca176286180fp-3, 0x1.619b9856a72b9p-3, -0x1.a5ec5def02e39p-4, 0x1.415b06fd806fap-4, -0x1.b819b77cb74f6p-5, 0x1.3681347bde1d3p-5, -0x1.b06f44308a5e9p-6, 0x1.2f5ed90116f3cp-6, -0x1.a684889ba1bb2p-7 },
-	{ 0x1.9000000000000p+0, 0x1.c799aecd47951p-1, -0x1.065580a945957p-55, 0x1.543f8239fe825p-4, 0x1.18c60eaee02e9p-60, 0x1.97758497a3fbbp-2, -0x1.2eac05dfb2d0cp-4, 0x1.fa1453f461fa9p-4, -0x1.dde963035e048p-5, 0x1.6c787cf662c5cp-5, -0x1.bdb01f2df6e8cp-6, 0x1.2547c8f0c45fcp-6, -0x1.768ffc7f2e368p-7, 0x1.e40b1c3aad835p-8, -0x1.36205d7c04c04p-8 },
-	{ 0x1.b000000000000p+0, 0x1.d00a6ad56f3adp-1, -0x1.9b4a9d9133da3p-55, 0x1.709b25b197c7cp-3, 0x1.6929903be3dc8p-58, 0x1.85edc4ade2d9fp-2, -0x1.42c35c99eec94p-6, 0x1.88ebcca5929bap-4, -0x1.081e200f52e87p-5, 0x1.b9c99f94b804cp-6, -0x1.d5739ffe9b1dbp-7, 0x1.26a8a05fe27efp-7, -0x1.593af6fcd90e6p-8, 0x1.9e9a2ade2f454p-9, -0x1.eb9c97df19d81p-10 },
-	{ 0x1.d000000000000p+0, 0x1.de99088fe9c26p-1, -0x1.ed3604fb7cf60p-56, 0x1.19924a03486eap-2, 0x1.cf408366fb7d1p-58, 0x1.87055a0b3d7ccp-2, 0x1.8c054c8fb54a1p-6, 0x1.4cd08b8eb89dbp-4, -0x1.041b0f36a7fbep-6, 0x1.20f87215b0790p-6, -0x1.f7bd4ebe6c2d3p-8, 0x1.39fd18412afd9p-8, -0x1.4eaea9a43e6b1p-9, 0x1.79c646c33421ep-10, -0x1.9ffb56eb4f72bp-11 },
-	{ 0x1.f000000000000p+0, 0x1.f348f37d8f21cp-1, -0x1.614c5bb75424ap-55, 0x1.7d1ec45651d5ap-2, 0x1.a92470d44e23cp-57, 0x1.97d8d8455d0a6p-2, 0x1.01d5e6ff3d8e1p-4, 0x1.33408f068b463p-4, -0x1.34f6b91df13acp-8, 0x1.9e9ade49f6228p-7, -0x1.09651e2729d89p-8, 0x1.6443fc6796a9ap-9, -0x1.50e0cb7df39ecp-10, 0x1.6c0623298d2b0p-11, -0x1.7421a5e6cb4f7p-12 },
-	{ 0x1.1000000000000p+1, 0x1.0f38ce473d263p+0, -0x1.d791424ee6cf3p-54, 0x1.0f6fd3f031734p-1, 0x1.382a958711b7cp-55, 0x1.cc3678328b73dp-2, 0x1.e7ba85666af59p-4, 0x1.397bdf51ab6cfp-4, 0x1.e2da450a35c2dp-8, 0x1.35a5f0a901423p-7, -0x1.3225ec3991055p-10, 0x1.61abc6d12a026p-10, -0x1.ed328801926c9p-12, 0x1.10143d235b03fp-12, -0x1.e7d92f44cb0c2p-14 },
-	{ 0x1.3000000000000p+1, 0x1.38e5c7902ecfap+0, -0x1.38e990e46d0f3p-55, 0x1.9078b888f4e7fp-1, -0x1.e857b1bbd124fp-55, 0x1.2363f289f5eebp-1, 0x1.9fe4787b210f2p-3, 0x1.8232939be7c0dp-4, 0x1.583e8ff9a5b29p-6, 0x1.315b0f690775dp-7, 0x1.b829ae37fbd93p-11, 0x1.a285ad007d53ap-11, -0x1.6e66959c1e305p-14, 0x1.7463df17983eep-14, -0x1.d5aac06b40f4fp-16 },
-	{ 0x1.5000000000000p+1, 0x1.74f9931453942p+0, 0x1.260faee81e27fp-54, 0x1.1c757db8187c3p+0, 0x1.8a7f81e5a3264p-54, 0x1.8571fbd54b6f0p-1, 0x1.4115ee0a5fdf2p-2, 0x1.0a270aad0be80p-3, 0x1.2d2f0fddd9d5bp-5, 0x1.8d8f9681b5a9bp-7, 0x1.37a2d87b8e0e5p-9, 0x1.a2be489ca2641p-11, 0x1.2f629b4a78b32p-14, 0x1.a5345629df1d6p-15, -0x1.2aab5c4529eedp-18 },
-	{ 0x1.7000000000000p+1, 0x1.c9a76be577123p+0, -0x1.58e3c88a75f88p-55, 0x1.8f2754ddcf90cp+0, -0x1.e93e6bd703dd3p-58, 0x1.0d1191949418ap+0, 0x1.e1f42cf0ae65dp-2, 0x1.82b358a3adda7p-3, 0x1.e1f2b30cb1429p-5, 0x1.240f6d41e3300p-6, 0x1.1522ca0c59237p-8, 0x1.1fcfe5747387ep-10, 0x1.98089728debc9p-13, 0x1.b4ead317a085ep-15, 0x1.496908e3aa394p-18 },
-	{ 0x1.9000000000000p+1, 0x1.202c5b2bb0f89p+1, -0x1.33227d4490711p-53, 0x1.17cfcfbb38d85p+1, 0x1.d06ff24270104p-56, 0x1.7c34d9d2f2ce2p+0, 0x1.67a8c7887a232p-1, 0x1.20786ffd0a50cp-2, 0x1.799cdc7d0690dp-4, 0x1.c1b6e020afc26p-6, 0x1.c8a7bbd36d799p-8, 0x1.bd6d88bfe7c80p-10, 0x1.6ea3ba4150e2fp-12, 0x1.3d03b96f026abp-14, 0x1.9d1b80d9e4b05p-17 },
-	{ 0x1.b000000000000p+1, 0x1.7390dcfb37969p+1, -0x1.3955435785f0cp-53, 0x1.8a3a915968d18p+1, 0x1.7e8c51fb04725p-56, 0x1.11218624273f9p+1, 0x1.0d29cd0988c7ep+0, 0x1.b54043e22524ap-2, 0x1.274bdc8c11117p-3, 0x1.616d59097ff0bp-5, 0x1.72b13f4556d81p-7, 0x1.668a906a528d3p-9, 0x1.35bf3896245d5p-11, 0x1.0042cdfd54d11p-13, 0x1.7619f35fa6b5cp-16 },
-	{ 0x1.d000000000000p+1, 0x1.e987910aadb27p+1, 0x1.03a02335f386dp-60, 0x1.17eb7f45e4f69p+2, -0x1.a730ce0e8ac9dp-53, 0x1.8dcd8c2005befp+1, 0x1.956f622174a1fp+0, 0x1.4f349606bffd1p-1, 0x1.cfcded16a2dc4p-3, 0x1.190aa54f71daap-4, 0x1.2d093a4965718p-6, 0x1.2537ebd135adap-8, 0x1.032551c888ff7p-10, 0x1.ababa5ee1cd52p-13, 0x1.43341be32d5b0p-15 },
-	{ 0x1.f000000000000p+1, 0x1.48f0558ced951p+2, 0x1.201ec52fb3eb1p-55, 0x1.914e1ff8caf49p+2, 0x1.3ee9391688948p-52, 0x1.252e75da3e55ep+2, 0x1.33bc88f0c8b8ep+1, 0x1.03757f16fdf23p+0, 0x1.6e8ce4aa66a12p-2, 0x1.c2e4700ff4639p-4, 0x1.eb406e7ac3417p-6, 0x1.e400259902352p-8, 0x1.b272fbc72393ap-10, 0x1.6946732297be5p-12, 0x1.15a64924b8d94p-14 },
-	{ 0x1.0800000000000p+2, 0x1.c2454e7444846p+2, -0x1.9fffb5732f4f0p-52, 0x1.22a5711530a72p+3, 0x1.01249eaeb1aaap-52, 0x1.b4f1320a6a1d3p+2, 0x1.d71648cc18d28p+1, 0x1.95327b41eccbfp+0, 0x1.23bd7e1f5bb8fp-1, 0x1.6c79ddce1ae07p-3, 0x1.933cf56eeea4bp-5, 0x1.9252918bb9fb7p-7, 0x1.6deeb921777cap-9, 0x1.3374c6b82e3e1p-11, 0x1.de6277c41fbf9p-14 },
-	{ 0x1.1800000000000p+2, 0x1.39823a73f6e70p+3, 0x1.5788ad8ef1027p-51, 0x1.a985a1e23e566p+3, 0x1.da037bcf97fbep-51, 0x1.4902ed84db521p+3, 0x1.6bac08121f087p+2, 0x1.3f0c03282bc2ap+1, 0x1.d3c8240740f90p-1, 0x1.28c00fd8992fbp-2, 0x1.4d197336009b8p-4, 0x1.509b00d527ea1p-6, 0x1.35f1f414809dfp-8, 0x1.0741f00f93e62p-10, 0x1.9e15c0a9af25cp-13 },
-	{ 0x1.2800000000000p+2, 0x1.bba2db71ad69bp+3, 0x1.61ae2bbc5563cp-51, 0x1.3ade5d78ad35cp+4, -0x1.3f026aab92cd2p-51, 0x1.f478069ff7b06p+3, 0x1.1b29db7f2a492p+3, 0x1.fa7f5906d7c9cp+1, 0x1.79c39a71a1ca6p+0, 0x1.e6989c5fbbd2bp-2, 0x1.14ed8110fae4cp-3, 0x1.1b61e2f43f92fp-5, 0x1.0808def778ea9p-7, 0x1.c5684c82e3410p-10, 0x1.68496f99fef7dp-12 },
-	{ 0x1.3800000000000p+2, 0x1.3ea8d2e086287p+4, -0x1.fd3efae85dcdap-50, 0x1.d6ffc45c40023p+4, 0x1.1df2e57751ef3p-50, 0x1.80588a299f206p+4, 0x1.bcb5df96619e1p+3, 0x1.95381796a9ed3p+2, 0x1.3346fe4e08af2p+1, 0x1.91ad18a0b976dp-1, 0x1.cf656d8b70c58p-3, 0x1.e0102c2af4fb9p-5, 0x1.c46fc4c0f6561p-7, 0x1.889fbc03c10f5p-9, 0x1.3b1fc4ff15686p-11 },
-	{ 0x1.4800000000000p+2, 0x1.d05778e7e6a88p+4, -0x1.da76fedb829aep-51, 0x1.6403466c62bcep+5, 0x1.9096eb23adb22p-49, 0x1.29f5ba12aae0ep+5, 0x1.6023ca0bd753ep+4, 0x1.46b399c103ebbp+3, 0x1.f774a7b14cfcbp+1, 0x1.4dcd957138e48p+0, 0x1.86285d74407d2p-2, 0x1.9910f48951e72p-4, 0x1.85d8603b1e9a0p-6, 0x1.55d9457e285c4p-8, 0x1.150fc63ca74e7p-10 },
-	{ 0x1.5800000000000p+2, 0x1.56e66feed60cbp+5, -0x1.10ec89c77b368p-50, 0x1.0fe55bd638f42p+6, 0x1.38abf59d94f83p-50, 0x1.d23c9c41df776p+5, 0x1.1922cfcb1fcd2p+5, 0x1.096593be7f5bap+4, 0x1.9f5775480d698p+2, 0x1.173b11af18aa6p+1, 0x1.4a89f2edd4ecep-1, 0x1.5ea168396c78dp-3, 0x1.51cdd1e5ca4b6p-5, 0x1.2b3ead66e501ap-7, 0x1.e9b5d56c5faecp-10 },
-	{ 0x1.6800000000000p+2, 0x1.007a26ddb8412p+6, -0x1.8768afca23c47p-49, 0x1.a3857781bdf36p+6, -0x1.8c37a033a6322p-48, 0x1.700cfb32a67f7p+6, 0x1.c486677306d0ap+5, 0x1.b2668d3789517p+4, 0x1.5904eb8b677b7p+3, 0x1.d63207a5167c0p+1, 0x1.19bf75b5c000fp+0, 0x1.2e4b44bdd2d0bp-2, 0x1.2656126131b11p-4, 0x1.0758235e7f05ep-6, 0x1.b2fe9ac67907cp-9 },
-	{ 0x1.7800000000000p+2, 0x1.845dc101a3814p+6, -0x1.33ce26f1c85fep-50, 0x1.46d8f60447c66p+7, 0x1.3e982477aa341p-47, 0x1.2515ecbce4f81p+7, 0x1.6f14f6ca0b447p+6, 0x1.661ba6456772dp+5, 0x1.208d48dd37c60p+4, 0x1.8e68fa2d444b2p+2, 0x1.e3385b115573cp+0, 0x1.061e3839c5f29p-1, 0x1.01de18fd884d2p-3, 0x1.d1ef64dca4786p-6, 0x1.84573a0d51934p-8 },
-	{ 0x1.8800000000000p+2, 0x1.297809748fc3fp+7, -0x1.83f6193deff6dp-51, 0x1.011790abedab9p+8, -0x1.2e33095400cecp-46, 0x1.d6c3a803039f7p+7, 0x1.2c145bf440a9fp+7, 0x1.295401029be65p+6, 0x1.e5e0884e1747cp+4, 0x1.53b4ddaca568cp+3, 0x1.a0d8a69715c27p+1, 0x1.c922ee296ece4p-1, 0x1.c64717ea888e3p-3, 0x1.9e53468cb7e6dp-5, 0x1.5c6abdbdef5c6p-7 },
-	{ 0x1.9800000000000p+2, 0x1.ccc5a668efa11p+7, -0x1.97d95a0761e08p-47, 0x1.98390165b749ap+8, 0x1.2ff5f7ccf0affp-47, 0x1.7d3a0ff1d0615p+8, 0x1.ee55ee496a998p+7, 0x1.f131e66d8a40dp+6, 0x1.9bc18caba8b0bp+5, 0x1.23718d3700eb1p+4, 0x1.69b2380f57645p+2, 0x1.90d951aa68966p+0, 0x1.9246fd231a271p-2, 0x1.7250d78c0b54cp-4, 0x1.3a226c65daa58p-6 },
-	{ 0x1.a800000000000p+2, 0x1.68abc6a7cb1b9p+8, 0x1.62ed25f969dd0p-49, 0x1.47091ce2f0974p+9, -0x1.3c369e83cc5e1p-47, 0x1.3739cf8fd4d01p+9, 0x1.9a31bf898a6a9p+8, 0x1.a291b527cd8f0p+7, 0x1.5f3118ebe7172p+6, 0x1.f71da32bba080p+4, 0x1.3ba720ad109fap+3, 0x1.616c903feb11cp+1, 0x1.661a274b4058ep-1, 0x1.4ca691cc0f5f6p-3, 0x1.1c999419060fbp-5 },
-	{ 0x1.b800000000000p+2, 0x1.1d34d9bd3412fp+9, -0x1.78e3eef4e71e0p-45, 0x1.084d30bb3eedcp+10, 0x1.8528822c19dccp-44, 0x1.0017389b411f0p+10, 0x1.56d8e06b99844p+9, 0x1.62c18bcd7a2a2p+8, 0x1.2d6eab13ced22p+7, 0x1.b4dbbc2d293b8p+5, 0x1.1508effbae735p+4, 0x1.394c3394292b6p+2, 0x1.406e36771311fp+0, 0x1.2c4dc3e2ab0a1p-2, 0x1.0313e0880d123p-4 },
-	{ 0x1.c800000000000p+2, 0x1.c77fce7a7c240p+9, 0x1.ba30bd36b3913p-45, 0x1.aedb16b5d5e73p+10, -0x1.31c6127b1d1c8p-44, 0x1.a8b3b0cd4a311p+10, 0x1.20980b6761f61p+10, 0x1.2ea967c30ef7fp+9, 0x1.0454f46e8be31p+8, 0x1.7d8e9bd077ebcp+6, 0x1.e9004e61ff5d4p+4, 0x1.1735767200da1p+3, 0x1.202ff2b223fa0p+1, 0x1.106efb001426dp-1, 0x1.d9eb5c8bc7362p-4 },
-	{ 0x1.d800000000000p+2, 0x1.6f2d809b9ef45p+10, 0x1.d4c37617d6278p-45, 0x1.6219c7839d08cp+11, -0x1.00c329c99c6fep-44, 0x1.62d164e168f6dp+11, 0x1.e93afddef50aap+10, 0x1.03e49f98d1e83p+10, 0x1.c46ab5b42cfd0p+8, 0x1.4f2edfb70a600p+7, 0x1.b1f2cb47ba198p+5, 0x1.f44627f9d59b4p+3, 0x1.047e9d4696912p+2, 0x1.f0b1b73dcc4d1p-1, 0x1.b37bda272fe64p-3 },
-	{ 0x1.e800000000000p+2, 0x1.2aae4082f432dp+11, 0x1.e85e7f4889e4bp-44, 0x1.255e48566bef0p+12, -0x1.beb17485567bcp-42, 0x1.2a9d037f7a4f5p+12, 0x1.a17fa681dbd44p+11, 0x1.c12d19e757eb9p+10, 0x1.8b7915ed4ec2ep+9, 0x1.281e8bcef8e6ap+8, 0x1.832dcfda40463p+6, 0x1.c28159c7445bep+4, 0x1.d943f0aa46d27p+2, 0x1.c6f1bdfa2649bp+0, 0x1.9202778ac0b4ap-2 },
-	{ 0x1.f800000000000p+2, 0x1.ea32d63d31808p+11, 0x1.2e6a52d5156ecp-44, 0x1.e9eb46f97aab1p+12, -0x1.923ede22d0706p-42, 0x1.fa3b3579a7a8ep+12, 0x1.66a82f0348357p+12, 0x1.86948c3f7a88cp+11, 0x1.5bbb7df864472p+10, 0x1.071215a3e631bp+9, 0x1.5b4a9d479439fp+7, 0x1.97c1d8fe11ec9p+5, 0x1.b004d09868f91p+3, 0x1.a2ab1706878a8p+1, 0x1.74cbf6e640c0ap-1 },
-};
-
-/* (n - 1)! for n = 1..23, exact in double: tgamma at the integers, exactly (C23 F.10.5.4 asks no more, the strict file gives it) */
-static const double factorials[23] = { 0x1.0000000000000p+0, 0x1.0000000000000p+0, 0x1.0000000000000p+1, 0x1.8000000000000p+2, 0x1.8000000000000p+4, 0x1.e000000000000p+6, 0x1.6800000000000p+9, 0x1.3b00000000000p+12, 0x1.3b00000000000p+15, 0x1.6260000000000p+18, 0x1.baf8000000000p+21, 0x1.308a800000000p+25, 0x1.c8cfc00000000p+28, 0x1.7328cc0000000p+32, 0x1.44c3b28000000p+36, 0x1.3077775800000p+40, 0x1.3077775800000p+44, 0x1.437eeecd80000p+48, 0x1.6beecca730000p+52, 0x1.b02b930689000p+56, 0x1.0e1b3be415a00p+61, 0x1.6283be9b5c620p+65, 0x1.e77526159f06cp+69 };
-
-/* The piece of y in [1, 8): three fraction bits on [1, 4), four on [4, 8) */
-static inline const double *tgamma_piece(double y)
-{
-	uint64_t bits = __libc_double_bits(y);
-
-	if (bits < 0x4010000000000000ull)
-		return pieces[(bits - 0x3ff0000000000000ull) >> 49];
-
-	return pieces[16 + ((bits - 0x4010000000000000ull) >> 48)];
-}
-
-/* Gamma at t from its piece's centre as hi + *lo: c0 + c1 t exactly (two fused multiply-adds, or an exact product and a fast two-sum), the rest in plain double */
-[[gnu::always_inline]] static inline double tgamma_eval(const double *c, double t, double *lo)
-{
-	double q = c[4] + t * (c[5] + t * (c[6] + t * (c[7] + t * (c[8] + t * (c[9] + t * (c[10] + t * (c[11] + t * (c[12] + t * (c[13] + t * c[14])))))))));
-	struct __libc_dd product;
-	struct __libc_dd sum;
-	double r;
-
-	if (__libc_fpu_fma) {
-		r = __builtin_fma(c[3], t, c[1]);
-		*lo = __builtin_fma(c[3], t, c[1] - r) + (c[2] + t * q);
-		return r;
-	}
-	product = __libc_fast_product(c[3], t);
-	sum = __libc_dd_fast_sum(c[1], product.hi);
-	*lo = sum.lo + product.lo + (c[2] + t * q);
-
-	return sum.hi;
-}
-
-/* (n_hi + n_lo)/(d_hi + d_lo), rounded once: the quotient and its remainder (exact by fma or Dekker), the low parts to first order */
-static inline double tgamma_divide(double n_hi, double n_lo, double d_hi, double d_lo)
-{
-	double q = n_hi / d_hi;
-	struct __libc_dd p = __libc_fast_product(q, d_hi);
-
-	return q + (((n_hi - p.hi) - p.lo) + n_lo - q * d_lo) / d_hi;
-}
-
-/*
- * The exponent of Stirling's form, (a - 1/2) log a - a + log(2 pi)/2 + S(1/a^2)/a for 8 <= a < 2^52, as hi + *lo: a - 1/2
- * exact, log a as a pair (__libc_fast_log_pair: about 2^-66 absolutely), their product exact, S of degree 6 (lgamma's,
- * 2^-57.59 absolutely, below 2^-60 once divided by a); about 2^-58.5 absolutely up to 171.6, so that e^E is within
- * 2^-58 relatively
- */
-static inline double tgamma_stirling(double a, double *lo)
-{
-	double y = a - 0.5;
-	double v = 1.0 / a;
-	double z = v * v;
-	double l_lo;
-	double l = __libc_fast_log_pair(a, 0.0, 0, &l_lo);
-	struct __libc_dd p = __libc_fast_product(y, l);
-	struct __libc_dd s = __libc_dd_sum(p.hi, -a);
-	struct __libc_dd t = __libc_dd_fast_sum(s.hi, 0x1.d67f1c864beb5p-1);
-
-	*lo = t.lo + (s.lo + p.lo + y * l_lo + -0x1.65b5a1b7ff5dfp-55 + v * (0x1.5555555555555p-4 + z * (-0x1.6c16c16c149f4p-9 + z * (0x1.a01a017dcf9e1p-11 + z * (-0x1.38134d4f8896fp-11 + z * (0x1.b92c33f9445e5p-11 + z * (-0x1.ef8d748aeb0f2p-10 + z * 0x1.4bffc9d8b455bp-8)))))));
-	return t.hi;
-}
-
-/* sign e^(hi + lo) by the fast exp's reduction and table, the scale's ends (overflow, subnormal results rounded once) by __libc_fast_exp_scale */
-static inline double tgamma_exp(double hi, double lo, double sign)
-{
-	/* Normalized first: lo holds S/a and the like, up to 2^-7, beyond the polynomial's |u| <= ln 2/128 */
-	struct __libc_dd e = __libc_dd_fast_sum(hi, lo);
-	double kd;
-	int32_t k = __libc_fast_exp_index(e.hi * 0x1.71547652b82fep+6, &kd);
-	double u = ((e.hi - kd * 0x1.62e42fee00000p-7) - kd * 0x1.a39ef35793c76p-39) + e.lo;
-
-	return sign * __libc_fast_exp_scale(k, __libc_fast_expm1_poly(u));
-}
-
-/* floor(a) for a positive finite a, by masking its fraction bits: exact in every rounding direction */
-static inline double tgamma_floor(double a)
-{
-	uint64_t bits = __libc_double_bits(a);
-	int32_t e = (int32_t)(bits >> 52) - 1023;
-
-	if (e < 0)
-		return 0.0;
-	if (e >= 52)
-		return a;
-
-	return __libc_double_from(bits & ~((1ull << (52 - e)) - 1));
-}
-
-/*
- * A negative x, not an integer, from 2^-54 in magnitude: a = -x, n = floor(a), the sign (-1)^(n + 1).
- * - Above -8, the recurrence Gamma(x) = Gamma(z)/(x (x + 1) ... (x + n + 1)), z = x + n + 2 in (1, 2): the piece's t =
- *   x - (m - n - 2) (exact from |x| >= 1; below, its rounding only moves t), the product of the shifts as a pair (x + 1
- *   a pair below 1 in magnitude), one quotient.
- * - From -8, the reflection Gamma(-a) = -pi/(a sin(pi a) Gamma(a)) as one exponential, of log pi - log(a |sin pi g|) -
- *   E(a) with E Stirling's exponent, so that the underflow (from -184) rounds once; sin(pi g) by the fast sine's table and
- *   kernel, g the distance from a to the nearest integer.
- */
-[[gnu::noinline]] static double tgamma_negative(double x)
-{
-	double a = -x;
-	double n = tgamma_floor(a);
-	double fraction = a - n;
-	double sign;
-
-	if (fraction == 0)
-		return __libc_math_invalid();
-	/* (-1)^(n + 1), n's parity by exact operations (no integer conversion, whose library call raised a flag on armv7e-m-dp) */
-	sign = tgamma_floor(n * 0.5) == n * 0.5 ? -1.0 : 1.0;
-	/* |Gamma(x)| is below 2^-1075 from 184 */
-	if (a >= 190.0)
-		return __libc_math_underflow(sign);
-	if (a < 8.0) {
-		double m = n + 2.0;
-		const double *c = tgamma_piece(x + m);
-		struct __libc_dd p = __libc_dd_sum(x, 0.0);
-		double g_lo;
-		double g = tgamma_eval(c, x - (c[0] - m), &g_lo);
-
-		for (double k = 1.0; k < m; k += 1.0) {
-			struct __libc_dd v = __libc_dd_sum(x, k);
-			struct __libc_dd q = __libc_fast_product(p.hi, v.hi);
-
-			p = __libc_dd_fast_sum(q.hi, q.lo + p.lo * v.hi + p.hi * v.lo);
-		}
-		return tgamma_divide(g, g_lo, p.hi, p.lo);
-	} else {
-		double g = fraction <= 0.5 ? fraction : 1.0 - fraction;
-		uint32_t j = (uint32_t)(g * 32.0 + 0.5);
-		double d = g - (double)j * 0x1p-5;
-		struct __libc_dd t = __libc_fast_product(d, 0x1.921fb54442d18p+1);
-		double z;
-		double s_lo;
-		double s;
-		struct __libc_dd q;
-		double l_lo;
-		double l;
-		double e_lo;
-		double e;
-		struct __libc_dd first;
-		struct __libc_dd second;
-
-		t.lo += d * 0x1.1a62633145c07p-53;
-		z = t.hi * t.hi;
-		s = __libc_fast_sin_turn(j, t.hi, t.lo, __libc_fast_sin_poly(z), __libc_fast_cos_poly(z), &s_lo);
-		q = __libc_fast_product(a, s);
-		q = __libc_dd_fast_sum(q.hi, q.lo + a * s_lo);
-		l = __libc_fast_log_pair(q.hi, q.lo, 0, &l_lo);
-		e = tgamma_stirling(a, &e_lo);
-		first = __libc_dd_sum(0x1.250d048e7a1bdp+0, -l);
-		second = __libc_dd_sum(first.hi, -e);
-		return tgamma_exp(second.hi, second.lo + first.lo + (0x1.7abf2ad8d5088p-57 - l_lo - e_lo), sign);
-	}
-}
-
-/*
- * The ends (C23 7.12.8.4, F.10.5.4): NaN returns itself, +inf +inf, -inf invalid, +-0 +-inf with divide-by-zero; below
- * 2^-54 in magnitude 1/x - gamma (as the strict file: gamma decides only the directed roundings); from 171.62437695630272 the overflow; |x| from 2^52
- * is an integer: the overflow, or invalid when negative
- */
-[[gnu::noinline]] static double tgamma_ends(double x)
-{
-	if (isnan(x))
-		return x + x;
-	if (isinf(x))
-		return x > 0 ? x : __libc_math_invalid();
-	if (x == 0)
-		return __libc_math_divbyzero(__builtin_copysign(1.0, x));
-	if (__builtin_fabs(x) < 0x1p-54) {
-		/*
-		 * 1/x - gamma (Euler's constant) as the strict file forms it: gamma is below half an ulp of 1/x, so it decides
-		 * only the directed roundings, and it is lost if 1/x is rounded first. 1/x as a pair, to nearest, on x scaled by
-		 * 2^64, then rounded once in the caller's direction; at or below 2^-1024 1/x overflows alike.
-		 */
-		struct __libc_dd reciprocal;
-		int mode;
-
-		if (__builtin_fabs(x) <= 0x1p-1024)
-			return 1.0 / x;
-		mode = __libc_math_nearest();
-		reciprocal = __libc_dd_divide((struct __libc_dd){ .hi = 1.0, .lo = 0.0 }, (struct __libc_dd){ .hi = x * 0x1p64, .lo = 0.0 });
-		reciprocal.lo -= 0x1.2788cfc6fb619p-1 * 0x1p-64;
-		__libc_math_restore(mode);
-		return reciprocal.hi * 0x1p64 + reciprocal.lo * 0x1p64;
-	}
-	if (x < 0)
-		return __libc_math_invalid();
-
-	return __libc_math_overflow(1.0);
-}
-
-/*
  * The fast tgamma of the double-FPU cores (PLAN D162, D219, D230), within 1 ulp (docs/research/libm-fast-double.md,
  * section 34):
  * - the integers to 23 exactly ((n - 1)!);
  * - below 1, Gamma(1 + x)/x, Gamma(1 + x) by the piece of 1 + x at t = x - (m - 1), one quotient;
  * - below 8, the pieces;
  * - to 171.6, e^E with E Stirling's exponent as a pair, rounded once;
- * - negative x by the recurrence above -8 and the reflection below (tgamma_negative).
+ * - negative x by the recurrence above -8 and the reflection below; those paths, the ends and Stirling's in their own
+ *   files, which the soft-double cores' fixed-point file shares (__libc_fast_tgamma_*.c).
  * C23 7.12.8.4.
  */
 double tgamma(double x)
@@ -268,22 +36,20 @@ double tgamma(double x)
 
 	/* 2^-54 <= |x| < 2^52, and x below the overflow */
 	if (magnitude - 0x3c90000000000000ull >= 0x4330000000000000ull - 0x3c90000000000000ull || x > 171.62437695630272)
-		return tgamma_ends(x);
+		return __libc_fast_tgamma_ends(x);
 	if (x < 0)
-		return tgamma_negative(x);
+		return __libc_fast_tgamma_negative(x);
 	if (x <= 23.0 && (double)(int32_t)x == x)
-		return factorials[(int32_t)x - 1];
+		return __libc_fast_tgamma_factorials[(int32_t)x - 1];
 	if (x < 1.0) {
-		c = tgamma_piece(1.0 + x);
-		hi = tgamma_eval(c, x - (c[0] - 1.0), &lo);
-		return tgamma_divide(hi, lo, x, 0.0);
+		c = __libc_fast_tgamma_piece(1.0 + x);
+		hi = __libc_fast_tgamma_eval(c, x - (c[0] - 1.0), &lo);
+		return __libc_fast_tgamma_divide(hi, lo, x, 0.0);
 	}
 	if (x < 8.0) {
-		c = tgamma_piece(x);
-		hi = tgamma_eval(c, x - c[0], &lo);
+		c = __libc_fast_tgamma_piece(x);
+		hi = __libc_fast_tgamma_eval(c, x - c[0], &lo);
 		return hi + lo;
 	}
-	hi = tgamma_stirling(x, &lo);
-
-	return tgamma_exp(hi, lo, 1.0);
+	return __libc_fast_tgamma_large(x);
 }
