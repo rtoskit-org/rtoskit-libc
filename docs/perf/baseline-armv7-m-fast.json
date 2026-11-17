@@ -537,10 +537,10 @@
     "insns": 820.75
    },
    "tgammaf/latency": {
-    "insns": 27673.94
+    "insns": 822.0
    },
    "tgammaf/throughput": {
-    "insns": 27683.38
+    "insns": 831.44
    }
   },
   "qsort": {

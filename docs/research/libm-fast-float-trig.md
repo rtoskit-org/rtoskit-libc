@@ -1196,3 +1196,47 @@ and within 2^-28 absolutely near the zeros where that is looser.
 | armv7e-m-dp | 511.9 (142.3 after P11.07d1) | 133.3 | — |
 | armv7-m | 18,357 | 713 | — |
 | armv6-m, armv6s-m | 36,729 | 3360 | — |
+
+## 25. tgammaf at 1 ulp (P11.07e3, D219, D232)
+
+The fast flavour had kept the strict `tgammaf`: a float-float core on the
+single-precision FPU and soft-float cores (846 instructions a call on
+armv7e-m, 55,326 on armv6-m), and `tgamma` rounded to float on the
+double-FPU cores.
+
+**Every core but the single-precision FPU's** (`fast/tgammaf.c`, and the
+same lines in `nofp/fast/tgammaf.c`, which beat the soft-float cores'
+`sp-nearest` layer): `(float)tgamma(x)`. The fast double `tgamma` (D230,
+D231) is within 0.59 ulp of double.
+
+**The single-precision FPU** (`sp-nearest/fast/tgammaf.c`): the double
+file's method in float with fused multiply-adds.
+- The factorials to 13 exactly (exact in float).
+- Γ on [1, 8) from 32 pieces of degree 6, in the double file's layout
+  (2^-29.19 relatively).
+- Γ(1 + x)/x below 1, by one quotient with its remainder.
+- From 8 to the overflow at 35.0401, e^E: Stirling's exponent as a float
+  pair, with log a by `lgammaf`'s extended log2 kernel (2^-35), the
+  product exact, and S of degree 2. Then `__libc_fast_expf_kernel` on the
+  pair, which also scales the overflow end.
+- Negative x by the recurrence above −16 and by the reflection as one
+  exponential below, with `lgammaf`'s sine pair (to 1/4, then the cosine
+  form). The results round to ±0 from 2^-151 down: the kernel's scaling
+  starts at 2^-153.
+
+Bugs found by the full float sweep and fixed before the commit:
+- below about −46 the exponent's k fell under the kernel's −153 and the
+  scaling wrapped (inf);
+- with the recurrence only above −8, as in the double file, the
+  reflection reached 0.974 ulp near −8.75. Above −16 the recurrence's
+  longer product costs nothing on the bench's path.
+
+Every float, against the host's double `tgamma`: at most 0.9267 ulp (near
+−25, the reflection), none beyond 1 ulp.
+
+| Core | `tgammaf` before | now | picolibc |
+|---|---:|---:|---:|
+| armv7e-m, armv8-m.main | 846.2 | 174.2 | 238 |
+| armv7e-m-dp | 731.3 (168.1 after P11.07e2) | 159.1 | — |
+| armv7-m | 27,683 | 831.4 | — |
+| armv6-m, armv6s-m | 55,326 | 4080 | — |
