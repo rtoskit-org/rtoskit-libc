@@ -777,8 +777,8 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
 - [x] `libc/math/fast/tgamma.c` in double (x86_64, armv7e-m-dp; the
   soft-double cores run it on their helpers until e2).
 
-### P11.07e2 — the double `tgamma` in fixed point  `[ ]`
-- [ ] `libc/math/dp-fixed/fast/tgamma.c` on the soft-double cores.
+### P11.07e2 — the double `tgamma` in fixed point  `[x]`
+- [x] `libc/math/dp-fixed/fast/tgamma.c` on the soft-double cores.
 
 ### P11.07e3 — `tgammaf`  `[ ]`
 - [ ] On the single-precision FPU cores, and from the fast `tgamma`

@@ -531,10 +531,10 @@
     "insns": 562.62
    },
    "tgamma/latency": {
-    "insns": 5297.5
+    "insns": 806.62
    },
    "tgamma/throughput": {
-    "insns": 5311.62
+    "insns": 820.75
    },
    "tgammaf/latency": {
     "insns": 27673.94

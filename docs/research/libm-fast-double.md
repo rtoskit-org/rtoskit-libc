@@ -2618,3 +2618,51 @@ split against overflow, a factorial table, reflection), the strict file
 | armv7e-m-dp | 718.6 | 167.1 | 731.3 → 179.8 |
 | x86_64 | 1141.4 | 208.2 | 1156.4 → 223.2 |
 | armv7e-m (on the helpers until P11.07e2) | 23,498 | 5167 | 846 (its own core) |
+
+## 35. tgamma in fixed point on the soft-double cores (P11.07e2, D231)
+
+P11.07e1's double file ran on the soft-double helpers at 5167 instructions
+a call on armv7e-m. `dp-fixed/fast/tgamma.c` takes positive x below 64
+into 64-bit integers:
+- **The integers to 23:** the double file's factorial table, now shared
+  in `__libc_fast_tgamma_pieces.c` with its 32 pieces.
+- **[1, 8):** Γ(x)·2^-s in Q64 from 32 pieces of degree 11 (the double
+  file's layout), each with its own power of two s (0 to 13) so that the
+  values stay below 1. The fit is within 2^-58.06 relatively, with the
+  evaluation's truncations simulated. The result rounds once.
+- **Below 1:** Γ(1 + x)/x. 1 + x is taken in Q63; its truncation only
+  picks the piece and moves u. The piece's value is multiplied by 1/x
+  from `__libc_dp_fixed_reciprocal`.
+- **[8, 64):** e^E, with E = (x − ½) ln x − x + ½log 2π + S(1/x²)/x in
+  128-bit Q64, built from:
+  - ln x by the fixed log kernel plus e ln 2, a few units of 2^-64;
+  - the product with x − ½ as 64 × 128 bits, the top 128 kept;
+  - x exactly;
+  - S by lgamma's fit.
+
+  Then t = E·log2 e = n + f 2^-64, and 2^f from exp's kernel. E is within
+  about 2^-56 absolutely below 64; above, the log's error times x would
+  approach 0.3 ulp, so from 64 the double path stays.
+- **From 64, negative x and the ends:** the double file's paths, which
+  moved into `__libc_fast_tgamma_large.c`, `_negative.c` and `_ends.c`,
+  with their inline helpers in `math-fast.h`.
+
+The first version kept Stirling's exponential in double from 8 up. It
+measured 4028 instructions on armv7e-m, because the bench's arguments,
+[0.5, 20], are mostly above 8. Hence the fixed-point exponential.
+
+Against binary128, 4·10^6 points a range:
+
+| Range | worst |
+|---|---:|
+| [10^-300, 10^-16], [10^-16, 1/2], [1/2, 1] | 0.5120, 0.5116, 0.5055 ulp |
+| [1, 2], [2, 4], [4, 8] | 0.5114, 0.5136, 0.5066 |
+| [8, 16], [16, 32], [32, 64] | 0.5121, 0.5311, 0.5642 |
+| [64, 171.6] (double) | 0.5461 |
+| [−8, 0), [−189, −8] (double) | 0.5119, 0.5360 |
+
+| Core | `tgamma` before P11.07e | after e1 (on the helpers) | now | picolibc |
+|---|---:|---:|---:|---:|
+| armv7e-m, armv8-m.main | 23,498 | 5167 | 823.4 | 6023 |
+| armv7-m | 24,298 | 5312 | 820.8 | — |
+| armv6-m, armv6s-m | 64,700 | 15,174 | 4051 | — |
