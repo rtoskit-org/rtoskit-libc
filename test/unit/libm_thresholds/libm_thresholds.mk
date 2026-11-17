@@ -30,4 +30,9 @@ CFLAGS += -frounding-math -fsignaling-nans
 
 all: ${CURDIR}/libm_thresholds.elf
 
+# The fast build type's expectation compiles into a subdirectory of the build directory (subdir.mk)
+${CURDIR}/fast/expect.o: | ${CURDIR}/fast
+${CURDIR}/fast:
+	mkdir -p $@
+
 endif

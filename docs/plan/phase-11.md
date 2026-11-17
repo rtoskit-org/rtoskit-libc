@@ -735,9 +735,21 @@ ones (fixed point on the soft-double cores, double on the double-FPU cores).
 - [x] The double `erfc` in fixed point on the soft-double cores and in
   double on the double-FPU cores, at 1 ulp (D219); as P11.07b.
 
-### P11.07d — `lgamma`, `lgammaf`  `[ ]`
-- [ ] At 1 ulp, and an absolute error (2^-60 double, 2^-28 float) within
-  2^-6 of a zero (D219); the poles and `signgam` as in speed; as P11.07b.
+### P11.07d — `lgamma`, `lgammaf`  `[~]`
+At 1 ulp, and an absolute error (2^-60 double, 2^-28 float) within 2^-6 of
+a zero (D219); the poles and `signgam` as in speed; as P11.07b. Split, as
+P11.07c was: one function and core family a step.
+
+### P11.07d1 — the double `lgamma` on the double-FPU cores  `[x]`
+- [x] `libc/math/fast/lgamma.c` in double (x86_64, armv7e-m-dp; the
+  soft-double cores run it on their helpers until d2).
+
+### P11.07d2 — the double `lgamma` in fixed point  `[ ]`
+- [ ] `libc/math/dp-fixed/fast/lgamma.c` on the soft-double cores.
+
+### P11.07d3 — `lgammaf`  `[ ]`
+- [ ] On the single-precision FPU cores (`sp-nearest/fast/`), and in
+  double on the double-FPU cores.
 
 ### P11.07e — `tgamma`, `tgammaf`  `[ ]`
 - [ ] As P11.07b; overflow, underflow and the poles as in speed.
