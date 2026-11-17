@@ -494,7 +494,7 @@ static inline struct __libc_dd __libc_dd_sqrt(struct __libc_dd a)
 /* x = n pi/2 + r with |r| about pi/4 at most; returns n mod 4 and r as a double-double, for finite x */
 int __libc_rem_pio2(double x, struct __libc_dd *r);
 
-/* sin and cos of r.hi + r.lo for |r| at most about pi/4, to about 2^-60 */
+/* sin and cos of r.hi + r.lo for |r| at most 0.8, to about 2^-66 (cos is 1 - 2 sin^2(r/2)) */
 struct __libc_dd __libc_sin_core(struct __libc_dd r);
 struct __libc_dd __libc_cos_core(struct __libc_dd r);
 

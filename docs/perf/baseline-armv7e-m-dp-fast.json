@@ -183,10 +183,10 @@
     "insns": 51.31
    },
    "cospi/latency": {
-    "insns": 216.69
+    "insns": 239.69
    },
    "cospi/throughput": {
-    "insns": 215.44
+    "insns": 238.44
    },
    "cospif/latency": {
     "insns": 59.38
@@ -471,10 +471,10 @@
     "insns": 64.62
    },
    "sinpi/latency": {
-    "insns": 220.69
+    "insns": 243.69
    },
    "sinpi/throughput": {
-    "insns": 219.44
+    "insns": 242.44
    },
    "sinpif/latency": {
     "insns": 57.38
@@ -519,10 +519,10 @@
     "insns": 67.81
    },
    "tanpi/latency": {
-    "insns": 254.69
+    "insns": 300.69
    },
    "tanpi/throughput": {
-    "insns": 253.81
+    "insns": 299.81
    },
    "tanpif/latency": {
     "insns": 76.38

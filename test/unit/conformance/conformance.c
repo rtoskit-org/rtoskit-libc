@@ -36,6 +36,8 @@
 #include <tgmath.h>
 #include <time.h>
 
+#include "libm_expect.h"
+
 static int failures;
 
 static void fail(int line, const char *what)
@@ -291,6 +293,20 @@ static void regression_log1p_large(void)
 		CHECK(!fetestexcept(FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID | FE_DIVBYZERO));
 #endif
 	}
+}
+
+/*
+ * sin, cos and tan to nearest within 0.53 ulp: the double-double cores lost up to 0.11 ulp to the low part of the
+ * reduced argument and, in cos, to r^4/24 rounded in double, so 0.3-0.6 % of results above pi/4 were misrounded, by
+ * up to 0.61 ulp, through both reductions (Cody-Waite below 2^20, Payne-Hanek above); each argument is one the old
+ * cores misrounded (P11.07m)
+ */
+static void regression_trig_cores(void)
+{
+	CHECK(libm_exact("sin", sin(0x1.bd0a14269acdfp+707), 0x1.6e1cbd6c025f7p-1) && libm_exact("tan", tan(0x1.f3605e569c782p+525), -0x1.fa789308d09f5p-1));
+	CHECK(libm_exact("cos", cos(0x1.868bf0afb16cep+581), -0x1.6ec35af07ef1fp-1) && libm_exact("tan", tan(-0x1.52dc2f7f6b4c2p+998), 0x1.fed08109bba22p-1));
+	CHECK(libm_exact("cos", cos(0x1.32cba10db5908p+18), 0x1.770263edc99c5p-1) && libm_exact("sin", sin(0x1.6de3bb196fd16p+11), -0x1.7fe62456303bdp-1));
+	CHECK(libm_exact("tan", tan(0x1.c7a0f18cf4d0cp+11), 0x1.fc8a496f1ad08p-1));
 }
 
 /* functional/strtod, strtod_long, strtod_simple, strtold: exact rounding at the boundaries, very long input, round trips */
@@ -619,6 +635,7 @@ int main(void)
 	regression_pow_minus_one();
 	regression_atanf_sixteenth();
 	regression_log1p_large();
+	regression_trig_cores();
 
 	functional_strtod();
 	functional_strtol();
