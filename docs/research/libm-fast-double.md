@@ -2554,3 +2554,67 @@ Instructions per call (fast, throughput):
 | armv7e-m, armv8-m.main | 17,366 | 5006 | 699.6 | 3901 |
 | armv7-m | 17,908 | 5144 | 701.6 | — |
 | armv6-m, armv6s-m | 47,083 | 14,761 | 3323 | — |
+
+## 34. tgamma at 1 ulp on the double-FPU cores (P11.07e1, D219, D230)
+
+The fast flavour had kept the strict `tgamma`, which is e^lgamma through
+the double-double cores: 718.6 instructions a call on armv7e-m-dp, 1141 on
+x86_64, and 23,498 on armv7e-m on the soft-double helpers.
+
+Sources: musl's `tgamma.c` (a Lanczos sum times y^(x − ½) e^-y, the power
+split against overflow, a factorial table, reflection), the strict file
+(`libm-special.md`), and this phase's lgamma (§32). No code was copied.
+
+**Method (`libc/math/fast/tgamma.c`):**
+- **The integers to 23** come from a table of exact factorials.
+- **On [1, 8), Γ from 32 pieces of degree 11** (2^-58.11 relatively).
+  Eight are of width 1/8 on [1, 2) and eight of 1/4 on [2, 4), indexed by
+  three fraction bits; on [4, 8) there are sixteen of width 1/4, by four.
+  Γ's growth made [4, 8) at width 1/2 only 2^-43.8; degree 12 was no
+  better than 11 at 1/4, being limited by the coefficients' rounding.
+- **Below 1:** Γ(1 + x)/x, with t = x − (m − 1) so that 1 + x only picks
+  the piece, and one quotient with its remainder.
+- **Below 2^-54:** 1/x − γ as the strict file forms it (a pair, to
+  nearest, rounded once in the caller's direction), so that the directed
+  modes see Euler's constant.
+- **From 8 to the overflow** (171.62437695630272), e^E with
+  E = (x − ½) log x − x + ½log 2π + S(1/x²)/x as a pair:
+  - log x from `__libc_fast_log_pair`, about 2^-66 absolutely;
+  - the product (x − ½)·log x exact;
+  - S of degree 6 (lgamma's).
+
+  E is within about 2^-58.5 absolutely to 171.6. The pair is normalized,
+  then reduced by the fast exp's table, and `__libc_fast_exp_scale` handles
+  the overflow end.
+- **Negative x above −8:** the recurrence Γ(x) = Γ(z)/(x (x + 1) ... (x + n
+  + 1)) with z = x + n + 2 in (1, 2), the product as a pair (x + 1 a pair
+  below 1 in magnitude), and one quotient.
+- **Negative x from −8:** the reflection as a single exponential, of
+  log π − log(a |sin πg|) − E(a), so that the underflow from about −178
+  rounds once; zero with the right sign from −190.
+- **Signs and poles:** the sign is (−1)^(n + 1), its parity found by exact
+  operations, because the integer conversion's library call raised a flag
+  on armv7e-m-dp. Poles are invalid.
+
+**Bugs found and fixed before the commit:**
+- Stirling's pair carried S/x (about 2^-7) unnormalized into the
+  exponential's reduction, beyond the polynomial's |u| ≤ ln 2/128: 147 ulp
+  near 8.
+- The tiny-x path was a bare 1/x, which the conformance test's downward
+  case catches.
+- The sign's integer conversion raised a flag at the poles.
+
+**Measured** against binary128 (`tgammaq`), 2·10^6 points a range:
+
+| Range | worst |
+|---|---:|
+| [10^-300, 10^-16], [10^-16, 1] | 0.5259, 0.5203 ulp |
+| [1, 8], [8, 171.6] | 0.5886, 0.5470 |
+| [−10^-16, −10^-300], [−1, −10^-16] | 0.5602, 0.5127 |
+| [−8, −1], [−30, −8], [−189, −30] | 0.5108, 0.5430, 0.5423 |
+
+| Core | `tgamma` before | now | `tgammaf` (strict, through `tgamma`) |
+|---|---:|---:|---:|
+| armv7e-m-dp | 718.6 | 167.1 | 731.3 → 179.8 |
+| x86_64 | 1141.4 | 208.2 | 1156.4 → 223.2 |
+| armv7e-m (on the helpers until P11.07e2) | 23,498 | 5167 | 846 (its own core) |

@@ -26,14 +26,14 @@ SRC := $(if $(filter %/atanf.c %/atan2f.c %/asinf.c %/acosf.c %/atanpif.c %/atan
 # The erfc table only where erff or erfcf of this directory stays
 SRC := $(if $(filter %/erff.c %/erfcf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_erfc_table.c,${SRC}))
 # (the exponentials' special paths too, since P11.06h: dp-fixed/fast calls them)
-SRC := $(if $(filter %/exp.c %/exp2.c %/exp10.c %/expm1.c %/pow.c %/sinh.c %/cosh.c %/tanh.c %/__libc_fast_exp_special.c %/__libc_fast_exp2_special.c %/__libc_fast_exp10_special.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp_pairs.c,${SRC}))
+SRC := $(if $(filter %/exp.c %/exp2.c %/exp10.c %/expm1.c %/pow.c %/sinh.c %/cosh.c %/tanh.c %/tgamma.c %/__libc_fast_exp_special.c %/__libc_fast_exp2_special.c %/__libc_fast_exp10_special.c,${SRC}),${SRC},$(filter-out %/__libc_fast_exp_pairs.c,${SRC}))
 # The log tables only where a logarithm, pow, an inverse hyperbolic function or lgamma's double paths stay (dp-fixed/fast calls them too) (the special values
 # stay: dp-fixed/fast calls them too)
-SRC := $(if $(filter %/log.c %/log10.c %/log1p.c %/pow.c %/asinh.c %/acosh.c %/atanh.c %/__libc_fast_lgamma_positive.c %/__libc_fast_lgamma_negative.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log_table.c,${SRC}))
+SRC := $(if $(filter %/log.c %/log10.c %/log1p.c %/pow.c %/asinh.c %/acosh.c %/atanh.c %/__libc_fast_lgamma_positive.c %/__libc_fast_lgamma_negative.c %/tgamma.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log_table.c,${SRC}))
 SRC := $(if $(filter %/log2.c,${SRC}),${SRC},$(filter-out %/__libc_fast_log2_table.c,${SRC}))
 # The trigonometric table only where a double sin, cos, sincos, tan or lgamma's negative path stays, the slow path also where a
 # float one does
-SRC := $(if $(filter %/sin.c %/cos.c %/sincos.c %/tan.c %/__libc_fast_lgamma_negative.c,${SRC}),${SRC},$(filter-out %/__libc_fast_sin_table.c,${SRC}))
+SRC := $(if $(filter %/sin.c %/cos.c %/sincos.c %/tan.c %/__libc_fast_lgamma_negative.c %/tgamma.c,${SRC}),${SRC},$(filter-out %/__libc_fast_sin_table.c,${SRC}))
 SRC := $(if $(filter %/sin.c %/cos.c %/sincos.c %/tan.c %/sinf.c %/cosf.c %/sincosf.c %/tanf.c,${SRC}),${SRC},$(filter-out %/__libc_fast_trig_slow.c,${SRC}))
 # The atan(j/16) pairs only where a double atan or atan2 of this directory stays (the atan2 slow path stays: dp-fixed/fast
 # calls it too)
