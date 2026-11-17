@@ -442,3 +442,7 @@ Unchanged: `sp-nearest/fast/` is the single-precision FPU cores' only.
 ## P11.05d1 — `log1p`, `log2p1` and `log10p1` as `log`, `log2` and `log10` from 2^100 (D227)
 
 Release: `log1p.o` 276 → 264, `log2p1.o` and `log10p1.o` 560 → 544 bytes of code. The test of 2^100 replaces the infinity test; every image unchanged (no size program calls these functions), so no budget moves; baselines re-recorded.
+
+## P11.07m — The strict sin and cos cores below 0.53 ulp (D228)
+
+Accuracy fix; the growth was accepted by the maintainer. Members: `__libc_sin_core.o` 980 → 1120 bytes (r⁵/120 in double-double, the exact 1/128 part of the bracket, y·x⁴/24), `__libc_cos_core.o` 592 → 436 (1 − 2 sin²(r/2)); `libc.a` text -16 bytes; `math-mix` 30052 bytes (-20). Stack depth of `sin`, `cos` and `tan` 288 → 368 bytes: `__libc_cos_core` now calls `__libc_sin_core`. The speed and fast flavours take `libc/math/speed/__libc_cos_core.c` (the series, about 750 bytes more on the cores without a double FPU).

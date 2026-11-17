@@ -1398,3 +1398,7 @@ Fast, instructions per call (throughput): `erfcf` 233.31 → 131.25 (picolibc 16
 ## P11.05d1 — `log1p`, `log2p1` and `log10p1` as `log`, `log2` and `log10` from 2^100 (D227)
 
 Release and speed, instructions per call (latency): `log1p` 6722.81 → 6702.81, `log2p1` 8200.88 → 8178.88 (`log10p1` the same), and `log1pf` and the float pairs follow: the test of 2^100 is shorter than the infinity test it replaces. Release and speed baselines take these cases; the fast baselines are left as they were.
+
+## P11.07m — The strict sin and cos cores below 0.53 ulp (D228)
+
+Instructions per call (throughput), slower by the accuracy the old cores lacked (accepted by the maintainer; the size flavour's cos is 1 − 2 sin²(r/2), the speed and fast flavours' the series with exact squares). Release (size): `sin` 6435 → 9400.25 (+46.1 %), `cos` 6412.75 → 9427.62 (+47.0 %), `sinpi` 6056.62 → 9044.38 (+49.3 %), `cospi` 6022 → 9009.75 (+49.6 %), `tanpi` 11807.2 → 17814.8 (+50.9 %), `tan` 11197.7 → 17164.8 (+53.3 %), `sincos` 10527.6 → 16507.7 (+56.8 %). Speed: `sincos` 1389.75 → 1582.06 (+13.8 %), `cos` 1067.25 → 1259.56 (+18.0 %), `sinpi` 6056.62 → 7876.5 (+30.0 %), `cospi` 6022 → 7841.88 (+30.2 %), `tanpi` 11807.2 → 15476.6 (+31.1 %). Fast: `sinpi` 6056.62 → 7876.5 (+30.0 %), `cospi` 6022 → 7841.88 (+30.2 %), `tanpi` 11807.2 → 15476.6 (+31.1 %). No other case changed.

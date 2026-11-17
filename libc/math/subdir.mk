@@ -16,6 +16,8 @@ LIBC_MATH_OVERRIDES := $(foreach layer,${LIBC_MATH_LAYERS},$(notdir $(wildcard $
 # ... and in the speed and fast flavours those a layer's speed/ directory replaces (D77; dp-fixed's sin, cos and sincos,
 # P8.03)
 LIBC_MATH_OVERRIDES += $(if $(filter speed,${LIBC_FLAVOURS}),$(foreach layer,${LIBC_MATH_LAYERS},$(notdir $(wildcard ${SOURCE_DIR}/${layer}/speed/*.c))))
+# ... and in those flavours the generic files libc/math/speed/ replaces (__libc_cos_core, D228)
+LIBC_MATH_OVERRIDES += $(if $(filter speed,${LIBC_FLAVOURS}),$(notdir $(wildcard ${SOURCE_DIR}/speed/*.c)))
 SRC := $(filter-out $(addprefix ${SOURCE_DIR}/,${LIBC_MATH_OVERRIDES}),$(wildcard ${SOURCE_DIR}/*.c))
 # ... and in the fast flavour those of libc/math/fast/ and the layers' fast/ directories (D162, common.mk)
 SRC := $(call libc_math_fast_filter,${SRC})

@@ -25,6 +25,9 @@ include ${PROJECT_ROOT}/tools/makefiles/project.mk
 # Exercise the library, not the compiler's built-in versions of the functions
 CFLAGS += -fno-builtin
 
+# The strict or the fast contract's libm expectations (PLAN D167)
+CPPFLAGS += -I${PROJECT_ROOT}/test/unit/include/$(if $(filter fast,${LIBC_FLAVOURS}),fast,strict)
+
 all: ${CURDIR}/conformance.elf
 
 endif

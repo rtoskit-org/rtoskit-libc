@@ -588,10 +588,10 @@
     "libc": {
      "bss": 0,
      "data": 0,
-     "rodata": 3431,
+     "rodata": 3406,
      "tbss": 0,
      "tdata": 0,
-     "text": 9565,
+     "text": 9563,
      "unwind": 0
     },
     "libgcc": {
@@ -606,7 +606,7 @@
     "other": {
      "bss": 0,
      "data": 0,
-     "rodata": 33,
+     "rodata": 26,
      "tbss": 0,
      "tdata": 0,
      "text": 0,
@@ -634,10 +634,10 @@
    "sections": {
     "bss": 40,
     "data": 0,
-    "rodata": 3488,
+    "rodata": 3456,
     "tbss": 0,
     "tdata": 0,
-    "text": 10108,
+    "text": 10106,
     "unwind": 0
    }
   },
@@ -658,10 +658,10 @@
     "libc": {
      "bss": 0,
      "data": 0,
-     "rodata": 3991,
+     "rodata": 3965,
      "tbss": 0,
      "tdata": 0,
-     "text": 12254,
+     "text": 12252,
      "unwind": 0
     },
     "libgcc": {
@@ -676,7 +676,7 @@
     "other": {
      "bss": 0,
      "data": 0,
-     "rodata": 51,
+     "rodata": 45,
      "tbss": 0,
      "tdata": 0,
      "text": 0,
@@ -704,10 +704,10 @@
    "sections": {
     "bss": 40,
     "data": 0,
-    "rodata": 4112,
+    "rodata": 4080,
     "tbss": 0,
     "tdata": 0,
-    "text": 13078,
+    "text": 13076,
     "unwind": 0
    }
   }
@@ -915,10 +915,10 @@
    "__libc_cos_core.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 96,
+    "rodata": 32,
     "tbss": 0,
     "tdata": 0,
-    "text": 293,
+    "text": 215,
     "unwind": 0
    },
    "__libc_cosf_cases.o": {
@@ -1671,10 +1671,10 @@
    "__libc_sin_core.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 112,
+    "rodata": 128,
     "tbss": 0,
     "tdata": 0,
-    "text": 491,
+    "text": 567,
     "unwind": 0
    },
    "__libc_sinf_cases.o": {
@@ -8674,10 +8674,10 @@
   "totals": {
    "bss": 2888,
    "data": 204,
-   "rodata": 17939,
+   "rodata": 17891,
    "tbss": 626,
    "tdata": 8,
-   "text": 106789,
+   "text": 106787,
    "unwind": 88
   }
  },
@@ -9287,7 +9287,7 @@
    "__libc_atan2_core.o:libc/math/__libc_atan2_core.c:atan_unit": 8,
    "__libc_atexit_run.o:libc/stdlib/__libc_atexit_run.c:__libc_atexit_run": 16,
    "__libc_call_once_eh.o:__libc_call_once_eh": 32,
-   "__libc_cos_core.o:__libc_cos_core": 8,
+   "__libc_cos_core.o:__libc_cos_core": 16,
    "__libc_cosh_core.o:__libc_cosh_core": 8,
    "__libc_cxa_thread_run.o:libc/stdlib/__libc_cxa_thread_run.c:__libc_cxa_thread_run": 16,
    "__libc_decimal_round.o:__libc_decimal_round": 8,

@@ -697,7 +697,7 @@
      "rodata": 3700,
      "tbss": 0,
      "tdata": 0,
-     "text": 22356,
+     "text": 22340,
      "unwind": 0
     },
     "libgcc": {
@@ -715,7 +715,7 @@
      "rodata": 0,
      "tbss": 0,
      "tdata": 0,
-     "text": 44,
+     "text": 48,
      "unwind": 0
     },
     "port": {
@@ -743,7 +743,7 @@
     "rodata": 3700,
     "tbss": 0,
     "tdata": 0,
-    "text": 23188,
+    "text": 23176,
     "unwind": 0
    }
   }
@@ -1197,7 +1197,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 584,
+    "text": 428,
     "unwind": 0
    },
    "__libc_cosf_cases.o": {
@@ -2106,7 +2106,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 988,
+    "text": 1128,
     "unwind": 0
    },
    "__libc_sincosf_core.o": {
@@ -9190,7 +9190,7 @@
    "rodata": 10215,
    "tbss": 362,
    "tdata": 8,
-   "text": 151254,
+   "text": 151238,
    "unwind": 36
   }
  },
@@ -9266,7 +9266,7 @@
     ]
    },
    "cos": {
-    "depth": 320,
+    "depth": 464,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -9281,6 +9281,7 @@
     ],
     "path": [
      "cos",
+     "__libc_cos_core",
      "__libc_sin_core",
      "libc/math/__libc_sin_core.c:__libc_dd_product"
     ]
@@ -9685,7 +9686,7 @@
     ]
    },
    "sin": {
-    "depth": 320,
+    "depth": 464,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -9700,6 +9701,7 @@
     ],
     "path": [
      "sin",
+     "__libc_cos_core",
      "__libc_sin_core",
      "libc/math/__libc_sin_core.c:__libc_dd_product"
     ]
@@ -9807,7 +9809,7 @@
     ]
    },
    "tan": {
-    "depth": 368,
+    "depth": 512,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -9822,6 +9824,7 @@
     ],
     "path": [
      "tan",
+     "__libc_cos_core",
      "__libc_sin_core",
      "libc/math/__libc_sin_core.c:__libc_dd_product"
     ]
@@ -9981,7 +9984,7 @@
    "__libc_call_once_eh.o:__libc_call_once_eh": 24,
    "__libc_call_once_eh.o:libc/threads/__libc_call_once_eh.c:once_guard_finish": 0,
    "__libc_clogf_modulus.o:__libc_clogf_modulus": 56,
-   "__libc_cos_core.o:__libc_cos_core": 128,
+   "__libc_cos_core.o:__libc_cos_core": 136,
    "__libc_cosh_core.o:__libc_cosh_core": 96,
    "__libc_csqrtf_core.o:__libc_csqrtf_core": 104,
    "__libc_csqrtf_core.o:libc/complex/sp-nearest/__libc_csqrtf_core.c:__libc_ff_product": 16,
@@ -10117,7 +10120,7 @@
    "__libc_scan_store.o:__libc_scan_store": 16,
    "__libc_secs_to_tm.o:__libc_secs_to_tm": 32,
    "__libc_secs_to_tm.o:libc/time/__libc_secs_to_tm.c:__libc_floor_divmod64": 16,
-   "__libc_sin_core.o:__libc_sin_core": 144,
+   "__libc_sin_core.o:__libc_sin_core": 152,
    "__libc_sin_core.o:libc/math/__libc_sin_core.c:__libc_dd_product": 88,
    "__libc_sincosf_core.o:__libc_sincosf_core": 40,
    "__libc_sinf_core.o:__libc_sinf_core": 128,

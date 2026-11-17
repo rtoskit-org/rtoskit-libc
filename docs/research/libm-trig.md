@@ -79,12 +79,12 @@ caller's direction.
     - The leading 106 bits become a double-double, which is multiplied by
       π/2.
   - The 2/π table holds 40 words (1280 bits), enough for x up to `DBL_MAX`.
-- **`__libc_sin_core(r)`** for |r| ≤ 0.8 computes r - r³/6 with the cube
-  and the sixth as double-doubles. It adds the Taylor terms r^5 … r^17 in
-  double (the next term is below 2^-62 relative), and the low part of r
-  times cos(r) ≈ 1 - r²/2.
-- **`__libc_cos_core(r)`** computes 1 - r²/2 with the square exact, minus
-  r.hi · r.lo, plus the terms r^4 … r^18.
+- **`__libc_sin_core(r)`** and **`__libc_cos_core(r)`**: superseded in P11.07m
+  (D228, [`trig-cores.md`](trig-cores.md)). The original cores (r − r³/6 plus a
+  Taylor tail from r⁵ in double; 1 − r²/2 plus a tail from r⁴ in double, with the
+  low part through first-order terms) were 0.02 and 0.10 ulp from exact, which
+  misrounded 0.3–0.6 % of results. sin now carries r³(1/6 − r²/120) in
+  double-double with a five-term fitted tail from r⁷, and cos is 1 − 2 sin²(r/2).
 - **sin, cos, tan** select the core by quadrant. tan is sin/cos, or
   -cos/sin in the odd quadrants, as a double-double quotient, so it stays
   accurate near the poles. Tiny arguments (below 2^-27) round x or its
