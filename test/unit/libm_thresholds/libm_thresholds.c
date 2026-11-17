@@ -28,6 +28,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include "libm_thresholds.h"
+
 static int failures;
 
 static void fail(int line, const char *what)
@@ -899,6 +901,26 @@ static void check_erfc_ends(void)
 	RAISES(is_positive_zero((float)erfc(0x1.b4cccccccccccp+4)), FE_UNDERFLOW);
 }
 
+static void check_lgamma_paths(void)
+{
+	/*
+	 * P11.07d1 (the fast double lgamma, D225; the strict file elsewhere): the zeros 1 and 2 exactly (+0) and next to
+	 * them (relative), each side of the switches at 1, 8 and 2^60, of -1 and -16 (the recurrence's ends), the poles, a
+	 * point next to the negative zeros near -2.75 and -8 (the reflection had lost 1.5 ulp from -8; the strict file is
+	 * thousands of ulps off there, Q62), and -2.5, which the strict file misrounds
+	 */
+	QUIET(is_positive_zero((float)lgamma(1.0)) && is_positive_zero((float)lgamma(2.0)));
+	CHECK(near_double(lgamma(0x1.fffffffffffffp-1), 0x1.2788cfc6fb61ap-54) && near_double(lgamma(0x1.0000000000001p+0), -0x1.2788cfc6fb617p-53));
+	CHECK(near_double(lgamma(0x1.fffffffffffffp+0), -0x1.b0ee6072093cdp-54) && near_double(lgamma(0x1.0000000000001p+1), 0x1.b0ee6072093d1p-53));
+	CHECK(near_double(lgamma(0x1.fffffffffffffp+2), 0x1.10ce1f32dcc2fp+3) && near_double(lgamma(8.0), 0x1.10ce1f32dcc30p+3) && near_double(lgamma(0.75), 0x1.a051c372609eep-3));
+	CHECK(near_double(lgamma(0x1.e68ea5218ccd6p-1), 0x1.f80f8e6a23855p-6) && near_double(lgamma(0x1.fffffffffffffp+59), 0x1.44b5ecf0a9650p+65) && near_double(lgamma(0x1p-61), 0x1.52417db067f38p+5));
+	CHECK(near_double(lgamma(-0x1.0000000000001p+0), 0x1.205966f2b4f12p+5) && near_double(lgamma(-0x1.fffffffffffffp+3), 0x1.a56bc8280719cp+1) && near_double(lgamma(-0x1.0000000000001p+4), 0x1.4cb2bc2c1e2fep+1));
+	if (contract_lgamma_negative_zeros())
+		CHECK(fabs(lgamma(-0x1.5fb410a1bd901p+1) - 0x1.8fb8530ba7689p-53) <= 0x1p-60 && fabs(lgamma(-0x1.000034028b3f9p+3) - 0x1.34e935f3e5a5dp-36) <= 0x1p-60 && near_double(lgamma(-2.5), -0x1.ccbf9f5ed0f16p-5));
+	RAISES(lgamma(-3.0) == INFINITY && lgamma(-0x1p52) == INFINITY && lgamma(0.0) == INFINITY, FE_DIVBYZERO);
+	CHECK(lgamma(-INFINITY) == INFINITY && isnan(lgamma(NAN)));
+}
+
 static void check_hypot(void)
 {
 	/*
@@ -945,6 +967,7 @@ int main(void)
 	check_hypot();
 	check_erfcf_ends();
 	check_erfc_ends();
+	check_lgamma_paths();
 
 	if (failures == 0)
 		puts("pass: libm_thresholds");

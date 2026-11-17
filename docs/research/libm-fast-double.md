@@ -2418,3 +2418,94 @@ The members, against speed's `erfc.o`, which also pulls in the
 
 The tables are most of each: 14 × 12 + 4 × 10 words in fixed point, and
 7 × 16 + 3 × 14 doubles in double.
+
+## 32. lgamma at 1 ulp on the double-FPU cores (P11.07d1, D219, D225)
+
+The fast flavour had kept the strict `lgamma`, a double-double core that
+ran its recurrence up to 12 and Stirling's series beyond: 499 instructions
+a call on armv7e-m-dp, and 17,366 on armv7e-m, where every step is a soft
+call.
+
+### 32.1 Sources
+
+- musl and fdlibm (`src/math/lgamma_r.c`): pieces by |x|; near zero,
+  −log|x|; for negative x, the reflection through sin(πx); rationals about
+  the minimum near 1.46 and on [2, 3]; the recurrence into [2, 3) below 8;
+  Stirling's series in 1/x from 8.
+- The strict file (`libc/math/__libc_lgamma_core.c`, `libm-special.md`):
+  Taylor series about 1 and 2, the recurrence to 12, Stirling's series
+  with ten terms, and the reflection.
+- This project's fast kernels: `__libc_fast_log_pair` (D190, D201) and
+  the fast sine's table and kernel (D196).
+
+No code was copied.
+
+### 32.2 Method (`libc/math/fast/lgamma.c`)
+
+- **The zeros 1 and 2.** h(y) = lgamma(y)/((y − 1)(y − 2)) is smooth and
+  positive on [1, 8): γ at 1, 1 − γ at 2. It is fitted in 24 pieces, eight
+  a binade (widths 1/8, 1/4 and 1/2), each of degree 11 in t = y − m. The
+  fit is within 2^-62.48 relatively; degree 10 would be 2^-58.12. A piece
+  is indexed by y's exponent and top three fraction bits. From 1 to 8, the
+  result is (x − 1)(x − 2)·h(x). Both factors are exact, and their product
+  is an exact pair, so the result is relative however close x is to 1 or
+  2 (+0 at them, tested before h so that no inexact is raised).
+- **Below 1:** x(x − 1)h(1 + x) − log x. The piece is chosen from 1 + x
+  (that rounding only picks the piece) and t = x − (m − 1). log x is a
+  pair; |log x| is at least |lgamma(1 + x)|, so a fast two-sum combines
+  them.
+- **From 8, Stirling:** (x − ½)(log x − 1) + ½log 2π − ½ + S(1/x²)/x, with
+  S of degree 6 (2^-57.59 absolutely, below 2^-60 once divided by x).
+  x − ½ keeps its rounding error, which matters from 2^52.
+- **Negative x in (−16, −1)** (D225): the recurrence
+  lgamma(x) = lgamma(z) − log P, with x in (−n − 1, −n),
+  z = x + n + 2 in (1, 2), exact, and P = |x (x + 1) ... (x + n + 1)|
+  formed as a normalized pair (at most 16 exact pair products). Near every
+  zero both terms are small: P is near 1, and z is near 1 or 2. So neither
+  term cancels the other, and the result stays relative.
+- **Other negative x**, from −1 and below −16: the reflection,
+  log π − log(a |sin πf|) − lgamma(a), with a = −x and f the distance from
+  a to the nearest integer (by masking a's fraction bits, not a rounding
+  shift, so it is exact in every rounding direction: the strict `lgammaf`
+  calls `lgamma`). The sine comes from the fast sine's table and kernel.
+- **The ends:** NaN, the infinities, the poles (divide-by-zero), below
+  2^-60 −log|x|, and from 2^60 the strict file's x(log x − 1).
+
+### 32.3 What was tried first
+
+The reflection everywhere, as musl does. Near the negative zeros its three
+terms are about log n! and nearly cancel. With the terms at 2^-62
+relatively (h of degree 11, the log kernel, the sine kernel, whose worst
+case near j = 1 is 2^-60), the absolute error reached 2^-59.5 near −2.5 to
+−7, and 2^-57.8 with 1.54 ulp from −8.
+
+The strict core, tried as an accurate fallback, is no better there. Its
+Stirling series runs in plain double, so its absolute error near the
+negative zeros is about 2^-57, thousands of ulps of the tiny results
+(Q62).
+
+The product recurrence removed the cancellation itself, and with it the
+fallback.
+
+### 32.4 Measured
+
+Against binary128 (`lgammaq`, checked against mpmath near the zeros):
+4·10^6 random points in each range, and 4·10^5 points around each of the
+34 negative zeros from −2.46 to −18, from the zero itself outwards to
+2^-6.
+
+| Range | worst |
+|---|---:|
+| [10^-300, 10^-10] | 0.5000 ulp |
+| [0.001, 1/2], [1/2, 1] | 0.5002, 0.5008 |
+| [1, 2], [2, 3], [3, 8] | 0.5026, 0.5029, 0.5032 |
+| [8, 100], [100, 10^15], [10^15, 10^300] | 0.5016, 0.5000, 0.5000 |
+| [−1, 0), [−2, −1], [−3, −2] | 0.5020, 0.5001, 0.5028 |
+| [−8, −3], [−16, −8], [−100, −16], [−10^15, −100] | 0.5006, 0.5000, 0.5002, 0.5000 |
+| within 2^-6 of each negative zero | at most 0.503 ulp, and 2^-60 absolutely where the result is below 2^-6 |
+
+D219's promise holds as written: 1 ulp, and near the zeros 2^-60
+absolutely. The soft-double cores run this file on their helpers until
+P11.07d2: on armv7e-m and armv8-m.main it is 3 times the strict count
+lower, but still above picolibc. On those cores the near-zero results
+reach 2^-63 absolutely, inside the bound.
