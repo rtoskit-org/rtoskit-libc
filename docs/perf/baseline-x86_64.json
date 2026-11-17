@@ -474,35 +474,35 @@
    },
    "log10p1/latency": {
     "cycles": 155.56,
-    "insns": 352.69
+    "insns": 350.69
    },
    "log10p1/throughput": {
     "cycles": 112.03,
-    "insns": 353.69
+    "insns": 351.69
    },
    "log10p1f/latency": {
     "cycles": 161.5,
-    "insns": 367.69
+    "insns": 365.69
    },
    "log10p1f/throughput": {
     "cycles": 112.07,
-    "insns": 368.69
+    "insns": 366.69
    },
    "log1p/latency": {
     "cycles": 138.16,
-    "insns": 314.69
+    "insns": 312.69
    },
    "log1p/throughput": {
     "cycles": 83.21,
-    "insns": 315.69
+    "insns": 313.69
    },
    "log1pf/latency": {
     "cycles": 150.08,
-    "insns": 341.69
+    "insns": 339.69
    },
    "log1pf/throughput": {
     "cycles": 93.32,
-    "insns": 342.69
+    "insns": 340.69
    },
    "log2/latency": {
     "cycles": 143.48,
@@ -522,19 +522,19 @@
    },
    "log2p1/latency": {
     "cycles": 153.96,
-    "insns": 352.69
+    "insns": 350.69
    },
    "log2p1/throughput": {
     "cycles": 113.17,
-    "insns": 353.69
+    "insns": 351.69
    },
    "log2p1f/latency": {
     "cycles": 161.44,
-    "insns": 367.69
+    "insns": 365.69
    },
    "log2p1f/throughput": {
     "cycles": 112.13,
-    "insns": 368.69
+    "insns": 366.69
    },
    "logf/latency": {
     "cycles": 127.59,

@@ -5777,7 +5777,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 560,
+    "text": 544,
     "unwind": 0
    },
    "log10p1f.o": {
@@ -5804,7 +5804,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 276,
+    "text": 264,
     "unwind": 0
    },
    "log1pf.o": {
@@ -5858,7 +5858,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 560,
+    "text": 544,
     "unwind": 0
    },
    "log2p1f.o": {
@@ -9414,7 +9414,7 @@
    "rodata": 10167,
    "tbss": 362,
    "tdata": 8,
-   "text": 170090,
+   "text": 170046,
    "unwind": 36
   }
  },
@@ -10857,7 +10857,7 @@
    "log10p1f.o:libc/math/sp-nearest/log10p1f.c:__libc_ff_product": 32,
    "log10p1f.o:log10p1f": 32,
    "log10p1l.o:log10p1l": 0,
-   "log1p.o:log1p": 40,
+   "log1p.o:log1p": 32,
    "log1pf.o:log1pf": 32,
    "log1pl.o:log1pl": 0,
    "log2.o:log2": 80,

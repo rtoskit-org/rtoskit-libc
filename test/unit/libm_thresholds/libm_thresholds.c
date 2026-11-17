@@ -624,8 +624,7 @@ static void check_double_logarithms(void)
 	QUIET(near_double(log2(0x1.fffffffffffffp-1), -0x1.71547652b82fep-53) && near_double(log2(0x1.0000000000001p+0), 0x1.71547652b82fdp-52) && near_double(log10(0x1.0000000000001p+0), 0x1.bcb7b1526e50dp-54) && near_double(log10(0x1p-1074), -0x1.434e6420f4374p+8));
 	QUIET(near_double(log1p(0x1.6a09e667f3bcdp-8), 0x1.690ad6c502fa9p-8) && near_double(log1p(0x1.6a09e667f3bcep-8), 0x1.690ad6c502faap-8) && near_double(log1p(-0x1.6a09e667f3bcdp-8), -0x1.6b0ad8c505a54p-8) && near_double(log1p(-0x1.6a09e667f3bcep-8), -0x1.6b0ad8c505a55p-8));
 	QUIET(near_double(log1p(-0x1.ac44dfb0777p-9), -0x1.acf86168cd623p-9) && near_double(log1p(-0x1.fffffffffffffp-1), -0x1.25e4f7b2737fap+5) && near_double(log1p(0x1p53), 0x1.25e4f7b2737fap+5));
-	/* Not QUIET: the strict file raises a spurious underflow there (its correction 1/x is subnormal) */
-	CHECK(near_double(log1p(0x1.fffffffffffffp+1023), 0x1.62e42fefa39efp+9) && near_double(log1p(0x1p60), 0x1.4cb5ecf0a9650p+5) && near_double(log1p(0x1.0000000000001p60), 0x1.4cb5ecf0a9650p+5));
+	QUIET(near_double(log1p(0x1.fffffffffffffp+1023), 0x1.62e42fefa39efp+9) && near_double(log1p(0x1p60), 0x1.4cb5ecf0a9650p+5) && near_double(log1p(0x1.0000000000001p60), 0x1.4cb5ecf0a9650p+5));
 	QUIET(near_double(log1p(1.0), 0x1.62e42fefa39efp-1) && near_double(log1p(-0x1.6a09e667b433dp-8), -0x1.6b0ad8c4c5c1fp-8) && log1p(0x1p-61) == 0x1p-61);
 	CHECK(log1p(-0x1p-1074) == -0x1p-1074 && log1p(0x1p-1074) == 0x1p-1074);
 	/*

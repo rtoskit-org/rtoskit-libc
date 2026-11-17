@@ -273,6 +273,26 @@ static void regression_atanf_sixteenth(void)
 	CHECK(fabs((double)atan2f(0x1.fffffep-5f, 1.0f) - 0x1.ff55b974cde0ap-5) < 0x1p-28 && fabs((double)atan2f(0x1.fffffep-1f, 0x1p4f) - 0x1.ff55b974cde0ap-5) < 0x1p-28);
 }
 
+/*
+ * The strict log1p core added the correction t/s of 1 + x = s + t (TwoSum) however large x was, and for x near DBL_MAX
+ * that 1/x is subnormal: log1p(DBL_MAX) raised a spurious underflow, and so did log2p1 and log10p1 over the same core
+ * (C23 7.12.1p6: underflow is for a tiny result). Each result within an ulp (2^-43 at 2^9) of the MPFR value.
+ */
+static void regression_log1p_large(void)
+{
+	static const double large[] = { 0x1.fffffffffffffp+1023, 0x1.0000000000001p+1022, 0x1p1000, 0x1.0000000000001p+100 };
+
+	CHECK(fabs(log1p(0x1.fffffffffffffp+1023) - 0x1.62e42fefa39efp+9) <= 0x1p-43 && fabs(log1p(0x1p1000) - 0x1.5a92d6d005c94p+9) <= 0x1p-43);
+	CHECK(fabs(log1p(0x1.0000000000001p+100) - 0x1.1542457337d43p+6) <= 0x1p-46 && log2p1(0x1.fffffffffffffp+1023) == 0x1p10 && log2p1(0x1p1000) == 1000.0);
+	for (size_t i = 0; i < sizeof(large) / sizeof(large[0]); ++i) {
+		CHECK(feclearexcept(FE_ALL_EXCEPT) == 0);
+		CHECK(log1p(large[i]) > 69 && log2p1(large[i]) >= 100 && log10p1(large[i]) > 30);
+#ifdef FE_UNDERFLOW
+		CHECK(!fetestexcept(FE_UNDERFLOW | FE_OVERFLOW | FE_INVALID | FE_DIVBYZERO));
+#endif
+	}
+}
+
 /* functional/strtod, strtod_long, strtod_simple, strtold: exact rounding at the boundaries, very long input, round trips */
 static void functional_strtod(void)
 {
@@ -598,6 +618,7 @@ int main(void)
 	regression_directed_rounding();
 	regression_pow_minus_one();
 	regression_atanf_sixteenth();
+	regression_log1p_large();
 
 	functional_strtod();
 	functional_strtol();
