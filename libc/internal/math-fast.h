@@ -1130,6 +1130,56 @@ static inline float __libc_fast_pair_from(float c_hi, float c_lo, float hi, floa
 	return sum;
 }
 
+/*
+ * (c_hi + c_lo) - (hi + lo) as an unrounded pair when |c_hi| >= |hi| (pi/2 or pi less an angle up to pi/2 in the
+ * single-precision FPU cores' inverse trigonometric functions), the leading difference exact by Fast2Sum
+ */
+static inline float __libc_fast_pair_from_larger(float c_hi, float c_lo, float hi, float lo, float *out_lo)
+{
+	float difference = c_hi - hi;
+
+	*out_lo = ((c_hi - difference) - hi) + (c_lo - lo);
+	return difference;
+}
+
+/*
+ * atan(t + t_lo) for |t| <= 1/2 as the unrounded pair t + *lo (the single-precision FPU cores' atanf and atan2f at D220's
+ * target; the float trigonometric note, section 27): atan t = t + t^3 P(z), z = t^2, with P of degree 5 fitted on
+ * [0, 1/4] (relative error 2^-27.9 with float coefficients), t^3 as a pair and its leading term t^3 P0 inside one fused
+ * multiply-add, and t_lo with atan's slope 1/(1 + z) as 1 - z (off by z^2 <= 1/16 of a term below 2^-24 of t). The callers reduce to |t| <= 1/2 (one polynomial on [0, 1] reached
+ * 1.05 ulp near 1, where its tail is a fifth of the result)
+ */
+static inline float __libc_fast_atanf_poly(float t, float t_lo, float *lo)
+{
+	float z = t * t;
+	float z_lo = __builtin_fmaf(t, t, -z);
+	float cube = t * z;
+	float cube_lo = __builtin_fmaf(t, z, -cube) + t * z_lo;
+	float p = __builtin_fmaf(z, 0x1.3d355ap-5f, -0x1.4706d0p-4f);
+
+	p = __builtin_fmaf(z, p, 0x1.c024c6p-4f);
+	p = __builtin_fmaf(z, p, -0x1.244ad6p-3f);
+	p = __builtin_fmaf(z, p, 0x1.9996eep-3f);
+	*lo = __builtin_fmaf(cube, -0x1.555552p-2f, __builtin_fmaf(cube * z, p, __builtin_fmaf(cube_lo, -0x1.555552p-2f, __builtin_fmaf(-z, t_lo, t_lo))));
+	return t;
+}
+
+/*
+ * (n - d)/(n + d) for d/2 <= n <= d, or d = 1 and n < 2 (atanf), as t + *lo: n - d exact (Sterbenz), n + d and its error
+ * by Fast2Sum (n and d of the same binade or n below),
+ * the quotient's remainder by a fused multiply-add; atan(n/d) = pi/4 + atan t with |t| <= 1/3
+ */
+static inline float __libc_fast_atanf_shift(float n, float d, float *lo)
+{
+	float difference = n - d;
+	float sum = n + d;
+	float sum_lo = n - (sum - d);
+	float t = difference / sum;
+
+	*lo = (__builtin_fmaf(-t, sum, difference) - t * sum_lo) / sum;
+	return t;
+}
+
 /* (hi + lo) / pi rounded: the product by 1/pi as float and remainder, the leading product's error by a fused multiply-add */
 static inline float __libc_fast_pair_over_pi(float hi, float lo)
 {
@@ -1163,8 +1213,27 @@ static inline float __libc_fast_half_angle(float a, float *lo)
 	float z = (1.0f - a) * 0.5f;
 	float s = __builtin_sqrtf(z);
 
-	*lo = s > 0 ? __builtin_fmaf(-s, s, z) / (2.0f * s) : 0.0f;
+	/* 2^-126 keeps a = 1 (s = 0) from 0/0 at no cost elsewhere: s is at least 2^-12.5 below 1 */
+	*lo = __builtin_fmaf(-s, s, z) / __builtin_fmaf(2.0f, s, 0x1p-126f);
 	return s;
+}
+
+/*
+ * asin(x) for |x| <= 1/2 as x + x^3 P(x^2), the unrounded pair x + *lo, at D220's 0.9-ulp target (the single-precision
+ * FPU cores' asinf and acosf; the float trigonometric note, section 27): P of degree 4 fitted on [0, 1/4] (relative error
+ * 2^-27.2 with float coefficients; the tail x^3 P is at most 0.045 of the result). The pi forms keep the degree-6
+ * __libc_fast_asinf_small for their 0.55 target
+ */
+static inline float __libc_fast_asinf_poly(float x, float x_lo, float *lo)
+{
+	float z = x * x;
+	float p = __builtin_fmaf(z, 0x1.599e9ep-5f, 0x1.8bf0a2p-6f);
+
+	p = __builtin_fmaf(z, p, 0x1.748398p-5f);
+	p = __builtin_fmaf(z, p, 0x1.3301b2p-4f);
+	p = __builtin_fmaf(z, p, 0x1.5555cap-3f);
+	*lo = __builtin_fmaf(x * z, p, x_lo);
+	return x;
 }
 
 /*

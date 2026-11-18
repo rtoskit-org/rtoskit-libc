@@ -57,7 +57,7 @@ float complex cacosf(float complex z)
 
 	if (fmaxf(fabsf(x), fabsf(y)) >= 0x1p24f) {
 		value = __libc_ff_add(__libc_clogf_modulus(x, y), __LIBC_LN2F);
-		return CMPLXF(atan2f(fabsf(y), x), -copysignf(value.hi + value.lo, y));
+		return CMPLXF(__libc_atan2f_accurate(fabsf(y), x), -copysignf(value.hi + value.lo, y));
 	}
 
 	if (y == 0 && fabsf(x) == 1.0f)
@@ -66,7 +66,7 @@ float complex cacosf(float complex z)
 		value = __libc_ff_multiply(__libc_ff_sum(1.0f, -fabsf(x)), __libc_ff_sum(1.0f, fabsf(x)));
 		if (fabsf(x) < 1.0f) {
 			value = __libc_ff_divide((struct __libc_ff){ .hi = scalbnf(-y, 64), .lo = 0.0f }, __libc_ff_sqrt(value));
-			return CMPLXF(acosf(x), y == 0 ? -y : __libc_exp2f_scale(value, -64));
+			return CMPLXF(__libc_acosf_accurate(x), y == 0 ? -y : __libc_exp2f_scale(value, -64));
 		}
 		value = __libc_ff_divide((struct __libc_ff){ .hi = scalbnf(fabsf(y), 64), .lo = 0.0f }, __libc_ff_sqrt((struct __libc_ff){ .hi = -value.hi, .lo = -value.lo }));
 		real = x > 0 ? (y == 0 ? 0.0f : __libc_exp2f_scale(value, -64)) : 0x1.921fb6p+1f;

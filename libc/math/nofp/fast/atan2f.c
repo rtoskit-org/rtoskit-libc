@@ -53,3 +53,6 @@ float atan2f(float y, float x)
 	v = __libc_fixed_atan(ax, ay, &exponent);
 	return __libc_fixed_offset_float(__LIBC_FIXED_HALF_PI_62, v, exponent, !left, negative);
 }
+
+/* The float complex layer's accurate atan2f (D236): this one, within 0.52 ulp */
+float __libc_atan2f_accurate(float y, float x) __attribute__((__alias__("atan2f")));

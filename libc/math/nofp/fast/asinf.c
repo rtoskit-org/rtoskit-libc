@@ -41,3 +41,6 @@ float asinf(float x)
 		return __libc_fixed_float(v, exponent, negative);
 	return __libc_fixed_offset_float(__LIBC_FIXED_HALF_PI_62, v, exponent, true, negative);
 }
+
+/* The float complex layer's accurate asinf (D236): this one, within 0.52 ulp */
+float __libc_asinf_accurate(float x) __attribute__((__alias__("asinf")));

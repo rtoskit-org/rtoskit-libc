@@ -37,16 +37,16 @@ float complex clogf(float complex z)
 	int scale;
 
 	if (isinf(x) || isinf(y))
-		return CMPLXF(INFINITY, atan2f(y, x));
+		return CMPLXF(INFINITY, __libc_atan2f_accurate(y, x));
 	if (isnan(x) || isnan(y))
 		return CMPLXF(x + y, x + y);
 	if (a == 0)
-		return CMPLXF(-1.0f / a, atan2f(y, x));
+		return CMPLXF(-1.0f / a, __libc_atan2f_accurate(y, x));
 
 	if (a == 1.0f && b < 0x1p-20f) {
 		scale = ilogbf(b);
 		square_b = __libc_ff_product(scalbnf(b, -scale), scalbnf(b, -scale));
-		return CMPLXF(__libc_exp2f_scale(square_b, 2 * scale - 1), atan2f(y, x));
+		return CMPLXF(__libc_exp2f_scale(square_b, 2 * scale - 1), __libc_atan2f_accurate(y, x));
 	}
 	if (a >= 0x1.6a09e6p-1f && a <= 2.0f) {
 		/* a^2 - 1 is exact (Sterbenz), then the four parts are summed in float-float */
@@ -59,10 +59,10 @@ float complex clogf(float complex z)
 			value = __libc_ff_add((struct __libc_ff){ .hi = 1.0f, .lo = 0.0f }, value);
 			value = __libc_ff_multiply(__libc_log2f_core(value.hi, value.lo), __LIBC_LN2F);
 		}
-		return CMPLXF(0.5f * value.hi + 0.5f * value.lo, atan2f(y, x));
+		return CMPLXF(0.5f * value.hi + 0.5f * value.lo, __libc_atan2f_accurate(y, x));
 	}
 
 	value = __libc_clogf_modulus(x, y);
 
-	return CMPLXF(value.hi + value.lo, atan2f(y, x));
+	return CMPLXF(value.hi + value.lo, __libc_atan2f_accurate(y, x));
 }

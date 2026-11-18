@@ -31,3 +31,6 @@ float acosf(float x)
 
 	return value.hi + value.lo;
 }
+
+/* The float complex layer's accurate acosf (D236): this one, within 0.52 ulp */
+float __libc_acosf_accurate(float x) __attribute__((__alias__("acosf")));

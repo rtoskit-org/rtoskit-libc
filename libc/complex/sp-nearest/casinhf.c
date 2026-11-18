@@ -52,7 +52,7 @@ float complex casinhf(float complex z)
 
 	if (fmaxf(fabsf(x), fabsf(y)) >= 0x1p24f) {
 		value = __libc_ff_add(__libc_clogf_modulus(x, y), __LIBC_LN2F);
-		return CMPLXF(copysignf(value.hi + value.lo, x), atan2f(y, fabsf(x)));
+		return CMPLXF(copysignf(value.hi + value.lo, x), __libc_atan2f_accurate(y, fabsf(x)));
 	}
 
 	if (x == 0 && fabsf(y) == 1.0f)
@@ -61,7 +61,7 @@ float complex casinhf(float complex z)
 		value = __libc_ff_multiply(__libc_ff_sum(1.0f, -fabsf(y)), __libc_ff_sum(1.0f, fabsf(y)));
 		if (fabsf(y) < 1.0f) {
 			value = __libc_ff_divide((struct __libc_ff){ .hi = scalbnf(x, 64), .lo = 0.0f }, __libc_ff_sqrt(value));
-			return CMPLXF(x == 0 ? x : __libc_exp2f_scale(value, -64), asinf(y));
+			return CMPLXF(x == 0 ? x : __libc_exp2f_scale(value, -64), __libc_asinf_accurate(y));
 		}
 		return CMPLXF(copysignf(acoshf(fabsf(y)), x), copysignf(0x1.921fb6p+0f, y));
 	}

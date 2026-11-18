@@ -45,3 +45,6 @@ float acosf(float x)
 		return __libc_fixed_float(v, exponent, false);
 	return __libc_fixed_offset_float(__LIBC_FIXED_PI_62, v, exponent, true, false);
 }
+
+/* The float complex layer's accurate acosf (D236): this one, within 0.52 ulp */
+float __libc_acosf_accurate(float x) __attribute__((__alias__("acosf")));
