@@ -2666,3 +2666,42 @@ Against binary128, 4·10^6 points a range:
 | armv7e-m, armv8-m.main | 23,498 | 5167 | 823.4 | 6023 |
 | armv7-m | 24,298 | 5312 | 820.8 | — |
 | armv6-m, armv6s-m | 64,700 | 15,174 | 4051 | — |
+
+## 36. sqrt in fixed point on the soft-double cores, correctly rounded (P11.07f, D219, D233)
+
+Every build type had used the strict `sqrt` on the soft-double cores. It
+takes 59 bits of an integer square root of the significand bit by bit
+(`__libc_isqrt`), then the sticky bit, rounded once: 1968 instructions a
+call on armv7e-m, against picolibc's 884. The FPU cores keep their
+instruction (`fpv5-dp`, `x86_64`).
+
+**Source:** musl's `sqrt.c`, read for this step (fast-math.md §12): a
+reciprocal square root seed, Goldschmidt and Newton steps in integers,
+then the rounding decided by an exact integer comparison of the midpoint's
+square with the operand. No code was copied. The kernel here is the
+project's own `__libc_dp_fixed_root` (D200, P11.05: the rsqrt seed, three
+Newton steps, two remainder corrections; within about 6 units of 2^-64),
+which `hypot` already uses (D222).
+
+**Method (`libc/math/dp-fixed/fast/sqrt.c`):**
+- x = m 2^(e − 52) with m normalized, subnormals too.
+- t = m 2^10 or m 2^11 for an even or an odd e, so that T = t 2^-64 lies
+  in [1/4, 1).
+- s = √T 2^64, raised to 2^63 if the error leaves it just below.
+- q = s's top 53 bits. The 11 bits below decide the rounding, except
+  within 8 units of the midpoint, where (2q + 1)² is compared with
+  t 2^44 in 108-bit integers. They are never equal, the square being odd.
+- The exponent is ⌊e/2⌋; q reaching 2^53 carries into it.
+- These cores round to nearest and raise no flags (D44).
+
+**Measured:** 4·10^8 samples, none not correctly rounded. A quarter of
+them were random magnitudes, a quarter subnormals, a quarter exact
+squares, and a quarter within 8 ulps of a midpoint's square. The special
+values (±0, +inf, the smallest subnormals, DBL_MAX, negatives, NaN) match
+too.
+
+| Core | `sqrt` before | now | picolibc |
+|---|---:|---:|---:|
+| armv7e-m, armv8-m.main | 1968 | 208.1 | 884 |
+| armv7-m | 1972 | 210.1 | — |
+| armv6-m, armv6s-m | 4169 | 728.9 | — |

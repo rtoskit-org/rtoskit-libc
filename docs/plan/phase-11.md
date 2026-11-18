@@ -784,8 +784,8 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
 - [x] On the single-precision FPU cores, and from the fast `tgamma`
   elsewhere.
 
-### P11.07f — `sqrt` in `fast`, still correctly rounded  `[ ]`
-- [ ] Fixed point on the soft-double cores (`dp-fixed/fast/`): the rsqrt
+### P11.07f — `sqrt` in `fast`, still correctly rounded  `[x]`
+- [x] Fixed point on the soft-double cores (`dp-fixed/fast/`): the rsqrt
   seed and Newton steps, the rounding by an exact integer test (D219);
   correctly rounded, every test unchanged; gains.
 
