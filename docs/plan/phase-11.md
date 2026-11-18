@@ -789,10 +789,12 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
   seed and Newton steps, the rounding by an exact integer test (D219);
   correctly rounded, every test unchanged; gains.
 
-### P11.07g — `sinf`, `cosf`, `sincosf`, `tanf` on the single-precision FPU  `[ ]`
-- [ ] `libc/math/sp-nearest/fast/` (the fast layer armv7e-m and
+### P11.07g — `sinf`, `cosf`, `sincosf`, `tanf` on the single-precision FPU  `[x]`
+- [x] `libc/math/sp-nearest/fast/` (the fast layer armv7e-m and
   armv8-m.main share) at D220's 0.9-ulp target, `tanf` at its 1.5 bound;
-  every float checked; tests, gains.
+  every float checked; tests, gains. Done (D234): 0.6493, 0.6473 and
+  0.9974 ulp; armv7e-m `sinf` 128.3 → 82.3, `cosf` 123.3 → 79.3,
+  `sincosf` 212.3 → 133.3, `tanf` 216.3 → 90.3 (picolibc 101, 100, 214, 96).
 
 ### P11.07h — `atanf`, `asinf`, `acosf`, `atan2f` on the single-precision FPU  `[ ]`
 - [ ] As P11.07g.

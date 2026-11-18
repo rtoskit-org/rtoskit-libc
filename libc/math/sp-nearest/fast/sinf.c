@@ -16,16 +16,15 @@
 #include "internal/math-fast.h"
 
 /*
- * The fast sinf of the single-precision FPU cores (PLAN D162, D175): x = k pi/32 + s with s as float-float, by four-piece
- * Cody-Waite below 64 (__libc_fast_rem_pio32f) and by the layer's integer reduction above (__libc_rem_pio2f, k modulo 64);
- * s = x below 2^-6, then sin(k pi/32 + s) by the table kernel (__libc_fast_sinf_kernel). Below 1 ulp to nearest (the note, section 4); float only, round to nearest only as the layer (D57).
+ * The fast sinf of the single-precision FPU cores (PLAN D162, D220, D234): x = q pi/2 + r with r as a float pair (__libc_fast_rem_pio2f_quadrant: three-piece Cody-Waite below 64, the layer's integer reduction above), then
+ * sin r or cos r by plain float polynomials with two exact corrections (__libc_fast_sinf_pio2). 0.65 ulp to nearest
+ * over every float (the float trigonometric note, section 26); round to nearest only as the layer (D57).
  */
 float sinf(float x)
 {
-	struct __libc_ff s;
-	float hi;
-	float lo;
-	int k;
+	float r;
+	float r_lo;
+	int q;
 
 	if (isnan(x))
 		return x + x;
@@ -34,15 +33,7 @@ float sinf(float x)
 	/* The x^3 term is below half an ulp of x: the result rounds to x (keeping -0) */
 	if (__builtin_fabsf(x) < 0x1p-12f)
 		return x;
-	if (__builtin_fabsf(x) < 0x1p-6f) {
-		k = 0;
-		s = (struct __libc_ff){ .hi = x, .lo = 0.0f };
-	} else if (__builtin_fabsf(x) < 64.0f) {
-		k = __libc_fast_rem_pio32f(x, &s.lo, &s.hi);
-	} else {
-		k = __libc_rem_pio2f(x, &s);
-	}
-	hi = __libc_fast_sinf_kernel(k, s.hi, s.lo, &lo);
+	q = __libc_fast_rem_pio2f_quadrant(x, &r, &r_lo);
 
-	return hi + lo;
+	return __libc_fast_sinf_pio2(q, r, r_lo);
 }

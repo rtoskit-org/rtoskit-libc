@@ -903,28 +903,6 @@ static inline double __libc_fast_asin_half(double a, double *rest, double *tail_
 	return s;
 }
 
-/*
- * x = k pi/32 + s for 2^-6 <= |x| < 64 in float (the single-precision FPU cores' sinf family; the note, section 4), a
- * Cody-Waite reduction in four pieces: P1, P2, P3 of 14 bits, so that k P1, k P2, k P3 are exact (|k| < 2^10), x - k P1
- * exact by a fused multiply-add (both multiples of 2^-28, the difference below 0.052), the next two by exact two-sums, and
- * P4 rounded (k P4 below 2^-36); s as s_hi + *s_lo to about 2^-59 absolute. Near the multiples of pi/2, where sin or cos is
- * small, |s| is at least 2^-26.3 for these floats (measured over all of them), so that is 2^-33 relative
- */
-static inline int __libc_fast_rem_pio32f(float x, float *s_lo, float *s_hi)
-{
-	float k = __builtin_fmaf(x, 0x1.45f306p+3f, 0x1.8p23f) - 0x1.8p23f;
-	float e1;
-	float e2;
-	float hi = __libc_fast_two_sum(__builtin_fmaf(-k, 0x1.9218p-4f, x), -k * 0x1.ed5p-18f, &e1);
-	float tail;
-
-	hi = __libc_fast_two_sum(hi, -k * 0x1.10bp-34f, &e2);
-	tail = __builtin_fmaf(-k, 0x1.184698p-48f, e1 + e2);
-	*s_hi = hi + tail;
-	*s_lo = (hi - *s_hi) + tail;
-	return (int)k;
-}
-
 /* sin and cos of j pi/32 as float hi and lo, j = 0 .. 8 (libc/math/sp-nearest/fast/__libc_fast_sinf_table.c) */
 extern const float __libc_fast_sinf_table[9][4];
 
@@ -990,6 +968,94 @@ static inline float __libc_fast_divide_pairs(float a, float a_lo, float b, float
 	q = a_hi / b_hi;
 
 	return q + (__builtin_fmaf(-q, b_hi, a_hi) + __builtin_fmaf(-q, b_lo, a_lo)) / b_hi;
+}
+
+/*
+ * x = q pi/2 + r for finite x in float (the single-precision FPU cores' sinf, cosf, sincosf and tanf at D220's 0.9-ulp
+ * target; the float trigonometric note, section 26), r = *r_hi + *r_lo with |r| <= pi/4, the quadrant q returned modulo 4.
+ * Below 64, Cody-Waite in three pieces: k = round(2x/pi) by the 1.5 2^23 shift, x - k P1 exact by a fused multiply-add
+ * (P1 = pi/2 to 24 bits, the difference a multiple of 2^-24 below 1), k P2 as an exact product pair and its sum by a
+ * two-sum, k P3 rounded; r to about 2^-66 absolute, and |r| >= 2^-26.3 for these floats. Above, the layer's integer
+ * reduction (__libc_rem_pio2f: x = (k + d) pi/32) and r = j pi/32 + d pi/32 for k = 16 q + j, j in [-8, 8], with j = 8
+ * taken in place of -8 when d < 0 so that |r| stays within pi/4
+ */
+static inline int __libc_fast_rem_pio2f_quadrant(float x, float *r_hi, float *r_lo)
+{
+	struct __libc_ff s;
+	float k;
+	float hi;
+	float p;
+	float error;
+	float lo;
+	int n;
+	int j;
+	int q;
+
+	if (__builtin_fabsf(x) < 64.0f) {
+		k = __builtin_fmaf(x, 0x1.45f306p-1f, 0x1.8p23f) - 0x1.8p23f;
+		p = k * -0x1.777a5cp-25f;
+		hi = __libc_fast_two_sum(__builtin_fmaf(-k, 0x1.921fb6p0f, x), -p, &error);
+		lo = (error - __builtin_fmaf(k, -0x1.777a5cp-25f, -p)) - k * -0x1.ee59dap-50f;
+		q = (int)k;
+	} else {
+		n = __libc_rem_pio2f(x, &s);
+		j = ((n + 8) & 15) - 8;
+		q = (n + 8) >> 4;
+		if (j == -8 && s.hi < 0.0f) {
+			j = 8;
+			q--;
+		}
+		k = (float)j;
+		p = k * 0x1.921fb6p-4f;
+		hi = __libc_fast_two_sum(p, s.hi, &error);
+		lo = error + (__builtin_fmaf(k, 0x1.921fb6p-4f, -p) + __builtin_fmaf(k, -0x1.777a5cp-29f, s.lo));
+	}
+	*r_hi = hi + lo;
+	*r_lo = (hi - *r_hi) + lo;
+	return q & 3;
+}
+
+/*
+ * sin r for r = r_hi + r_lo, |r| <= pi/4, z = r_hi^2 rounded, as the unrounded pair r_hi + *lo: sin r = r + r^3 S(z) with S
+ * of degree 2 (fitted, relative error 2^-27.4 with float coefficients), r^3 as the pair r_hi z + (its product error + r_hi
+ * z_lo) and its leading term r^3 S0 inside one fused multiply-add, so that the remaining rounding of the small term is
+ * below 0.07 ulp of the result; r_lo enters with the slope 1 - z/2 (about cos r: with slope 1 it cost up to 0.15 ulp)
+ */
+static inline float __libc_fast_sinf_pair(float r_hi, float r_lo, float z, float *lo)
+{
+	float z_lo = __builtin_fmaf(r_hi, r_hi, -z);
+	float cube = r_hi * z;
+	float cube_lo = __builtin_fmaf(r_hi, z, -cube) + r_hi * z_lo;
+
+	*lo = __builtin_fmaf(cube, -0x1.555546p-3f, __builtin_fmaf(cube * z, __builtin_fmaf(z, -0x1.994eaap-13f, 0x1.11076p-7f), __builtin_fmaf(cube_lo, -0x1.555546p-3f, r_lo * __builtin_fmaf(z, -0.5f, 1.0f))));
+	return r_hi;
+}
+
+/*
+ * cos r for r = r_hi + r_lo, |r| <= pi/4, z = r_hi^2 rounded, as the unrounded pair return + *lo: w = 1 - z/2 and its
+ * exact error by Fast2Sum (fdlibm's idea; plain 1 + z C(z) lost 0.6 ulp to z's rounding), then z's rounding error and
+ * r_lo's term back in (-(z_lo/2 + r_hi r_lo)), and z^2 C(z) with C of degree 2 (relative error 2^-31.5)
+ */
+static inline float __libc_fast_cosf_pair(float r_hi, float r_lo, float z, float *lo)
+{
+	float z_lo = __builtin_fmaf(r_hi, r_hi, -z);
+	float half = 0.5f * z;
+	float w = 1.0f - half;
+	float error = (1.0f - w) - half;
+
+	*lo = __builtin_fmaf(z * z, __builtin_fmaf(z, __builtin_fmaf(z, 0x1.9a02a6p-16f, -0x1.6c0c8ep-10f), 0x1.55554ap-5f), error) - __builtin_fmaf(r_hi, r_lo, 0.5f * z_lo);
+	return w;
+}
+
+/* sin(q pi/2 + r) for the quadrant q and r = r_hi + r_lo of __libc_fast_rem_pio2f_quadrant, rounded once */
+static inline float __libc_fast_sinf_pio2(int q, float r_hi, float r_lo)
+{
+	float z = r_hi * r_hi;
+	float lo;
+	float hi = (q & 1) == 0 ? __libc_fast_sinf_pair(r_hi, r_lo, z, &lo) : __libc_fast_cosf_pair(r_hi, r_lo, z, &lo);
+	float value = hi + lo;
+
+	return (q & 2) == 0 ? value : -value;
 }
 
 /* atan(j/8) for j = 0 .. 8, correctly rounded doubles (libc/math/fast/__libc_fast_atan_table.c) */
