@@ -2689,8 +2689,13 @@ which `hypot` already uses (D222).
   in [1/4, 1).
 - s = √T 2^64, raised to 2^63 if the error leaves it just below.
 - q = s's top 53 bits. The 11 bits below decide the rounding, except
-  within 8 units of the midpoint, where (2q + 1)² is compared with
-  t 2^44 in 108-bit integers. They are never equal, the square being odd.
+  within 8 units of the midpoint, where the sign of t 2^44 − (2q + 1)²
+  decides. There the two differ by at most about 2^48, so their difference
+  modulo 2^64 has the true sign: only the square's low 64 bits are formed
+  (two 32 × 32 products). They are never equal, the square being odd.
+  The first version compared full 108-bit values, and was 12 bytes over
+  armv6-m's fast `math-mix` budget in CI. The low-64-bit test made the
+  member 122 bytes smaller (496 → 374).
 - The exponent is ⌊e/2⌋; q reaching 2^53 carries into it.
 - These cores round to nearest and raise no flags (D44).
 
@@ -2703,5 +2708,5 @@ too.
 | Core | `sqrt` before | now | picolibc |
 |---|---:|---:|---:|
 | armv7e-m, armv8-m.main | 1968 | 208.1 | 884 |
-| armv7-m | 1972 | 210.1 | — |
+| armv7-m | 1972 | 213.1 | — |
 | armv6-m, armv6s-m | 4169 | 728.9 | — |

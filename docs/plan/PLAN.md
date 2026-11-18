@@ -337,7 +337,7 @@ supersedes it; do not edit history.
 | D233 | **The fast `sqrt` of the soft-double cores in fixed point, still correctly rounded** (P11.07f, D219; `docs/research/libm-fast-double.md` §36). `dp-fixed/fast/sqrt.c`:
 - the significand scaled into [1/4, 1);
 - the root by `__libc_dp_fixed_root` (the rsqrt seed, three Newton steps, two corrections; within about 6 units of 2^-64);
-- the rounding from the 11 bits below the result, except within 8 units of the midpoint, where an exact 108-bit comparison of (2q + 1)² with the operand decides.
+- the rounding from the 11 bits below the result, except within 8 units of the midpoint, where the exact sign of t·2^44 − (2q + 1)² decides. The difference is below 2^48 there, so its low 64 bits suffice: two 32 × 32 products. A first version with a full 108-bit comparison was 12 bytes over armv6-m's zero-margin fast `math-mix` budget (D216) in CI; this one is 122 bytes smaller.
 
 No misrounding in 4·10^8 samples, a quarter of them within 8 ulps of a midpoint. The fast contract does not change (`sqrt` correctly rounded, C23 F.3). armv7e-m `sqrt` 1968 → 208.1 instructions (picolibc 884), armv6-m 4169 → 728.9. The fast bench baselines take the `sqrt` cases only. | `hypot`'s root kernel already existed; correct rounding costs one rare 128-bit comparison. |
 - `fast/tgammaf.c` and `nofp/fast/tgammaf.c` are `(float)tgamma(x)` on every core but the single-precision FPU's;
