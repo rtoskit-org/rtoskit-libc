@@ -334,6 +334,12 @@ supersedes it; do not edit history.
 | D230 | **The fast double `tgamma` of the double-FPU cores** (P11.07e1, D219; `docs/research/libm-fast-double.md` §34). `libc/math/fast/tgamma.c` in place of the strict file (x86_64, armv7e-m-dp; the soft-double cores run it on their helpers until P11.07e2):
 | D231 | **The fast `tgamma` of the soft-double cores in fixed point** (P11.07e2, D219, D230; `docs/research/libm-fast-double.md` §35). `dp-fixed/fast/tgamma.c` handles positive x below 64 in 64-bit integers:
 | D232 | **The fast `tgammaf` at 1 ulp** (P11.07e3, D219; `docs/research/libm-fast-float-trig.md` §25):
+| D233 | **The fast `sqrt` of the soft-double cores in fixed point, still correctly rounded** (P11.07f, D219; `docs/research/libm-fast-double.md` §36). `dp-fixed/fast/sqrt.c`:
+- the significand scaled into [1/4, 1);
+- the root by `__libc_dp_fixed_root` (the rsqrt seed, three Newton steps, two corrections; within about 6 units of 2^-64);
+- the rounding from the 11 bits below the result, except within 8 units of the midpoint, where an exact 108-bit comparison of (2q + 1)² with the operand decides.
+
+No misrounding in 4·10^8 samples, a quarter of them within 8 ulps of a midpoint. The fast contract does not change (`sqrt` correctly rounded, C23 F.3). armv7e-m `sqrt` 1968 → 208.1 instructions (picolibc 884), armv6-m 4169 → 728.9. The fast bench baselines take the `sqrt` cases only. | `hypot`'s root kernel already existed; correct rounding costs one rare 128-bit comparison. |
 - `fast/tgammaf.c` and `nofp/fast/tgammaf.c` are `(float)tgamma(x)` on every core but the single-precision FPU's;
 - `sp-nearest/fast/tgammaf.c` uses the double file's method in float with fused multiply-adds: the factorials to 13, 32 pieces of Γ of degree 6 on [1, 8), Γ(1 + x)/x below 1, e^E with Stirling's exponent as a float pair through `__libc_fast_expf_kernel` to the overflow, the recurrence above −16 and the reflection below.
 
