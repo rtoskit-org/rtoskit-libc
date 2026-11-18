@@ -1240,3 +1240,77 @@ Every float, against the host's double `tgamma`: at most 0.9267 ulp (near
 | armv7e-m-dp | 731.3 (168.1 after P11.07e2) | 159.1 | — |
 | armv7-m | 27,683 | 831.4 | — |
 | armv6-m, armv6s-m | 55,326 | 4080 | — |
+
+## 26. sinf, cosf, sincosf and tanf at the 0.9-ulp target (P11.07g, D220, D234)
+
+The fast files of the single-precision FPU cores (armv7e-m, armv8-m.main;
+`sp-nearest/fast/`) had kept section 4's method for the 0.55 target: x =
+k π/32 + s with s as a float pair, then a 9-entry table of sin and cos of
+jπ/32 as float pairs and the float-float kernel
+(`__libc_fast_sinf_kernel`). On armv7e-m that took 128 instructions for
+`sinf` (picolibc 101), 123 for `cosf` (100), 212 for `sincosf` (214) and
+216 for `tanf` (96), whose two kernels were divided as pairs. D220 lets
+these files target 0.9 ulp, with the bound at 1 ulp, or 1.5 for `tanf`.
+Fast-math §12.2's prototype D was the starting point.
+
+**The reduction** (`__libc_fast_rem_pio2f_quadrant` in `math-fast.h`):
+x = q π/2 + r, with r as a pair, |r| ≤ π/4 and q modulo 4.
+- Below 64, Cody–Waite in three pieces:
+  - k = round(2x/π) by the 1.5·2^23 shift in one fused multiply-add;
+  - x − k·P1 is exact by a fused multiply-add, since P1 is π/2 to 24 bits and the difference is a multiple of 2^-24 below 1;
+  - k·P2 is an exact product pair, and its subtraction an exact two-sum;
+  - k·P3 is rounded.
+  
+  r is good to about 2^-66 absolutely. Near the multiples of π/2, |r| ≥ 2^-26.3 for these floats: section 4's measurement for the multiples of π/32, a superset.
+- From 64, the layer's integer reduction (`__libc_rem_pio2f`, x = (n + d)·π/32), then r = j·π/32 + d·π/32 for n = 16q + j with j in [−8, 8). When j = −8 and d < 0, r would reach 8.5·π/32, past the polynomials' interval. The first sweep showed this as 1.31 ulp from 64 up. So j = 8 is taken there instead, with q one less.
+
+**sin r and cos r** (`__libc_fast_sinf_pair`, `__libc_fast_cosf_pair`),
+with z = r_hi² rounded:
+- **sin r = r + r³·S(z)**, with S of degree 2 fitted on [0, (π/4)²]: a relative error of 2^-27.4 with float coefficients. Two corrections:
+  - r³ is the pair r_hi·z plus (its product error + r_hi·z_lo), from 0.89 to 0.82 ulp;
+  - the leading r³·S0 goes inside one fused multiply-add, so the remaining small term's rounding stays below 0.07 ulp: from 0.82 to 0.78 ulp.
+- **cos r = w + error − (z_lo/2 + r_hi·r_lo) + z²·C(z)**:
+  - w = 1 − z/2, and its exact error by Fast2Sum (fdlibm's form; plain 1 + z·C lost 0.6 ulp to z's rounding);
+  - C is of degree 2, a relative error of 2^-31.5.
+- **r_lo's slope.** r_lo has to enter with the derivative's slope. Adding it with slope 1 cost up to 0.15 ulp in `sinf` near π/4 (the slope there is cos r ≈ 0.71). It now enters times 1 − z/2. `cosf` already took −r_hi·r_lo. With this, 0.78 became 0.65.
+
+`sinf` picks the pair by q's parity, adds it once, and sets the sign from
+q & 2. `cosf` is the same for q + 1. `sincosf` shares the reduction, and its two
+results equal `sinf`'s and `cosf`'s bit for bit (checked over every float).
+
+**tanf** (`tanf.c`, `tan_pair`): tan r = r + r³·T(z), with T of degree 6
+(2^-27.7 relatively with float coefficients), r³ as a pair and r³·T0
+inside one fused multiply-add, as for sin.
+- r_lo enters with tan's slope 1 + tan²r, which is up to 2 near π/4, taken as 1 + a² with a = r_hi plus the tail. With slope 1 the pair was off by 2^-24.3 of the result, and the sweep measured 1.33 ulp. Now it is at most 0.9974 (near 2^49, from 64 up; below 64, 0.9693).
+- In the odd quadrants the result is −1/t, with t = hi + lo normalised: q = 1/t, then q + q·(1 − q·t − q·t_lo), with 1 − q·t exact by a fused multiply-add.
+
+Dividing the sine pair by the cosine pair (`__libc_fast_divide_pairs`) measured 0.966 ulp but
+took 108 instructions, above picolibc's 96. The polynomial takes 90.
+
+**Accuracy.** Every float was checked on the host against the host's double functions: the library
+files built with `-mfma` and the fpv4-sp FPU header, both signs, 0 to the
+infinities and NaN.
+
+| Function | max ulp | where | above 0.5 ulp |
+|---|---:|---|---:|
+| `sinf` | 0.6493 | near 2^125 | 1.9 % |
+| `cosf` | 0.6473 | near 2^103 | 1.9 % |
+| `tanf` | 0.9974 | near 2^49 | 3.7 % |
+
+`sincosf` returns what `sinf` and `cosf` return.
+
+**Instructions a call** (throughput; picolibc measured on armv7e-m):
+
+| Function | armv7e-m before | now | armv8-m.main before | now | picolibc |
+|---|---:|---:|---:|---:|---:|
+| `sinf` | 128.3 | 82.3 | 126.3 | 82.3 | 101 |
+| `cosf` | 123.3 | 79.3 | 121.3 | 79.3 | 100 |
+| `sincosf` | 212.3 | 133.3 | 208.3 | 133.3 | 214 |
+| `tanf` | 216.3 | 90.3 | 212.3 | 90.3 | 96 |
+
+The fast size budgets hold on every core (`size-report diff`, `budget`
+and the speed and fast budgets).
+
+The table kernel, its 9-entry table and `__libc_fast_divide_pairs` stay:
+`sinpif`, `cospif`, `tanpif` and `tanhf` use them. The four-piece π/32
+reduction (`__libc_fast_rem_pio32f`) had no other user and is gone.

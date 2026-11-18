@@ -398,6 +398,15 @@ static void check_trigonometric(void)
 	QUIET(within_ulp(tanpif(0x1.000004p-1f), -0x1.45f306dc9c39cp+21) && within_ulp(sinpif(0x1.7ffffcp+0f), -0x1.ffffffffff621p-1) && within_ulp(cospif(0x1.7ffffcp+0f), -0x1.921fb544426a4p-21) && within_ulp(tanpif(0x1.7ffffcp+0f), 0x1.45f306dc9c5f6p+20));
 	QUIET(within_ulp(sinf(0x1.921fb6p+1f), -0x1.777a5cf72cec6p-24) && within_ulp(cosf(0x1.921fb6p+1f), -0x1.fffffffffffdep-1) && within_ulp(sinf(0x1.921fb6p+2f), 0x1.777a5cf72ceadp-23) && within_ulp(cosf(0x1.921fb6p+2f), 0x1.fffffffffff76p-1));
 	QUIET(within_ulp(sinf(0x1.2d97c8p+2f), -0x1.fffffffffffffp-1) && within_ulp(cosf(0x1.2d97c8p+2f), 0x1.99bc5b961b1adp-27) && within_ulp(sinf(0x1.f6a7a2p+3f), 0x1.2aa70bcb07d3ap-22) && within_ulp(cosf(0x1.f6a7a2p+3f), -0x1.ffffffffffea4p-1));
+	/*
+	 * regression_fast_trigf_wide_quarter (P11.07g): from 64 the single-precision FPU's fast files fold the integer reduction's
+	 * n pi/32 + d to a quarter turn; with j = -8 and d < 0 the reduced argument reached 8.5 pi/32, past the polynomials'
+	 * interval (1.31 ulp before the fix)
+	 */
+	QUIET(within_ulp(sinf(0x1.7b4c64p+8f), 0x1.7b4e82a00052ap-1) && within_ulp(cosf(0x1.7b4c64p+8f), -0x1.57e79a5a7b591p-1) && within_ulp(tanf(0x1.7b4c64p+8f), -0x1.1a5a5bb039b8ep+0));
+	QUIET(within_ulp(sinf(0x1.9d7cdcp+9f), -0x1.57f244f044ce2p-1) && within_ulp(cosf(0x1.9d7cdcp+9f), -0x1.7b44d69f14629p-1) && within_ulp(tanf(0x1.9d7cdcp+9f), 0x1.d050d790aa150p-1));
+	/* regression_fast_tanf_slope (P11.07g): r_lo taken with slope 1 put tanf 1.33 ulp off near pi/4 */
+	QUIET(within_ulp(tanf(0x1.f683fcp+1f), 0x1.fee31aa781e56p-1) && within_ulp(tanf(0x1.5cb7dep+6f), -0x1.ffa139f7fe026p-1));
 }
 
 static void check_inverse_trigonometric(void)
