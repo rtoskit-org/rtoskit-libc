@@ -441,6 +441,13 @@ static void check_inverse_trigonometric(void)
 	 * accuracy only: a subnormal result may raise underflow
 	 */
 	CHECK(within_ulp(atanf(0x1.fffffep-5f), 0x1.ff55b974cde0ap-5) && within_ulp(atanpif(0x1.29a8c4p-124f), 0x1.7afdd40083a1ap-126));
+	/*
+	 * regression_fast_atanf_near_one (P11.07h): one polynomial on [0, 1] put the single-precision FPU's fast atanf and
+	 * atan2f 1.05 ulp off near 1, where its tail is a fifth of the result; and each side of the new reductions (1/2, 2)
+	 */
+	CHECK(within_ulp(atanf(0x1.fa2fe4p-1f), 0x1.8f3369e40ac6bp-1) && within_ulp(atan2f(0x1.b100cap-6f, 0x1.b7104ap-6f), 0x1.8e90d1e81869ap-1) && within_ulp(atan2f(0x1.b100cap-6f, -0x1.b7104ap-6f), 0x1.2e7b80ca3cb72p+1));
+	CHECK(within_ulp(atanf(0.5f), atan(0.5)) && within_ulp(atanf(0x1.000002p-1f), atan(0x1.000002p-1)) && within_ulp(atanf(0x1.fffffep+0f), atan(0x1.fffffep+0)) && within_ulp(atanf(2.0f), atan(2.0)));
+	CHECK(within_ulp(atan2f(1.0f, 2.0f), atan2(1.0, 2.0)) && within_ulp(atan2f(0x1.000002p0f, 2.0f), atan2(0x1.000002p0, 2.0)) && within_ulp(atan2f(-0x1.fffffep127f, 0x1.fffffep127f), atan2(-0x1.fffffep127, 0x1.fffffep127)));
 	CHECK(within_ulp(atan2f(-0x1.d0f908p-128f, 0x1.cf06bep-126f), -0x1.f7bdd378a59ccp-3) && within_ulp(atan2f(-0x1.70ca9p-128f, 0x1.707228p-124f), -0x1.ffd01ada0df0bp-5));
 	/* regression: a quotient near 2^-125 had its remainder rounded to half an ulp of it (0.67 ulp; complex_float's 0.52) */
 	CHECK(within_ulps(atan2f(-0x1.f59efp-36f, 0x1.6f5952p+89f), -0x1.5d9276a8b0b88p-125, 0.52) && within_ulps(atan2f(0x1.821528p+3f, 0x1.f6b5dep+126f), 0x1.893791320e1ffp-124, 0.52));

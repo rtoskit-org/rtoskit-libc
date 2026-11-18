@@ -16,12 +16,19 @@
 #include "internal/math-fast.h"
 
 /*
- * The fast atanf of the single-precision FPU cores (PLAN D162, D176): atan |x| by the table kernel (__libc_fast_atanf_kernel), as pi/2 - atan(1/|x|) above 1, with the sign of x. Below 1 ulp to nearest (the trigonometric
- * note, section 7); float only, round to nearest only as the layer (D57). C23 F.10.1.3: +-infinity gives +-pi/2, +-0 itself.
+ * The fast atanf of the single-precision FPU cores (PLAN D162, D220, D235): atan |x| = c + s atan t with one reduction to
+ * |t| <= 1/2: t = |x| up to 1/2; t = (|x| - 1)/(|x| + 1) below 2, c = pi/4 (__libc_fast_atanf_shift); t = 1/|x| from 2
+ * rounded once, c = pi/2 and s = -1; then the polynomial (__libc_fast_atanf_poly) and c + s atan t
+ * by Fast2Sum, the sign of x. Within D220's 0.9-ulp target to nearest over every float (the float trigonometric note,
+ * section 27); round to nearest only as the layer (D57). C23 F.10.1.3: +-infinity gives +-pi/2, +-0 itself.
  */
 float atanf(float x)
 {
 	float a = __builtin_fabsf(x);
+	float t = a;
+	float t_lo = 0.0f;
+	float c = 0.0f;
+	float c_lo = 0.0f;
 	float hi;
 	float lo;
 
@@ -30,16 +37,22 @@ float atanf(float x)
 	/* x^3/3 is below half an ulp of x: the result rounds to x (keeping -0) */
 	if (a < 0x1p-12f)
 		return x;
-
-	if (a > 1.0f) {
-		/* pi/2 - atan(1/a), 1/a as a pair (its remainder by a fused multiply-add); +-infinity gives +-pi/2 */
-		float u = 1.0f / a;
-
-		hi = __libc_fast_atanf_kernel(u, isinf(a) ? 0.0f : __builtin_fmaf(-u, a, 1.0f) / a, &lo);
-		hi = __libc_fast_pair_from(0x1.921fb6p+0f, -0x1.777a5cp-25f, hi, lo, &lo);
-	} else {
-		hi = __libc_fast_atanf_kernel(a, 0.0f, &lo);
+	if (a >= 2.0f) {
+		/*
+		 * pi/2 - atan(1/a), +-infinity giving +-pi/2: 1/a rounded once, its error below 2^-26 absolute (u <= 1/2) and so
+		 * below 0.125 ulp of a result above atan 2; its remainder by a fused multiply-add cost 6 instructions
+		 */
+		t = -1.0f / a;
+		c = 0x1.921fb6p+0f;
+		c_lo = -0x1.777a5cp-25f;
+	} else if (a > 0.5f) {
+		t = __libc_fast_atanf_shift(a, 1.0f, &t_lo);
+		c = 0x1.921fb6p-1f;
+		c_lo = -0x1.777a5cp-26f;
 	}
+	hi = __libc_fast_atanf_poly(t, t_lo, &lo);
+	/* c + atan t = c - (-atan t), exact when c = 0 and by Fast2Sum otherwise (|atan t| < pi/4) */
+	hi = __libc_fast_pair_from_larger(c, c_lo, -hi, -lo, &lo);
 	hi = hi + lo;
 
 	return x < 0 ? -hi : hi;

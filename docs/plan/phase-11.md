@@ -796,8 +796,10 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
   0.9974 ulp; armv7e-m `sinf` 128.3 → 82.3, `cosf` 123.3 → 79.3,
   `sincosf` 212.3 → 133.3, `tanf` 216.3 → 90.3 (picolibc 101, 100, 214, 96).
 
-### P11.07h — `atanf`, `asinf`, `acosf`, `atan2f` on the single-precision FPU  `[ ]`
-- [ ] As P11.07g.
+### P11.07h — `atanf`, `asinf`, `acosf`, `atan2f` on the single-precision FPU  `[x]`
+- [x] As P11.07g. Done (D235): 0.6501, 0.7684, 0.7430 and 0.6533 (sampled)
+  ulp; armv7e-m `atanf` 92.3 → 60.4, `asinf` 64.3 → 53.8, `acosf` 63.3 →
+  48.6, `atan2f` 118.4 → 91.9 (picolibc 65, 57, 50, 109).
 
 ### P11.07i — `cbrtf`, `expm1f`, `log1pf` on the single-precision FPU  `[ ]`
 - [ ] As P11.07g.

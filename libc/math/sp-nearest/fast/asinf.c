@@ -16,31 +16,31 @@
 #include "internal/math-fast.h"
 
 /*
- * The fast asinf of the single-precision FPU cores (PLAN D162, D176): up to 1/2 x + x^3 P(x^2) (__libc_fast_asinf_small); above, pi/2 - 2 asin(s) with s = sqrt((1 - |x|)/2) as a pair, the sign of x. Below 1 ulp to nearest (the trigonometric
- * note, section 7); float only, round to nearest only as the layer (D57). C23 F.10.1.2: |x| > 1 invalid, +-0 itself.
+ * The fast asinf of the single-precision FPU cores (PLAN D162, D220, D235): up to 1/2 |x| + |x|^3 P(x^2)
+ * (__libc_fast_asinf_poly, degree 4); above, pi/2 - 2 asin(s) with s = sqrt((1 - |x|)/2) as a pair, the difference by Fast2Sum;
+ * the sign of x. One call of the polynomial, so that it is inlined. Within D220's 0.9-ulp target to nearest over every
+ * float (the float trigonometric note, section 27); round to nearest only as the layer (D57). C23 F.10.1.2: |x| > 1
+ * invalid, +-0 itself.
  */
 float asinf(float x)
 {
 	float a = __builtin_fabsf(x);
-	float s;
-	float s_lo;
+	float t = a;
+	float t_lo = 0.0f;
 	float hi;
 	float lo;
 
-	if (isnan(x))
-		return x + x;
-	if (a > 1.0f)
-		return __libc_math_invalidf();
+	/* NaN (a quiet comparison), or |x| > 1: invalid */
+	if (!islessequal(a, 1.0f))
+		return isnan(x) ? x + x : __libc_math_invalidf();
 	/* x^3/6 is below half an ulp of x: the result rounds to x (keeping -0) */
 	if (a < 0x1p-12f)
 		return x;
-	if (a <= 0.5f) {
-		hi = __libc_fast_asinf_small(x, 0.0f, &lo);
-		return hi + lo;
-	}
-	s = __libc_fast_half_angle(a, &s_lo);
-	hi = __libc_fast_asinf_small(s, s_lo, &lo);
-	hi = __libc_fast_pair_from(0x1.921fb6p+0f, -0x1.777a5cp-25f, 2.0f * hi, 2.0f * lo, &lo);
+	if (a > 0.5f)
+		t = __libc_fast_half_angle(a, &t_lo);
+	hi = __libc_fast_asinf_poly(t, t_lo, &lo);
+	if (a > 0.5f)
+		hi = __libc_fast_pair_from_larger(0x1.921fb6p+0f, -0x1.777a5cp-25f, 2.0f * hi, 2.0f * lo, &lo);
 	hi = hi + lo;
 
 	return x < 0 ? -hi : hi;

@@ -56,3 +56,6 @@ float atan2f(float y, float x)
 
 	return value.hi + value.lo;
 }
+
+/* The float complex layer's accurate atan2f (D236): this one, within 0.52 ulp */
+float __libc_atan2f_accurate(float y, float x) __attribute__((__alias__("atan2f")));

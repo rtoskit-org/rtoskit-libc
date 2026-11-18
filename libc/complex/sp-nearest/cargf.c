@@ -15,9 +15,10 @@
 #include <math.h>
 
 #include "internal/complex.h"
+#include "internal/math.h"
 
 /* C23 7.3.9.1: atan2 of the parts */
 float cargf(float complex z)
 {
-	return atan2f(__libc_imf(z), __libc_ref(z));
+	return __libc_atan2f_accurate(__libc_imf(z), __libc_ref(z));
 }

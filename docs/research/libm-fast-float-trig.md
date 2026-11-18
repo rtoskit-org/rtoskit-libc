@@ -1314,3 +1314,81 @@ and the speed and fast budgets).
 The table kernel, its 9-entry table and `__libc_fast_divide_pairs` stay:
 `sinpif`, `cospif`, `tanpif` and `tanhf` use them. The four-piece π/32
 reduction (`__libc_fast_rem_pio32f`) had no other user and is gone.
+
+## 27. atanf, asinf, acosf and atan2f at the 0.9-ulp target (P11.07h, D220, D235)
+
+The single-precision FPU cores' fast files had section 7's methods for the
+0.55 target. On armv7e-m they took:
+
+| Function | instructions | picolibc |
+|---|---:|---:|
+| `atanf` | 92.3 | 65 |
+| `asinf` | 64.3 | 57 |
+| `acosf` | 63.3 | 50 |
+| `atan2f` | 118.4 | 109 |
+
+`atanf` and `atan2f` used a table of atan(j/8) with a reduction quotient of its own. `asinf` and `acosf` called a degree-6 polynomial from two sites, so it was not inlined and its low part went through the stack.
+
+**atan** (`__libc_fast_atanf_poly`): atan t = t + t³·P(z) for |t| ≤ 1/2,
+with P of degree 5 fitted on [0, 1/4]: a relative error of 2^-27.9 with float
+coefficients. t³ is a pair, and t³·P0 goes inside one fused multiply-add, as for
+sinf (section 26). t_lo enters with atan's slope 1/(1 + z), taken as
+1 − z: the error is z² ≤ 1/16 of a term already below 2^-24 of t, and
+it saves a division.
+- **A first version** used one polynomial of degree 8 on [0, 1] and reached 1.05 ulp
+  near 1 (`atanf` near 0.989; `atan2f` at quotients near 1, sampled). There, the
+  polynomial's tail is a fifth of the result and its roundings add up.
+- **Hence one reduction per path** to |t| ≤ 1/2, and the result c + s·atan t by
+  one Fast2Sum, which is exact because |atan t| < π/4 ≤ c, or trivially exact when c = 0:
+  - `atanf`:
+    - t = |x| up to 1/2;
+    - t = (|x| − 1)/(|x| + 1) below 2, with c = π/4 (`__libc_fast_atanf_shift`: |x| − 1 exact by Sterbenz, |x| + 1 and its error by Fast2Sum, the quotient's remainder by a fused multiply-add);
+    - t = −1/|x| from 2 with c = π/2, the reciprocal rounded once. Its error is below 2^-26 absolutely, under 0.125 ulp of a result above atan 2. The remainder cost 6 instructions, and leaving it out removes the infinity test, since 1/∞ = 0 gives π/2.
+  - `atan2f`:
+    - after ordering n ≤ d, t = n/d with its remainder up to 1/2;
+    - above, t = (n − d)/(n + d) from the operands, where n − d is exact (Sterbenz) and n and d are scaled by 1/4 above 2^126 against the overflow of n + d.
+    
+    The result is k·π/4 ± atan t, with k and the sign from the swap and x's sign, using a 5-entry table of k·π/4 pairs. That is one exact addition in place of up to three. One unsigned test per operand, |x| and |y| in [2^-100, 2^60), keeps the zeros, infinities, NaNs and the 2^64 scaling off the common path. The scaling is the existing guard for subnormal remainders.
+
+**asin** (`__libc_fast_asinf_poly`): x + x³·P(z) of degree 4 on [0, 1/4]
+(2^-27.2), whose tail is at most 0.045 of the result. Each file calls it
+once, and it is inlined.
+- Above 1/2, s = √((1 − |x|)/2) as a pair (`__libc_fast_half_angle`).
+- π/2 − 2·asin s, π − 2·asin s and π/2 − asin x are computed by Fast2Sum (`__libc_fast_pair_from_larger`).
+- The NaN and |x| > 1 tests are one quiet `islessequal`. A plain `<=` would raise invalid on a quiet NaN.
+- The half-angle's branch on s = 0 became a divisor 2s + 2^-126. That is exact for every s > 0, since s ≥ 2^-12.5 below 1, and 0/2^-126 = 0 at |x| = 1. The π forms (`asinpif`, `acospif`) share this helper and keep their degree-6 polynomial for the 0.55 target, so they are unchanged.
+
+**Accuracy** (the library files on the host with `-mfma` and the fpv4-sp
+header, against the host's double functions):
+
+| Function | max ulp | where | above 0.5 ulp | checked |
+|---|---:|---|---:|---|
+| `atanf` | 0.6501 | near 0.496 | 0.06 % | every float |
+| `asinf` | 0.7684 | near 0.530 | 0.08 % | every float |
+| `acosf` | 0.7430 | near 0.542 | 0.02 % | every float |
+| `atan2f` | 0.6533 | (2^-22.3, 2^-21.3) | 0.02 % | 10^8 pairs: random, near-equal magnitudes, mid-range exponents |
+
+**Instructions a call on armv7e-m** (throughput):
+
+| Function | before | now | picolibc |
+|---|---:|---:|---:|
+| `atanf` | 92.3 | 60.4 | 65 |
+| `asinf` | 64.3 | 53.8 | 57 |
+| `acosf` | 63.3 | 48.6 | 50 |
+| `atan2f` | 118.4 | 91.9 | 109 |
+
+armv8-m.main measures the same, except `atan2f`, at 87.9. The fast size budgets hold on every core.
+
+The atan(j/8) table kernel (`__libc_fast_atanf_kernel`, `__libc_fast_atanf_table`) and `__libc_fast_asinf_small` stay for the π forms. Those are `atanpif`, `atan2pif`, `asinpif` and `acospif`, which keep the 0.55 target.
+
+**The float complex layer** (D236). `complex_float` (D65) holds each part
+of the float complex functions within 0.52 ulp. Some parts came from the public functions:
+- `atan2f` for `clogf`, `cargf` and a branch each of `cacosf` and `casinhf`;
+- `acosf` and `asinf` near the cuts of `cacosf` and `casinhf`.
+
+The new files failed it: `clogf`'s argument by 0.527 at (2^126.3, −2^124.3), and both near-cut branches by about 0.6 ulp. The complex files now call `__libc_atan2f_accurate`, `__libc_asinf_accurate` and `__libc_acosf_accurate`:
+- aliases of the public functions where those meet 0.52 (strict `sp-nearest`, and `nofp/fast` on the soft-float cores);
+- in this fast layer, P11.04's bodies kept as files of their own.
+
+The public functions keep their speed-up and the complex contract is unchanged.
+

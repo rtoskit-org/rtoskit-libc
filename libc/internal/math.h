@@ -725,6 +725,15 @@ struct __libc_ff __libc_sinf_core(int k, struct __libc_ff s);
 /* atan2(y, x) for finite y and x not both zero, to about 2^-42 */
 struct __libc_ff __libc_atan2f_core(struct __libc_ff y, struct __libc_ff x);
 
+/*
+ * atan2f, asinf and acosf within 0.52 ulp for the float complex layer (libc/complex/sp-nearest, PLAN D65, D236): atan2f itself where it
+ * is that accurate (aliases in libc/math/sp-nearest/ and libc/math/nofp/fast/), and their own files in the fast flavour
+ * of the single-precision FPU cores, whose atan2f, asinf and acosf target 0.9 ulp (D220)
+ */
+float __libc_atan2f_accurate(float y, float x);
+float __libc_asinf_accurate(float x);
+float __libc_acosf_accurate(float x);
+
 /* erf(x) for 0 <= x < 4, to about 2^-42 */
 struct __libc_ff __libc_erff_core(float x);
 

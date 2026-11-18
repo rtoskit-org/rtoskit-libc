@@ -32,3 +32,6 @@ float asinf(float x)
 
 	return value.hi + value.lo;
 }
+
+/* The float complex layer's accurate asinf (D236): this one, within 0.52 ulp */
+float __libc_asinf_accurate(float x) __attribute__((__alias__("asinf")));

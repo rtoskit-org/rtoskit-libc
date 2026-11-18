@@ -16,33 +16,35 @@
 #include "internal/math-fast.h"
 
 /*
- * The fast acosf of the single-precision FPU cores (PLAN D162, D176): up to 1/2 pi/2 - asin x; above, 2 asin(s) with s = sqrt((1 - |x|)/2) as a pair, or pi minus it for a negative x. Below 1 ulp to nearest (the trigonometric
- * note, section 7); float only, round to nearest only as the layer (D57). C23 F.10.1.1: |x| > 1 invalid, acos 1 = +0.
+ * The fast acosf of the single-precision FPU cores (PLAN D162, D220, D235): up to 1/2 pi/2 - asin x; above, 2 asin(s)
+ * with s = sqrt((1 - |x|)/2) as a pair, or pi minus it for a negative x; the polynomial (__libc_fast_asinf_poly, degree 4) called
+ * once, so that it is inlined, and the differences by Fast2Sum. Within D220's 0.9-ulp target to nearest over every float
+ * (the float trigonometric note, section 27); round to nearest only as the layer (D57). C23 F.10.1.1: |x| > 1 invalid,
+ * acos 1 = +0.
  */
 float acosf(float x)
 {
 	float a = __builtin_fabsf(x);
-	float s;
-	float s_lo;
+	float t = x;
+	float t_lo = 0.0f;
 	float hi;
 	float lo;
 
-	if (isnan(x))
-		return x + x;
-	if (a > 1.0f)
-		return __libc_math_invalidf();
+	/* NaN (a quiet comparison), or |x| > 1: invalid */
+	if (!islessequal(a, 1.0f))
+		return isnan(x) ? x + x : __libc_math_invalidf();
+	if (a > 0.5f)
+		t = __libc_fast_half_angle(a, &t_lo);
+	hi = __libc_fast_asinf_poly(t, t_lo, &lo);
 	if (a <= 0.5f) {
 		/* pi/2 - asin x */
-		hi = __libc_fast_asinf_small(x, 0.0f, &lo);
-		hi = __libc_fast_pair_from(0x1.921fb6p+0f, -0x1.777a5cp-25f, hi, lo, &lo);
+		hi = __libc_fast_pair_from_larger(0x1.921fb6p+0f, -0x1.777a5cp-25f, hi, lo, &lo);
 	} else {
-		/* 2 asin(s), s = sqrt((1 - |x|)/2), or pi minus it for a negative x */
-		s = __libc_fast_half_angle(a, &s_lo);
-		hi = __libc_fast_asinf_small(s, s_lo, &lo);
+		/* 2 asin(s), or pi minus it for a negative x */
 		hi *= 2.0f;
 		lo *= 2.0f;
 		if (x < 0)
-			hi = __libc_fast_pair_from(0x1.921fb6p+1f, -0x1.777a5cp-24f, hi, lo, &lo);
+			hi = __libc_fast_pair_from_larger(0x1.921fb6p+1f, -0x1.777a5cp-24f, hi, lo, &lo);
 	}
 
 	return hi + lo;
