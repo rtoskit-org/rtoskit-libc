@@ -483,10 +483,10 @@
     "insns": 919.69
    },
    "sqrt/latency": {
-    "insns": 772.19
+    "insns": 769.69
    },
    "sqrt/throughput": {
-    "insns": 728.94
+    "insns": 726.44
    },
    "sqrtf/latency": {
     "insns": 459.44

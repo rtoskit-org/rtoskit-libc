@@ -17,30 +17,19 @@
 #include "dp-fixed-fast.h"
 #include "internal/math.h"
 
-/* a^2 for a below 2^55 as (hi, lo): a = h 2^32 + l, h^2 2^64 + 2 h l 2^32 + l^2 */
-static inline void sqrt_square(uint64_t a, uint64_t *hi, uint64_t *lo)
-{
-	uint32_t l = (uint32_t)a;
-	uint32_t h = (uint32_t)(a >> 32);
-	uint64_t ll = __libc_trig_wide(l, l);
-	uint64_t hl = __libc_trig_wide(h, l);
-
-	*lo = ll + (hl << 33);
-	*hi = __libc_trig_wide(h, h) + (hl >> 31) + (*lo < ll);
-}
-
 /*
  * The midpoint's side, exactly: the root rounds up when (2 q + 1) 2^10, the midpoint above q in units of 2^-64, is below
- * sqrt(t 2^64), i.e. (2 q + 1)^2 < t 2^44 (108-bit integers; never equal, the square being odd)
+ * sqrt(t 2^64), i.e. (2 q + 1)^2 < t 2^44. Within 8 units of the midpoint the two differ by at most about 2 2^54 2^-7 =
+ * 2^48, so their difference modulo 2^64, as a signed number, has the true sign: the square's low 64 bits only (two 32 x
+ * 32 products, m = h 2^32 + l, l^2 + 2 h l 2^32), never equal to t 2^44's (the square is odd)
  */
-[[gnu::noinline]] static uint64_t sqrt_decide(uint64_t q, uint64_t t)
+static inline uint64_t sqrt_decide(uint64_t q, uint64_t t)
 {
-	uint64_t hi;
-	uint64_t lo;
+	uint64_t m = 2 * q + 1;
+	uint32_t l = (uint32_t)m;
+	uint64_t low = __libc_trig_wide(l, l) + (__libc_trig_wide((uint32_t)(m >> 32), l) << 33);
 
-	sqrt_square(2 * q + 1, &hi, &lo);
-
-	return (hi < (t >> 20) || (hi == (t >> 20) && lo < (t << 44))) ? q + 1 : q;
+	return (int64_t)((t << 44) - low) > 0 ? q + 1 : q;
 }
 
 /* The ends (C23 7.12.7.10, F.10.4.10): NaN returns itself, a negative x (not -0) is invalid, +-0 and +inf return themselves */
