@@ -50,7 +50,7 @@ and builds for x86-64 as well, which is where it is developed and tested.
    fixed-point maths. The `fast` build is the speed build with a maths
    library that is less accurate (below 1 ulp, 1.5 for `tan`, the hyperbolic
    functions and `erf`) and rounds to nearest only, in exchange for a
-   fraction of the instructions (a quarter on the Cortex-M4F). Drop-in archives trim `printf` further (`libc-nofloat.a`,
+   fraction of the instructions (about a sixth on the Cortex-M4F). Drop-in archives trim `printf` further (`libc-nofloat.a`,
    `libc-minimal-printf.a`) or swap in the smallest allocator
    (`libc-tinymalloc.a`), and `libc.a` itself can use any of three
    allocators: nano, TLSF or tiny.
@@ -118,7 +118,7 @@ All of this runs as part of `make check`. See
 | Float functions, directed rounding | Correctly rounded | not measured | Up to 2 ulp; up to 35 % misrounded upward |
 | Double functions | Below 0.53 ulp, at most 0.023 % misrounded | Up to about 1 ulp | Below 0.53 ulp, except `erf` at 0.89 ulp |
 | Floating-point exceptions | Raised on every core, including the soft `<fenv.h>` on Armv6-M | — | AOR's Arm soft-float raises none |
-| The `fast` build, round to nearest | Below 1 ulp (1.5 for `tan`, the hyperbolic functions and `erf`), checked by the same tests; `erfc`, `lgamma`, `tgamma` and the rest as above. Each function's measured worst case is in the `libm-fast-*.md` notes. Directed rounding is not supported. | — | — |
+| The `fast` build, round to nearest | Below 1 ulp (1.5 for `tan`, the hyperbolic functions and `erf`), checked by the same tests; `erfc`, `lgamma` and `tgamma` below 1 ulp (`lgamma` within 2^-60 absolutely near its zeros); `sqrt` and `hypot` correctly rounded; the float complex functions as above. The functions aim at 0.55 ulp, and on the Cortex-M4F and M33 the float functions at 0.9. Each function's measured worst case is in the `libm-fast-*.md` notes. Directed rounding is not supported. | — | — |
 
 The method and the per-function results are in
 [`docs/research/optimized-routines.md`](docs/research/optimized-routines.md)
@@ -175,7 +175,7 @@ above 1 took more instructions.
 | stdio (23) | 1.22 | 1.00 | 1.00 | 1.00 | 1.16 | 0.94 |
 | `strto*` (21) | 6.17 | 1.00 | 1.00 | 0.97 | 1.00 | 1.77 |
 | malloc (9) | 1.07 | 1.00 | 1.00 | 1.00 | 7.21 | 0.68 |
-| maths, throughput | 1.00 | 1.00 | 0.25 | 0.95 | 0.39 | 0.42 |
+| maths, throughput | 1.00 | 1.00 | 0.17 | 0.95 | 0.39 | 0.42 |
 
 The figures were measured on the current tree with `bench-runner compare`
 (picolibc and newlib-nano) and `bench-runner aor`; the original comparisons
@@ -198,9 +198,9 @@ introsort `qsort` saves the others' 38–49 % extra. On single-precision and
 soft-float cores AOR's float maths takes 4–7 times our instructions. We are
 slower where we chose exactness: our maths functions take 2–3 times
 picolibc's instructions because they are correctly rounded. The fast build
-gives up that exactness: picolibc took 1.75 times its maths instructions on
-this core when they were compared (22 of 132 cases were still slower, mostly
-the functions it leaves exact, such as `sqrt`, `hypot` and `lgamma`). `%f` and
+gives up that exactness: picolibc takes 2.67 times its maths instructions on
+this core, and none of the 132 cases is slower (phase 11's comparison, where
+the fast build is the reference). `%f` and
 `%g` cost more because they format exactly. newlib-nano's allocator is
 faster because it takes no lock; ours is always thread-safe.
 
@@ -283,7 +283,7 @@ Without it, `make` builds all four, each in its own tree.
 | `debug` | `-O0 -g3`, `assert` enabled | Stepping through the library in a debugger |
 | `release` | `-Os -g3`, `NDEBUG` | The size build, and the one to ship. A size budget ([`docs/size/budget.json`](docs/size/budget.json)) keeps it from growing. |
 | `speed` | `-Os -g3`, `NDEBUG`, plus faster routines | The speed build. It adds 32-byte-per-iteration `memcpy`, `memmove` and `memset`, word-at-a-time `strlen`, `strcmp`, `strchr` and `memchr` on Thumb-2, block copies on Armv6-M, fast paths in `strtol`, `printf` and `strtod`, and fixed-point float maths on the cores without an FPU. |
-| `fast` | as `speed`, plus faster maths | The speed build with a faster maths library that is less accurate (below 1 ulp to nearest; 1.5 for `tan`, the hyperbolic functions and `erf`) and rounds to nearest only. Exceptions, `errno` and the special values are as in the other builds. On the Cortex-M4F its maths take a quarter of the speed build's instructions. |
+| `fast` | as `speed`, plus faster maths | The speed build with a faster maths library that is less accurate (below 1 ulp to nearest; 1.5 for `tan`, the hyperbolic functions and `erf`) and rounds to nearest only. Exceptions, `errno` and the special values are as in the other builds. On the Cortex-M4F its maths take about a sixth of the speed build's instructions. |
 
 The three optimised builds install the same headers and archive names, so a
 program switches between them by pointing at the other install. One caution:

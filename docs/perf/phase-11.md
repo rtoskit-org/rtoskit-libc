@@ -15,6 +15,72 @@ Measured at the P11.05o library (`c2cb4a7`):
 As in phases 3 and 4 (`docs/perf/phase-3.md`, `phase-4.md`), the speed
 figures count guest instructions per operation, not cycles.
 
+## P11.07k: the comparison after Q54's work (D218–D239)
+
+Measured again at the P11.07j library (`bcf19dc`), with the same packages,
+AOR revision, qemu and compiler as P11.06a. The full tables are at the end
+(*P11.07k tables*). The fast figures come from the committed baselines
+(`docs/perf/baseline-<arch>-fast.json`).
+
+**Against picolibc and newlib-nano.** The table gives each library's
+instructions as a ratio to the fast flavour, as a geometric mean over the 132
+math cases all five builds share. P11.06a's figures are in brackets.
+
+| Core | size | speed | picolibc | newlib-nano |
+|---|---:|---:|---:|---:|
+| armv6-m, armv6s-m | 11.14 | 6.00 | 3.30 (2.52) | 3.47 (2.65) |
+| armv7-m | 17.70 | 8.68 | 5.36 (3.69) | 5.61 (3.85) |
+| armv7e-m | 6.76 | 5.84 | 2.67 (1.75) | 2.84 (1.86) |
+| armv7e-m-dp | 2.62 | 2.60 | 1.39 (1.15) | 1.22 (1.01) |
+
+**The exit check (P11.07):** on armv7e-m, and on armv8-m.main, which runs the same code, no fast maths case is slower than picolibc: 0 of 132. Q54's 22 functions are all below it. Outside the check, these cases are still slower:
+- **armv6-m and armv6s-m:** `hypotf` (5.03 times picolibc, strict, Q61) and `sqrtf` (1.16; correctly rounded, on the soft-float helpers).
+- **armv7-m:** `hypotf` (4.35), `sqrtf` (1.27) and `fmodf` (1.04).
+- **armv7e-m-dp**, 15 functions in its double path (`libc/math/fast/`):
+  - `acos` and `asin` (2.27);
+  - `hypot` (1.75, Q61);
+  - `expm1` (1.62), `atan` (1.60);
+  - `cbrt` and `cbrtf` (1.36–1.37);
+  - `tan` (1.33);
+  - `acosf` and `asinf` (1.27–1.32);
+  - `atan2` and `tanh` (1.13);
+  - `log1pf` (1.10), `log1p` (1.04) and `expm1f` (1.03).
+
+  picolibc's figures for this core are its double-FPU build. P11.07 changed the single-precision FPU and soft-double cores only.
+
+**Against AOR**, over the 17 functions AOR provides, throughput (AOR's
+instructions as a ratio to the fast flavour):
+
+| Core | AOR / fast, geometric mean | range | speed / fast |
+|---|---:|---:|---:|
+| armv6-m, armv6s-m | 4.32 | 2.73–25.2 | 3.88 |
+| armv7-m | 4.54 | 2.15–23.1 | 4.79 |
+| armv7e-m, armv8-m.main | 6.92, 6.95 | 4.13–16.0 | 7.20 |
+| armv7e-m-dp | 1.06 | 1.02–1.20 | 3.95 |
+| x86_64 (not gated) | 1.57 | 0.81–44.9 | 5.76 |
+
+Every Arm core is at or below AOR's count for every one of the 17. x86_64,
+which is not gated, has AOR ahead in `pow` (0.81), `log` (0.92), `sincosf`
+(0.93) and `log2` (0.94). The other rows below 1 in the full AOR tables are
+functions AOR does not provide: they gain from AOR's soft-float helpers, which
+the comparison links in as well (P4.03).
+
+**Accuracy** (P4.05's method, 16,384 samples per function, table at the end).
+The armv7e-m figures show D220's target:
+- `sinf` 0.626 and `cosf` 0.600 ulp (0.501 and 0.500 at P11.06a, with 165 and 180 samples misrounded against 2 and 0);
+- `expf` 0.776, `exp2f` 0.755, `powf` 0.801 and `erff` 0.720, unchanged since P11.03 and P11.04.
+
+Every other fast function, on every core, is within 0.53 ulp.
+
+**Size** (`docs/size/<arch>.md`, D239). The fast figures are re-locked lower on the five cores P11.07 changed, and armv7e-m-dp's are unchanged:
+
+| Core | `math-mix` over speed | `math-float` over speed |
+|---|---:|---:|
+| armv6-m, armv6s-m | +2.8 % | −17.9 % |
+| armv7-m | +3.1 % | −15.2 % |
+| armv7e-m, armv8-m.main | +4.1 % | +0.4 %, +0.3 % |
+| armv7e-m-dp | +29.1 % (its own line, D211) | −42.4 % |
+
 ## Summary
 
 The fast build (`BUILD_TYPE=fast`, D162) replaces the strict libm with a
@@ -1150,6 +1216,1026 @@ maximum ulp error / the results not correctly rounded.
 | `powf` | 0.500 / 0 | 0.500 / 0 | 0.503 / 17 | 0.504 / 6 | 0.500 / 0 | 0.500 / 0 | 0.801 / 501 | 0.504 / 6 | 0.500 / 0 | 0.500 / 0 | 0.502 / 5 | 0.504 / 6 |
 | `exp` | 0.500 / 0 | 0.500 / 0 | 0.501 / 3 | 0.502 / 9 | 0.500 / 0 | 0.500 / 0 | 0.501 / 3 | 0.502 / 9 | 0.500 / 0 | 0.500 / 0 | 0.523 / 30 | 0.502 / 6 |
 | `exp2` | 0.501 / 4 | 0.501 / 4 | 0.500 / 4 | 0.502 / 8 | 0.501 / 4 | 0.501 / 4 | 0.500 / 4 | 0.502 / 8 | 0.501 / 4 | 0.501 / 4 | 0.512 / 25 | 0.501 / 9 |
+| `log` | 0.500 / 0 | 0.500 / 0 | 0.500 / 5 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 5 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 |
+| `log2` | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 |
+| `erf` | 0.500 / 0 | 0.500 / 0 | 0.502 / 4 | 0.837 / 1560 | 0.500 / 0 | 0.500 / 0 | 0.502 / 4 | 0.837 / 1560 | 0.500 / 0 | 0.500 / 0 | 0.511 / 13 | 0.837 / 1541 |
+| `pow` | 0.500 / 0 | 0.500 / 0 | 0.501 / 5 | 0.502 / 6 | 0.500 / 0 | 0.500 / 0 | 0.501 / 5 | 0.502 / 6 | 0.500 / 0 | 0.500 / 0 | 0.524 / 21 | 0.502 / 6 |
+
+## P11.07k tables
+
+### Against picolibc and newlib-nano
+
+### armv6-m
+
+Instructions per operation; the geometric mean is over every case all 5 builds share, as a ratio to rtoskit's fast flavour.
+
+| Program | Case | rtoskit (size) | rtoskit (speed) | rtoskit (fast) | picolibc | newlib-nano |
+|---|---|---:|---:|---:|---:|---:|
+| string | geometric mean (603 cases) | 1.13 | 1.00 | 1.00 | 1.31 | 1.15 |
+| | `memcpy/16/0:0` | 54.0 | 40.0 | 40.0 | 119 | 65.0 |
+| | `memcpy/1024/0:0` | 1314 | 292 | 292 | 6167 | 884 |
+| | `memset/1024/0` | 1054 | 169 | 169 | 5141 | 503 |
+| | `strlen/64/0` | 115 | 115 | 115 | 279 | 146 |
+| | `strcmp/64/0:0` | 541 | 478 | 478 | 537 | 167 |
+| stdio | geometric mean (23 cases) | 1.14 | 1.00 | 1.00 | 1.67 | 1.12 |
+| | `snprintf/%d` | 1638 | 1622 | 1622 | 2151 | 1222 |
+| | `snprintf/%s` | 451 | 428 | 428 | 650 | 669 |
+| | `snprintf/%f` | 13287 | 13202 | 13202 | 15716 | 6331 |
+| | `snprintf/%g` | 14849 | 14761 | 14761 | 13075 | 6444 |
+| | `fprintf/mix` | 4134 | 4077 | 4077 | 5802 | 4335 |
+| strto | geometric mean (21 cases) | 8.09 | 1.00 | 1.00 | 1.36 | 1.68 |
+| | `strtol/int` | 1501 | 422 | 422 | 513 | 535 |
+| | `strtod/short` | 2720 | 1827 | 1827 | 2625 | 2079 |
+| | `strtod/17-digits` | 23430 | 3167 | 3167 | 3908 | 5320 |
+| malloc | geometric mean (9 cases) | 1.04 | 1.00 | 1.00 | 3.87 | 0.36 |
+| | `fixed/16` | 224 | 224 | 224 | 90.5 | 49.5 |
+| | `batch/shuffled` | 247 | 247 | 247 | 412 | 75.0 |
+| | `realloc/grow` | 225 | 225 | 225 | 36095 | 452 |
+| qsort | geometric mean (8 cases) | 3.75 | 1.00 | 1.00 | 1.39 | 1.35 |
+| | `qsort/random/1024` | 769 | 314 | 314 | 313 | 309 |
+| math | geometric mean (132 cases) | 11.14 | 6.00 | 1.00 | 3.30 | 3.47 |
+| | `sqrtf/throughput` | 461 | 461 | 461 | 397 | 718 |
+| | `expf/throughput` | 11034 | 375 | 368 | 2659 | 2768 |
+| | `logf/throughput` | 12367 | 2210 | 670 | 2912 | 2982 |
+| | `sinf/throughput` | 18350 | 2933 | 1090 | 2697 | 2706 |
+| | `powf/throughput` | 22158 | 1222 | 1216 | 9269 | 9376 |
+| | `erff/throughput` | 141024 | 2967 | 420 | 6949 | 6967 |
+| | `exp/throughput` | 10317 | 10317 | 1410 | 5013 | 5156 |
+| | `log/throughput` | 16964 | 16964 | 1454 | 5631 | 5734 |
+| | `sin/throughput` | 25801 | 2833 | 2775 | 5001 | 5003 |
+| | `pow/throughput` | 31522 | 31522 | 3938 | 17110 | 17279 |
+
+### armv6s-m
+
+Instructions per operation; the geometric mean is over every case all 5 builds share, as a ratio to rtoskit's fast flavour.
+
+| Program | Case | rtoskit (size) | rtoskit (speed) | rtoskit (fast) | picolibc | newlib-nano |
+|---|---|---:|---:|---:|---:|---:|
+| string | geometric mean (603 cases) | 1.13 | 1.00 | 1.00 | 1.31 | 1.15 |
+| | `memcpy/16/0:0` | 54.0 | 40.0 | 40.0 | 119 | 65.0 |
+| | `memcpy/1024/0:0` | 1314 | 292 | 292 | 6167 | 884 |
+| | `memset/1024/0` | 1054 | 169 | 169 | 5141 | 503 |
+| | `strlen/64/0` | 115 | 115 | 115 | 279 | 146 |
+| | `strcmp/64/0:0` | 541 | 478 | 478 | 537 | 167 |
+| stdio | geometric mean (23 cases) | 1.14 | 1.00 | 1.00 | 1.67 | 1.12 |
+| | `snprintf/%d` | 1638 | 1622 | 1622 | 2151 | 1222 |
+| | `snprintf/%s` | 451 | 428 | 428 | 650 | 669 |
+| | `snprintf/%f` | 13287 | 13202 | 13202 | 15716 | 6331 |
+| | `snprintf/%g` | 14849 | 14761 | 14761 | 13075 | 6444 |
+| | `fprintf/mix` | 4134 | 4077 | 4077 | 5802 | 4335 |
+| strto | geometric mean (21 cases) | 8.09 | 1.00 | 1.00 | 1.36 | 1.68 |
+| | `strtol/int` | 1501 | 422 | 422 | 513 | 535 |
+| | `strtod/short` | 2720 | 1827 | 1827 | 2625 | 2079 |
+| | `strtod/17-digits` | 23430 | 3167 | 3167 | 3908 | 5320 |
+| malloc | geometric mean (9 cases) | 1.04 | 1.00 | 1.00 | 3.87 | 0.36 |
+| | `fixed/16` | 224 | 224 | 224 | 90.5 | 49.5 |
+| | `batch/shuffled` | 247 | 247 | 247 | 412 | 75.0 |
+| | `realloc/grow` | 225 | 225 | 225 | 36095 | 452 |
+| qsort | geometric mean (8 cases) | 3.75 | 1.00 | 1.00 | 1.39 | 1.35 |
+| | `qsort/random/1024` | 769 | 314 | 314 | 313 | 309 |
+| math | geometric mean (132 cases) | 11.14 | 6.00 | 1.00 | 3.30 | 3.47 |
+| | `sqrtf/throughput` | 461 | 461 | 461 | 397 | 718 |
+| | `expf/throughput` | 11034 | 375 | 368 | 2659 | 2768 |
+| | `logf/throughput` | 12367 | 2210 | 670 | 2912 | 2982 |
+| | `sinf/throughput` | 18350 | 2933 | 1090 | 2697 | 2706 |
+| | `powf/throughput` | 22158 | 1222 | 1216 | 9269 | 9376 |
+| | `erff/throughput` | 141024 | 2967 | 420 | 6949 | 6967 |
+| | `exp/throughput` | 10317 | 10317 | 1410 | 5013 | 5156 |
+| | `log/throughput` | 16964 | 16964 | 1454 | 5631 | 5734 |
+| | `sin/throughput` | 25801 | 2833 | 2775 | 5001 | 5003 |
+| | `pow/throughput` | 31522 | 31522 | 3938 | 17110 | 17279 |
+
+### armv7-m
+
+Instructions per operation; the geometric mean is over every case all 5 builds share, as a ratio to rtoskit's fast flavour.
+
+| Program | Case | rtoskit (size) | rtoskit (speed) | rtoskit (fast) | picolibc | newlib-nano |
+|---|---|---:|---:|---:|---:|---:|
+| string | geometric mean (603 cases) | 1.47 | 1.00 | 1.00 | 1.53 | 1.22 |
+| | `memcpy/16/0:0` | 53.0 | 42.0 | 42.0 | 87.0 | 43.0 |
+| | `memcpy/1024/0:0` | 1313 | 174 | 174 | 4119 | 607 |
+| | `memset/1024/0` | 1054 | 177 | 177 | 4117 | 366 |
+| | `strlen/64/0` | 115 | 107 | 107 | 215 | 154 |
+| | `strcmp/64/0:0` | 540 | 240 | 240 | 410 | 176 |
+| stdio | geometric mean (23 cases) | 1.22 | 1.00 | 1.00 | 1.16 | 0.96 |
+| | `snprintf/%d` | 475 | 455 | 455 | 893 | 528 |
+| | `snprintf/%s` | 424 | 396 | 396 | 543 | 543 |
+| | `snprintf/%f` | 14751 | 14669 | 14669 | 3990 | 3301 |
+| | `snprintf/%g` | 15561 | 15476 | 15476 | 3640 | 3416 |
+| | `fprintf/mix` | 2326 | 2151 | 2151 | 3506 | 2943 |
+| strto | geometric mean (21 cases) | 6.05 | 1.00 | 1.00 | 0.97 | 1.73 |
+| | `strtol/int` | 1213 | 305 | 305 | 239 | 205 |
+| | `strtod/short` | 1455 | 630 | 630 | 817 | 1042 |
+| | `strtod/17-digits` | 5248 | 1241 | 1241 | 1237 | 3139 |
+| malloc | geometric mean (9 cases) | 1.07 | 1.00 | 1.00 | 7.24 | 0.68 |
+| | `fixed/16` | 92.0 | 92.0 | 92.0 | 76.0 | 40.5 |
+| | `batch/shuffled` | 111 | 111 | 111 | 335 | 63.7 |
+| | `realloc/grow` | 99.1 | 99.1 | 99.1 | 28882 | 325 |
+| qsort | geometric mean (8 cases) | 3.67 | 1.00 | 1.00 | 1.38 | 1.48 |
+| | `qsort/random/1024` | 640 | 274 | 274 | 278 | 277 |
+| math | geometric mean (132 cases) | 17.70 | 8.68 | 1.00 | 5.36 | 5.61 |
+| | `sqrtf/throughput` | 468 | 468 | 468 | 369 | 545 |
+| | `expf/throughput` | 5431 | 125 | 119 | 1247 | 1337 |
+| | `logf/throughput` | 6185 | 1026 | 253 | 1322 | 1376 |
+| | `sinf/throughput` | 9154 | 842 | 379 | 1279 | 1276 |
+| | `powf/throughput` | 11060 | 374 | 368 | 4514 | 4623 |
+| | `erff/throughput` | 66112 | 1122 | 184 | 3151 | 3145 |
+| | `exp/throughput` | 3874 | 3874 | 262 | 2090 | 2199 |
+| | `log/throughput` | 6405 | 6405 | 297 | 2212 | 2290 |
+| | `sin/throughput` | 9543 | 770 | 755 | 1766 | 1763 |
+| | `pow/throughput` | 11833 | 11833 | 817 | 7040 | 7208 |
+
+### armv7e-m
+
+Instructions per operation; the geometric mean is over every case all 5 builds share, as a ratio to rtoskit's fast flavour.
+
+| Program | Case | rtoskit (size) | rtoskit (speed) | rtoskit (fast) | picolibc | newlib-nano |
+|---|---|---:|---:|---:|---:|---:|
+| string | geometric mean (603 cases) | 1.51 | 1.00 | 1.00 | 1.48 | 1.18 |
+| | `memcpy/16/0:0` | 53.0 | 42.0 | 42.0 | 87.0 | 41.0 |
+| | `memcpy/1024/0:0` | 1313 | 174 | 174 | 4119 | 575 |
+| | `memset/1024/0` | 1054 | 177 | 177 | 4117 | 366 |
+| | `strlen/64/0` | 115 | 107 | 107 | 215 | 104 |
+| | `strcmp/64/0:0` | 540 | 240 | 240 | 410 | 127 |
+| stdio | geometric mean (23 cases) | 1.22 | 1.00 | 1.00 | 1.16 | 0.94 |
+| | `snprintf/%d` | 475 | 455 | 455 | 893 | 506 |
+| | `snprintf/%s` | 423 | 395 | 395 | 543 | 534 |
+| | `snprintf/%f` | 14734 | 14652 | 14652 | 3993 | 3266 |
+| | `snprintf/%g` | 15538 | 15453 | 15453 | 3646 | 3382 |
+| | `fprintf/mix` | 2326 | 2151 | 2151 | 3506 | 2938 |
+| strto | geometric mean (21 cases) | 6.17 | 1.00 | 1.00 | 1.00 | 1.77 |
+| | `strtol/int` | 1213 | 305 | 305 | 239 | 204 |
+| | `strtod/short` | 1384 | 559 | 559 | 821 | 1044 |
+| | `strtod/17-digits` | 5241 | 1242 | 1242 | 1241 | 3130 |
+| malloc | geometric mean (9 cases) | 1.07 | 1.00 | 1.00 | 7.21 | 0.68 |
+| | `fixed/16` | 92.5 | 92.5 | 92.5 | 76.0 | 40.5 |
+| | `batch/shuffled` | 111 | 111 | 111 | 335 | 63.7 |
+| | `realloc/grow` | 99.2 | 99.2 | 99.2 | 28882 | 315 |
+| qsort | geometric mean (8 cases) | 3.67 | 1.00 | 1.00 | 1.38 | 1.49 |
+| | `qsort/random/1024` | 640 | 274 | 274 | 278 | 277 |
+| math | geometric mean (132 cases) | 6.76 | 5.84 | 1.00 | 2.67 | 2.84 |
+| | `sqrtf/throughput` | 10.3 | 10.3 | 10.3 | 10.3 | 23.3 |
+| | `expf/throughput` | 160 | 160 | 58.3 | 75.9 | 94.9 |
+| | `logf/throughput` | 165 | 165 | 74.3 | 84.5 | 85.6 |
+| | `sinf/throughput` | 575 | 575 | 82.3 | 101 | 103 |
+| | `powf/throughput` | 367 | 367 | 215 | 234 | 269 |
+| | `erff/throughput` | 1383 | 1383 | 123 | 141 | 141 |
+| | `exp/throughput` | 3813 | 3813 | 261 | 2085 | 2200 |
+| | `log/throughput` | 6184 | 6184 | 295 | 2207 | 2285 |
+| | `sin/throughput` | 9400 | 765 | 751 | 1767 | 1763 |
+| | `pow/throughput` | 11531 | 11531 | 817 | 7037 | 7205 |
+
+### armv7e-m-dp
+
+Instructions per operation; the geometric mean is over every case all 5 builds share, as a ratio to rtoskit's fast flavour.
+
+| Program | Case | rtoskit (size) | rtoskit (speed) | rtoskit (fast) | picolibc | newlib-nano |
+|---|---|---:|---:|---:|---:|---:|
+| string | geometric mean (603 cases) | 1.51 | 1.00 | 1.00 | 1.48 | 1.18 |
+| | `memcpy/16/0:0` | 53.0 | 42.0 | 42.0 | 87.0 | 41.0 |
+| | `memcpy/1024/0:0` | 1313 | 174 | 174 | 4119 | 575 |
+| | `memset/1024/0` | 1054 | 177 | 177 | 4117 | 366 |
+| | `strlen/64/0` | 115 | 107 | 107 | 215 | 104 |
+| | `strcmp/64/0:0` | 540 | 240 | 240 | 410 | 127 |
+| stdio | geometric mean (23 cases) | 1.22 | 1.00 | 1.00 | 1.16 | 0.74 |
+| | `snprintf/%d` | 475 | 455 | 455 | 893 | 506 |
+| | `snprintf/%s` | 423 | 395 | 395 | 543 | 534 |
+| | `snprintf/%f` | 14737 | 14655 | 14655 | 3993 | 1057 |
+| | `snprintf/%g` | 15541 | 15456 | 15456 | 3646 | 1189 |
+| | `fprintf/mix` | 2326 | 2151 | 2151 | 3506 | 2938 |
+| strto | geometric mean (21 cases) | 6.55 | 1.00 | 1.00 | 0.96 | 1.24 |
+| | `strtol/int` | 1213 | 305 | 305 | 239 | 204 |
+| | `strtod/short` | 1151 | 326 | 326 | 618 | 233 |
+| | `strtod/17-digits` | 5179 | 1180 | 1180 | 1038 | 2175 |
+| malloc | geometric mean (9 cases) | 1.07 | 1.00 | 1.00 | 7.21 | 0.68 |
+| | `fixed/16` | 92.5 | 92.5 | 92.5 | 76.0 | 40.5 |
+| | `batch/shuffled` | 111 | 111 | 111 | 335 | 63.7 |
+| | `realloc/grow` | 99.2 | 99.2 | 99.2 | 28882 | 315 |
+| qsort | geometric mean (8 cases) | 3.67 | 1.00 | 1.00 | 1.38 | 1.49 |
+| | `qsort/random/1024` | 640 | 274 | 274 | 278 | 277 |
+| math | geometric mean (132 cases) | 2.62 | 2.60 | 1.00 | 1.39 | 1.22 |
+| | `sqrtf/throughput` | 10.3 | 10.3 | 10.3 | 10.3 | 23.3 |
+| | `expf/throughput` | 172 | 172 | 42.3 | 75.9 | 43.3 |
+| | `logf/throughput` | 162 | 162 | 45.3 | 80.5 | 44.3 |
+| | `sinf/throughput` | 220 | 210 | 42.8 | 101 | 49.5 |
+| | `powf/throughput` | 398 | 398 | 86.4 | 232 | 89.4 |
+| | `erff/throughput` | 421 | 421 | 65.4 | 141 | 121 |
+| | `exp/throughput` | 169 | 169 | 52.6 | 69.8 | 56.6 |
+| | `log/throughput` | 150 | 150 | 65.6 | 79.8 | 64.6 |
+| | `sin/throughput` | 199 | 188 | 96.1 | 102 | 106 |
+| | `pow/throughput` | 393 | 393 | 133 | 227 | 134 |
+
+### armv8-m.main
+
+Instructions per operation; the geometric mean is over every case all 5 builds share, as a ratio to rtoskit's fast flavour.
+
+| Program | Case | rtoskit (size) | rtoskit (speed) | rtoskit (fast) | picolibc | newlib-nano |
+|---|---|---:|---:|---:|---:|---:|
+| string | geometric mean (603 cases) | 1.51 | 1.00 | 1.00 | 1.57 | 1.25 |
+| | `memcpy/16/0:0` | 53.0 | 42.0 | 42.0 | 87.0 | 43.0 |
+| | `memcpy/1024/0:0` | 1313 | 174 | 174 | 4119 | 607 |
+| | `memset/1024/0` | 1054 | 177 | 177 | 4117 | 366 |
+| | `strlen/64/0` | 115 | 107 | 107 | 215 | 154 |
+| | `strcmp/64/0:0` | 540 | 240 | 240 | 410 | 176 |
+| stdio | geometric mean (23 cases) | 1.21 | 1.00 | 1.00 | 1.15 | 0.95 |
+| | `snprintf/%d` | 475 | 455 | 455 | 893 | 520 |
+| | `snprintf/%s` | 423 | 395 | 395 | 543 | 535 |
+| | `snprintf/%f` | 14733 | 14651 | 14651 | 3994 | 3276 |
+| | `snprintf/%g` | 15537 | 15452 | 15452 | 3643 | 3393 |
+| | `fprintf/mix` | 2323 | 2148 | 2148 | 3506 | 2946 |
+| strto | geometric mean (21 cases) | 6.18 | 1.00 | 1.00 | 1.00 | 1.78 |
+| | `strtol/int` | 1213 | 305 | 305 | 239 | 211 |
+| | `strtod/short` | 1384 | 559 | 559 | 821 | 1040 |
+| | `strtod/17-digits` | 5261 | 1241 | 1241 | 1241 | 3134 |
+| malloc | geometric mean (9 cases) | 1.07 | 1.00 | 1.00 | 7.35 | 0.68 |
+| | `fixed/16` | 90.5 | 90.5 | 90.5 | 76.0 | 40.5 |
+| | `batch/shuffled` | 109 | 109 | 109 | 335 | 60.7 |
+| | `realloc/grow` | 97.4 | 97.4 | 97.4 | 28882 | 324 |
+| qsort | geometric mean (8 cases) | 3.67 | 1.00 | 1.00 | 1.38 | 1.49 |
+| | `qsort/random/1024` | 640 | 274 | 274 | 278 | 277 |
+| math | geometric mean (132 cases) | 6.76 | 5.84 | 1.00 | 2.67 | 2.83 |
+| | `sqrtf/throughput` | 10.3 | 10.3 | 10.3 | 10.3 | 23.3 |
+| | `expf/throughput` | 160 | 160 | 58.3 | 75.9 | 93.9 |
+| | `logf/throughput` | 165 | 165 | 74.3 | 83.5 | 87.6 |
+| | `sinf/throughput` | 574 | 574 | 82.3 | 101 | 102 |
+| | `powf/throughput` | 353 | 353 | 203 | 232 | 273 |
+| | `erff/throughput` | 1383 | 1383 | 123 | 141 | 139 |
+| | `exp/throughput` | 3813 | 3813 | 261 | 2085 | 2201 |
+| | `log/throughput` | 6184 | 6184 | 295 | 2207 | 2285 |
+| | `sin/throughput` | 9400 | 754 | 740 | 1767 | 1763 |
+| | `pow/throughput` | 11532 | 11532 | 817 | 7037 | 7207 |
+
+### Against Arm Optimized Routines
+
+### x86_64
+
+Instructions per operation: rtoskit-libc's size, speed and fast flavours, and the fast flavour with AOR's routines linked in. The ratio is AOR against the fast flavour, as a geometric mean over the cases whose count changed.
+
+| Program | Cases changed | AOR / fast (geometric mean) | AOR symbols linked |
+|---|---:|---:|---|
+| string | 0 of 603 | — | — |
+| stdio | 0 of 23 | — | — |
+| strto | 0 of 21 | — | — |
+| malloc | 0 of 9 | — | — |
+| qsort | 0 of 8 | — | — |
+| math | 50 of 160 | 1.36 | `cosf`, `erf`, `erff`, `exp`, `exp10`, `exp2`, `exp2f`, `expf`, `log`, `log10f`, `log2`, `log2f`, `logf`, `pow`, `powf`, `sincosf`, `sinf` |
+| softfloat | 0 of 20 | — | — |
+
+#### math
+
+Throughput per call, for the functions whose count changed (AOR's own, or ours through AOR's soft-float).
+
+| Function | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `expf` | 237 | 237 | 38.7 | 43.7 | 1.13 |
+| `exp2f` | 302 | 302 | 37.7 | 42.7 | 1.13 |
+| `logf` | 267 | 267 | 48.7 | 49.7 | 1.02 |
+| `log2f` | 337 | 337 | 48.7 | 49.7 | 1.02 |
+| `log10f` | 303 | 303 | 49.7 | 52.7 | 1.06 |
+| `powf` | 633 | 633 | 81.6 | 88.6 | 1.09 |
+| `sinf` | 432 | 392 | 50.2 | 52.6 | 1.05 |
+| `cosf` | 423 | 382 | 51.1 | 52.7 | 1.03 |
+| `sincosf` | 683 | 602 | 88.4 | 82.6 | 0.93 |
+| `erff` | 511 | 511 | 63.7 | 2171 | 34.09 |
+| `exp` | 230 | 230 | 50.7 | 55.7 | 1.10 |
+| `exp2` | 287 | 287 | 46.7 | 51.7 | 1.11 |
+| `exp10` | 277 | 277 | 51.7 | 56.7 | 1.10 |
+| `expm1` | 242 | 242 | 134 | 135 | 1.01 |
+| `log` | 252 | 252 | 75.7 | 69.7 | 0.92 |
+| `log2` | 330 | 330 | 86.7 | 81.7 | 0.94 |
+| `log10` | 288 | 288 | 101 | 102 | 1.01 |
+| `log1p` | 314 | 314 | 91.6 | 92.6 | 1.01 |
+| `log2p1` | 352 | 352 | 354 | 352 | 0.99 |
+| `log10p1` | 352 | 352 | 354 | 352 | 0.99 |
+| `pow` | 625 | 625 | 204 | 165 | 0.81 |
+| `asinh` | 549 | 549 | 183 | 184 | 1.01 |
+| `acosh` | 479 | 479 | 177 | 178 | 1.01 |
+| `atanh` | 383 | 383 | 138 | 140 | 1.01 |
+| `erf` | 504 | 504 | 98.0 | 4400 | 44.90 |
+
+#### softfloat
+
+Per operation.
+
+| Operation | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `fadd` | 7.6 | 7.6 | 7.6 | 7.6 | 1.00 |
+| `fsub` | 7.6 | 7.6 | 7.6 | 7.6 | 1.00 |
+| `fmul` | 7.6 | 7.6 | 7.6 | 7.6 | 1.00 |
+| `fdiv` | 7.6 | 7.6 | 7.6 | 7.6 | 1.00 |
+| `fcmp` | 8.6 | 8.6 | 8.6 | 8.6 | 1.00 |
+| `dadd` | 10.6 | 10.6 | 10.6 | 10.6 | 1.00 |
+| `dsub` | 10.6 | 10.6 | 10.6 | 10.6 | 1.00 |
+| `dmul` | 10.6 | 10.6 | 10.6 | 10.6 | 1.00 |
+| `ddiv` | 10.6 | 10.6 | 10.6 | 10.6 | 1.00 |
+| `dcmp` | 8.6 | 8.6 | 8.6 | 8.6 | 1.00 |
+| `f2d` | 9.6 | 9.6 | 9.6 | 9.6 | 1.00 |
+| `d2f` | 6.6 | 6.6 | 6.6 | 6.6 | 1.00 |
+| `f2i` | 9.6 | 9.6 | 9.6 | 9.6 | 1.00 |
+| `i2f` | 6.6 | 6.6 | 6.6 | 6.6 | 1.00 |
+| `d2i` | 9.6 | 9.6 | 9.6 | 9.6 | 1.00 |
+| `i2d` | 9.6 | 9.6 | 9.6 | 9.6 | 1.00 |
+| `f2l` | 8.6 | 8.6 | 8.6 | 8.6 | 1.00 |
+| `l2f` | 6.6 | 6.6 | 6.6 | 6.6 | 1.00 |
+| `d2l` | 8.6 | 8.6 | 8.6 | 8.6 | 1.00 |
+| `l2d` | 9.6 | 9.6 | 9.6 | 9.6 | 1.00 |
+
+### armv6-m
+
+Instructions per operation: rtoskit-libc's size, speed and fast flavours, and the fast flavour with AOR's routines linked in. The ratio is AOR against the fast flavour, as a geometric mean over the cases whose count changed.
+
+| Program | Cases changed | AOR / fast (geometric mean) | AOR symbols linked |
+|---|---:|---:|---|
+| string | 60 of 603 | 0.96 | `strcmp` |
+| stdio | 0 of 23 | — | `__aeabi_fmul`, `strcmp` |
+| strto | 3 of 21 | 0.97 | `__aeabi_fmul`, `strcmp` |
+| malloc | 0 of 9 | — | `strcmp` |
+| qsort | 1 of 8 | 1.06 | `strcmp` |
+| math | 112 of 160 | 1.48 | `__aeabi_dcmpeq`, `__aeabi_dcmpge`, `__aeabi_dcmpgt`, `__aeabi_dcmple`, `__aeabi_dcmplt`, `__aeabi_dcmpun`, `__aeabi_fadd`, `__aeabi_fcmpeq`, `__aeabi_fcmpgt`, `__aeabi_fcmple`, `__aeabi_fcmplt`, `__aeabi_fcmpun`, `__aeabi_fmul`, `__aeabi_frsub`, `__aeabi_fsub`, `cosf`, `erf`, `erff`, `exp`, `exp10`, `exp2`, `exp2f`, `expf`, `log`, `log10f`, `log2`, `log2f`, `logf`, `pow`, `powf`, `sincosf`, `sinf`, `strcmp` |
+| softfloat | 5 of 20 | 0.51 | `__aeabi_dcmplt`, `__aeabi_fadd`, `__aeabi_fcmplt`, `__aeabi_fmul`, `__aeabi_frsub`, `__aeabi_fsub`, `strcmp` |
+
+#### string
+
+Aligned case per size: size flavour / speed flavour / fast flavour / AOR.
+
+| Function | 0 | 1 | 4 | 16 | 64 | 256 | 1024 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `strcmp` | 29 / 30 / 30 / 39 | 37 / 37 / 37 / 45 | 61 / 58 / 58 / 47 | 157 / 142 / 142 / 71 | 541 / 478 / 478 / 167 | 2077 / 1822 / 1822 / 551 | 8221 / 7198 / 7198 / 2087 |
+
+#### math
+
+Throughput per call, for the functions whose count changed (AOR's own, or ours through AOR's soft-float).
+
+| Function | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `sqrtf` | 461 | 461 | 461 | 429 | 0.93 |
+| `cbrtf` | 8590 | 8590 | 630 | 596 | 0.95 |
+| `hypotf` | 6293 | 6293 | 6293 | 3747 | 0.60 |
+| `expf` | 11034 | 375 | 368 | 2452 | 6.66 |
+| `exp2f` | 9269 | 316 | 310 | 2212 | 7.13 |
+| `exp10f` | 11103 | 11103 | 367 | 337 | 0.92 |
+| `expm1f` | 12310 | 12310 | 461 | 427 | 0.93 |
+| `exp2m1f` | 10068 | 10068 | 432 | 398 | 0.92 |
+| `exp10m1f` | 12406 | 12406 | 466 | 436 | 0.94 |
+| `logf` | 12367 | 2210 | 670 | 2426 | 3.62 |
+| `log2f` | 10547 | 583 | 577 | 2447 | 4.24 |
+| `log10f` | 12365 | 678 | 670 | 2686 | 4.01 |
+| `log1pf` | 12789 | 12789 | 699 | 670 | 0.96 |
+| `log2p1f` | 11003 | 11003 | 608 | 582 | 0.96 |
+| `log10p1f` | 13202 | 13202 | 699 | 671 | 0.96 |
+| `powf` | 22158 | 1222 | 1216 | 5462 | 4.49 |
+| `sinf` | 18350 | 2933 | 1090 | 3059 | 2.81 |
+| `cosf` | 18281 | 2887 | 1100 | 3077 | 2.80 |
+| `sincosf` | 33645 | 4418 | 1696 | 5156 | 3.04 |
+| `tanf` | 36223 | 5065 | 2178 | 2144 | 0.98 |
+| `sinpif` | 17579 | 17579 | 920 | 848 | 0.92 |
+| `cospif` | 17172 | 17172 | 900 | 834 | 0.93 |
+| `tanpif` | 35613 | 35613 | 2015 | 1936 | 0.96 |
+| `asinf` | 22944 | 22944 | 730 | 694 | 0.95 |
+| `acosf` | 23761 | 23761 | 749 | 718 | 0.96 |
+| `atanf` | 17683 | 17683 | 751 | 716 | 0.95 |
+| `atan2f` | 18355 | 18355 | 812 | 777 | 0.96 |
+| `sinhf` | 15310 | 15310 | 627 | 590 | 0.94 |
+| `coshf` | 15181 | 15181 | 622 | 589 | 0.95 |
+| `tanhf` | 15977 | 15977 | 742 | 708 | 0.95 |
+| `asinhf` | 19353 | 19353 | 1152 | 1115 | 0.97 |
+| `acoshf` | 19926 | 19926 | 1182 | 1150 | 0.97 |
+| `atanhf` | 15868 | 15868 | 877 | 842 | 0.96 |
+| `erff` | 141024 | 2967 | 420 | 10570 | 25.17 |
+| `erfcf` | 119604 | 2874 | 2874 | 2770 | 0.96 |
+| `lgammaf` | 36729 | 36729 | 3360 | 3332 | 0.99 |
+| `tgammaf` | 55326 | 55326 | 4080 | 4007 | 0.98 |
+| `fmodf` | 273 | 273 | 273 | 230 | 0.84 |
+| `floorf` | 105 | 105 | 105 | 70.7 | 0.67 |
+| `roundf` | 103 | 103 | 103 | 68.7 | 0.66 |
+| `exp` | 10317 | 10317 | 1410 | 3923 | 2.78 |
+| `exp2` | 14133 | 14133 | 1210 | 3304 | 2.73 |
+| `exp10` | 14233 | 14233 | 1412 | 3916 | 2.77 |
+| `exp2m1` | 14606 | 14606 | 14606 | 14387 | 0.99 |
+| `exp10m1` | 14813 | 14813 | 14813 | 14602 | 0.99 |
+| `log` | 16964 | 16964 | 1454 | 4303 | 2.96 |
+| `log2` | 21420 | 21420 | 1535 | 5180 | 3.37 |
+| `log2p1` | 22115 | 22115 | 22150 | 21925 | 0.99 |
+| `log10p1` | 22129 | 22129 | 22163 | 21938 | 0.99 |
+| `pow` | 31522 | 31522 | 3938 | 12146 | 3.08 |
+| `sinpi` | 24995 | 21815 | 21815 | 21608 | 0.99 |
+| `cospi` | 24957 | 21778 | 21778 | 21595 | 0.99 |
+| `tanpi` | 50490 | 44102 | 44102 | 43896 | 1.00 |
+| `erf` | 40655 | 40655 | 2049 | 25459 | 12.43 |
+| `tgamma` | 64747 | 64700 | 4051 | 4007 | 0.99 |
+| `fmod` | 446 | 446 | 446 | 432 | 0.97 |
+
+#### softfloat
+
+Per operation.
+
+| Operation | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `fadd` | 90.3 | 90.3 | 90.3 | 50.6 | 0.56 |
+| `fsub` | 84.8 | 84.8 | 84.8 | 51.6 | 0.61 |
+| `fmul` | 109 | 109 | 109 | 56.3 | 0.52 |
+| `fdiv` | 292 | 292 | 292 | 292 | 1.00 |
+| `fcmp` | 44.4 | 44.4 | 44.4 | 24.2 | 0.54 |
+| `dadd` | 107 | 107 | 107 | 107 | 1.00 |
+| `dsub` | 116 | 116 | 116 | 116 | 1.00 |
+| `dmul` | 264 | 264 | 264 | 264 | 1.00 |
+| `ddiv` | 844 | 844 | 844 | 844 | 1.00 |
+| `dcmp` | 66.9 | 66.9 | 66.9 | 24.2 | 0.36 |
+| `f2d` | 32.4 | 32.4 | 32.4 | 32.4 | 1.00 |
+| `d2f` | 51.5 | 51.5 | 51.5 | 51.5 | 1.00 |
+| `f2i` | 24.9 | 24.9 | 24.9 | 24.9 | 1.00 |
+| `i2f` | 76.6 | 76.6 | 76.6 | 76.6 | 1.00 |
+| `d2i` | 38.4 | 38.4 | 38.4 | 38.4 | 1.00 |
+| `i2d` | 61.6 | 61.6 | 61.6 | 61.6 | 1.00 |
+| `f2l` | 45.4 | 45.4 | 45.4 | 45.4 | 1.00 |
+| `l2f` | 525 | 525 | 525 | 525 | 1.00 |
+| `d2l` | 62.5 | 62.5 | 62.5 | 62.5 | 1.00 |
+| `l2d` | 473 | 473 | 473 | 473 | 1.00 |
+
+### armv6s-m
+
+Instructions per operation: rtoskit-libc's size, speed and fast flavours, and the fast flavour with AOR's routines linked in. The ratio is AOR against the fast flavour, as a geometric mean over the cases whose count changed.
+
+| Program | Cases changed | AOR / fast (geometric mean) | AOR symbols linked |
+|---|---:|---:|---|
+| string | 60 of 603 | 0.96 | `strcmp` |
+| stdio | 0 of 23 | — | `__aeabi_fmul`, `strcmp` |
+| strto | 3 of 21 | 0.97 | `__aeabi_fmul`, `strcmp` |
+| malloc | 0 of 9 | — | `strcmp` |
+| qsort | 1 of 8 | 1.06 | `strcmp` |
+| math | 112 of 160 | 1.48 | `__aeabi_dcmpeq`, `__aeabi_dcmpge`, `__aeabi_dcmpgt`, `__aeabi_dcmple`, `__aeabi_dcmplt`, `__aeabi_dcmpun`, `__aeabi_fadd`, `__aeabi_fcmpeq`, `__aeabi_fcmpgt`, `__aeabi_fcmple`, `__aeabi_fcmplt`, `__aeabi_fcmpun`, `__aeabi_fmul`, `__aeabi_frsub`, `__aeabi_fsub`, `cosf`, `erf`, `erff`, `exp`, `exp10`, `exp2`, `exp2f`, `expf`, `log`, `log10f`, `log2`, `log2f`, `logf`, `pow`, `powf`, `sincosf`, `sinf`, `strcmp` |
+| softfloat | 5 of 20 | 0.51 | `__aeabi_dcmplt`, `__aeabi_fadd`, `__aeabi_fcmplt`, `__aeabi_fmul`, `__aeabi_frsub`, `__aeabi_fsub`, `strcmp` |
+
+#### string
+
+Aligned case per size: size flavour / speed flavour / fast flavour / AOR.
+
+| Function | 0 | 1 | 4 | 16 | 64 | 256 | 1024 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `strcmp` | 29 / 30 / 30 / 39 | 37 / 37 / 37 / 45 | 61 / 58 / 58 / 47 | 157 / 142 / 142 / 71 | 541 / 478 / 478 / 167 | 2077 / 1822 / 1822 / 551 | 8221 / 7198 / 7198 / 2087 |
+
+#### math
+
+Throughput per call, for the functions whose count changed (AOR's own, or ours through AOR's soft-float).
+
+| Function | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `sqrtf` | 461 | 461 | 461 | 429 | 0.93 |
+| `cbrtf` | 8590 | 8590 | 630 | 596 | 0.95 |
+| `hypotf` | 6293 | 6293 | 6293 | 3747 | 0.60 |
+| `expf` | 11034 | 375 | 368 | 2452 | 6.66 |
+| `exp2f` | 9269 | 316 | 310 | 2212 | 7.13 |
+| `exp10f` | 11103 | 11103 | 367 | 337 | 0.92 |
+| `expm1f` | 12310 | 12310 | 461 | 427 | 0.93 |
+| `exp2m1f` | 10068 | 10068 | 432 | 398 | 0.92 |
+| `exp10m1f` | 12406 | 12406 | 466 | 436 | 0.94 |
+| `logf` | 12367 | 2210 | 670 | 2426 | 3.62 |
+| `log2f` | 10547 | 583 | 577 | 2447 | 4.24 |
+| `log10f` | 12365 | 678 | 670 | 2686 | 4.01 |
+| `log1pf` | 12789 | 12789 | 699 | 670 | 0.96 |
+| `log2p1f` | 11003 | 11003 | 608 | 582 | 0.96 |
+| `log10p1f` | 13202 | 13202 | 699 | 671 | 0.96 |
+| `powf` | 22158 | 1222 | 1216 | 5462 | 4.49 |
+| `sinf` | 18350 | 2933 | 1090 | 3059 | 2.81 |
+| `cosf` | 18281 | 2887 | 1100 | 3077 | 2.80 |
+| `sincosf` | 33645 | 4418 | 1696 | 5156 | 3.04 |
+| `tanf` | 36223 | 5065 | 2178 | 2144 | 0.98 |
+| `sinpif` | 17579 | 17579 | 920 | 848 | 0.92 |
+| `cospif` | 17172 | 17172 | 900 | 834 | 0.93 |
+| `tanpif` | 35613 | 35613 | 2015 | 1936 | 0.96 |
+| `asinf` | 22944 | 22944 | 730 | 694 | 0.95 |
+| `acosf` | 23761 | 23761 | 749 | 718 | 0.96 |
+| `atanf` | 17683 | 17683 | 751 | 716 | 0.95 |
+| `atan2f` | 18355 | 18355 | 812 | 777 | 0.96 |
+| `sinhf` | 15310 | 15310 | 627 | 590 | 0.94 |
+| `coshf` | 15181 | 15181 | 622 | 589 | 0.95 |
+| `tanhf` | 15977 | 15977 | 742 | 708 | 0.95 |
+| `asinhf` | 19353 | 19353 | 1152 | 1115 | 0.97 |
+| `acoshf` | 19926 | 19926 | 1182 | 1150 | 0.97 |
+| `atanhf` | 15868 | 15868 | 877 | 842 | 0.96 |
+| `erff` | 141024 | 2967 | 420 | 10570 | 25.17 |
+| `erfcf` | 119604 | 2874 | 2874 | 2770 | 0.96 |
+| `lgammaf` | 36729 | 36729 | 3360 | 3332 | 0.99 |
+| `tgammaf` | 55326 | 55326 | 4080 | 4007 | 0.98 |
+| `fmodf` | 273 | 273 | 273 | 230 | 0.84 |
+| `floorf` | 105 | 105 | 105 | 70.7 | 0.67 |
+| `roundf` | 103 | 103 | 103 | 68.7 | 0.66 |
+| `exp` | 10317 | 10317 | 1410 | 3923 | 2.78 |
+| `exp2` | 14133 | 14133 | 1210 | 3304 | 2.73 |
+| `exp10` | 14233 | 14233 | 1412 | 3916 | 2.77 |
+| `exp2m1` | 14606 | 14606 | 14606 | 14387 | 0.99 |
+| `exp10m1` | 14813 | 14813 | 14813 | 14602 | 0.99 |
+| `log` | 16964 | 16964 | 1454 | 4303 | 2.96 |
+| `log2` | 21420 | 21420 | 1535 | 5180 | 3.37 |
+| `log2p1` | 22115 | 22115 | 22150 | 21925 | 0.99 |
+| `log10p1` | 22129 | 22129 | 22163 | 21938 | 0.99 |
+| `pow` | 31522 | 31522 | 3938 | 12146 | 3.08 |
+| `sinpi` | 24995 | 21815 | 21815 | 21608 | 0.99 |
+| `cospi` | 24957 | 21778 | 21778 | 21595 | 0.99 |
+| `tanpi` | 50490 | 44102 | 44102 | 43896 | 1.00 |
+| `erf` | 40655 | 40655 | 2049 | 25459 | 12.43 |
+| `tgamma` | 64747 | 64700 | 4051 | 4007 | 0.99 |
+| `fmod` | 446 | 446 | 446 | 432 | 0.97 |
+
+#### softfloat
+
+Per operation.
+
+| Operation | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `fadd` | 90.3 | 90.3 | 90.3 | 50.6 | 0.56 |
+| `fsub` | 84.8 | 84.8 | 84.8 | 51.6 | 0.61 |
+| `fmul` | 109 | 109 | 109 | 56.3 | 0.52 |
+| `fdiv` | 292 | 292 | 292 | 292 | 1.00 |
+| `fcmp` | 44.4 | 44.4 | 44.4 | 24.2 | 0.54 |
+| `dadd` | 107 | 107 | 107 | 107 | 1.00 |
+| `dsub` | 116 | 116 | 116 | 116 | 1.00 |
+| `dmul` | 264 | 264 | 264 | 264 | 1.00 |
+| `ddiv` | 844 | 844 | 844 | 844 | 1.00 |
+| `dcmp` | 66.9 | 66.9 | 66.9 | 24.2 | 0.36 |
+| `f2d` | 32.4 | 32.4 | 32.4 | 32.4 | 1.00 |
+| `d2f` | 51.5 | 51.5 | 51.5 | 51.5 | 1.00 |
+| `f2i` | 24.9 | 24.9 | 24.9 | 24.9 | 1.00 |
+| `i2f` | 76.6 | 76.6 | 76.6 | 76.6 | 1.00 |
+| `d2i` | 38.4 | 38.4 | 38.4 | 38.4 | 1.00 |
+| `i2d` | 61.6 | 61.6 | 61.6 | 61.6 | 1.00 |
+| `f2l` | 45.4 | 45.4 | 45.4 | 45.4 | 1.00 |
+| `l2f` | 525 | 525 | 525 | 525 | 1.00 |
+| `d2l` | 62.5 | 62.5 | 62.5 | 62.5 | 1.00 |
+| `l2d` | 473 | 473 | 473 | 473 | 1.00 |
+
+### armv7-m
+
+Instructions per operation: rtoskit-libc's size, speed and fast flavours, and the fast flavour with AOR's routines linked in. The ratio is AOR against the fast flavour, as a geometric mean over the cases whose count changed.
+
+| Program | Cases changed | AOR / fast (geometric mean) | AOR symbols linked |
+|---|---:|---:|---|
+| string | 0 of 603 | — | — |
+| stdio | 2 of 23 | 0.95 | `__aeabi_d2uiz`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_fdiv`, `__aeabi_fmul`, `__aeabi_ui2f`, `__aeabi_ul2d` |
+| strto | 14 of 21 | 0.94 | `__aeabi_d2lz`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_f2iz`, `__aeabi_f2uiz`, `__aeabi_fdiv`, `__aeabi_fmul`, `__aeabi_ui2f`, `__aeabi_ul2d` |
+| malloc | 0 of 9 | — | — |
+| qsort | 0 of 8 | — | — |
+| math | 160 of 160 | 1.36 | `__aeabi_d2f`, `__aeabi_d2iz`, `__aeabi_d2lz`, `__aeabi_d2uiz`, `__aeabi_dadd`, `__aeabi_dcmpeq`, `__aeabi_dcmpge`, `__aeabi_dcmpgt`, `__aeabi_dcmple`, `__aeabi_dcmplt`, `__aeabi_dcmpun`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_drsub`, `__aeabi_dsub`, `__aeabi_f2d`, `__aeabi_f2iz`, `__aeabi_fadd`, `__aeabi_fcmpeq`, `__aeabi_fcmpgt`, `__aeabi_fcmple`, `__aeabi_fcmplt`, `__aeabi_fcmpun`, `__aeabi_fdiv`, `__aeabi_fmul`, `__aeabi_frsub`, `__aeabi_fsub`, `__aeabi_i2d`, `__aeabi_i2f`, `__aeabi_l2d`, `__aeabi_l2f`, `__aeabi_ui2d`, `__aeabi_ui2f`, `__aeabi_ul2d`, `__aeabi_ul2f`, `cosf`, `erf`, `erff`, `exp`, `exp10`, `exp2`, `exp2f`, `expf`, `log`, `log10f`, `log2`, `log2f`, `logf`, `pow`, `powf`, `sincosf`, `sinf` |
+| softfloat | 18 of 20 | 0.81 | `__aeabi_d2f`, `__aeabi_d2iz`, `__aeabi_d2lz`, `__aeabi_dadd`, `__aeabi_dcmplt`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_drsub`, `__aeabi_dsub`, `__aeabi_f2d`, `__aeabi_f2iz`, `__aeabi_f2lz`, `__aeabi_fadd`, `__aeabi_fcmplt`, `__aeabi_fdiv`, `__aeabi_fmul`, `__aeabi_frsub`, `__aeabi_fsub`, `__aeabi_i2d`, `__aeabi_i2f`, `__aeabi_l2d`, `__aeabi_l2f`, `__aeabi_ui2d`, `__aeabi_ul2f` |
+
+#### math
+
+Throughput per call, for the functions whose count changed (AOR's own, or ours through AOR's soft-float).
+
+| Function | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `sqrtf` | 468 | 468 | 468 | 460 | 0.98 |
+| `cbrtf` | 3545 | 3545 | 162 | 150 | 0.93 |
+| `hypotf` | 3336 | 3336 | 3336 | 2942 | 0.88 |
+| `expf` | 5431 | 125 | 119 | 748 | 6.28 |
+| `exp2f` | 4511 | 118 | 112 | 693 | 6.21 |
+| `exp10f` | 5461 | 5461 | 117 | 105 | 0.89 |
+| `expm1f` | 6065 | 6065 | 151 | 141 | 0.93 |
+| `exp2m1f` | 4979 | 4979 | 151 | 139 | 0.92 |
+| `exp10m1f` | 6135 | 6135 | 153 | 142 | 0.93 |
+| `logf` | 6185 | 1026 | 253 | 716 | 2.82 |
+| `log2f` | 5322 | 247 | 240 | 721 | 3.00 |
+| `log10f` | 6181 | 259 | 253 | 772 | 3.04 |
+| `log1pf` | 6386 | 6386 | 254 | 244 | 0.96 |
+| `log2p1f` | 5545 | 5545 | 242 | 234 | 0.97 |
+| `log10p1f` | 6619 | 6619 | 255 | 246 | 0.96 |
+| `powf` | 11060 | 374 | 368 | 1596 | 4.34 |
+| `sinf` | 9154 | 842 | 379 | 841 | 2.22 |
+| `cosf` | 9093 | 810 | 379 | 843 | 2.22 |
+| `sincosf` | 16796 | 1160 | 654 | 1405 | 2.15 |
+| `tanf` | 17903 | 1083 | 568 | 557 | 0.98 |
+| `sinpif` | 8812 | 8812 | 369 | 333 | 0.90 |
+| `cospif` | 8578 | 8578 | 347 | 319 | 0.92 |
+| `tanpif` | 17671 | 17671 | 563 | 527 | 0.94 |
+| `asinf` | 11310 | 11310 | 239 | 230 | 0.96 |
+| `acosf` | 11794 | 11794 | 244 | 236 | 0.97 |
+| `atanf` | 8608 | 8608 | 245 | 234 | 0.96 |
+| `atan2f` | 8995 | 8995 | 261 | 250 | 0.96 |
+| `sinhf` | 7396 | 7396 | 171 | 158 | 0.92 |
+| `coshf` | 7302 | 7302 | 162 | 153 | 0.95 |
+| `tanhf` | 7763 | 7763 | 203 | 191 | 0.94 |
+| `asinhf` | 9783 | 9783 | 352 | 340 | 0.97 |
+| `acoshf` | 10152 | 10152 | 356 | 347 | 0.98 |
+| `atanhf` | 7721 | 7721 | 266 | 256 | 0.96 |
+| `erff` | 66112 | 1122 | 184 | 4248 | 23.10 |
+| `erfcf` | 54334 | 1068 | 1068 | 1032 | 0.97 |
+| `lgammaf` | 18357 | 18357 | 713 | 701 | 0.98 |
+| `tgammaf` | 27683 | 27683 | 831 | 800 | 0.96 |
+| `fmodf` | 225 | 225 | 225 | 208 | 0.93 |
+| `floorf` | 75.2 | 75.2 | 75.2 | 62.0 | 0.82 |
+| `roundf` | 69.2 | 69.2 | 69.2 | 56.0 | 0.81 |
+| `sqrt` | 1972 | 1972 | 213 | 203 | 0.95 |
+| `cbrt` | 4309 | 4309 | 299 | 289 | 0.97 |
+| `hypot` | 5956 | 5956 | 346 | 336 | 0.97 |
+| `exp` | 3874 | 3874 | 262 | 1156 | 4.42 |
+| `exp2` | 5320 | 5320 | 226 | 989 | 4.38 |
+| `exp10` | 5334 | 5334 | 261 | 1142 | 4.38 |
+| `expm1` | 4128 | 4128 | 293 | 283 | 0.96 |
+| `exp2m1` | 5488 | 5488 | 5488 | 4887 | 0.89 |
+| `exp10m1` | 5620 | 5620 | 5620 | 4993 | 0.89 |
+| `log` | 6405 | 6405 | 297 | 1307 | 4.40 |
+| `log2` | 8007 | 8007 | 313 | 1589 | 5.08 |
+| `log10` | 7881 | 7881 | 318 | 307 | 0.97 |
+| `log1p` | 6941 | 6941 | 334 | 323 | 0.97 |
+| `log2p1` | 8439 | 8439 | 8463 | 7249 | 0.86 |
+| `log10p1` | 8438 | 8438 | 8462 | 7252 | 0.86 |
+| `pow` | 11833 | 11833 | 817 | 3762 | 4.61 |
+| `sin` | 9543 | 770 | 755 | 744 | 0.99 |
+| `cos` | 9569 | 1270 | 760 | 750 | 0.99 |
+| `sincos` | 16789 | 1596 | 1072 | 1048 | 0.98 |
+| `tan` | 17607 | 1012 | 996 | 985 | 0.99 |
+| `sinpi` | 9199 | 8011 | 8011 | 7137 | 0.89 |
+| `cospi` | 9178 | 7990 | 7990 | 7122 | 0.89 |
+| `tanpi` | 18282 | 15904 | 15904 | 13911 | 0.87 |
+| `asin` | 13481 | 13481 | 665 | 657 | 0.99 |
+| `acos` | 14076 | 14076 | 669 | 659 | 0.99 |
+| `atan` | 8070 | 8070 | 493 | 484 | 0.98 |
+| `atan2` | 8667 | 8667 | 492 | 484 | 0.98 |
+| `sinh` | 6585 | 6585 | 397 | 387 | 0.97 |
+| `cosh` | 6166 | 6166 | 382 | 373 | 0.98 |
+| `tanh` | 7444 | 7444 | 447 | 438 | 0.98 |
+| `asinh` | 15719 | 15719 | 495 | 485 | 0.98 |
+| `acosh` | 13773 | 13773 | 461 | 450 | 0.98 |
+| `atanh` | 9757 | 9757 | 487 | 477 | 0.98 |
+| `erf` | 13408 | 13408 | 518 | 8364 | 16.16 |
+| `erfc` | 40682 | 40682 | 844 | 833 | 0.99 |
+| `lgamma` | 17908 | 17908 | 702 | 690 | 0.98 |
+| `tgamma` | 24298 | 24298 | 821 | 794 | 0.97 |
+| `fmod` | 291 | 291 | 291 | 260 | 0.90 |
+| `floor` | 102 | 102 | 102 | 91.1 | 0.90 |
+| `round` | 99.5 | 99.5 | 99.5 | 89.1 | 0.90 |
+
+#### softfloat
+
+Per operation.
+
+| Operation | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `fadd` | 56.3 | 56.3 | 56.3 | 38.1 | 0.68 |
+| `fsub` | 52.1 | 52.1 | 52.1 | 37.6 | 0.72 |
+| `fmul` | 39.2 | 39.2 | 39.2 | 36.9 | 0.94 |
+| `fdiv` | 57.7 | 57.7 | 57.7 | 58.9 | 1.02 |
+| `fcmp` | 28.9 | 28.9 | 28.9 | 21.3 | 0.74 |
+| `dadd` | 56.2 | 56.2 | 56.2 | 47.2 | 0.84 |
+| `dsub` | 59.1 | 59.1 | 59.1 | 47.3 | 0.80 |
+| `dmul` | 58.0 | 58.0 | 58.0 | 61.9 | 1.07 |
+| `ddiv` | 244 | 244 | 244 | 85.9 | 0.35 |
+| `dcmp` | 29.9 | 29.9 | 29.9 | 21.2 | 0.71 |
+| `f2d` | 15.9 | 15.9 | 15.9 | 15.9 | 1.00 |
+| `d2f` | 19.4 | 19.4 | 19.4 | 17.9 | 0.92 |
+| `f2i` | 15.9 | 15.9 | 15.9 | 16.9 | 1.06 |
+| `i2f` | 20.9 | 20.9 | 20.9 | 20.9 | 1.00 |
+| `d2i` | 19.9 | 19.9 | 19.9 | 20.9 | 1.05 |
+| `i2d` | 21.6 | 21.6 | 21.6 | 18.9 | 0.88 |
+| `f2l` | 27.4 | 27.4 | 27.4 | 20.9 | 0.76 |
+| `l2f` | 26.9 | 26.9 | 26.9 | 27.3 | 1.01 |
+| `d2l` | 44.9 | 44.9 | 44.9 | 25.9 | 0.58 |
+| `l2d` | 30.1 | 30.1 | 30.1 | 29.6 | 0.98 |
+
+### armv7e-m
+
+Instructions per operation: rtoskit-libc's size, speed and fast flavours, and the fast flavour with AOR's routines linked in. The ratio is AOR against the fast flavour, as a geometric mean over the cases whose count changed.
+
+| Program | Cases changed | AOR / fast (geometric mean) | AOR symbols linked |
+|---|---:|---:|---|
+| string | 237 of 603 | 1.08 | `memchr`, `memset`, `strlen` |
+| stdio | 20 of 23 | 1.00 | `__aeabi_d2uiz`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_ul2d`, `memchr`, `memset`, `strlen` |
+| strto | 11 of 21 | 0.95 | `__aeabi_d2lz`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_ul2d`, `memchr`, `memset` |
+| malloc | 1 of 9 | 1.02 | `memchr`, `memset` |
+| qsort | 0 of 8 | — | `memchr`, `memset` |
+| math | 100 of 160 | 1.88 | `__aeabi_d2f`, `__aeabi_d2iz`, `__aeabi_d2lz`, `__aeabi_d2uiz`, `__aeabi_dadd`, `__aeabi_dcmpeq`, `__aeabi_dcmpge`, `__aeabi_dcmpgt`, `__aeabi_dcmple`, `__aeabi_dcmplt`, `__aeabi_dcmpun`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_drsub`, `__aeabi_dsub`, `__aeabi_f2d`, `__aeabi_i2d`, `__aeabi_l2d`, `__aeabi_ui2d`, `__aeabi_ul2d`, `cosf`, `erf`, `erff`, `exp`, `exp10`, `exp2`, `exp2f`, `expf`, `log`, `log10f`, `log2`, `log2f`, `logf`, `memchr`, `memset`, `pow`, `powf`, `sincosf`, `sinf` |
+| softfloat | 12 of 20 | 0.80 | `__aeabi_d2f`, `__aeabi_d2iz`, `__aeabi_d2lz`, `__aeabi_dadd`, `__aeabi_dcmplt`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_drsub`, `__aeabi_dsub`, `__aeabi_f2d`, `__aeabi_f2lz`, `__aeabi_i2d`, `__aeabi_l2d`, `__aeabi_l2f`, `__aeabi_ui2d`, `__aeabi_ul2f`, `memchr`, `memset` |
+
+#### string
+
+Aligned case per size: size flavour / speed flavour / fast flavour / AOR.
+
+| Function | 0 | 1 | 4 | 16 | 64 | 256 | 1024 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `memset` | 30 / 18 / 18 / 19 | 33 / 35 / 35 / 29 | 34 / 35 / 35 / 38 | 46 / 39 / 39 / 40 | 94 / 57 / 57 / 49 | 286 / 81 / 81 / 85 | 1054 / 177 / 177 / 229 |
+| `memchr` | 29 / 24 / 24 / 23 | 36 / 35 / 35 / 27 | 65 / 40 / 40 / 42 | 95 / 57 / 57 / 63 | 215 / 141 / 141 / 123 | 695 / 477 / 477 / 363 | 2615 / 1821 / 1821 / 1323 |
+| `strlen` | 35 / 35 / 35 / 42 | 42 / 35 / 35 / 42 | 40 / 36 / 36 / 42 | 55 / 53 / 53 / 56 | 115 / 107 / 107 / 104 | 355 / 323 / 323 / 290 | 1315 / 1187 / 1187 / 1034 |
+| `strcpy` | 65 / 62 / 62 / 69 | 76 / 62 / 62 / 69 | 75 / 65 / 65 / 71 | 105 / 90 / 90 / 93 | 225 / 156 / 156 / 153 | 705 / 396 / 396 / 363 | 2625 / 1356 / 1356 / 1203 |
+
+#### math
+
+Throughput per call, for the functions whose count changed (AOR's own, or ours through AOR's soft-float).
+
+| Function | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `expf` | 160 | 160 | 58.3 | 681 | 11.68 |
+| `exp2f` | 141 | 141 | 59.3 | 632 | 10.65 |
+| `logf` | 165 | 165 | 74.3 | 649 | 8.73 |
+| `log2f` | 154 | 154 | 80.3 | 654 | 8.14 |
+| `log10f` | 165 | 165 | 83.3 | 698 | 8.38 |
+| `powf` | 367 | 367 | 215 | 1478 | 6.86 |
+| `sinf` | 575 | 575 | 82.3 | 756 | 9.18 |
+| `cosf` | 567 | 567 | 79.3 | 757 | 9.54 |
+| `sincosf` | 786 | 786 | 133 | 1248 | 9.36 |
+| `erff` | 1383 | 1383 | 123 | 550 | 4.48 |
+| `sqrt` | 1968 | 1968 | 208 | 199 | 0.95 |
+| `cbrt` | 3765 | 3765 | 296 | 286 | 0.97 |
+| `hypot` | 5835 | 5835 | 346 | 336 | 0.97 |
+| `exp` | 3813 | 3813 | 261 | 1090 | 4.18 |
+| `exp2` | 5235 | 5235 | 225 | 934 | 4.15 |
+| `exp10` | 5252 | 5252 | 260 | 1075 | 4.13 |
+| `expm1` | 4075 | 4075 | 292 | 282 | 0.96 |
+| `exp2m1` | 5408 | 5408 | 5408 | 4720 | 0.87 |
+| `exp10m1` | 5541 | 5541 | 5541 | 4825 | 0.87 |
+| `log` | 6184 | 6184 | 295 | 1245 | 4.22 |
+| `log2` | 7758 | 7758 | 311 | 1514 | 4.87 |
+| `log10` | 7635 | 7635 | 315 | 304 | 0.97 |
+| `log1p` | 6707 | 6707 | 330 | 319 | 0.97 |
+| `log2p1` | 8183 | 8183 | 8205 | 7023 | 0.86 |
+| `log10p1` | 8182 | 8182 | 8204 | 7027 | 0.86 |
+| `pow` | 11531 | 11531 | 817 | 3576 | 4.38 |
+| `sin` | 9400 | 765 | 751 | 748 | 1.00 |
+| `cos` | 9428 | 1260 | 755 | 753 | 1.00 |
+| `sincos` | 16508 | 1582 | 1065 | 1050 | 0.99 |
+| `tan` | 17165 | 1005 | 987 | 981 | 0.99 |
+| `sinpi` | 9044 | 7876 | 7876 | 6865 | 0.87 |
+| `cospi` | 9010 | 7842 | 7842 | 6836 | 0.87 |
+| `tanpi` | 17815 | 15477 | 15477 | 13347 | 0.86 |
+| `asin` | 13029 | 13029 | 662 | 654 | 0.99 |
+| `acos` | 13628 | 13628 | 668 | 658 | 0.99 |
+| `atan` | 7741 | 7741 | 487 | 478 | 0.98 |
+| `atan2` | 8314 | 8314 | 488 | 480 | 0.98 |
+| `sinh` | 6367 | 6367 | 394 | 384 | 0.97 |
+| `cosh` | 5954 | 5954 | 380 | 371 | 0.98 |
+| `tanh` | 7193 | 7193 | 446 | 436 | 0.98 |
+| `asinh` | 15215 | 15215 | 497 | 488 | 0.98 |
+| `acosh` | 13378 | 13378 | 461 | 450 | 0.98 |
+| `atanh` | 9286 | 9286 | 487 | 477 | 0.98 |
+| `erf` | 12171 | 12171 | 518 | 8263 | 15.96 |
+| `erfc` | 37968 | 37968 | 843 | 832 | 0.99 |
+| `lgamma` | 17366 | 17366 | 700 | 688 | 0.98 |
+| `tgamma` | 23498 | 23498 | 823 | 797 | 0.97 |
+| `fmod` | 280 | 280 | 280 | 250 | 0.89 |
+| `floor` | 96.6 | 96.6 | 96.6 | 86.1 | 0.89 |
+| `round` | 94.6 | 94.6 | 94.6 | 84.1 | 0.89 |
+
+#### softfloat
+
+Per operation.
+
+| Operation | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `fadd` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fsub` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fmul` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fdiv` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fcmp` | 10.8 | 10.8 | 10.8 | 10.8 | 1.00 |
+| `dadd` | 55.2 | 55.2 | 55.2 | 46.2 | 0.84 |
+| `dsub` | 58.1 | 58.1 | 58.1 | 46.3 | 0.80 |
+| `dmul` | 54.0 | 54.0 | 54.0 | 54.9 | 1.02 |
+| `ddiv` | 174 | 174 | 174 | 81.9 | 0.47 |
+| `dcmp` | 28.9 | 28.9 | 28.9 | 20.2 | 0.70 |
+| `f2d` | 15.9 | 15.9 | 15.9 | 15.9 | 1.00 |
+| `d2f` | 19.4 | 19.4 | 19.4 | 17.9 | 0.92 |
+| `f2i` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `i2f` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `d2i` | 19.9 | 19.9 | 19.9 | 20.9 | 1.05 |
+| `i2d` | 21.6 | 21.6 | 21.6 | 18.9 | 0.88 |
+| `f2l` | 27.4 | 27.4 | 27.4 | 20.9 | 0.76 |
+| `l2f` | 32.9 | 32.9 | 32.9 | 27.3 | 0.83 |
+| `d2l` | 44.9 | 44.9 | 44.9 | 25.9 | 0.58 |
+| `l2d` | 30.1 | 30.1 | 30.1 | 29.6 | 0.98 |
+
+### armv7e-m-dp
+
+Instructions per operation: rtoskit-libc's size, speed and fast flavours, and the fast flavour with AOR's routines linked in. The ratio is AOR against the fast flavour, as a geometric mean over the cases whose count changed.
+
+| Program | Cases changed | AOR / fast (geometric mean) | AOR symbols linked |
+|---|---:|---:|---|
+| string | 237 of 603 | 1.08 | `memchr`, `memset`, `strlen` |
+| stdio | 19 of 23 | 1.00 | `memchr`, `memset`, `strlen` |
+| strto | 11 of 21 | 1.00 | `__aeabi_d2lz`, `memchr`, `memset` |
+| malloc | 1 of 9 | 1.02 | `memchr`, `memset` |
+| qsort | 0 of 8 | — | `memchr`, `memset` |
+| math | 96 of 160 | 1.02 | `__aeabi_d2lz`, `__aeabi_l2d`, `cosf`, `erf`, `erff`, `exp`, `exp10`, `exp2`, `exp2f`, `expf`, `log`, `log10f`, `log2`, `log2f`, `logf`, `memchr`, `memset`, `pow`, `powf`, `sincosf`, `sinf` |
+| softfloat | 4 of 20 | 0.79 | `__aeabi_d2lz`, `__aeabi_f2lz`, `__aeabi_l2d`, `__aeabi_l2f`, `__aeabi_ul2f`, `memchr`, `memset` |
+
+#### string
+
+Aligned case per size: size flavour / speed flavour / fast flavour / AOR.
+
+| Function | 0 | 1 | 4 | 16 | 64 | 256 | 1024 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `memset` | 30 / 18 / 18 / 19 | 33 / 35 / 35 / 29 | 34 / 35 / 35 / 38 | 46 / 39 / 39 / 40 | 94 / 57 / 57 / 49 | 286 / 81 / 81 / 85 | 1054 / 177 / 177 / 229 |
+| `memchr` | 29 / 24 / 24 / 23 | 36 / 35 / 35 / 27 | 65 / 40 / 40 / 42 | 95 / 57 / 57 / 63 | 215 / 141 / 141 / 123 | 695 / 477 / 477 / 363 | 2615 / 1821 / 1821 / 1323 |
+| `strlen` | 35 / 35 / 35 / 42 | 42 / 35 / 35 / 42 | 40 / 36 / 36 / 42 | 55 / 53 / 53 / 56 | 115 / 107 / 107 / 104 | 355 / 323 / 323 / 290 | 1315 / 1187 / 1187 / 1034 |
+| `strcpy` | 65 / 62 / 62 / 69 | 76 / 62 / 62 / 69 | 75 / 65 / 65 / 71 | 105 / 90 / 90 / 93 | 225 / 156 / 156 / 153 | 705 / 396 / 396 / 363 | 2625 / 1356 / 1356 / 1203 |
+
+#### math
+
+Throughput per call, for the functions whose count changed (AOR's own, or ours through AOR's soft-float).
+
+| Function | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `logf` | 162 | 162 | 45.3 | 46.3 | 1.02 |
+| `log2f` | 203 | 203 | 45.3 | 48.3 | 1.07 |
+| `log10f` | 173 | 173 | 47.3 | 50.3 | 1.06 |
+| `powf` | 398 | 398 | 86.4 | 88.4 | 1.02 |
+| `sinf` | 220 | 210 | 42.8 | 50.5 | 1.18 |
+| `cosf` | 213 | 203 | 42.8 | 47.2 | 1.10 |
+| `sincosf` | 337 | 316 | 67.3 | 80.8 | 1.20 |
+| `erff` | 421 | 421 | 65.4 | 67.1 | 1.02 |
+| `sqrt` | 11.6 | 11.6 | 11.6 | 11.6 | 0.99 |
+| `cbrt` | 132 | 132 | 89.8 | 89.8 | 1.00 |
+| `hypot` | 138 | 138 | 109 | 109 | 1.00 |
+| `exp` | 169 | 169 | 52.6 | 55.6 | 1.06 |
+| `exp2` | 183 | 183 | 50.6 | 51.6 | 1.02 |
+| `exp10` | 185 | 185 | 54.6 | 55.6 | 1.02 |
+| `expm1` | 172 | 172 | 106 | 106 | 1.00 |
+| `exp2m1` | 173 | 173 | 173 | 173 | 1.00 |
+| `exp10m1` | 182 | 182 | 182 | 182 | 1.00 |
+| `log` | 150 | 150 | 65.6 | 67.6 | 1.03 |
+| `log2` | 200 | 200 | 69.6 | 72.6 | 1.04 |
+| `log10` | 161 | 161 | 74.6 | 76.6 | 1.03 |
+| `log1p` | 186 | 186 | 85.8 | 87.7 | 1.02 |
+| `log2p1` | 196 | 196 | 198 | 196 | 0.99 |
+| `log10p1` | 196 | 196 | 198 | 196 | 0.99 |
+| `pow` | 393 | 393 | 133 | 135 | 1.01 |
+| `sin` | 199 | 188 | 96.1 | 96.1 | 1.00 |
+| `cos` | 201 | 190 | 93.3 | 93.2 | 1.00 |
+| `sincos` | 298 | 277 | 171 | 171 | 1.00 |
+| `tan` | 274 | 253 | 133 | 133 | 1.00 |
+| `sinpi` | 253 | 242 | 242 | 242 | 1.00 |
+| `cospi` | 249 | 238 | 238 | 238 | 1.00 |
+| `tanpi` | 321 | 300 | 300 | 300 | 1.00 |
+| `asin` | 220 | 220 | 135 | 135 | 1.00 |
+| `acos` | 228 | 228 | 127 | 127 | 1.00 |
+| `atan` | 195 | 195 | 108 | 108 | 1.00 |
+| `atan2` | 360 | 360 | 141 | 141 | 1.00 |
+| `sinh` | 200 | 200 | 107 | 106 | 1.00 |
+| `cosh` | 192 | 192 | 78.6 | 78.6 | 1.00 |
+| `tanh` | 202 | 202 | 137 | 137 | 1.00 |
+| `asinh` | 287 | 287 | 107 | 109 | 1.02 |
+| `acosh` | 246 | 246 | 101 | 103 | 1.02 |
+| `atanh` | 217 | 217 | 89.8 | 91.8 | 1.02 |
+| `erf` | 418 | 418 | 67.9 | 69.2 | 1.02 |
+| `erfc` | 783 | 783 | 133 | 133 | 1.00 |
+| `lgamma` | 499 | 499 | 130 | 130 | 1.00 |
+| `tgamma` | 719 | 719 | 155 | 155 | 1.00 |
+| `fmod` | 178 | 178 | 178 | 178 | 1.00 |
+| `floor` | 11.8 | 11.8 | 11.8 | 11.8 | 0.99 |
+| `round` | 11.8 | 11.8 | 11.8 | 11.8 | 0.99 |
+
+#### softfloat
+
+Per operation.
+
+| Operation | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `fadd` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fsub` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fmul` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fdiv` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fcmp` | 10.8 | 10.8 | 10.8 | 10.8 | 1.00 |
+| `dadd` | 9.9 | 9.9 | 9.9 | 9.9 | 1.00 |
+| `dsub` | 9.9 | 9.9 | 9.9 | 9.9 | 1.00 |
+| `dmul` | 9.9 | 9.9 | 9.9 | 9.9 | 1.00 |
+| `ddiv` | 9.9 | 9.9 | 9.9 | 9.9 | 1.00 |
+| `dcmp` | 10.8 | 10.8 | 10.8 | 10.8 | 1.00 |
+| `f2d` | 8.9 | 8.9 | 8.9 | 8.9 | 1.00 |
+| `d2f` | 6.8 | 6.8 | 6.8 | 6.8 | 1.00 |
+| `f2i` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `i2f` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `d2i` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `i2d` | 9.9 | 9.9 | 9.9 | 9.9 | 1.00 |
+| `f2l` | 25.9 | 25.9 | 25.9 | 20.9 | 0.81 |
+| `l2f` | 32.9 | 32.9 | 32.9 | 27.3 | 0.83 |
+| `d2l` | 26.9 | 26.9 | 26.9 | 25.9 | 0.96 |
+| `l2d` | 48.6 | 48.6 | 48.6 | 29.6 | 0.61 |
+
+### armv8-m.main
+
+Instructions per operation: rtoskit-libc's size, speed and fast flavours, and the fast flavour with AOR's routines linked in. The ratio is AOR against the fast flavour, as a geometric mean over the cases whose count changed.
+
+| Program | Cases changed | AOR / fast (geometric mean) | AOR symbols linked |
+|---|---:|---:|---|
+| string | 237 of 603 | 1.08 | `memchr`, `memset`, `strlen` |
+| stdio | 20 of 23 | 1.00 | `__aeabi_d2uiz`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_ul2d`, `memchr`, `memset`, `strlen` |
+| strto | 11 of 21 | 0.95 | `__aeabi_d2lz`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_ul2d`, `memchr`, `memset` |
+| malloc | 1 of 9 | 1.02 | `memchr`, `memset` |
+| qsort | 0 of 8 | — | `memchr`, `memset` |
+| math | 100 of 160 | 1.88 | `__aeabi_d2f`, `__aeabi_d2iz`, `__aeabi_d2lz`, `__aeabi_d2uiz`, `__aeabi_dadd`, `__aeabi_dcmpeq`, `__aeabi_dcmpge`, `__aeabi_dcmpgt`, `__aeabi_dcmple`, `__aeabi_dcmplt`, `__aeabi_dcmpun`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_drsub`, `__aeabi_dsub`, `__aeabi_f2d`, `__aeabi_i2d`, `__aeabi_l2d`, `__aeabi_ui2d`, `__aeabi_ul2d`, `cosf`, `erf`, `erff`, `exp`, `exp10`, `exp2`, `exp2f`, `expf`, `log`, `log10f`, `log2`, `log2f`, `logf`, `memchr`, `memset`, `pow`, `powf`, `sincosf`, `sinf` |
+| softfloat | 12 of 20 | 0.80 | `__aeabi_d2f`, `__aeabi_d2iz`, `__aeabi_d2lz`, `__aeabi_dadd`, `__aeabi_dcmplt`, `__aeabi_ddiv`, `__aeabi_dmul`, `__aeabi_drsub`, `__aeabi_dsub`, `__aeabi_f2d`, `__aeabi_f2lz`, `__aeabi_i2d`, `__aeabi_l2d`, `__aeabi_l2f`, `__aeabi_ui2d`, `__aeabi_ul2f`, `memchr`, `memset` |
+
+#### string
+
+Aligned case per size: size flavour / speed flavour / fast flavour / AOR.
+
+| Function | 0 | 1 | 4 | 16 | 64 | 256 | 1024 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| `memset` | 30 / 18 / 18 / 19 | 33 / 35 / 35 / 29 | 34 / 35 / 35 / 38 | 46 / 39 / 39 / 40 | 94 / 57 / 57 / 49 | 286 / 81 / 81 / 85 | 1054 / 177 / 177 / 229 |
+| `memchr` | 29 / 24 / 24 / 23 | 36 / 35 / 35 / 27 | 65 / 40 / 40 / 42 | 95 / 57 / 57 / 63 | 215 / 141 / 141 / 123 | 695 / 477 / 477 / 363 | 2615 / 1821 / 1821 / 1323 |
+| `strlen` | 35 / 35 / 35 / 42 | 42 / 35 / 35 / 42 | 40 / 36 / 36 / 42 | 55 / 53 / 53 / 56 | 115 / 107 / 107 / 104 | 355 / 323 / 323 / 290 | 1315 / 1187 / 1187 / 1034 |
+| `strcpy` | 65 / 62 / 62 / 69 | 76 / 62 / 62 / 69 | 75 / 65 / 65 / 71 | 105 / 90 / 90 / 93 | 225 / 156 / 156 / 153 | 705 / 396 / 396 / 363 | 2625 / 1356 / 1356 / 1203 |
+
+#### math
+
+Throughput per call, for the functions whose count changed (AOR's own, or ours through AOR's soft-float).
+
+| Function | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `expf` | 160 | 160 | 58.3 | 681 | 11.68 |
+| `exp2f` | 141 | 141 | 59.3 | 632 | 10.65 |
+| `logf` | 165 | 165 | 74.3 | 649 | 8.73 |
+| `log2f` | 154 | 154 | 80.3 | 654 | 8.14 |
+| `log10f` | 165 | 165 | 83.3 | 698 | 8.38 |
+| `powf` | 353 | 353 | 203 | 1478 | 7.27 |
+| `sinf` | 574 | 574 | 82.3 | 756 | 9.18 |
+| `cosf` | 566 | 566 | 79.3 | 757 | 9.54 |
+| `sincosf` | 784 | 784 | 133 | 1247 | 9.35 |
+| `erff` | 1383 | 1383 | 123 | 550 | 4.48 |
+| `sqrt` | 1968 | 1968 | 207 | 199 | 0.96 |
+| `cbrt` | 3765 | 3765 | 296 | 286 | 0.97 |
+| `hypot` | 5835 | 5835 | 344 | 334 | 0.97 |
+| `exp` | 3813 | 3813 | 261 | 1090 | 4.18 |
+| `exp2` | 5236 | 5236 | 225 | 934 | 4.15 |
+| `exp10` | 5252 | 5252 | 260 | 1075 | 4.13 |
+| `expm1` | 4075 | 4075 | 292 | 282 | 0.96 |
+| `exp2m1` | 5408 | 5408 | 5408 | 4720 | 0.87 |
+| `exp10m1` | 5541 | 5541 | 5541 | 4825 | 0.87 |
+| `log` | 6184 | 6184 | 295 | 1245 | 4.22 |
+| `log2` | 7758 | 7758 | 311 | 1514 | 4.87 |
+| `log10` | 7635 | 7635 | 315 | 304 | 0.97 |
+| `log1p` | 6707 | 6707 | 330 | 319 | 0.97 |
+| `log2p1` | 8183 | 8183 | 8205 | 7023 | 0.86 |
+| `log10p1` | 8182 | 8182 | 8204 | 7027 | 0.86 |
+| `pow` | 11532 | 11532 | 817 | 3576 | 4.38 |
+| `sin` | 9400 | 754 | 740 | 737 | 1.00 |
+| `cos` | 9428 | 1249 | 743 | 741 | 1.00 |
+| `sincos` | 16508 | 1571 | 1054 | 1039 | 0.99 |
+| `tan` | 17165 | 1000 | 982 | 976 | 0.99 |
+| `sinpi` | 9045 | 7877 | 7877 | 6866 | 0.87 |
+| `cospi` | 9010 | 7842 | 7842 | 6836 | 0.87 |
+| `tanpi` | 17815 | 15477 | 15477 | 13347 | 0.86 |
+| `asin` | 13029 | 13029 | 662 | 654 | 0.99 |
+| `acos` | 13628 | 13628 | 668 | 658 | 0.99 |
+| `atan` | 7741 | 7741 | 487 | 478 | 0.98 |
+| `atan2` | 8314 | 8314 | 488 | 480 | 0.98 |
+| `sinh` | 6367 | 6367 | 394 | 384 | 0.97 |
+| `cosh` | 5954 | 5954 | 380 | 371 | 0.98 |
+| `tanh` | 7193 | 7193 | 446 | 436 | 0.98 |
+| `asinh` | 15215 | 15215 | 498 | 488 | 0.98 |
+| `acosh` | 13378 | 13378 | 461 | 450 | 0.98 |
+| `atanh` | 9286 | 9286 | 487 | 477 | 0.98 |
+| `erf` | 12173 | 12173 | 518 | 8251 | 15.94 |
+| `erfc` | 37969 | 37969 | 843 | 832 | 0.99 |
+| `lgamma` | 17366 | 17366 | 700 | 689 | 0.98 |
+| `tgamma` | 23498 | 23498 | 823 | 797 | 0.97 |
+| `fmod` | 281 | 281 | 281 | 251 | 0.89 |
+| `floor` | 96.6 | 96.6 | 96.6 | 86.1 | 0.89 |
+| `round` | 94.6 | 94.6 | 94.6 | 84.1 | 0.89 |
+
+#### softfloat
+
+Per operation.
+
+| Operation | size | speed | fast | AOR | AOR / fast |
+|---|---:|---:|---:|---:|---:|
+| `fadd` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fsub` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fmul` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fdiv` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `fcmp` | 10.8 | 10.8 | 10.8 | 10.8 | 1.00 |
+| `dadd` | 55.2 | 55.2 | 55.2 | 46.2 | 0.84 |
+| `dsub` | 58.1 | 58.1 | 58.1 | 46.3 | 0.80 |
+| `dmul` | 54.0 | 54.0 | 54.0 | 54.9 | 1.02 |
+| `ddiv` | 174 | 174 | 174 | 81.9 | 0.47 |
+| `dcmp` | 28.9 | 28.9 | 28.9 | 20.2 | 0.70 |
+| `f2d` | 15.9 | 15.9 | 15.9 | 15.9 | 1.00 |
+| `d2f` | 19.4 | 19.4 | 19.4 | 17.9 | 0.92 |
+| `f2i` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `i2f` | 7.8 | 7.8 | 7.8 | 7.8 | 1.00 |
+| `d2i` | 19.9 | 19.9 | 19.9 | 20.9 | 1.05 |
+| `i2d` | 21.6 | 21.6 | 21.6 | 18.9 | 0.88 |
+| `f2l` | 27.4 | 27.4 | 27.4 | 20.9 | 0.76 |
+| `l2f` | 32.9 | 32.9 | 32.9 | 27.3 | 0.83 |
+| `d2l` | 44.9 | 44.9 | 44.9 | 25.9 | 0.58 |
+| `l2d` | 30.1 | 30.1 | 30.1 | 29.6 | 0.98 |
+
+### Accuracy against AOR
+
+#### On the Arm targets
+
+16,384 sampled arguments per function, round to nearest: maximum ulp error / results not correctly rounded.
+
+| Function | armv6-m/size | armv6-m/speed | armv6-m/fast | armv6-m/aor | armv7e-m/size | armv7e-m/speed | armv7e-m/fast | armv7e-m/aor | armv7e-m-dp/size | armv7e-m-dp/speed | armv7e-m-dp/fast | armv7e-m-dp/aor |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `expf` | 0.500 / 0 | 0.500 / 0 | 0.504 / 29 | 0.501 / 4 | 0.500 / 0 | 0.500 / 0 | 0.776 / 777 | 0.501 / 4 | 0.500 / 0 | 0.500 / 0 | 0.506 / 17 | 0.501 / 4 |
+| `exp2f` | 0.500 / 0 | 0.500 / 0 | 0.503 / 25 | 0.501 / 5 | 0.500 / 0 | 0.500 / 0 | 0.755 / 778 | 0.501 / 5 | 0.500 / 0 | 0.500 / 0 | 0.506 / 9 | 0.501 / 5 |
+| `logf` | 0.500 / 0 | 0.500 / 0 | 0.502 / 23 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.514 / 2 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 |
+| `log2f` | 0.500 / 0 | 0.500 / 0 | 0.502 / 29 | 0.541 / 1 | 0.500 / 0 | 0.500 / 0 | 0.505 / 3 | 0.541 / 1 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.541 / 1 |
+| `log10f` | 0.500 / 0 | 0.500 / 0 | 0.502 / 30 | 0.510 / 6 | 0.500 / 0 | 0.500 / 0 | 0.501 / 3 | 0.510 / 6 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.510 / 6 |
+| `sinf` | 0.500 / 0 | 0.500 / 0 | 0.502 / 22 | 0.559 / 110 | 0.500 / 0 | 0.500 / 0 | 0.626 / 165 | 0.559 / 110 | 0.500 / 0 | 0.500 / 0 | 0.500 / 3 | 0.559 / 110 |
+| `cosf` | 0.500 / 0 | 0.500 / 0 | 0.502 / 14 | 0.558 / 108 | 0.500 / 0 | 0.500 / 0 | 0.600 / 180 | 0.558 / 108 | 0.500 / 0 | 0.500 / 0 | 0.502 / 3 | 0.558 / 108 |
+| `erff` | 0.500 / 0 | 0.500 / 0 | 0.511 / 48 | 0.887 / 1298 | 0.500 / 0 | 0.500 / 0 | 0.720 / 69 | 0.887 / 1063 | 0.500 / 0 | 0.500 / 0 | 0.508 / 13 | 0.887 / 1063 |
+| `powf` | 0.500 / 0 | 0.500 / 0 | 0.503 / 17 | 0.504 / 6 | 0.500 / 0 | 0.500 / 0 | 0.801 / 501 | 0.504 / 6 | 0.500 / 0 | 0.500 / 0 | 0.502 / 5 | 0.504 / 6 |
+| `exp` | 0.500 / 0 | 0.500 / 0 | 0.515 / 17 | 0.502 / 9 | 0.500 / 0 | 0.500 / 0 | 0.515 / 17 | 0.502 / 9 | 0.500 / 0 | 0.500 / 0 | 0.523 / 44 | 0.502 / 6 |
+| `exp2` | 0.501 / 4 | 0.501 / 4 | 0.526 / 32 | 0.502 / 8 | 0.501 / 4 | 0.501 / 4 | 0.526 / 32 | 0.502 / 8 | 0.501 / 4 | 0.501 / 4 | 0.526 / 53 | 0.501 / 9 |
 | `log` | 0.500 / 0 | 0.500 / 0 | 0.500 / 5 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 5 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 |
 | `log2` | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 | 0.500 / 0 |
 | `erf` | 0.500 / 0 | 0.500 / 0 | 0.502 / 4 | 0.837 / 1560 | 0.500 / 0 | 0.500 / 0 | 0.502 / 4 | 0.837 / 1560 | 0.500 / 0 | 0.500 / 0 | 0.511 / 13 | 0.837 / 1541 |
