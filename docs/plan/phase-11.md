@@ -669,7 +669,7 @@ reopened the phase for Q54 (D218): P11.07.
 
 ---
 
-## P11.07 — Q54: the fast cases still slower than picolibc (D218)  `[~]`
+## P11.07 — Q54: the fast cases still slower than picolibc (D218)  `[x]`
 
 On armv7e-m, 22 fast maths cases take more instructions than picolibc's
 (P11.06a). Two groups, one sub-step per family, armv7e-m and armv8-m.main
@@ -730,7 +730,7 @@ armv7e-m-dp's own line, D211).
   (picolibc 1443), `hypotf` 161 → 52.4 (53.9). Q61: the soft-float cores'
   `hypotf` and armv7e-m-dp's `hypot` stay above picolibc.
 
-### P11.07c — `erfc`, `erfcf`  `[~]`
+### P11.07c — `erfc`, `erfcf`  `[x]`
 Split: the float function rests on an existing kernel, the double needs new
 ones (fixed point on the soft-double cores, double on the double-FPU cores).
 
@@ -825,6 +825,9 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
   every Arm core is at or below AOR; the remaining slower cases on other
   cores are recorded (Q63 for armv7e-m-dp).
 
-### P11.07l — Phase exit  `[ ]`
-- [ ] Phase exit: PLAN's phase table, decisions, open questions; Q54
-  closed or what is left of it recorded.
+### P11.07l — Phase exit  `[x]`
+- [x] Phase exit: PLAN's phase table, decisions, open questions; Q54
+  closed or what is left of it recorded. Done (D240): P11.07's exit met
+  (no armv7e-m or armv8-m.main case slower than picolibc, every Arm core at
+  or below AOR, the fast budget held); Q54 resolved; open for later Q57,
+  Q61, Q62 and Q63.
