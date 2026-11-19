@@ -831,3 +831,42 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
   (no armv7e-m or armv8-m.main case slower than picolibc, every Arm core at
   or below AOR, the fast budget held); Q54 resolved; open for later Q57,
   Q61, Q62 and Q63.
+
+## P11.08 — Q61 and Q63: the slower cases outside P11.07's check (D241)  `[ ]`
+The maintainer's decision after P11.07l: fix Q61 and Q63 in phase 11, by its
+rules (`fast` alone; debug, release and speed byte-identical); Q57 and Q62
+go to phase 12. Exit: on every Arm core no fast maths case slower than
+picolibc's but those the maintainer excludes; every Arm core still at or
+below AOR; the fast size budget held (re-locked as D187 says).
+
+### P11.08a — Research  `[ ]`
+- [ ] Each case measured and read (picolibc's method, ideas only): on
+  armv6-m, armv6s-m and armv7-m `hypotf`, `sqrtf` and `fmodf` (P11.07k found
+  them slower); on armv7e-m-dp `acos`, `asin`, `hypot`, `expm1`, `atan`,
+  `cbrt`, `cbrtf`, `tan`, `acosf`, `asinf`, `atan2`, `tanh`, `log1pf`,
+  `log1p`, `expm1f` (`libc/math/fast/`, shared with x86_64); where the
+  instructions go and an estimate per function; the contract each keeps
+  (`sqrtf`, `fmodf`, `hypotf` and `hypot` exact or correctly rounded, D222).
+
+### P11.08b — `hypotf`, `sqrtf` and `fmodf` on the soft-float cores  `[ ]`
+- [ ] `nofp/fast/` (armv6-m, armv6s-m, armv7-m): an integer `hypotf`,
+  correctly rounded (D222); `sqrtf` and `fmodf` exact as today, faster;
+  tests, gains.
+
+### P11.08c — armv7e-m-dp's inverse trigonometry  `[ ]`
+- [ ] `asin`, `acos`, `atan`, `atan2` and `asinf`, `acosf` in
+  `libc/math/fast/` (or an armv7e-m-dp layer of its own), within the fast
+  contract; x86_64 measured too; tests, gains.
+
+### P11.08d — armv7e-m-dp's `expm1`, `log1p`, `cbrt`, `tan`, `tanh`, `hypot`  `[ ]`
+- [ ] The rest of Q63 and Q61's `hypot` (correctly rounded), split further if
+  P11.08a finds it needed; tests, gains.
+
+### P11.08e — Comparison, size and docs  `[ ]`
+- [ ] P11.07k's comparison again on every Arm core; the size budget re-locked;
+  `docs/perf/phase-11.md`, `docs/size/`, README.
+
+### P11.08f — Phase exit  `[ ]`
+- [ ] PLAN's phase table, decisions, open questions; Q61 and Q63 closed or
+  what is left of them recorded.
+
