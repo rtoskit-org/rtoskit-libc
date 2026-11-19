@@ -1261,22 +1261,51 @@ static inline float __libc_fast_expf_pair(float a, int *k, float *lo)
 
 /*
  * log1p(u + u_lo) for u > -1 and |u_lo| at most half an ulp of u, rounded once (the single-precision FPU cores' asinhf,
- * acoshf, atanhf; the note, section 10): the log1pf reduction of u, with u_lo/(1 + u) beside its own correction
+ * acoshf, atanhf; the float trigonometric note, sections 10 and 29): within 2^-5 of 0, u + u^2 q(u) with u_lo taken with
+ * the slope 1 - u; beyond, U = 1 + u by a two-sum, U reduced against a table entry c_i as logf, and the rounding c of
+ * 1 + u and u_lo together as (c + u_lo)/U, one division (log(U + c + u_lo) = log U + (c + u_lo)/U to below 2^-47)
  */
 static inline float __libc_fast_log1pf_pair(float u, float u_lo)
 {
 	const float *entry;
 	float kf;
+	float big;
+	float c;
+	float z;
 	float r;
-	float lo;
 	int k;
 	int i;
 
-	r = __libc_fast_log1pf_reduce(u, &k, &i, &lo);
+	if (__builtin_fabsf(u) < 0x1p-5f)
+		return u + (__libc_fast_log1pf_tail(u) + __builtin_fmaf(-u, u_lo, u_lo));
+	big = __libc_fast_two_sum(1.0f, u, &c);
+	z = __libc_fast_logf_split_z(big, &k, &i);
+	r = __builtin_fmaf(z, __libc_fast_logf_invc[i], -1.0f);
 	entry = __libc_fast_logf_ln[i];
 	kf = (float)k;
 
-	return __builtin_fmaf(kf, 0x1.62e400p-1f, entry[0]) + (r + (__builtin_fmaf(kf, 0x1.7f7d1cp-20f, entry[1]) + (__libc_fast_log1pf_tail(r) + (lo + u_lo / (1.0f + u)))));
+	return __builtin_fmaf(kf, 0x1.62e400p-1f, entry[0]) + (r + (__builtin_fmaf(kf, 0x1.7f7d1cp-20f, entry[1]) + (__libc_fast_log1pf_tail(r) + (c + u_lo) / big)));
+}
+
+/*
+ * log(v + v_lo) for a finite v >= 1 and |v_lo| at most half an ulp of v, rounded once (asinhf from 1/2 and acoshf from 2;
+ * the float trigonometric note, section 29): the logf reduction of v and v_lo/v beside it
+ */
+static inline float __libc_fast_logf_pair(float v, float v_lo)
+{
+	const float *entry;
+	float kf;
+	float z;
+	float r;
+	int k;
+	int i;
+
+	z = __libc_fast_logf_split_z(v, &k, &i);
+	r = __builtin_fmaf(z, __libc_fast_logf_invc[i], -1.0f);
+	entry = __libc_fast_logf_ln[i];
+	kf = (float)k;
+
+	return __builtin_fmaf(kf, 0x1.62e400p-1f, entry[0]) + (r + (__builtin_fmaf(kf, 0x1.7f7d1cp-20f, entry[1]) + (__libc_fast_log1pf_tail(r) + v_lo / v)));
 }
 
 /* log 2a for a finite a from 2 up, rounded once: the logf reduction of a with k + 1 (asinhf and acoshf above 2^12) */

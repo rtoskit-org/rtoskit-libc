@@ -806,8 +806,10 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
   `cbrtf` 81.3 → 50.3, `expm1f` 78.4 → 52.3, `log1pf` 96.3 → 77.5
   (picolibc 53, 61, 82).
 
-### P11.07j — `asinhf`, `acoshf`, `atanhf` on the single-precision FPU  `[ ]`
-- [ ] As P11.07g.
+### P11.07j — `asinhf`, `acoshf`, `atanhf` on the single-precision FPU  `[x]`
+- [x] As P11.07g. Done (D238): 0.7536, 0.7421 and 0.7538 ulp (bound 1.5);
+  armv7e-m `asinhf` 135.3 → 98.7, `acoshf` 125.3 → 101.3, `atanhf` 111.3 →
+  102.3 (picolibc 112, 106, 107).
 
 ### P11.07k — Comparison, size and docs  `[ ]`
 - [ ] P11.06a's comparison again (`bench-runner compare` and `aor`, every

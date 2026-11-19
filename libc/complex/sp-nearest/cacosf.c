@@ -70,7 +70,7 @@ float complex cacosf(float complex z)
 		}
 		value = __libc_ff_divide((struct __libc_ff){ .hi = scalbnf(fabsf(y), 64), .lo = 0.0f }, __libc_ff_sqrt((struct __libc_ff){ .hi = -value.hi, .lo = -value.lo }));
 		real = x > 0 ? (y == 0 ? 0.0f : __libc_exp2f_scale(value, -64)) : 0x1.921fb6p+1f;
-		return CMPLXF(real, -copysignf(acoshf(fabsf(x)), y));
+		return CMPLXF(real, -copysignf(__libc_acoshf_accurate(fabsf(x)), y));
 	}
 	__libc_csqrtf_core(__libc_ff_sum(1.0f, -x), -y, &u_real, &u_imag);
 	__libc_csqrtf_core(__libc_ff_sum(1.0f, x), y, &v_real, &v_imag);

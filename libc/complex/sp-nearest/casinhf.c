@@ -63,7 +63,7 @@ float complex casinhf(float complex z)
 			value = __libc_ff_divide((struct __libc_ff){ .hi = scalbnf(x, 64), .lo = 0.0f }, __libc_ff_sqrt(value));
 			return CMPLXF(x == 0 ? x : __libc_exp2f_scale(value, -64), __libc_asinf_accurate(y));
 		}
-		return CMPLXF(copysignf(acoshf(fabsf(y)), x), copysignf(0x1.921fb6p+0f, y));
+		return CMPLXF(copysignf(__libc_acoshf_accurate(fabsf(y)), x), copysignf(0x1.921fb6p+0f, y));
 	}
 	/* w = iz = -y + ix */
 	__libc_csqrtf_core(__libc_ff_sum(1.0f, y), -x, &u_real, &u_imag);

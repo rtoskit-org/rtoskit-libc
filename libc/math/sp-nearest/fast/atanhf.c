@@ -16,9 +16,9 @@
 #include "internal/math-fast.h"
 
 /*
- * The fast atanhf of the single-precision FPU cores (PLAN D162, D177): log1p(2|x|/(1 - |x|))/2 with 1 - |x| by a two-sum and
- * the quotient's remainder by a fused multiply-add (__libc_fast_log1pf_pair), the sign of x. Below 1.5 ulp to nearest (the
- * trigonometric note, section 10); float only, round to nearest only as the layer (D57). C23 F.10.2.3: +-1 gives
+ * The fast atanhf of the single-precision FPU cores (PLAN D162, D177, D238): log1p(2|x|/(1 - |x|))/2 with 1 - |x| by Fast2Sum and
+ * the quotient's remainder by a fused multiply-add (__libc_fast_log1pf_pair), the sign of x. Within the 1.5-ulp bound to nearest (the
+ * float trigonometric note, sections 10 and 29); float only, round to nearest only as the layer (D57). C23 F.10.2.3: +-1 gives
  * +-infinity with divide-by-zero, beyond invalid, +-0 itself.
  */
 float atanhf(float x)
@@ -40,7 +40,9 @@ float atanhf(float x)
 	/* x^3/3 is below half an ulp of x: the result rounds to x (keeping -0) */
 	if (a < 0x1p-12f)
 		return x;
-	d = __libc_fast_two_sum(1.0f, -a, &d_lo);
+	/* 1 - |x| and its error by Fast2Sum (1 > |x|) */
+	d = 1.0f - a;
+	d_lo = (1.0f - d) - a;
 	q = 2.0f * a / d;
 	q_lo = (__builtin_fmaf(-q, d, 2.0f * a) - q * d_lo) / d;
 	r = 0.5f * __libc_fast_log1pf_pair(q, q_lo);

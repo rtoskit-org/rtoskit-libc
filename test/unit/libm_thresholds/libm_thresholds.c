@@ -441,6 +441,9 @@ static void check_inverse_trigonometric(void)
 	 * accuracy only: a subnormal result may raise underflow
 	 */
 	CHECK(within_ulp(atanf(0x1.fffffep-5f), 0x1.ff55b974cde0ap-5) && within_ulp(atanpif(0x1.29a8c4p-124f), 0x1.7afdd40083a1ap-126));
+	/* P11.07j: each side of the single-precision FPU's new fast paths, asinhf's at 1/2 and 2^12 and acoshf's at 2 */
+	CHECK(within_ulp(asinhf(0x1.fffffep-2f), 0x1.ecc2c9225f041p-2) && within_ulp(asinhf(0.5f), 0x1.ecc2caec5160ap-2) && within_ulp(asinhf(-0.5f), -0x1.ecc2caec5160ap-2) && within_ulp(asinhf(0x1.fffffep+11f), 0x1.205966dab4f12p+3) && within_ulp(asinhf(0x1p+12f), 0x1.205966fab4f12p+3));
+	CHECK(within_ulp(acoshf(0x1.fffffep+0f), 0x1.512425f1e5ce3p+0) && within_ulp(acoshf(2.0f), 0x1.5124271980435p+0) && within_ulp(acoshf(0x1.000002p+1f), 0x1.51242968b528ep+0));
 	/*
 	 * regression_fast_cbrtf_ends, regression_fast_log1pf_minus_infinity, regression_fast_expm1f_near_minus_one (P11.07i):
 	 * the single-precision FPU's fast cbrtf overflowed t^3 near FLT_MAX and lost the residual's low part to underflow near
