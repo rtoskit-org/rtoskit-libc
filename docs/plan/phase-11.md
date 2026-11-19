@@ -839,14 +839,16 @@ go to phase 12. Exit: on every Arm core no fast maths case slower than
 picolibc's but those the maintainer excludes; every Arm core still at or
 below AOR; the fast size budget held (re-locked as D187 says).
 
-### P11.08a — Research  `[ ]`
-- [ ] Each case measured and read (picolibc's method, ideas only): on
+### P11.08a — Research  `[x]`
+- [x] Each case measured and read (picolibc's method, ideas only): on
   armv6-m, armv6s-m and armv7-m `hypotf`, `sqrtf` and `fmodf` (P11.07k found
   them slower); on armv7e-m-dp `acos`, `asin`, `hypot`, `expm1`, `atan`,
   `cbrt`, `cbrtf`, `tan`, `acosf`, `asinf`, `atan2`, `tanh`, `log1pf`,
   `log1p`, `expm1f` (`libc/math/fast/`, shared with x86_64); where the
   instructions go and an estimate per function; the contract each keeps
   (`sqrtf`, `fmodf`, `hypotf` and `hypot` exact or correctly rounded, D222).
+  Done (D242; `libm-fast-double.md` §37): picolibc's fdlibm methods read,
+  the cause and an estimate per function, measured in instructions.
 
 ### P11.08b — `hypotf`, `sqrtf` and `fmodf` on the soft-float cores  `[ ]`
 - [ ] `nofp/fast/` (armv6-m, armv6s-m, armv7-m): an integer `hypotf`,

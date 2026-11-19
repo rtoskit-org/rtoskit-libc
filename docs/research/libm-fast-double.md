@@ -2710,3 +2710,107 @@ too.
 | armv7e-m, armv8-m.main | 1968 | 208.1 | 884 |
 | armv7-m | 1972 | 213.1 | — |
 | armv6-m, armv6s-m | 4169 | 728.9 | — |
+
+## 37. Q61 and Q63: the cases still slower than picolibc outside P11.07's check (P11.08a, D241, D242)
+
+P11.07k (D239) left 18 fast cases slower than picolibc 1.8.6 on the Arm cores
+that P11.07's armv7e-m check did not cover. The maintainer chose to fix them in
+phase 11 (D241), measured as the project measures everything: guest
+instructions per call under qemu (D72), with a division or a square root
+counting as one instruction (asked again for this step: instruction counts, not
+cycles). The figures are throughput, from P11.07k's baselines and its picolibc
+build.
+
+| Core | Function | ours | picolibc | ratio |
+|---|---|---:|---:|---:|
+| armv6-m, armv6s-m | `hypotf` | 6293.1 | 1251.2 | 5.03 |
+| | `sqrtf` | 460.6 | 396.8 | 1.16 |
+| armv7-m | `hypotf` | 3335.9 | 766.6 | 4.35 |
+| | `sqrtf` | 468.4 | 369.1 | 1.27 |
+| | `fmodf` | 225.2 | 215.9 | 1.04 |
+| armv7e-m-dp | `acos` | 127.4 | 56.1 | 2.27 |
+| | `asin` | 135.3 | 59.8 | 2.26 |
+| | `hypot` | 108.7 | 61.9 | 1.75 |
+| | `expm1` | 105.6 | 65.4 | 1.62 |
+| | `atan` | 107.9 | 67.5 | 1.60 |
+| | `cbrt` | 89.8 | 65.8 | 1.36 |
+| | `cbrtf` | 72.8 | 53.3 | 1.37 |
+| | `tan` | 132.8 | 100.0 | 1.33 |
+| | `acosf` | 66.1 | 50.1 | 1.32 |
+| | `asinf` | 73.1 | 57.3 | 1.27 |
+| | `atan2` | 141.2 | 124.8 | 1.13 |
+| | `tanh` | 136.9 | 121.2 | 1.13 |
+| | `log1pf` | 87.8 | 79.6 | 1.10 |
+| | `log1p` | 85.8 | 82.2 | 1.04 |
+| | `expm1f` | 62.6 | 60.8 | 1.03 |
+
+armv6-m's `fmodf` is level with picolibc's (273.1 against 273.8).
+
+### 37.1 Sources (ideas only)
+
+Read for this section (2026-11-19, picolibc `main`, via raw.githubusercontent.com):
+- `libm/math/s_asin.c`, `s_acos.c`, `s_atan.c`, `s_atan2.c`, `k_tan.c`,
+  `s_tanh.c`, `s_hypot.c`;
+- `libm/common/s_expm1.c`, `s_log1p.c`, `s_cbrt.c`;
+- the float files `libm/math/sf_asin.c`, `sf_sqrt.c`, `sf_fmod.c`, `sf_hypot.c` and
+  `libm/common/sf_cbrt.c`, `sf_log1p.c`, `sf_expm1.c`.
+
+These are fdlibm's methods:
+- **`asin` and `acos`:** x + x·R(x²) below 1/2, with R a rational of degree 5 over 4. Above 1/2, the half-angle form with one square root. One or two divisions.
+- **`atan`:** five intervals with atan(c_i) + atan of a transformed argument (one division), and an odd polynomial of 11 terms split into even and odd halves.
+- **`atan2`:** the quotient and `atan`'s kernel, with sign tables.
+- **`expm1`:** x = k·ln2 + r with no table, and a degree-5 polynomial in r² inside one rational expression (one division).
+- **`log1p`:** s = f/(2 + f) and a degree-7 polynomial in s².
+- **`cbrt`:** the exponent word divided by 3 as a first guess, a rational refinement, and one Newton step (five divisions).
+- **`tan`:** an odd polynomial of 13 terms. Above 0.6744 it uses tan(π/4 − y) = (1 − tan y)/(1 + tan y), with one division.
+- **`tanh`:** t/(t + 2) on `expm1`.
+- **`hypot`:** split squares, one square root, under 1 ulp, not correctly rounded.
+- **The float files** do the same in float. `sqrtf` is a 25-step bit-by-bit recurrence, `fmodf` a shift-and-subtract loop, and `hypotf` split float squares and one `sqrtf`.
+
+### 37.2 Where our instructions go
+
+**armv7e-m-dp's double path** (`libc/math/fast/`, shared with x86_64) was written for the 0.55-ulp target. Most files carry exact pairs (double-double products and two-sums) and long polynomials where the result's own rounding leaves room. Taking each function in turn:
+
+- **`asin`:** 13 polynomial terms at 2^-60.3 relative, z = x² and s·w as exact pairs, and two two-sums.
+  - The tail s·w is at most 0.045 of the result, so a tail good to 2^-54 relative costs at most 0.03 ulp over the last rounding.
+  - fdlibm's rational of degree 5/4 meets that in about 10 operations and a division. Our 13-term Horner takes 13 operations plus about 12 for the pairs.
+  - `acos` is the same, and their half-angle forms add a square root and its remainder.
+- **`atan`:** the j/8 table's reduction with an exact quotient pair, a long polynomial and pair arithmetic. Section 27 of the float trigonometric note showed one reduction to |t| ≤ 1/2 and a polynomial of degree 5 doing the float job in 60. In double the same shape needs a degree of about 10 for 2^-54 relative.
+- **`atan2`:** `atan`'s kernel on an exact quotient, plus the ends.
+- **`expm1`:** the 64-entry 2^(j/64) table (`__libc_fast_exp_index`). Only |x| < ln2/128 takes the k = 0 path, so the bench's [−1, 1] goes through the table and its two-sums. A polynomial on |x| ≤ 1 with no reduction (section 28's `expm1f` in double), or k = round(x/ln2) without a table, avoids that.
+- **`log1p`:** the 64-entry log table, which is already lean (85.8 against 82.2). The special-value prelude (two quiet comparisons, then three more tests) can become integer tests on the bits, as `log1pf` did in section 28.
+- **`cbrt`:** the exponent split into q and j by a multiply, a degree-4 seed, one plain Newton step and one exact Newton step. Section 28's bit trick (bits/3 plus an offset), a short polynomial in d = t³/x − 1 and the one exact step remove the split.
+- **`cbrtf`:** the same in double for a float result. The bit trick on the double and one plain Newton step give far more than float needs.
+- **`tan`:** sine and cosine polynomials around the π/32 table, two `__libc_fast_sin_turn` calls and a quotient of pairs. A tangent polynomial after a π/2 reduction, with −1/t in the odd quadrants (section 26's `tanf` in double), needs neither the table nor the second polynomial.
+- **`tanh`:** sinh and cosh from `__libc_fast_sinhcosh`, then a quotient of pairs. On a fast `expm1`, tanh |x| = e/(e + 2) with e = expm1(2|x|) is one call and one division.
+- **`asinf`, `acosf`:** they use the double files' pieces. A float result needs only 2^-30 relative, so a double polynomial of degree 4 or 5 with no pairs is enough.
+- **`log1pf`, `expm1f`:** short double polynomials, and the specials by integer tests.
+- **`hypot`:** correctly rounded (D222). Exact squares by fused multiply-adds and their sum as a pair, then the square root, then the remainder test. P11.07b's file carries a scaling prelude and a midpoint test. The prelude can become one exponent test, as `atan2f`'s did in section 27. Whether a correctly rounded `hypot` gets below picolibc's 61.9, which is not correctly rounded, is uncertain: about 55–70 is the estimate.
+
+**The soft-float cores:**
+- **`hypotf`:** still the strict float-float file in fast, as no `nofp/fast/hypotf.c` exists. In integers it becomes:
+  - the 24-bit significands squared exactly into 48 bits;
+  - the smaller square aligned to the larger (beyond a gap of 25 bits, |x| alone decides);
+  - a 64-bit integer square root;
+  - rounding by the exact remainder, correctly rounded.
+  
+  Estimated at 300–500 instructions on armv6-m, against picolibc's 1251.
+- **`sqrtf`:** the strict `nofp/sqrtf.c`, a bit-by-bit root. A seed and Newton steps in integers, with the rounding decided by the exact remainder (D233's method in 32 bits), is estimated at about 150–250.
+- **`fmodf`** (armv7-m only): the generic shift-and-subtract loop. armv7-m has `udiv`, so the remainder can advance 8 bits a step: (r << 8) % m_y stays below 2^32, using a division and `mls`. On armv6-m, which has no divide instruction, the loop stays as it is: it is already level there. A fast file only for armv7-m needs a layer listed in armv7-m's `LIBC_MATH_FAST_LAYERS` that armv6-m does not list. P11.08b decides where it goes.
+
+### 37.3 The plan and the contract
+
+Every function keeps its contract:
+- `sqrtf`, `fmodf` and `hypotf` stay exact or correctly rounded (C23 F.3, D222);
+- `hypot` stays correctly rounded;
+- armv7e-m-dp keeps the 0.55-ulp target (D220's 0.9 is for the single-precision FPU only), and the bounds do not move.
+
+The armv7e-m-dp files are shared with x86_64, which is measured and gated as well (`make bench`). A function that gets faster on armv7e-m-dp gets faster on x86_64 too.
+
+| Step | Functions | Estimate (armv7e-m-dp unless noted) |
+|---|---|---|
+| P11.08b | `hypotf`, `sqrtf` (armv6-m, armv6s-m, armv7-m), `fmodf` (armv7-m) | `hypotf` 300–500 (armv6-m), `sqrtf` 150–250, `fmodf` about 150 |
+| P11.08c | `asin`, `acos`, `atan`, `atan2`, `asinf`, `acosf` | 50–60, 50–60, 60–65, 110–120, about 40, about 40 |
+| P11.08d | `expm1`, `log1p`, `cbrt`, `cbrtf`, `tan`, `tanh`, `log1pf`, `expm1f`, `hypot` | 55–65, about 78, about 60, about 45, 85–95, 100–115, 70–75, about 55, 55–70 |
+
+Where a function cannot get below picolibc within its contract (most likely the correctly rounded `hypot`), the step records the figure and the cause. The maintainer then decides whether to exclude it (D218's exit allows exclusions).
