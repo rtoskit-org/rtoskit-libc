@@ -16,31 +16,43 @@
 #include "internal/math-fast.h"
 
 /*
- * The fast log1pf of the double-FPU cores (PLAN D162, D171): within 1/4 of 0, log(1 + x) from x itself
- * (__libc_fast_log1p_double, 2^-39.5 relative however small x is); beyond, 1 + x in double, exact there, as 2^e m
- * (__libc_fast_log_split) and e ln2 + log m with __libc_fast_log_double. Rounded once to float, below 0.51 ulp to
- * nearest (the note, section 12). Special values as C23 F.10.3.9.
+ * The ends (P11.08d1, D246), out of line so that the common path keeps no stack frame: NaN, below -1 a domain error,
+ * log(1 + -1) = -infinity with divide-by-zero (a division at run time, not a folded constant), +infinity, and the tiny
+ * arguments as the other build types (x, with underflow for a subnormal one). C23 F.10.3.9.
  */
-float log1pf(float x)
+[[gnu::noinline]] static float log1pf_ends(float x)
 {
-	double f;
-	double l;
-	int e;
-
 	if (isnan(x))
 		return x + x;
 	if (x < -1.0f)
 		return __libc_math_invalidf();
-	/* log(1 + -1) is -infinity with divide-by-zero: a division at run time, not a folded constant */
 	if (x == -1.0f)
 		return -1.0f / fabsf(x + 1.0f);
 	if (isinf(x))
 		return x;
-	/* The tiny arguments as the other build types: x, with underflow for a subnormal one */
-	if (isless(__builtin_fabsf(x), 0x1p-30f))
-		return __libc_math_tinyf(x, -1.0);
+
+	return __libc_math_tinyf(x, -1.0);
+}
+
+/*
+ * The fast log1pf of the double-FPU cores (PLAN D162, D171, D246): within 1/4 of 0, log(1 + x) from x itself
+ * (__libc_fast_log1p_double, 2^-39.5 relative however small x is); beyond, 1 + x in double, exact there, as 2^e m
+ * (__libc_fast_log_split) and e ln2 + log m with __libc_fast_log_double. Rounded once to float, below 0.51 ulp to
+ * nearest (the note, section 12). One integer test sends 2^-30 <= |x| and -1 < x < +infinity down the common path.
+ */
+float log1pf(float x)
+{
+	uint32_t bits = __libc_float_bits(x);
+	uint32_t a = bits & 0x7fffffff;
+	uint32_t top = (bits >> 31) != 0 ? 0x3f800000u : 0x7f800000u;
+	double f;
+	double l;
+	int e;
+
+	if (a - 0x30800000u >= top - 0x30800000u)
+		return log1pf_ends(x);
 	/* Within 1/4 of 0, x itself is m - 1 (and e = 0 adds exactly nothing): 1 + x need not be exact */
-	if (__builtin_fabsf(x) < 0.25f) {
+	if (a < 0x3e800000u) {
 		f = x;
 		e = 0;
 	} else {

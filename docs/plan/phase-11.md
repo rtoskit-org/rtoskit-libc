@@ -868,9 +868,26 @@ below AOR; the fast size budget held (re-locked as D187 says).
   141 → 102 (125), `asinf` 73 → 50 (57), `acosf` 66 → 47 (50); x86_64 `asinf`
   76 → 58, `acosf` 73 → 48.
 
-### P11.08d — armv7e-m-dp's `expm1`, `log1p`, `cbrt`, `tan`, `tanh`, `hypot`  `[ ]`
+### P11.08d — armv7e-m-dp's `expm1`, `log1p`, `cbrt`, `tan`, `tanh`, `hypot`  `[~]`
 - [ ] The rest of Q63 and Q61's `hypot` (correctly rounded), split further if
-  P11.08a finds it needed; tests, gains.
+  P11.08a finds it needed; tests, gains. Split into four steps, one commit each:
+
+#### P11.08d1 — `expm1`, `expm1f`, `log1p`, `log1pf`  `[x]`
+- [x] The double path's exponential and logarithm near zero; tests, gains.
+  Done (D246): armv7e-m-dp `expm1` 106 → 64 (picolibc 65), `expm1f` 63 → 46
+  (61), `log1p` 86 → 83 (82), `log1pf` 88 → 75 (80); x86_64 `expm1` 134 → 75,
+  `expm1f` 56 → 43, `log1pf` 80 → 72.
+
+#### P11.08d2 — `cbrt`, `cbrtf`  `[ ]`
+- [ ] The double path's cube roots; tests, gains.
+
+#### P11.08d3 — `tan`, `tanh`  `[ ]`
+- [ ] A tangent polynomial after a pi/2 reduction, and tanh on expm1; tests,
+  gains.
+
+#### P11.08d4 — `hypot`  `[ ]`
+- [ ] The correctly rounded double-FPU `hypot` (D222), below picolibc if it
+  can be; tests, gains.
 
 ### P11.08e — Comparison, size and docs  `[ ]`
 - [ ] P11.07k's comparison again on every Arm core; the size budget re-locked;
