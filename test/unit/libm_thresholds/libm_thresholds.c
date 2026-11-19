@@ -442,6 +442,15 @@ static void check_inverse_trigonometric(void)
 	 */
 	CHECK(within_ulp(atanf(0x1.fffffep-5f), 0x1.ff55b974cde0ap-5) && within_ulp(atanpif(0x1.29a8c4p-124f), 0x1.7afdd40083a1ap-126));
 	/*
+	 * regression_fast_cbrtf_ends, regression_fast_log1pf_minus_infinity, regression_fast_expm1f_near_minus_one (P11.07i):
+	 * the single-precision FPU's fast cbrtf overflowed t^3 near FLT_MAX and lost the residual's low part to underflow near
+	 * 2^-126; log1pf(-infinity) returned -infinity; expm1f's x^3/6 term rounded apart reached 0.94 ulp near -1
+	 */
+	CHECK(within_ulp(cbrtf(0x1.fffffep127f), 0x1.965fe9cc61958p+42) && within_ulp(cbrtf(-0x1.fffffep127f), -0x1.965fe9cc61958p+42) && within_ulp(cbrtf(0x1.05c66ep-126f), 0x1.01e9265e71e8ep-42) && within_ulp(cbrtf(0x1p-149f), 0x1.428a2f98d728bp-50));
+	RAISES(isnan(log1pf(-INFINITY)), FE_INVALID);
+	CHECK(within_ulp(expm1f(-0x1.fe80bap-1f), -0x1.431819e2dbb1ep-1) && within_ulp(expm1f(-0x1.f7af6ap-1f), -0x1.408fd9945765fp-1) && within_ulp(expm1f(-1.0f), expm1(-1.0)) && within_ulp(expm1f(0x1.000002p0f), expm1(0x1.000002p0)));
+	CHECK(within_ulp(log1pf(0x1.d735ccp-5f), 0x1.ca27fd81f8e71p-5) && within_ulp(log1pf(0x1.fffffep-6f), log1p(0x1.fffffep-6)) && within_ulp(log1pf(0x1p-5f), log1p(0x1p-5)) && within_ulp(log1pf(-0x1p-5f), log1p(-0x1p-5)));
+	/*
 	 * regression_fast_atanf_near_one (P11.07h): one polynomial on [0, 1] put the single-precision FPU's fast atanf and
 	 * atan2f 1.05 ulp off near 1, where its tail is a fifth of the result; and each side of the new reductions (1/2, 2)
 	 */
