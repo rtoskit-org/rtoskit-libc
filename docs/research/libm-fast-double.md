@@ -2814,3 +2814,47 @@ The armv7e-m-dp files are shared with x86_64, which is measured and gated as wel
 | P11.08d | `expm1`, `log1p`, `cbrt`, `cbrtf`, `tan`, `tanh`, `log1pf`, `expm1f`, `hypot` | 55–65, about 78, about 60, about 45, 85–95, 100–115, 70–75, about 55, 55–70 |
 
 Where a function cannot get below picolibc within its contract (most likely the correctly rounded `hypot`), the step records the figure and the cause. The maintainer then decides whether to exclude it (D218's exit allows exclusions).
+
+## 38. hypotf, sqrtf and fmodf on the soft-float cores (P11.08b, D242, D243)
+
+Section 37's first group. The three functions keep their contracts: `hypotf` and `sqrtf` correctly rounded (C23 F.3, D222), `fmodf` exact.
+
+**hypotf** (`nofp/fast/hypotf.c`, armv6-m, armv6s-m and armv7-m). The fast build had kept the strict float-float file on these cores. The new file works in integers:
+- With a ≥ b and their 24-bit significands, a gap of 14 binades or more returns a: b²/a² is then below 2^-26 of the result.
+- Otherwise S = a² + b² is formed in 64 bits, scaled by 2^14. It is exact up to a gap of 7, with a sticky bit beyond.
+- S is normalised by an even shift to [2^62, 2^64). Its top 32 bits give the root in Q32 by `__libc_fixed_square_root` (P11.04f2's seed, two Newton steps and a remainder correction), within 2 units of 2^-32.
+- The rounding comes from the bits below the result, except within 3 units of the midpoint, where (2q + 1)²·2^(2·drop − 2) is compared with S. That comparison is exact, and a tie rounds to even. Ties do occur: 388131² + 16777180² = 16781669², an odd 25-bit integer.
+- Below the normal range the result loses `1 − field` more bits to the same test, and underflow is raised when the result is inexact. Above it, overflow is raised by a product at run time.
+
+**sqrtf.** Two versions, picked by layer:
+- **armv6-m and armv6s-m** (`nofp/fast/sqrtf.c`): digit by digit, 13 steps that take two of the radicand's bits each and 12 that take zeros. Each loop ends on the root's own size, which saves a counter, and the 25th bit rounds (a root is never halfway between two floats). The Newton root measured 417 instructions there, because each 32 × 32 → 64 product is a call on Armv6-M. The digits take 385.
+- **armv7-m** (`soft-sp/fast/sqrtf.c`): the Newton root, 131 instructions with UMULL inline, against 430 for the digits. `soft-sp` is the one layer only armv7-m lists, so `armv7-m.mk` adds it to `LIBC_MATH_FAST_LAYERS`, and its `fast/` files replace `nofp/fast`'s of the same name on that core alone (no `#if`, D22). The top 24 bits of the Q32 root are rounded from the 8 below. Within 2 units of the midpoint, (2q + 1)² is compared exactly with the radicand.
+
+**fmodf** (`soft-sp/fast/fmodf.c`, armv7-m only). The integer significands, one bit of the exponent difference a step, with the remainder below 2^25. On armv6-m the strict file's remainder (the soft doubles') is already level with picolibc and smaller, so it stays. The new file needs `libc/math/nofp/subdir.mk`, so that the plain `nofp` module also gives way to the fast files.
+
+**Checked on the host** (the library files, nofp headers):
+- `sqrtf`: every one of the 2^32 inputs, against the host's;
+- `fmodf`: 3·10^8 pairs, random and close in exponent, against `fmod`;
+- `hypotf`: 2·10^8 pairs, against quad precision. They are random, close in exponent, Pythagorean triples scaled over 60 binades, subnormal and overflowing.
+
+None was wrong. Fixed before the commit:
+- `hypotf` returned NaN for results above FLT_MAX and misrounded subnormal results;
+- the digits' first version swapped the exponent's parities.
+
+**Instructions a call** (throughput):
+
+| Core | Function | before | now | picolibc |
+|---|---|---:|---:|---:|
+| armv6-m, armv6s-m | `hypotf` | 6293.1 | 624.1 | 1251.2 |
+| | `sqrtf` | 460.6 | 385.1 | 396.8 |
+| armv7-m | `hypotf` | 3335.9 | 199.9 | 766.6 |
+| | `sqrtf` | 468.4 | 131.3 | 369.1 |
+| | `fmodf` | 225.2 | 156.5 | 215.9 |
+
+**Size** (D243). armv6-m's and armv6s-m's fast figures hold. On armv7-m the maintainer accepted re-locking three of its own fast figures, each still inside D191's +20 % line over speed:
+
+| armv7-m image | before | now | cause |
+|---|---:|---:|---|
+| `float-exact` | 2,980 | 3,152 | `fmodf`'s own loop beside `remainderf`'s helper, which the strict `fmodf` shared |
+| `math-float` | 11,456 | 11,588 | the Newton `sqrtf` |
+| `math-mix` | 38,256 | 38,392 | the Newton `sqrtf` |

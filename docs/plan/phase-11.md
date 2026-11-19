@@ -850,10 +850,13 @@ below AOR; the fast size budget held (re-locked as D187 says).
   Done (D242; `libm-fast-double.md` §37): picolibc's fdlibm methods read,
   the cause and an estimate per function, measured in instructions.
 
-### P11.08b — `hypotf`, `sqrtf` and `fmodf` on the soft-float cores  `[ ]`
-- [ ] `nofp/fast/` (armv6-m, armv6s-m, armv7-m): an integer `hypotf`,
+### P11.08b — `hypotf`, `sqrtf` and `fmodf` on the soft-float cores  `[x]`
+- [x] `nofp/fast/` (armv6-m, armv6s-m, armv7-m): an integer `hypotf`,
   correctly rounded (D222); `sqrtf` and `fmodf` exact as today, faster;
-  tests, gains.
+  tests, gains. Done (D243): `hypotf` 6293 → 624 (armv6-m) and 3336 → 200
+  (armv7-m); `sqrtf` 461 → 385 (armv6-m, digits) and 468 → 131 (armv7-m,
+  `soft-sp/fast/`); armv7-m's `fmodf` 225 → 157; armv7-m's fast figures
+  re-locked with the maintainer's approval.
 
 ### P11.08c — armv7e-m-dp's inverse trigonometry  `[ ]`
 - [ ] `asin`, `acos`, `atan`, `atan2` and `asinf`, `acosf` in

@@ -321,10 +321,10 @@
     "insns": 345.88
    },
    "hypotf/latency": {
-    "insns": 3331.56
+    "insns": 195.56
    },
    "hypotf/throughput": {
-    "insns": 3335.94
+    "insns": 199.94
    },
    "lgamma/latency": {
     "insns": 690.31
@@ -489,10 +489,10 @@
     "insns": 213.06
    },
    "sqrtf/latency": {
-    "insns": 463.38
+    "insns": 424.88
    },
    "sqrtf/throughput": {
-    "insns": 468.44
+    "insns": 429.94
    },
    "tan/latency": {
     "insns": 987.56
