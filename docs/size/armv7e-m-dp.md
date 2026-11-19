@@ -767,3 +767,7 @@ Release: members unchanged in size; `log1p`'s frame 32 → 40 bytes (+8), the st
 ## P11.07m — The strict sin and cos cores below 0.53 ulp (D228)
 
 Accuracy fix; the growth was accepted by the maintainer. Members: `__libc_sin_core.o` 304 → 360 bytes (r⁵/120 in double-double, the exact 1/128 part of the bracket, y·x⁴/24), `__libc_cos_core.o` 208 → 104 (1 − 2 sin²(r/2)); `libc.a` text -48 bytes; `math-mix` 12070 bytes (-48). Stack depth of `sin`, `cos` and `tan` 212 → 280 bytes: `__libc_cos_core` now calls `__libc_sin_core`. The speed and fast flavours take `libc/math/speed/__libc_cos_core.c` (the series, about 750 bytes more on the cores without a double FPU).
+
+## P11.07k — The fast figures after P11.07 (D239)
+
+Fast re-locked at its P11.07 figures (D187): `math-mix` 16032 and `math-float` 5654, both unchanged; P11.07 changed nothing these images link on this core. Against speed (12422 and 9822): `math-mix` +29.1 %, the line of its own D211 set; `math-float` −42.4 %, inside D191's +20 % line.

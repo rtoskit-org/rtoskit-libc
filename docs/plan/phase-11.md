@@ -811,15 +811,19 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
   armv7e-m `asinhf` 135.3 → 98.7, `acoshf` 125.3 → 101.3, `atanhf` 111.3 →
   102.3 (picolibc 112, 106, 107).
 
-### P11.07k — Comparison, size and docs  `[ ]`
-- [ ] P11.06a's comparison again (`bench-runner compare` and `aor`, every
+### P11.07k — Comparison, size and docs  `[x]`
+- [x] P11.06a's comparison again (`bench-runner compare` and `aor`, every
   Arm core, the fast build as reference) and `aor-accuracy`;
   `docs/perf/phase-11.md`; the exit check above, any case still slower
   recorded.
-- [ ] Size: the fast budget re-locked at the new figures (D187), D191's line
+- [x] Size: the fast budget re-locked at the new figures (D187), D191's line
   checked as at P11.06j; `docs/size/`.
-- [ ] README (the fast row and the Cortex-M4F table), `docs/configuration.md`,
+- [x] README (the fast row and the Cortex-M4F table), `docs/configuration.md`,
   `fast-math.md` §4.
+  Done (D239): picolibc takes 2.67 times the fast flavour's maths
+  instructions on armv7e-m, and no case there or on armv8-m.main is slower;
+  every Arm core is at or below AOR; the remaining slower cases on other
+  cores are recorded (Q63 for armv7e-m-dp).
 
 ### P11.07l — Phase exit  `[ ]`
 - [ ] Phase exit: PLAN's phase table, decisions, open questions; Q54

@@ -245,6 +245,13 @@ in ulps of its binade (the subnormal ulp below the normal range), like D124.
 | error and gamma | `erf`, `erfc`, `lgamma`, `tgamma` | `erf` < 1.5 ulp; `erfc` < 1 ulp (D219, D223, D224; D178 had kept `erfcf` correctly rounded); `lgamma` and `lgammaf` 1 ulp, and near their zeros 2^-60 and 2^-28 absolutely (D219, D225, D226, D229); `tgamma` and `tgammaf` 1 ulp (D230–D232) | same | AOR's `erff` is 1.09; `lgamma` near its zeros needs high precision in any contract |
 | everything else (`hypot`, `fdim`, `nan`, complex functions, C23 additions not listed) | | as speed | | inherited until a later step measures a gain worth a fast file |
 
+**The targets and the exceptions (P11.07, D219, D220, D222, D233, D236).**
+
+- **Targets.** The bound is what the tests hold. The target, what the files aim at and measure, is 0.55 ulp. On the single-precision FPU cores (armv7e-m, armv8-m.main) it is 0.9 ulp, for `sinf`, `cosf`, `sincosf`, `atanf`, `asinf`, `acosf`, `atan2f`, `cbrtf`, `expm1f` and `log1pf`. Their measured worst cases are 0.65–0.84 ulp (D234, D235, D237). Their `tanf`, `asinhf`, `acoshf` and `atanhf` keep the 1.5-ulp bound and changed method only (0.74–0.997 ulp, D234, D238).
+- **Correctly rounded.** `sqrt` and `hypot` stay correctly rounded in fast. They have fast files of their own: `hypot` and `hypotf` in float, double and fixed point, and `sqrt` in fixed point on the soft-double cores (D222, D233).
+- **The float complex functions keep their contract** (componentwise within 0.52 ulp, D65). Where they call a function that fast relaxes (`atan2f`, `asinf`, `acosf`, `acoshf`), they call a hidden accurate one (`__libc_*_accurate`, D236).
+
+
 - **Rounding: round to nearest only** (the maintainer's decision, D162):
   the fast functions compute as if rounding to nearest and do not read or
   change the mode. On x86_64 and armv7e-m-dp, in a directed mode, no error
