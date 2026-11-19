@@ -12,29 +12,37 @@
  */
 
 #include <math.h>
+#include <stdint.h>
 
 #include "internal/math-fast.h"
 
 /*
- * The fast asinf of the double-FPU cores (PLAN D162, D176): atan(|x| / sqrt(1 - x^2)) with the sign of x (sqrt 0 gives pi/2) in double with __libc_fast_atan_double (2^-43.5);
- * rounded once to float, below 0.51 ulp to nearest (the trigonometric note, section 6). |x| > 1 and NaN as the double asin (C23 F.10.1.2).
+ * The fast asinf of the double path (PLAN D162, D244; docs/research/libm-fast-double.md, section 39), in plain double:
+ * x + x z P(z) below 1/2, and pi/2 - 2 asin(sqrt((1 - |x|)/2)) from 1/2 (|x| = 1 gives sqrt 0 and pi/2 itself), with
+ * __libc_fast_asinf_series's one call site; rounded once to float. C23 F.10.1.2: |x| > 1 and NaN as the double asin.
  */
 float asinf(float x)
 {
+	uint32_t bits = __libc_float_bits(x) & 0x7fffffff;
+	bool small = bits < 0x3f000000;
 	double d = x;
-	double s;
+	double y;
+	double v;
 	double r;
 
 	/* |x| > 1 (invalid), NaN: as the double function */
-	if (!isless(__builtin_fabsf(x), 1.0f) && !(__builtin_fabsf(x) == 1.0f))
+	if (bits > 0x3f800000)
 		return (float)asin(d);
-	/* 1 - x^2 = (1 - x)(1 + x) in double: both factors exact */
-	s = __builtin_sqrt((1.0 - d) * (1.0 + d));
 	/* The tiny arguments as the other build types */
-	if (isless(__builtin_fabsf(x), 0x1p-30f))
+	if (bits < 0x30800000)
 		return __libc_math_tinyf(x, x);
-	/* |x| = 1: pi/2 without the division by zero, which would raise divide-by-zero */
-	r = s == 0 ? 0x1.921fb54442d18p+0 : __libc_fast_atan_double(__builtin_fabs(d) / s);
+	/* (1 - |x|)/2 exact from 1/2 */
+	y = small ? d * d : (1.0 - __builtin_fabs(d)) * 0.5;
+	v = small ? d : __builtin_sqrt(y);
+	r = __libc_fast_asinf_series(v, y);
+	if (small)
+		return (float)r;
+	r = 0x1.921fb54442d18p+0 - 2.0 * r;
 
 	return (float)(x < 0 ? -r : r);
 }

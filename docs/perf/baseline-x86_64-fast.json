@@ -89,12 +89,12 @@
     "insns": 195.94
    },
    "acosf/latency": {
-    "cycles": 88.38,
-    "insns": 71.94
+    "cycles": 48.51,
+    "insns": 46.94
    },
    "acosf/throughput": {
-    "cycles": 58.12,
-    "insns": 72.94
+    "cycles": 9.84,
+    "insns": 47.94
    },
    "acosh/latency": {
     "cycles": 256.07,
@@ -121,12 +121,12 @@
     "insns": 203.69
    },
    "asinf/latency": {
-    "cycles": 88.07,
-    "insns": 75.44
+    "cycles": 59.59,
+    "insns": 56.94
    },
    "asinf/throughput": {
-    "cycles": 20.88,
-    "insns": 76.44
+    "cycles": 56.06,
+    "insns": 57.94
    },
    "asinh/latency": {
     "cycles": 319.3,

@@ -2858,3 +2858,93 @@ None was wrong. Fixed before the commit:
 | `float-exact` | 2,980 | 3,152 | `fmodf`'s own loop beside `remainderf`'s helper, which the strict `fmodf` shared |
 | `math-float` | 11,456 | 11,588 | the Newton `sqrtf` |
 | `math-mix` | 38,256 | 38,392 | the Newton `sqrtf` |
+
+## 39. armv7e-m-dp's inverse trigonometry (P11.08c, D242, D244, D245)
+
+Section 37's plan for `asin`, `acos`, `atan`, `atan2`, `asinf` and `acosf` on armv7e-m-dp. The figures are guest instructions a call (throughput), as in section 37. The bench's 16 arguments of `asin` and `acos` are spread over [−1, 1], so half of them take the half-angle form. Those of `atan` are spread over [−10, 10], so nine in ten take the reciprocal's range.
+
+### 39.1 Where the instructions went
+
+The disassembly of the P11.05j files on armv7e-m-dp shows three costs besides the arithmetic:
+- **`__libc_dd_product` out of line.** At `-Os` the exact product helper, called more than once in a file, stays a function. Every call costs a `bl`, register moves and a 32-byte stack frame for the returned pair. `asin` made three such calls a path, and the atan kernel two.
+- **The 13-term series with pairs.** z/6 by an exact product with 1/6 as a pair, s·w_hi by another, and two two-sums.
+- **Floating-point comparisons in the prologue.** Each test is `vcmp`, `vmrs` and a branch, three or four instructions where an integer comparison of the high word takes two. Also, a tiny-argument path that calls helpers makes the whole function keep a stack frame.
+
+### 39.2 The fused path (D244)
+
+armv7e-m-dp's FPU (FPv5-D16) has a double fused multiply-add. x86_64 (SSE2, `__libc_fpu_fma` false) shares `libc/math/fast/` but has none, and there a fused multiply-add would be a library call. So the new double code sits behind `if (__libc_fpu_fma)`, which the compiler folds. x86_64 keeps P11.05j's `asin`, `acos`, `atan` and `atan2` unchanged.
+
+Common to the fused files:
+- integer tests on |x|'s high word;
+- the tiny arguments in a separate `noinline` function, so that the main path needs no stack frame;
+- one call site for each kernel, so that it is inlined once.
+
+**`atan2`** keeps the 0.55-ulp target. Its j/16 kernel takes its remainders by fused multiply-adds (`__libc_fast_atan_kernel_fused`), exact as before:
+- 1 + a·c's rounding error by fma(a, c, 1 − d);
+- the quotient's remainder u − q·d.
+
+They replace product pairs and out-of-line `__libc_dd_product` calls. `__libc_fast_quotient` takes its remainder the same way, which also speeds up `tanh` and `atanh`.
+
+### 39.3 asin, acos and atan at 0.55 ulp first, then the maintainer's 0.9 (D245)
+
+At the 0.55 target the best versions were the following (host prototype and the library files, against `libquadmath`):
+- **`asin` and `acos`:** the tail asin S − s rounded once, as fma(sy, P0, fma(sy·y, Q(y), fma(sy_lo, P0, extra))). They need P of degree 13 (2^-62), s·y as an exact pair (the leading term is 4.5 % of the result), the square root's remainder times 1 + y·P0, and in `asin` two fast two-sums. They measured 0.5445 and 0.5426 ulp (4·10^7 samples), at 82.8 and 76.1 instructions.
+- **`atan`:** the fused kernel measured 0.5006 ulp at 87.4.
+
+All three stayed well above picolibc's 59.8, 56.1 and 67.5. Cheaper forms breached 0.55:
+
+| Variant | worst `asin` | worst `acos` |
+|---|---:|---:|
+| plain tail, w rounded (degree 12) | 0.6249 | 0.6209 |
+| exact s·y, degree 12 | 0.5765 | 0.5859 |
+| exact s·y, degree 13, without the remainder's factor 1 + y·P0 | 0.5686 | 0.5565 |
+| degree 12 re-fitted greedily after rounding (2^-59.4) | 0.5489 | 0.5481 |
+| Q(y) as a rational of degree (4, 4) | 0.5488 | 0.5508 |
+
+Given those figures (Q64), the maintainer chose a 0.9-ulp target for these three functions on the double-FPU cores, as D220 set for the single-precision FPU. The bound stays 1 ulp. The files now take that target:
+
+- **`asin`, `acos`:** w(y) = y·N(y)/D(y), with N and D of degree 4 fitted here by Sanathanan–Koerner iteration in mpmath. It is 2^-56.5 absolutely once rounded, below 0.1 ulp of the result, and its one division counts as one instruction. The tail fma(s, w, e) rounds once. The square root's remainder e = (y − s²)/(2s) stays (by a fused multiply-add and a division): without it, 2s alone would cost up to 0.5 ulp next to 1/2. `asin`'s half-angle form takes one fast two-sum, π/2 − 2s.
+- **`atan`:** c = j/16 nearest |x|, or from 1 nearest 1/|x|. The reciprocal only picks c, so it needs no remainder: atan |x| = π/2 − atan c + atan t, with t = (|x|·c − 1)/(|x| + c) and its numerator rounded once by a fused multiply-add. There the base is at least π/4 and |t| ≤ 1/32, so t's roundings cost below 0.05 ulp. Below 1 the kernel's exact remainders stay: without them `atan` measured 2.2 ulp next to 1/32, where t is half the result (`regression_fast_atan_near_32nd`).
+
+The polynomials:
+- Degree 11 in place of the rational gave 0.7518 and 0.7321 ulp at 70.8 and 62.6 instructions.
+- With the series' Taylor terms to z⁴, `atan` lost its margin near 1/32, so it keeps the kernel's five fitted terms.
+
+**`asinf` and `acosf`** (the double path, shared with x86_64, at the float target) drop the atan reduction (a division and the j/8 table) for asin's own forms in plain double: v + v·y·P(y) with P of degree 6 (2^-35.8 absolutely in w, about 2^-12 of the float result's last place). There is no fused multiply-add, so x86_64 takes the same code. |x| = 1 needs no test: y = 0 and s = 0, so the half-angle form gives π/2, or 0 for `acosf`.
+
+The full `make check` found one bug before the commit. Rounding downward, 1 − 1 is −0, so `acosf(1)` gave −0. The x > 1/2 branch is never negative, so a `fabs` returns +0 in every direction (`regression_fast_acosf_one_downward`).
+
+### 39.4 Accuracy
+
+| Function | worst error | target | samples |
+|---|---:|---:|---|
+| `asin` | 0.7435 ulp (0.7059 below 1/2) | 0.9 | 4·10^7, half within 0.45–0.55, near 1, tiny |
+| `acos` | 0.6895 ulp (0.5572 below 1/2) | 0.9 | the same |
+| `atan` | 0.5303 ulp | 0.9 | 3.2·10^7: [−10, 10], 2^-30 to 2^62, [0, 1.2] |
+| `atan2` | 0.5005 ulp | 0.55 | 2.4·10^7 pairs, 60 binades apart at most |
+| `asinf` | 0.500267 ulp | 0.55 | every float, the fused and SSE2 headers alike |
+| `acosf` | 0.500256 ulp | 0.55 | every float, the fused and SSE2 headers alike |
+
+The double functions are measured against `libquadmath`, `asinf` and `acosf` against the host's double `asin` and `acos`.
+
+### 39.5 Instructions
+
+| Function | armv7e-m-dp before | now | picolibc | x86_64 before | now |
+|---|---:|---:|---:|---:|---:|
+| `asin` | 135.3 | 64.3 | 59.8 | 203.7 | 203.7 (unchanged) |
+| `acos` | 127.4 | 58.1 | 56.1 | 195.9 | 195.9 (unchanged) |
+| `atan` | 107.9 | 75.8 | 67.5 | 202.9 | 202.9 (unchanged) |
+| `atan2` | 141.2 | 102.2 | 124.8 | 212.0 | 212.0 (unchanged) |
+| `asinf` | 73.1 | 49.6 | 57.3 | 76.4 | 57.9 |
+| `acosf` | 66.1 | 46.8 | 50.1 | 72.9 | 47.9 |
+
+The quotient and the kernel also speed up `tanh` (136.9 → 124.6) and `atanh` (89.8 → 88.8) on armv7e-m-dp.
+
+**Still above picolibc,** by 4.5, 2 and 8 instructions:
+- **`asin`:** its sign and the half-angle form's two-sum.
+- **`acos`:** the square root's remainder, which the 0.9 target still needs.
+- **`atan`:** the base π/2 − atan c as a fast two-sum, and the vector registers it saves. A second table of π/2 − atan(j/16), or table entries rounded so that π/2 − atan c is exact, would save about three instructions. The first adds 272 bytes, the second changes a table that `atan2` and the π forms share, so neither is done here. Q64 holds these figures for P11.08e's comparison.
+
+**Size.** armv7e-m-dp's fast `math-mix` falls from 16,032 to 15,928 bytes. P11.08e re-locks the fast figures.
+
+**The baseline's drift.** At HEAD, before this step, eight armv7e-m-dp fast cases and ten x86_64 ones differed from the committed baselines by one or two instructions, within the gate's noise: `acosh`, `asinh`, `atanh`, `log1p`, `log10` and kin. They come from earlier steps that re-recorded other cores only. This step records only the cases it changes.

@@ -247,7 +247,7 @@ in ulps of its binade (the subnormal ulp below the normal range), like D124.
 
 **The targets and the exceptions (P11.07, D219, D220, D222, D233, D236).**
 
-- **Targets.** The bound is what the tests hold. The target, what the files aim at and measure, is 0.55 ulp. On the single-precision FPU cores (armv7e-m, armv8-m.main) it is 0.9 ulp, for `sinf`, `cosf`, `sincosf`, `atanf`, `asinf`, `acosf`, `atan2f`, `cbrtf`, `expm1f` and `log1pf`. Their measured worst cases are 0.65–0.84 ulp (D234, D235, D237). Their `tanf`, `asinhf`, `acoshf` and `atanhf` keep the 1.5-ulp bound and changed method only (0.74–0.997 ulp, D234, D238).
+- **Targets.** The bound is what the tests hold. The target, what the files aim at and measure, is 0.55 ulp. On the single-precision FPU cores (armv7e-m, armv8-m.main) it is 0.9 ulp, for `sinf`, `cosf`, `sincosf`, `atanf`, `asinf`, `acosf`, `atan2f`, `cbrtf`, `expm1f` and `log1pf`. Their measured worst cases are 0.65–0.84 ulp (D234, D235, D237). Their `tanf`, `asinhf`, `acoshf` and `atanhf` keep the 1.5-ulp bound and changed method only (0.74–0.997 ulp, D234, D238). On the double-FPU cores (armv7e-m-dp) the target is also 0.9 ulp for the double `asin`, `acos` and `atan`, at the maintainer's choice (D245; measured 0.74, 0.69 and 0.53 ulp, `libm-fast-double.md` §39).
 - **Correctly rounded.** `sqrt` and `hypot` stay correctly rounded in fast. They have fast files of their own: `hypot` and `hypotf` in float, double and fixed point, and `sqrt` in fixed point on the soft-double cores (D222, D233).
 - **The float complex functions keep their contract** (componentwise within 0.52 ulp, D65). Where they call a function that fast relaxes (`atan2f`, `asinf`, `acosf`, `acoshf`), they call a hidden accurate one (`__libc_*_accurate`, D236).
 
