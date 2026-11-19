@@ -369,20 +369,20 @@
     "insns": 38.69
    },
    "expm1/latency": {
-    "cycles": 48.65,
-    "insns": 132.69
+    "cycles": 44.83,
+    "insns": 73.75
    },
    "expm1/throughput": {
-    "cycles": 24.36,
-    "insns": 133.69
+    "cycles": 12.16,
+    "insns": 74.75
    },
    "expm1f/latency": {
-    "cycles": 35.74,
-    "insns": 54.69
+    "cycles": 32.91,
+    "insns": 41.69
    },
    "expm1f/throughput": {
-    "cycles": 8.84,
-    "insns": 55.69
+    "cycles": 27.63,
+    "insns": 42.69
    },
    "floor/latency": {
     "cycles": 7.45,
@@ -497,12 +497,12 @@
     "insns": 91.56
    },
    "log1pf/latency": {
-    "cycles": 61.31,
-    "insns": 79.06
+    "cycles": 69.63,
+    "insns": 71.06
    },
    "log1pf/throughput": {
-    "cycles": 13.1,
-    "insns": 80.06
+    "cycles": 32.38,
+    "insns": 72.06
    },
    "log2/latency": {
     "cycles": 40.64,

@@ -819,6 +819,18 @@ double __libc_fast_atan2_slow(double y, double x);
 }
 
 /*
+ * a b + c rounded once where the FPU has a fused multiply-add, else a b rounded and the sum (P11.08d1, D246): for the
+ * files shared with x86_64, where __builtin_fma would be a library call
+ */
+[[gnu::always_inline]] static inline double __libc_fast_fma(double a, double b, double c)
+{
+	if (__libc_fpu_fma)
+		return __builtin_fma(a, b, c);
+
+	return a * b + c;
+}
+
+/*
  * a b as an exact pair, inline where the FPU has a fused multiply-add (two instructions; P11.08c, D244: the atan kernel's
  * two calls of __libc_dd_product cost 30 instructions on armv7e-m-dp), else __libc_dd_product's Dekker products called,
  * so that the cores without one keep their code size

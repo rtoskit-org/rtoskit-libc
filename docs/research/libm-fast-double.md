@@ -2948,3 +2948,65 @@ The quotient and the kernel also speed up `tanh` (136.9 → 124.6) and `atanh` (
 **Size.** armv7e-m-dp's fast `math-mix` falls from 16,032 to 15,928 bytes. P11.08e re-locks the fast figures.
 
 **The baseline's drift.** At HEAD, before this step, eight armv7e-m-dp fast cases and ten x86_64 ones differed from the committed baselines by one or two instructions, within the gate's noise: `acosh`, `asinh`, `atanh`, `log1p`, `log10` and kin. They come from earlier steps that re-recorded other cores only. This step records only the cases it changes.
+
+## 40. armv7e-m-dp's expm1, expm1f, log1p and log1pf (P11.08d1, D242, D246)
+
+Section 37's plan for the four functions of P11.08d1, at the double-FPU cores' 0.55-ulp target (D220). These files are shared with x86_64, so every change holds there too: fused multiply-adds go through `__libc_fast_fma`, which is a multiply and an add without FMA, and exact products through `__libc_fast_product`, which falls back to Dekker's products. The bench's arguments are spread over [−1, 1] for `expm1` and [−0.5, 10] for `log1p`.
+
+### 40.1 One range test, the ends out of line
+
+All four files tested their special cases one by one with floating-point comparisons, up to five tests and 22 instructions for `expm1`. The tiny-argument path calls helpers, and `expm1`'s −1 + 2^-100 needs a `volatile`, so both forced a stack frame on the common path. Now:
+- one integer test of the high word, or of the float's bits, sends the common range down the fast path;
+- a `noinline` edge function takes the rest.
+
+| Function | common range | the ends |
+|---|---|---|
+| `expm1` | 2^-54 ≤ \|x\| < 64 | NaN, tiny (x nudged up), from 64 exp's own slow path (`__libc_fast_exp_special`, the 1 below 2^-92 of e^x), below −64 −1 + 2^-100 |
+| `expm1f` | 2^-30 ≤ \|x\| < 18 | NaN, overflow from 89, −1 below −18, tiny, and from 18 to 89 the common path's formula |
+| `log1p` | 2^-7.5 < \|x\| with −1 < x < 2^1022 | the series below the bound, −1, the domain error, from 2^1022 log x, +∞ |
+| `log1pf` | 2^-30 ≤ \|x\|, −1 < x < +∞ | NaN, the domain error, −1, +∞, tiny |
+
+`log1p`'s fast range stops at 2^1022 for two reasons:
+- 1 + x can't round up to infinity near DBL_MAX;
+- below 2^1022 the correction e/u stays normal. Above it, 1/x would raise a spurious underflow; `regression_log1p_large` in the conformance suite failed on a first version that went to 2^1023.
+
+So the common path needs no 2^53 branch. With that branch kept, x86_64's `log1p` regressed by 2.9 %.
+
+### 40.2 expm1: a direct series below 0.35
+
+The P11.05b `expm1` took exp's 64-entry table for every |x| from ln 2/128. Where 2^(k/64) − 1 is small (k = ±1, a result near 0.011), the term 2^(k/64)·u is up to half the result. That path therefore needs 2^(k/64)·hi as an exact pair and two full two-sums. Now there are two paths:
+
+- **Below 0.35 in magnitude:** x + x²/2 + x³·P(x), with no reduction and no table. P is of degree 9, fitted here by Remez in mpmath, from P's Taylor series to avoid the cancellation of e^x − 1 − x − x²/2 (2^-59.7 relative to the result). x²/2, up to 15 % of the result, is an exact pair, and x + x²/2 is a fast two-sum. The rest is below 2 % and goes into one fused multiply-add.
+- **From 0.35:** the table, where |2^(k/64) − 1| is at least 0.29, so the second term is below 2 % of the result and needs no exact product:
+  - 2^(k/64) − 1 is an exact pair by one fast two-sum, the larger operand first by k's sign. Its low part is zero from 1/2 to 2^53, by Sterbenz and the grid.
+  - The rest is 2^(k/64)·(tail + u + u²q), by fused multiply-adds.
+
+The first version of the table path took exp's polynomial (`__libc_fast_expm1_tail`), which is good to 2^-57 absolutely. That is enough for exp, whose result is near 2^(k/64), but not for expm1 near 0.38, where the result is 0.47 and its ulp a quarter of the scale's: it measured 0.645 ulp. expm1's own q fixes it, as Taylor terms to u⁴ (2^-64.8; the fifth term changed nothing measurable).
+
+Widening the direct path to 1/2 (degree 10, 2^-58.4) reached 0.60 ulp near −1/2, where the result's ulp halves, so the split stays at 0.35.
+
+### 40.3 The float functions
+
+`expm1f` and `log1pf` keep their double kernels, the series or 2^t − 1, and log1p's s/(2 + s) form. Only the prologue changed, so their accuracy is unchanged.
+
+### 40.4 Accuracy
+
+| Function | worst error | samples |
+|---|---:|---|
+| `expm1` | 0.5436 ulp (fused), 0.5484 (SSE2) | 2.4·10^7 and more: [−1, 1], each side of 0.35, ±(0.34, 64), log-uniform |
+| `log1p` | 0.5058 ulp, both headers | 2.4·10^7: [−0.5, 10], (−1, −0.004), (0.004, 10^308), the series' edge |
+| `expm1f` | 0.547298 ulp | every float |
+| `log1pf` | 0.500011 ulp | every float |
+
+The double functions are measured against `libquadmath`, the float ones against the host's double `expm1` and `log1p`. `log1p`'s special values (−1, −2, ±∞, NaN, −0, 2^-61, each side of the bound, 2^53, 2^60, 2^61, DBL_MAX, −1 + 2^-53) match the host's.
+
+### 40.5 Instructions
+
+| Function | armv7e-m-dp before | now | picolibc | x86_64 before | now |
+|---|---:|---:|---:|---:|---:|
+| `expm1` | 105.6 | 64.4 | 65.4 | 133.7 | 74.8 |
+| `expm1f` | 62.6 | 45.6 | 60.8 | 55.7 | 74.8F |
+| `log1p` | 85.8 | 82.6 | 82.2 | 91.6 | 91.6 (unchanged) |
+| `log1pf` | 87.8 | 74.8 | 79.6 | 80.1 | 91.6 (unchanged)F |
+
+`log1p` is 0.4 instructions above picolibc, about 0.5 %. What remains is the range test's two bounds and two register saves; the table, the polynomial and e/u are as lean as before.

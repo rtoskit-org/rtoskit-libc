@@ -642,6 +642,17 @@ static void check_double_exponentials(void)
 	CHECK(expm1(-0x1.3ffffffffffffp+5) == -1.0 && expm1(-40.0) == -1.0 && expm1(-0x1.fffffffffffffp+8) == -1.0 && expm1(-512.0) == -1.0);
 	QUIET(near_double(expm1(-0x1.0a60a68030f0fp-4), -0x1.01e68a9e8cbep-4) && near_double(expm1(-0x1.045d580e1e606p-4), -0x1.f886318541a1fp-5) && near_double(expm1(0x1.36290a8f9f8f1p-4), 0x1.42349c9a9462dp-4));
 	QUIET(near_double(expm1(-0x1.00000000cd18fp-4), -0x1.f054043a7eb3dp-5) && near_double(expm1(0x1.5bcfa7205d3d6p-5), 0x1.634ce30cbc108p-5) && near_double(expm1(-0x1.0c7f173a14fdap-5), -0x1.0824e299f4421p-5));
+	/*
+	 * P11.08d1 (expm1's direct series and one range test, expm1f's one test, D246): each side of the split at 0.35, of the
+	 * range's 2^-54 and 64, the sweeps' worst points, and the regression: the table path took exp's polynomial at first,
+	 * whose 2^-57 cost 0.15 ulp where the result is near 0.47 (0.645 ulp before the commit); expm1f each side of 1/8 and
+	 * of 18
+	 */
+	QUIET(near_double(expm1(0x1.6666666666666p-2), 0x1.ad200b20177b2p-2) && near_double(expm1(0x1.6666666666665p-2), 0x1.ad200b20177b0p-2) && near_double(expm1(-0x1.6666666666666p-2), -0x1.2e663ed31c11ep-2) && near_double(expm1(-0x1.6666666666665p-2), -0x1.2e663ed31c11dp-2));
+	QUIET(near_double(expm1(0x1p6), 0x1.425982cf597cdp+92) && near_double(expm1(0x1.fffffffffffffp5), 0x1.425982cf597a5p+92) && expm1(-0x1p6) == -1.0 && expm1(-0x1.fffffffffffffp5) == -1.0 && expm1(0x1.0000000000001p-54) == 0x1.0000000000001p-54);
+	QUIET(near_double(expm1(-0x1.24b144a15d994p-2), -0x1.fd28090a790f5p-3) && near_double(expm1(0x1.63899bd1cd167p-2), 0x1.a9119d79ab92fp-2) && near_double(expm1(0x1.665611df99c3bp-2), 0x1.ad08dedc4d7a7p-2) && near_double(expm1(0x1.89b44ef6642cp-2), 0x1.e0191950c1e65p-2));
+	QUIET(within_ulp(expm1f(0.125f), 0x1.10b022db7ae68p-3) && within_ulp(expm1f(0x1.000002p-3f), 0x1.10b0251fa6ef8p-3) && within_ulp(expm1f(-0.125f), -0x1.e14aed893eef4p-4) && within_ulp(expm1f(-0x1.000002p-3f), -0x1.e14af110ec337p-4));
+	QUIET(within_ulp(expm1f(18.0f), 0x1.f4f22011940bdp+25) && within_ulp(expm1f(0x1.1ffffep+4f), 0x1.f4f1e17353e38p+25) && within_ulp(expm1f(-18.0f), -0x1.ffffff7d2cebap-1) && within_ulp(expm1f(-0x1.1ffffep+4f), -0x1.ffffff7d2cdb4p-1) && within_ulp(expm1f(0x1.a579e8p-3f), 0x1.d3fb091837638p-3));
 }
 
 static void check_double_logarithms(void)
@@ -688,6 +699,14 @@ static void check_double_logarithms(void)
 	QUIET(near_double(log10(0x1.08000000e5ae8p+0), 0x1.b5e9091b707f7p-7) && near_double(log10(0x1.efffffffa1775p-1), -0x1.c3d083821d15p-7) && near_double(log2(0x1.efffffff77c6bp-1), -0x1.77394caa43758p-5));
 	QUIET(near_double(log1p(0x1p-5), 0x1.f829b0e7833p-6) && near_double(log1p(0x1.fffffffffffffp-6), 0x1.f829b0e7832ffp-6) && near_double(log1p(-0x1p-5), -0x1.0415d89e74444p-5) && near_double(log1p(-0x1.fffffffffffffp-6), -0x1.0415d89e74444p-5));
 	QUIET(near_double(log1p(0x1.fffffffffffffp+62), 0x1.5d589f2fe5107p+5) && near_double(log1p(0x1p63), 0x1.5d589f2fe5107p+5) && near_double(log1p(0x1p64), 0x1.62e42fefa39efp+5) && near_double(log1p(0x1.6ap-1), 0x1.11cb81787ccf8p-1));
+	/*
+	 * P11.08d1 (log1p's and log1pf's one range test, D246): each side of the high word's bound just above 2^-7.5 and of
+	 * 2^1023 (from where log1p is log), the sweeps' worst points; log1pf each side of 1/4 and its ends
+	 */
+	QUIET(near_double(log1p(0x1.6a09fp-8), 0x1.690ae04f90f26p-8) && near_double(log1p(0x1.6a09effffffffp-8), 0x1.690ae04f90f25p-8) && near_double(log1p(-0x1.6a09fp-8), -0x1.6b0ae26ab6945p-8));
+	QUIET(near_double(log1p(0x1p1023), 0x1.628b76e3a7b61p+9) && near_double(log1p(0x1.fffffffffffffp1022), 0x1.628b76e3a7b61p+9) && near_double(log1p(0x1.e85946707e632p-8), 0x1.e689c9457a367p-8) && near_double(log1p(0x1.002a848efb6f3p-7), 0x1.fe5707005b307p-8));
+	QUIET(within_ulp(log1pf(0.25f), 0x1.c8ff7c79a9a22p-3) && within_ulp(log1pf(0x1.fffffep-3f), 0x1.c8ff7ae010086p-3) && within_ulp(log1pf(-0.25f), -0x1.269621134db92p-2) && within_ulp(log1pf(-0x1.fffffep-3f), -0x1.26961fbdf8641p-2));
+	QUIET(within_ulp(log1pf(-0x1.fffffep-1f), -0x1.0a2b23f3bab73p+4) && within_ulp(log1pf(0x1.fffffep+127f), 0x1.62e42feba39efp+6) && within_ulp(log1pf(-0x1.2f66c6p-2f), -0x1.67d2aefffe8e0p-2) && log1pf(INFINITY) == INFINITY && isnan(log1pf(NAN)));
 }
 
 static void check_double_powers(void)
