@@ -19,8 +19,44 @@
 /*
  * The fast acos of the double-FPU cores (PLAN D162, D198; docs/research/libm-fast-double.md, section 16): pi/2 - asin x
  * up to 1/2, and 2 asin(sqrt((1 - |x|)/2)) or pi minus it above, with the square root's remainder; one rounding.
- * C23 7.12.4.1, F.10.1.1: acos(1) is +0; |x| > 1 is a domain error.
+ * C23 7.12.4.1, F.10.1.1: acos(1) is +0; |x| > 1 is a domain error. Where the FPU has a fused multiply-add, acos_fused
+ * below.
  */
+
+/*
+ * The fused path (P11.08c, D244; the note, section 39), at the double-FPU cores' 0.9-ulp target (D245): the same forms
+ * in plain double, the series as one rational (__libc_fast_asin_w) and the tail rounded once; 0.5572 ulp below 1/2 and 0.6895 above over
+ * the section's samples
+ */
+static double acos_fused(double x, double a)
+{
+	/* |x|'s high word: the tests below are integer comparisons, and a NaN is above 1 */
+	uint32_t high = (uint32_t)(__libc_double_bits(a) >> 32);
+	struct __libc_dd first;
+	double t;
+	double s;
+
+	if (high >= 0x3ff00000) {
+		if (x == 1.0)
+			return 0.0;
+		if (x == -1.0)
+			return __LIBC_PI.hi + __LIBC_PI.lo;
+		return isnan(x) ? x + x : __libc_math_invalid();
+	}
+	s = __libc_fast_asin_fused(x, a, high < 0x3fe00000, &t);
+	/* pi/2 - x - t below 1/2: one fast two-sum, t below 0.024 */
+	if (high < 0x3fe00000) {
+		first = __libc_dd_fast_sum(__LIBC_PI_2.hi, -x);
+		return first.hi + ((first.lo + __LIBC_PI_2.lo) - t);
+	}
+	/* 2 asin s, relative however close x is to 1 (2 s exact) */
+	if (x > 0)
+		return 2.0 * s + 2.0 * t;
+	first = __libc_dd_fast_sum(__LIBC_PI.hi, -2.0 * s);
+
+	return first.hi + ((first.lo + __LIBC_PI.lo) - 2.0 * t);
+}
+
 double acos(double x)
 {
 	double a = __builtin_fabs(x);
@@ -30,6 +66,9 @@ double acos(double x)
 	double t_lo;
 	double t;
 	double s;
+
+	if (__libc_fpu_fma)
+		return acos_fused(x, a);
 
 	/* A NaN compares quietly (islessequal, isless): the relational operators would raise invalid */
 	if (islessequal(a, 0.5)) {

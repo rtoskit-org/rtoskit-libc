@@ -12,29 +12,37 @@
  */
 
 #include <math.h>
+#include <stdint.h>
 
 #include "internal/math-fast.h"
 
 /*
- * The fast acosf of the double-FPU cores (PLAN D162, D176): atan(sqrt(1 - x^2) / |x|), or pi minus it for a negative x (|x| = 0 gives pi/2) in double with __libc_fast_atan_double (2^-43.5);
- * rounded once to float, below 0.51 ulp to nearest (the trigonometric note, section 6). |x| > 1 and NaN as the double acos (C23 F.10.1.1).
+ * The fast acosf of the double path (PLAN D162, D244; docs/research/libm-fast-double.md, section 39), in plain double:
+ * pi/2 - (x + x z P(z)) below 1/2, and from 1/2 2 asin(sqrt((1 - |x|)/2)) or pi minus it (x = 1 gives sqrt 0 and +0
+ * in every direction), with __libc_fast_asinf_series's one call site; rounded once to float. C23 F.10.1.1: |x| > 1 and NaN as the
+ * double acos.
  */
 float acosf(float x)
 {
+	uint32_t bits = __libc_float_bits(x) & 0x7fffffff;
+	bool small = bits < 0x3f000000;
 	double d = x;
-	double s;
+	double y;
+	double v;
 	double r;
 
 	/* |x| > 1 (invalid), NaN: as the double function */
-	if (!isless(__builtin_fabsf(x), 1.0f) && !(__builtin_fabsf(x) == 1.0f))
+	if (bits > 0x3f800000)
 		return (float)acos(d);
-	/* +0 in every direction (the kernel's t + t z P is -0 at 0 rounding downward) */
-	if (x == 1.0f)
-		return 0.0f;
-	/* 1 - x^2 = (1 - x)(1 + x) in double: both factors exact */
-	s = __builtin_sqrt((1.0 - d) * (1.0 + d));
-	/* x = 0: pi/2 without the division by zero, which would raise divide-by-zero */
-	r = x == 0 ? 0x1.921fb54442d18p+0 : __libc_fast_atan_double(s / __builtin_fabs(d));
+	/* (1 - |x|)/2 exact from 1/2 */
+	y = small ? d * d : (1.0 - __builtin_fabs(d)) * 0.5;
+	v = small ? d : __builtin_sqrt(y);
+	r = __libc_fast_asinf_series(v, y);
+	if (small)
+		return (float)(0x1.921fb54442d18p+0 - r);
+	/* fabs: x = 1 gives 1 - 1 = -0 rounding downward, and acos 1 is +0 in every direction */
+	if (x > 0)
+		return (float)__builtin_fabs(2.0 * r);
 
-	return (float)(x < 0 ? 0x1.921fb54442d18p+1 - r : r);
+	return (float)(0x1.921fb54442d18p+1 - 2.0 * r);
 }

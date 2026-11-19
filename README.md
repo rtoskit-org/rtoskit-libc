@@ -118,7 +118,7 @@ All of this runs as part of `make check`. See
 | Float functions, directed rounding | Correctly rounded | not measured | Up to 2 ulp; up to 35 % misrounded upward |
 | Double functions | Below 0.53 ulp, at most 0.023 % misrounded | Up to about 1 ulp | Below 0.53 ulp, except `erf` at 0.89 ulp |
 | Floating-point exceptions | Raised on every core, including the soft `<fenv.h>` on Armv6-M | — | AOR's Arm soft-float raises none |
-| The `fast` build, round to nearest | Below 1 ulp (1.5 for `tan`, the hyperbolic functions and `erf`), checked by the same tests; `erfc`, `lgamma` and `tgamma` below 1 ulp (`lgamma` within 2^-60 absolutely near its zeros); `sqrt` and `hypot` correctly rounded; the float complex functions as above. The functions aim at 0.55 ulp, and on the Cortex-M4F and M33 the float functions at 0.9. Each function's measured worst case is in the `libm-fast-*.md` notes. Directed rounding is not supported. | — | — |
+| The `fast` build, round to nearest | Below 1 ulp (1.5 for `tan`, the hyperbolic functions and `erf`), checked by the same tests; `erfc`, `lgamma` and `tgamma` below 1 ulp (`lgamma` within 2^-60 absolutely near its zeros); `sqrt` and `hypot` correctly rounded; the float complex functions as above. The functions aim at 0.55 ulp; on the Cortex-M4F and M33 the float functions at 0.9, and on the double-FPU cores `asin`, `acos` and `atan` at 0.9. Each function's measured worst case is in the `libm-fast-*.md` notes. Directed rounding is not supported. | — | — |
 
 The method and the per-function results are in
 [`docs/research/optimized-routines.md`](docs/research/optimized-routines.md)

@@ -804,6 +804,26 @@ static void check_double_inverse_trigonometric(void)
 	QUIET(near_double(asin(0x1.101dc84c39c9ep-1), 0x1.1ee558c804933p-1) && near_double(asin(-0x1.122a045a5a2fp-1), -0x1.215125851920fp-1) && near_double(acos(0x1.1da5cc25957a2p-1), 0x1.f537266fed469p-1) && near_double(acos(-0x1.122a045a5a2fp-1), 0x1.1164240367b1p+1));
 	QUIET(near_double(atan2(-0x1.1f9a4767316fbp+42, 0x1.48836ba1bb9d2p+47), -0x1.c0209cc7ff694p-6) && near_double(atan2(0x1.1c54ae6882b6p-2, 0x1.39bbd506ebeeap+3), 0x1.cfe4447f19c0fp-6));
 	/*
+	 * P11.08c (the double-FPU cores' fused asin, acos and atan at D245's 0.9-ulp target, and the double path's plain-double
+	 * asinf and acosf, D244): the sweeps' worst points of each path, each side of the high-word tests at 1/2 and of the
+	 * float forms' 2^-30; regression_fast_acosf_one_downward: 1 - |x| is -0 rounding downward, which gave acosf(1) = -0;
+	 * regression_fast_atan_near_32nd: t's roundings unremedied below 1 cost 2.2 ulp near 1/32 (both before the commit)
+	 */
+	QUIET(near_double(asin(-0x1.d26f12962f8d4p-2), -0x1.e4494b175d2b5p-2) && near_double(asin(-0x1.0320e8011a02bp-1), -0x1.0fb3d83fef735p-1) && near_double(acos(0x1.16370aa3cb71bp-1), 0x1.fe1eae4a1f7cdp-1));
+	QUIET(near_double(atan(0x1.63308fb9bbe83p+0), 0x1.e47f7826b72cbp-1) && near_double(atan(-0x1.001029c49ead9p-5), -0x1.fff5a73074c44p-6) && near_double(atan(0x1.001211290e9p-5), 0x1.fff97505bea7fp-6));
+	QUIET(near_double(asin(0x1.e9c92e0fdce0ap-2), 0x1.feb1d8f36e30bp-2) && near_double(asin(-0x1.011590decbd73p-1), -0x1.0d55deffbe5c1p-1) && near_double(asin(0x1.e166b43da059p-2), 0x1.f52bca84ac30bp-2));
+	QUIET(near_double(acos(0x1.1909b67dd2889p-1), 0x1.fabffb75a9219p-1) && near_double(acos(0x1.f219eb2eff482p-2), 0x1.1013b43b88149p+0) && near_double(acos(-0x1.0b22f7b75ba8ep-1), 0x1.0f52496ff7489p+1));
+	QUIET(within_ulp(asinf(0x1.0a7342p-1f), 0x1.183bdd0023061p-1) && within_ulp(asinf(0x1.db01cap-2f), 0x1.edf09d00216d2p-2) && within_ulp(asinf(0.5f), 0x1.0c152382d7366p-1) && within_ulp(asinf(0x1.fffffep-2f), 0x1.0c15225b3cc23p-1));
+	QUIET(within_ulp(asinf(-0x1.fffffep-1f), -0x1.920914a5da6f9p+0) && asinf(1.0f) == 0x1.921fb6p+0f && asinf(-1.0f) == -0x1.921fb6p+0f && asinf(0x1p-30f) == 0x1p-30f && asinf(0x1.fffffep-31f) == 0x1.fffffep-31f);
+	QUIET(within_ulp(acosf(0x1.260af6p-1f), 0x1.eb07e50021847p-1) && within_ulp(acosf(0x1.daddccp-1f), 0x1.88653d001b445p-2) && within_ulp(acosf(0.5f), 0x1.0c152382d7366p+0) && within_ulp(acosf(0x1.fffffep-2f), 0x1.0c152416a4707p+0));
+	QUIET(within_ulp(acosf(-0.5f), 0x1.0c152382d7366p+1) && within_ulp(acosf(-0x1.fffffep-1f), 0x1.921464f50ea09p+1) && acosf(-1.0f) == 0x1.921fb6p+1f && is_positive_zero(acosf(1.0f)));
+	RAISES(isnan(asinf(0x1.000002p0f)) && isnan(acosf(-0x1.000002p0f)) && isnan(asinf(-INFINITY)), FE_INVALID);
+#ifdef FE_DOWNWARD
+	fesetround(FE_DOWNWARD);
+	QUIET(is_positive_zero(acosf(1.0f)) && acos(1.0) == 0.0 && !signbit(acos(1.0)));
+	fesetround(FE_TONEAREST);
+#endif
+	/*
 	 * P11.05k1 (the soft-double cores' fixed-point atan and atan2, D199): each side of the breakpoint estimate's 1/32 (where
 	 * j rounds to 0 or 1, the relative and the absolute paths), of an exponent gap of 6 (the aligned path's limit), y = x
 	 * next to 1 (j = 16), the second quadrant, and the sweeps' worst points

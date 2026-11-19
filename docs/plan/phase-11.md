@@ -858,10 +858,15 @@ below AOR; the fast size budget held (re-locked as D187 says).
   `soft-sp/fast/`); armv7-m's `fmodf` 225 → 157; armv7-m's fast figures
   re-locked with the maintainer's approval.
 
-### P11.08c — armv7e-m-dp's inverse trigonometry  `[ ]`
-- [ ] `asin`, `acos`, `atan`, `atan2` and `asinf`, `acosf` in
+### P11.08c — armv7e-m-dp's inverse trigonometry  `[x]`
+- [x] `asin`, `acos`, `atan`, `atan2` and `asinf`, `acosf` in
   `libc/math/fast/` (or an armv7e-m-dp layer of its own), within the fast
-  contract; x86_64 measured too; tests, gains.
+  contract; x86_64 measured too; tests, gains. Done (D244, D245): a fused
+  path where the FPU has a fused multiply-add, and at the maintainer's choice
+  a 0.9-ulp target for `asin`, `acos` and `atan` (Q64); armv7e-m-dp `asin`
+  135 → 64 (picolibc 60), `acos` 127 → 58 (56), `atan` 108 → 76 (68), `atan2`
+  141 → 102 (125), `asinf` 73 → 50 (57), `acosf` 66 → 47 (50); x86_64 `asinf`
+  76 → 58, `acosf` 73 → 48.
 
 ### P11.08d — armv7e-m-dp's `expm1`, `log1p`, `cbrt`, `tan`, `tanh`, `hypot`  `[ ]`
 - [ ] The rest of Q63 and Q61's `hypot` (correctly rounded), split further if

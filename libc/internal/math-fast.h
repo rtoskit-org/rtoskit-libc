@@ -818,14 +818,56 @@ double __libc_fast_atan2_slow(double y, double x);
 	return (struct __libc_dd){ .hi = product, .lo = ((ah * bh - product) + ah * bl + al * bh) + al * bl };
 }
 
+/*
+ * a b as an exact pair, inline where the FPU has a fused multiply-add (two instructions; P11.08c, D244: the atan kernel's
+ * two calls of __libc_dd_product cost 30 instructions on armv7e-m-dp), else __libc_dd_product's Dekker products called,
+ * so that the cores without one keep their code size
+ */
+[[gnu::always_inline]] static inline struct __libc_dd __libc_fast_fused_product(double a, double b)
+{
+	if (__libc_fpu_fma)
+		return __libc_fast_product(a, b);
+
+	return __libc_dd_product(a, b);
+}
+
 /* n / d + *lo: the quotient and its remainder over d, the remainder exact (the product's error by fma or Dekker) */
 static inline double __libc_fast_quotient(double n, double d, double *lo)
 {
 	double q = n / d;
-	struct __libc_dd p = __libc_dd_product(q, d);
+	struct __libc_dd p;
 
+	/* The remainder n - q d by one fused multiply-add, exact (D244) */
+	if (__libc_fpu_fma) {
+		*lo = __builtin_fma(-q, d, n) / d;
+		return q;
+	}
+	p = __libc_dd_product(q, d);
 	*lo = ((n - p.hi) - p.lo) / d;
 	return q;
+}
+
+/*
+ * The atan kernel below where the FPU has a fused multiply-add (P11.08c, D244): the same reduction and polynomial, with
+ * 1 + a c's rounding error and the quotient's remainder u - q d each by one fused multiply-add (exact, where the
+ * kernel takes a product pair and two subtractions), so that it holds the kernel's contract with fewer operations
+ */
+static inline double __libc_fast_atan_kernel_fused(double a, double a_lo, double *lo)
+{
+	int j = (int)(a * 16.0 + 0.5);
+	double c = (double)j * 0.0625;
+	const struct __libc_dd *e = &__libc_fast_atan_pairs[j];
+	double d = __builtin_fma(a, c, 1.0);
+	double d_lo = __builtin_fma(a_lo, c, __builtin_fma(a, c, 1.0 - d));
+	double u = a - c;
+	double q = u / d;
+	double t_lo = __builtin_fma(-q, d_lo, __builtin_fma(-q, d, u) + a_lo) / d;
+	double z = q * q;
+	double poly = z * (-0x1.5555555555555p-2 + z * (0x1.99999999998a4p-3 + z * (-0x1.24924922a7020p-3 + z * (0x1.c71c46c7ecbacp-4 + z * -0x1.739871480f801p-4))));
+	struct __libc_dd sum = __libc_dd_fast_sum(e->hi, q);
+
+	*lo = sum.lo + e->lo + t_lo + q * poly;
+	return sum.hi;
 }
 
 /*
@@ -834,7 +876,7 @@ static inline double __libc_fast_quotient(double n, double d, double *lo)
  * the quotient's remainder exact, |t| <= 1/32; atan t = t + t z P(z), z = t^2, five terms fitted here (2^-65.6 relative to
  * t); atan(c) + t by a fast two-sum (atan(1/16) > 1/32), the rest in the low part
  */
-static inline double __libc_fast_atan_kernel(double a, double a_lo, double *lo)
+static inline double __libc_fast_atan_kernel_split(double a, double a_lo, double *lo)
 {
 	int j = (int)(a * 16.0 + 0.5);
 	double c = (double)j * 0.0625;
@@ -852,6 +894,15 @@ static inline double __libc_fast_atan_kernel(double a, double a_lo, double *lo)
 
 	*lo = sum.lo + e->lo + t_lo + q * poly;
 	return sum.hi;
+}
+
+/* The atan kernel (D198, D244): the fused form where the FPU has a fused multiply-add, the split products elsewhere */
+static inline double __libc_fast_atan_kernel(double a, double a_lo, double *lo)
+{
+	if (__libc_fpu_fma)
+		return __libc_fast_atan_kernel_fused(a, a_lo, lo);
+
+	return __libc_fast_atan_kernel_split(a, a_lo, lo);
 }
 
 /*
@@ -900,6 +951,49 @@ static inline double __libc_fast_asin_half(double a, double *rest, double *tail_
 	 */
 	*rest = ((z - square.hi) - square.lo) / (s + s) * (1.0 + z * (0x1.5555555555555p-3 + z * 0x1.3333333333333p-4));
 	*tail_hi = __libc_fast_asin_series(s, z, 0.0, tail_lo);
+	return s;
+}
+
+/*
+ * w(y) = asin(sqrt y)/sqrt y - 1 for 0 <= y <= 1/4 on the fused path (P11.08c, D244, D245; the note, section 39):
+ * y N(y)/D(y) with N and D of degree 4 fitted here, 2^-56.5 absolutely once rounded (below 0.1 ulp of asin), for the
+ * double-FPU cores' 0.9-ulp target of asin and acos; one division in place of a polynomial of degree 11
+ */
+static inline double __libc_fast_asin_w(double y)
+{
+	double n = __builtin_fma(y, 0x1.1b88f9afd6aacp-12, -0x1.a9d0dceaefdf2p-6);
+	double d = __builtin_fma(y, 0x1.793cdb18b5359p-5, -0x1.04185200dd966p-1);
+
+	n = __builtin_fma(y, n, 0x1.4b149c1d015bdp-3);
+	d = __builtin_fma(y, d, 0x1.b565ed50ca68ap+0);
+	n = __builtin_fma(y, n, -0x1.30ead66c39dacp-2);
+	d = __builtin_fma(y, d, -0x1.1e49ba6ac3bb4p+1);
+	n = __builtin_fma(y, n, 0x1.55555555555b7p-3);
+	d = __builtin_fma(y, d, 1.0);
+
+	return y * (n / d);
+}
+
+/*
+ * asin's argument on the fused path (D244, D245), for 0 <= a = |v| < 1: when small (the caller's test on the high word,
+ * below 1/2) s = v itself and y = v^2; else the half-angle form's y = (1 - a)/2 exactly and s = sqrt y correctly
+ * rounded. Returns s, and *tail = asin(sqrt y) - s or asin v - v rounded once, with the square root's remainder
+ * (y - s^2)/(2 s), exact by a fused multiply-add (without it 2 s alone would cost up to 0.5 ulp at 1/2); one call site
+ * for both paths, so that the series is inlined once
+ */
+static inline double __libc_fast_asin_fused(double v, double a, bool small, double *tail)
+{
+	double y = v * v;
+	double s = v;
+	double e = 0.0;
+
+	if (!small) {
+		y = (1.0 - a) * 0.5;
+		s = __builtin_sqrt(y);
+		e = __builtin_fma(-s, s, y) / (s + s);
+	}
+	*tail = __builtin_fma(s, __libc_fast_asin_w(y), e);
+
 	return s;
 }
 
@@ -1056,6 +1150,24 @@ static inline float __libc_fast_sinf_pio2(int q, float r_hi, float r_lo)
 	float value = hi + lo;
 
 	return (q & 2) == 0 ? value : -value;
+}
+
+/*
+ * asin v for y = v^2 <= 1/4 in plain double, for the double path's float results (P11.08c, D244; the note, section 39):
+ * v + v y P(y) with P of degree 6 fitted here (2^-35.8 absolutely in y P(y)), about 2^-12 of the float result's last
+ * place; no fused multiply-add, so that x86_64 takes it as it is
+ */
+static inline double __libc_fast_asinf_series(double v, double y)
+{
+	double p = 0x1.eae009fa725cbp-8 + y * 0x1.1c0410aebe171p-5;
+
+	p = 0x1.933907fe734f6p-6 + y * p;
+	p = 0x1.ed59516fc0f93p-6 + y * p;
+	p = 0x1.6ddae169a6a04p-5 + y * p;
+	p = 0x1.3332a99872b71p-4 + y * p;
+	p = 0x1.55555605d8df8p-3 + y * p;
+
+	return v + v * (y * p);
 }
 
 /* atan(j/8) for j = 0 .. 8, correctly rounded doubles (libc/math/fast/__libc_fast_atan_table.c) */
