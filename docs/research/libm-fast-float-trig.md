@@ -1392,3 +1392,44 @@ The new files failed it: `clogf`'s argument by 0.527 at (2^126.3, −2^124.3), a
 
 The public functions keep their speed-up and the complex contract is unchanged.
 
+
+## 28. cbrtf, expm1f and log1pf at the 0.9-ulp target (P11.07i, D220, D237)
+
+The single-precision FPU cores' fast files of P11.03 took 81.3 (`cbrtf`), 78.4 (`expm1f`) and 96.3 (`log1pf`) instructions on armv7e-m, against picolibc's 53, 61 and 82.
+
+**cbrtf** works on the bits, with no exponent split:
+- t₀ comes from |x|'s bits divided by 3 plus 0x2a50e000, with x's sign. I chose the offset by search here, to minimise the span of t₀³/x over the significands of three binades: t₀ is within 9.5 % of the root.
+- d = t₀²·(t₀/x) − 1, ordered so that it does not overflow near FLT_MAX, where t₀³ did.
+- t = t₀·(1 + d)^(−1/3) by a degree-2 polynomial (2^-14.7).
+- Then one Newton step with the residual fma(t², t, −x). With the square's rounding error carried, the result was 0.5234 ulp at 53.3 instructions, level with picolibc's figure. Without it the result is 0.7503 ulp at 50.3. The square's rounding moves t by at most 2^-25.6, and that is the version kept.
+- Below 2^-100, x is scaled by 2^72 and the result by 2^-24. Scaling only the subnormals by 2^24 left the square's error times t to underflow near 2^-126: 0.8155 ulp.
+- Zeros, infinities and NaNs go by one unsigned test on the bits.
+
+**expm1f**, up to |x| = 1 without a reduction: x + x²/2 + x³·P(x), with P of degree 6 fitted on [−1, 1] (2^-26.9 with float coefficients).
+- x² and x³ are exact pairs, x + x²/2 is a two-sum, and x³·P0 goes inside one fused multiply-add. With x³/6 rounded apart, the result reached 0.9431 ulp near −1, where that term is a fifth of the result.
+- The comparison is a quiet `islessequal`, so NaN goes on to the existing tests.
+- Beyond 1 the file keeps P11.03's reduction and kernel. The bench draws x from [−1, 1], where the reduction had taken two thirds of the arguments to k = ±1.
+
+**log1pf:**
+- The specials and the small path |x| < 2^-5 are unsigned tests on the bits. The common path is a finite x ≥ 0 below 0x7f800000, or a negative one above −1.
+- The rounding c of u = 1 + x enters as c/u, one division: log(u + c) = log u + c/u to within c²/u², below 2^-47. The shared reduction scaled c by 2^-k and 1/c_i.
+- A first version took −∞ for +∞ in the specials and returned −∞. It now returns NaN with invalid.
+- `log2p1f` and `log10p1f` keep the shared helper.
+
+**Accuracy**, every float, on the host with `-mfma` and the fpv4-sp header:
+
+| Function | max ulp | where | above 0.5 ulp |
+|---|---:|---|---:|
+| `cbrtf` | 0.7503 | near 2.87 (each binade alike) | 8.6 % |
+| `expm1f` | 0.8432 | near 70.4 (P11.03's kernel path); 0.7897 below 1, near −0.98 | 0.38 % |
+| `log1pf` | 0.7548 | near 0.055 | 0.45 % |
+
+**Instructions a call on armv7e-m** (throughput):
+
+| Function | before | now | picolibc |
+|---|---:|---:|---:|
+| `cbrtf` | 81.3 | 50.3 | 53 |
+| `expm1f` | 78.4 | 52.3 | 61 |
+| `log1pf` | 96.3 | 77.5 | 82 |
+
+Nothing in the float complex layer calls these three (D236). `catanhf` uses the internal `__libc_log1pf_core`.
