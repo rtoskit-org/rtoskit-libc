@@ -752,6 +752,15 @@ static void check_double_powers(void)
 	QUIET(near_double(cbrt(0x1.fffffffffffffp+1), 0x1.965fea53d6e3cp+0) && near_double(cbrt(0x1p-1022), 0x1.428a2f98d728bp-341) && near_double(cbrt(0x0.fffffffffffffp-1022), 0x1.428a2f98d728ap-341) && near_double(cbrt(0x1p-1073), 0x1.428a2f98d728bp-358));
 	QUIET(near_double(cbrt(-0x1.fa7265fd9d029p+416), -0x1.fe2468c2b1ec5p+138) && near_double(cbrt(-0x1.c54bcf4dbdb0fp-1), -0x1.eba1effdff152p-1));
 	/*
+	 * P11.08d2 (cbrt and cbrtf from the bits with one Halley step and a series in the exact residual, D247): each side of
+	 * the range test's 2^-968 and 2^1022, the exact roots (2^-1074, 8, -27), the ends, and the sweeps' worst points; the
+	 * regression: t (t^3 + 2|x|) underflowed to 0 near 2^-968 before the commit (NaN)
+	 */
+	QUIET(near_double(cbrt(0x1p-968), 0x1.428a2f98d728bp-323) && near_double(cbrt(0x1.fffffffffffffp-969), 0x1.428a2f98d728bp-323) && near_double(cbrt(0x1p1022), 0x1.965fea53d6e3dp+340) && near_double(cbrt(0x1.fffffffffffffp1021), 0x1.965fea53d6e3cp+340));
+	QUIET(cbrt(0x1p-1074) == 0x1p-358 && cbrt(8.0) == 2.0 && cbrt(-27.0) == -3.0 && near_double(cbrt(0x1.fffffffffffffp1023), 0x1.428a2f98d728bp+341) && near_double(cbrt(-0x1.1a0f3c3a3bfaap1023), -0x1.086849925f017p+341));
+	QUIET(near_double(cbrt(0x1.1a44247ac738p9), 0x1.0878d0be0fc7dp+3) && near_double(cbrt(0x1.1a6339e1c4429p-1020), 0x1.088285a3ea45dp-340) && signbit(cbrt(-0.0)) && cbrt(INFINITY) == INFINITY && isnan(cbrt(NAN)));
+	QUIET(cbrtf(27.0f) == 3.0f && cbrtf(-0x1p-147f) == -0x1p-49f && within_ulp(cbrtf(0x1.000002p0f), 0x1.000000aaaaaa4p+0) && within_ulp(cbrtf(0x1.a74dc2p+3f), 0x1.2eb8d64c25ad1p+1) && signbit(cbrtf(-0.0f)));
+	/*
 	 * Subnormal results through __libc_fast_exp_scale (P11.06h, D214): rounded to 53 bits at the 2^1022 scale and then
 	 * to the subnormal grid, pow reached 0.77 ulp and exp2's slow path 0.76 (regression); now rounded once
 	 */

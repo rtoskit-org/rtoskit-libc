@@ -16,74 +16,52 @@
 
 #include "internal/math-fast.h"
 
-/* cbrt(2^j), j = 0..2, rounded */
-static const double cbrt_scale[3] = { 1.0, 0x1.428a2f98d728bp+0, 0x1.965fea53d6e3dp+0 };
+/*
+ * The ends (P11.08d2, D247), out of line: NaN, the infinities and the zeros return themselves (C23 7.12.7.1, F.10.4.1);
+ * below 2^-968 (where the residual's products would underflow) and from 2^1022 (where the Halley step's 2 t^3 + |x|
+ * could overflow) the argument scaled by 2^162 or 2^-162, exactly, and the root by 2^-54 or 2^54
+ */
+[[gnu::noinline]] static double cbrt_ends(double x)
+{
+	if (isnan(x) || isinf(x) || x == 0)
+		return x + x;
+	if (__builtin_fabs(x) < 1.0)
+		return cbrt(x * 0x1p162) * 0x1p-54;
+
+	return cbrt(x * 0x1p-162) * 0x1p54;
+}
 
 /*
- * The fast cbrt of the double-FPU cores (PLAN D162, D193): x = 2^(3q + j) m with m in [1, 2), cbrt(m) by a degree-4
- * Chebyshev fit (2^-16.2) times cbrt(2^j), one Newton step (2^-31), and one with the residual t^3 - y exact (the
- * products' errors by fused multiply-adds, t^3 - y itself exact by Sterbenz; or, without them, t cut to 26 bits and
- * Halley's step): about 2^-62 before the one rounding, t - d, with the sign on both. The exponent goes on after it (exactly: the result lies in [2^-358,
- * 2^342]).
- * C23 7.12.7.1, F.10.4.1: +-0, +-inf and NaN return themselves.
+ * The fast cbrt of the double-FPU cores (PLAN D162, D193, D247; docs/research/libm-fast-double.md, section 41), from
+ * |x|'s bits with no exponent split: t from the high word over 3 plus a constant fitted here (within 2^-5), one Halley
+ * step t (t^3 + 2a)/(2 t^3 + a) (2^-15.5), then r = (a - t^3)/t^3 with t^3 exact as a pair (the products' errors by
+ * fused multiply-adds, or Dekker's products without them; a - t^3 exact by Sterbenz) and the root as t (1 + r)^(1/3) =
+ * t + t r P(r) with P the series to r^3 (|r| below 2^-13.9, the next term 2^-60 of the result), rounded once with
+ * the sign on t. One test sends 2^-968 <= |x| < 2^1022 down this path.
  */
 double cbrt(double x)
 {
 	uint64_t bits = __libc_double_bits(x);
-	uint64_t sign = bits & 0x8000000000000000ull;
-	int32_t e = (int32_t)((bits >> 52) & 0x7ff);
+	uint32_t high = (uint32_t)(bits >> 32) & 0x7fffffff;
+	double a = __builtin_fabs(x);
 	struct __libc_dd square;
 	struct __libc_dd cube;
-	int32_t shift = 0;
-	int32_t q;
-	int32_t j;
-	double m;
-	double y;
+	double t3;
 	double t;
-	double d;
+	double r;
 
-	if (e == 0x7ff || (bits << 1) == 0)
-		return x + x;
-	if (e == 0) {
-		bits = __libc_double_bits(x * 0x1p54);
-		e = (int32_t)((bits >> 52) & 0x7ff);
-		shift = -18;
-	}
+	if (high - 0x03700000u >= 0x7fd00000u - 0x03700000u)
+		return cbrt_ends(x);
 
-	/* q = floor((e - 1023)/3) by a multiply: e + 1200 - 1023 is positive and below 2^16 */
-	q = (int32_t)(((uint32_t)(e + 177) * 43691u) >> 17) - 400;
-	j = e - 1023 - 3 * q;
-	m = __libc_double_from((bits & 0x000fffffffffffffull) | 0x3ff0000000000000ull);
-	y = __libc_double_from((bits & 0x000fffffffffffffull) | ((uint64_t)(1023 + j) << 52));
-	t = (0x1.04bc2bde493b9p-1 + m * (0x1.6c697f83452edp-1 + m * (-0x1.2d024eeecb9cbp-2 + m * (0x1.544aaec5e4624p-4 + m * -0x1.4b077fcd0882bp-7)))) * cbrt_scale[j];
-	t = t - (t * t * t - y) / (3.0 * t * t);
-
-	if (__libc_fpu_fma) {
-		/* Newton's step with t^3 - y exact: two products' errors by fused multiply-adds */
-		square = __libc_dd_product(t, t);
-		cube = __libc_dd_product(square.hi, t);
-		d = ((cube.hi - y) + (cube.lo + square.lo * t)) / (3.0 * square.hi);
-	} else {
-		/*
-		 * Without one, Dekker's products cost 17 operations each (soft ones on the cores without a double FPU): t cut to
-		 * 26 bits (2^-26) makes t^2 exact, its split a + b (27 bits and the rest) makes a t and b t exact, y - a t is
-		 * exact (Sterbenz), and Halley's step, cubic, leaves 2^-78
-		 */
-		double a;
-		double b;
-
-		t = __libc_double_from(__libc_double_bits(t) & ~((1ull << 27) - 1));
-		square.hi = t * t;
-		a = __libc_double_from(__libc_double_bits(square.hi) & ~((1ull << 26) - 1));
-		b = square.hi - a;
-		d = -(t * ((y - a * t) - b * t)) / (2.0 * square.hi * t + y);
-	}
-
-	/* The sign on t and d before the one rounding, so that a directed rounding rounds the signed result */
-	if (sign != 0) {
+	t = __libc_double_from((uint64_t)(high / 3 + 0x2a9f761cu) << 32);
+	t3 = t * t * t;
+	/* The quotient first: t (t^3 + 2a) would underflow near 2^-968 */
+	t = t * ((t3 + 2.0 * a) / (2.0 * t3 + a));
+	square = __libc_fast_product(t, t);
+	cube = __libc_fast_product(square.hi, t);
+	r = ((a - cube.hi) - (cube.lo + square.lo * t)) / cube.hi;
+	if (bits >> 63)
 		t = -t;
-		d = -d;
-	}
 
-	return __libc_double_from(__libc_double_bits(t - d) + ((uint64_t)(int64_t)(q + shift) << 52));
+	return __libc_fast_fma(t, r * (0x1.5555555555555p-2 + r * (-0x1.c71c71c71c71cp-4 + r * 0x1.f9add3c0ca458p-5)), t);
 }

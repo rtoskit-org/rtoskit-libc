@@ -193,20 +193,20 @@
     "insns": 86.62
    },
    "cbrt/latency": {
-    "cycles": 80.47,
-    "insns": 91.69
+    "cycles": 83.64,
+    "insns": 87.19
    },
    "cbrt/throughput": {
-    "cycles": 21.11,
-    "insns": 92.69
+    "cycles": 25.06,
+    "insns": 88.19
    },
    "cbrtf/latency": {
-    "cycles": 51.83,
-    "insns": 70.19
+    "cycles": 66.86,
+    "insns": 56.19
    },
    "cbrtf/throughput": {
-    "cycles": 14.03,
-    "insns": 71.19
+    "cycles": 14.16,
+    "insns": 57.19
    },
    "cos/latency": {
     "cycles": 43.2,

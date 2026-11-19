@@ -878,8 +878,10 @@ below AOR; the fast size budget held (re-locked as D187 says).
   (61), `log1p` 86 → 83 (82), `log1pf` 88 → 75 (80); x86_64 `expm1` 134 → 75,
   `expm1f` 56 → 43, `log1pf` 80 → 72.
 
-#### P11.08d2 — `cbrt`, `cbrtf`  `[ ]`
-- [ ] The double path's cube roots; tests, gains.
+#### P11.08d2 — `cbrt`, `cbrtf`  `[x]`
+- [x] The double path's cube roots; tests, gains. Done (D247): armv7e-m-dp
+  `cbrt` 90 → 53 (picolibc 66), `cbrtf` 73 → 45 (53); x86_64 `cbrt` 93 → 88,
+  `cbrtf` 71 → 57.
 
 #### P11.08d3 — `tan`, `tanh`  `[ ]`
 - [ ] A tangent polynomial after a pi/2 reduction, and tanh on expm1; tests,
