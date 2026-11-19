@@ -454,6 +454,17 @@ static void check_inverse_trigonometric(void)
 	CHECK(within_ulp(expm1f(-0x1.fe80bap-1f), -0x1.431819e2dbb1ep-1) && within_ulp(expm1f(-0x1.f7af6ap-1f), -0x1.408fd9945765fp-1) && within_ulp(expm1f(-1.0f), expm1(-1.0)) && within_ulp(expm1f(0x1.000002p0f), expm1(0x1.000002p0)));
 	CHECK(within_ulp(log1pf(0x1.d735ccp-5f), 0x1.ca27fd81f8e71p-5) && within_ulp(log1pf(0x1.fffffep-6f), log1p(0x1.fffffep-6)) && within_ulp(log1pf(0x1p-5f), log1p(0x1p-5)) && within_ulp(log1pf(-0x1p-5f), log1p(-0x1p-5)));
 	/*
+	 * P11.08b: the integer sqrtf, hypotf and fmodf of the cores without an FPU (correctly rounded or exact in every build
+	 * type): a hypotf tie (the triple 388131, 16777180, 16781669 lands half way, to even), subnormal and overflowing
+	 * results, and the ends of sqrtf and fmodf
+	 */
+	CHECK(hypotf(388131.0f, 16777180.0f) == 16781668.0f && hypotf(-16777180.0f, 388131.0f) == 16781668.0f && hypotf(3.0f, 4.0f) == 5.0f);
+	CHECK(hypotf(0x1p-149f, 0x1p-149f) == 0x1p-149f && hypotf(0x1.8p-140f, 0x1p-140f) == 0x1.cd8p-140f && hypotf(0x1p-149f, 0.0f) == 0x1p-149f);
+	RAISES(isinf(hypotf(0x1.fffffep127f, 0x1.fffffep127f)) && hypotf(0x1.fffffep127f, 0x1p100f) == 0x1.fffffep127f, FE_OVERFLOW);
+	CHECK(sqrtf(0x1p-149f) == 0x1.6a09e6p-75f && sqrtf(0x1.fffffep127f) == 0x1.fffffep63f && sqrtf(0x1p-148f) == 0x1p-74f && sqrtf(2.0f) == 0x1.6a09e6p0f && sqrtf(16777216.0f) == 4096.0f);
+	CHECK(fmodf(0x1.fffffep127f, 0x1p-149f) == 0.0f && fmodf(-7.5f, 2.0f) == -1.5f && fmodf(1.0f, 0x1p-149f) == 0.0f);
+	CHECK(fmodf(0x1.5p-128f, 0x1p-129f) == 0x1.4p-130f && is_negative_zero(fmodf(-4.0f, 2.0f)) && fmodf(5.0f, INFINITY) == 5.0f);
+	/*
 	 * regression_fast_atanf_near_one (P11.07h): one polynomial on [0, 1] put the single-precision FPU's fast atanf and
 	 * atan2f 1.05 ulp off near 1, where its tail is a fifth of the result; and each side of the new reductions (1/2, 2)
 	 */

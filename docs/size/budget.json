@@ -87,7 +87,7 @@
    },
    "armv7-m": {
     "float-exact": {
-     "code": 2980,
+     "code": 3152,
      "ram": 20
     },
     "hello-printf-float": {
@@ -119,11 +119,11 @@
      "ram": 48
     },
     "math-float": {
-     "code": 11456,
+     "code": 11588,
      "ram": 20
     },
     "math-mix": {
-     "code": 38256,
+     "code": 38392,
      "ram": 20
     }
    },
