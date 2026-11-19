@@ -46,3 +46,6 @@ float acoshf(float x)
 
 	return value.hi + value.lo;
 }
+
+/* The float complex layer's accurate acoshf (D236, D238): this one, within 0.52 ulp */
+float __libc_acoshf_accurate(float x) __attribute__((__alias__("acoshf")));

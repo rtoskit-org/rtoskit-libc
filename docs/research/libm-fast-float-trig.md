@@ -1433,3 +1433,36 @@ The single-precision FPU cores' fast files of P11.03 took 81.3 (`cbrtf`), 78.4 (
 | `log1pf` | 96.3 | 77.5 | 82 |
 
 Nothing in the float complex layer calls these three (D236). `catanhf` uses the internal `__libc_log1pf_core`.
+
+## 29. asinhf, acoshf and atanhf on the single-precision FPU (P11.07j, D220, D238)
+
+These keep their 1.5-ulp bound (D163) and change method only. Section 10's files took 135.3 (`asinhf`), 125.3 (`acoshf`) and 111.3 (`atanhf`) instructions on armv7e-m, against picolibc's 112, 106 and 107. All three ended in `__libc_fast_log1pf_pair`, which reduced 1 + u with the shared log1p reduction (a two-sum, a correction scaled by 2^-k and 1/c_i) and then divided u_lo by 1 + u.
+
+- **`__libc_fast_log1pf_pair`** now carries the rounding c of U = 1 + u and u_lo together, as (c + u_lo)/U by one division, as `log1pf` does since section 28. Within 2^-5 of 0 it is u + u²·q(u) with u_lo taken at slope 1 − u.
+- **`__libc_fast_logf_pair`**, new, computes log(v + v_lo) for v ≥ 1: the logf reduction and v_lo/v.
+- **asinhf**, from 1/2 to 2^12, is log(|x| + √(1 + x²)) on the pair (`__libc_fast_logf_pair`):
+  - |x| + s by Fast2Sum, since s > |x|, and the result is at least asinh(1/2), so there is no cancellation;
+  - this drops the reduction to log1p (s − 1 by a two-sum, then |x| + t by another).
+  
+  Below 1/2 it keeps the log1p form, which stays accurate relative to |x|. NaN, the infinities, |x| < 2^-12 and |x| ≥ 2^12 go by one unsigned test on the bits.
+- **acoshf**, from 2 to 2^12, is log(x + √(x² − 1)) on the pair: x² exact, x² − 1 and x + s each by Fast2Sum (x² ≥ 4, x > s). Below 2 it keeps the log1p form in t = x − 1, which is exact.
+- **atanhf**: 1 − |x| by Fast2Sum (1 > |x|) in place of a full two-sum.
+- **The float complex layer** calls `acoshf` near the cuts of `cacosf` and `casinhf`, whose parts stay within 0.52 ulp (D236). It now calls `__libc_acoshf_accurate`:
+  - an alias of `acoshf` in strict `sp-nearest` and in `nofp/fast`;
+  - in this fast layer, a file of its own with the strict layer's float-float method (D62). P11.04's fast body would have changed with the shared helper.
+
+**Accuracy**, every float, on the host with `-mfma` and the fpv4-sp header:
+
+| Function | max ulp | where | above 0.5 ulp |
+|---|---:|---|---:|
+| `asinhf` | 0.7536 | near 0.055 (log1p form) | 0.57 % |
+| `acoshf` | 0.7421 | near 1.001 (log1p form); 0.5161 from 2 | 0.04 % |
+| `atanhf` | 0.7538 | near 0.027 | 0.55 % |
+
+**Instructions a call on armv7e-m** (throughput):
+
+| Function | before | now | picolibc |
+|---|---:|---:|---:|
+| `asinhf` | 135.3 | 98.7 | 112 |
+| `acoshf` | 125.3 | 101.3 | 106 |
+| `atanhf` | 111.3 | 102.3 | 107 |

@@ -65,3 +65,6 @@ float acoshf(float x)
 	z = (int)stdc_leading_zeros(v);
 	return __libc_fixed_float(v << z, 5 - shift / 2 - z, false);
 }
+
+/* The float complex layer's accurate acoshf (D236, D238): this one, within 0.52 ulp */
+float __libc_acoshf_accurate(float x) __attribute__((__alias__("acoshf")));
