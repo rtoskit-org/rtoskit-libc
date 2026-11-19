@@ -3010,3 +3010,46 @@ The double functions are measured against `libquadmath`, the float ones against 
 | `log1pf` | 87.8 | 74.8 | 79.6 | 80.1 | 91.6 (unchanged)F |
 
 `log1p` is 0.4 instructions above picolibc, about 0.5 %. What remains is the range test's two bounds and two register saves; the table, the polynomial and e/u are as lean as before.
+
+## 41. armv7e-m-dp's cbrt and cbrtf (P11.08d2, D242, D247)
+
+Section 37's plan for the cube roots, in the files shared with x86_64, at the 0.55-ulp target.
+
+**The P11.05f method** took `cbrt` in four stages:
+- x = 2^(3q + j)·m, with q by a multiply;
+- cbrt m by a degree-4 fit (2^-16.2) times a table's cbrt(2^j);
+- one plain Newton step;
+- one Newton step with the exact residual.
+
+That is two divisions, the exponent split and its restoring, about 80 instructions on armv7e-m-dp against picolibc's 66. `cbrtf` did the same in double, with an integer division by 3 (`sdiv`).
+
+**The new method, the same in both:**
+- **The seed from the bits:** t₀ is |x|'s high word over 3 plus a constant. The constant, 0x2a9f761c, is fitted here by searching for the smallest worst relative error over [1, 8): 2^-5.0. There is no exponent split and no table. The root's exponent comes out of the division, so nothing needs restoring.
+- **One Halley step,** t₀·((t₀³ + 2a)/(2t₀³ + a)), cubic: 2^-15.5.
+- **The correction:** r = (a − t³)/t³ and cbrt a = t·(1 + r)^(1/3) = t + t·r·P(r), with P the binomial series 1/3 − r/9 + 5r²/81.
+  - For `cbrt`, t³ is an exact pair (the products' errors by fused multiply-adds, or Dekker's products without them), and a − t³ is exact by Sterbenz. With |r| below 2^-13.9, the next term is 2^-60 of the result. The sign goes on t before the one rounding, the final fused multiply-add.
+  - For `cbrtf`, plain double and the series to r²: 2^-45 relative.
+
+**The range.** One test sends 2^-968 ≤ |x| < 2^1022 down the common path:
+- below 2^-968 the residual's product errors would underflow;
+- from 2^1022 the Halley step's 2t³ + a could overflow.
+
+The ends scale x by 2^162 or 2^-162, exactly, and the root by 2^-54 or 2^54. Every float is a normal double, so `cbrtf` needs no such range.
+
+**The bug fixed before the commit:** the first version computed t·(t³ + 2a) before the division. Near 2^-968 that product is about 2^-1290 and underflowed to 0, so the result was NaN. The quotient now comes first (regression case in `libm_thresholds`).
+
+**Accuracy:**
+
+| Function | worst error | samples |
+|---|---:|---|
+| `cbrt` | 0.5036 ulp, both headers | 2.4·10^7: [−1000, 1000], [1, 8], 10^-300 to 10^300, the subnormals to 10^-290, 10^300 to DBL_MAX, negative |
+| `cbrtf` | 0.500000 ulp | every float |
+
+Exact cubes come out exact: 2^-1074 gives 2^-358, where the host's glibc returns the double below. 8 gives 2, and −27 gives −3, where glibc returns −3 − 2^-51.
+
+**Instructions:**
+
+| Function | armv7e-m-dp before | now | picolibc | x86_64 before | now |
+|---|---:|---:|---:|---:|---:|
+| `cbrt` | 89.8 | 52.8 | 65.8 | 92.7 | 88.2 |
+| `cbrtf` | 72.8 | 45.3 | 53.3 | 71.2 | 57.2 |

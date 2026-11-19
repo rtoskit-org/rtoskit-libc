@@ -12,46 +12,34 @@
  */
 
 #include <math.h>
+#include <stdint.h>
 
 #include "internal/math-fast.h"
 
 /*
- * The fast cbrtf of the double-FPU cores (PLAN D162, D171): |x| = 2^(3q + j) f in double (every float is a normal
- * double), f in [1, 2) and j in {0, 1, 2}; cbrt(2^j f) from a degree 3 polynomial in f times cbrt(2^j) (2^-13.2),
- * then one Halley step t (t^3 + 2m)/(2t^3 + m), cubic, to about 2^-39; rounded once to float, below 0.51 ulp to
- * nearest (the note, section 13). Special values as C23 F.10.4.1.
+ * The fast cbrtf of the double-FPU cores (PLAN D162, D171, D247; docs/research/libm-fast-double.md, section 41), in
+ * double, where every float but zero is normal: t from the high word over 3 plus a constant fitted here (within
+ * 2^-5), one Halley step t (t^3 + 2a)/(2 t^3 + a) (2^-15.5), and t (1 + r)^(1/3) for r = (a - t^3)/t^3 by the series
+ * to r^2 (2^-45 relatively); rounded once to float. C23 F.10.4.1: +-0, +-inf and NaN return themselves.
  */
 float cbrtf(float x)
 {
-	static const double roots[3] = { 1.0, 0x1.428a2f98d728bp+0, 0x1.965fea53d6e3dp+0 };
-	uint64_t bits;
-	double f;
-	double m;
-	double t;
+	uint32_t bits = __libc_float_bits(x);
+	double a = __builtin_fabs((double)x);
 	double t3;
-	int e;
-	int q;
-	int j;
+	double t;
+	double r;
 
-	if (isnan(x) || isinf(x) || x == 0)
+	if ((bits << 1) == 0 || (bits & 0x7f800000u) == 0x7f800000u)
 		return x + x;
 
-	bits = __libc_double_bits(__builtin_fabs((double)x));
-	e = (int)(bits >> 52) - 1023;
-	/* floor(e / 3) for e in [-149, 127], by a division of a positive number */
-	q = (e + 150) / 3 - 50;
-	j = e - 3 * q;
-	bits &= 0x000fffffffffffffull;
-	f = __libc_double_from(bits | 0x3ff0000000000000ull);
-	m = __libc_double_from(bits | (uint64_t)(1023 + j) << 52);
-
-	/* Plain products: the start needs no fused multiply-add, which x86_64's baseline lacks (a call, 1,057 instructions) */
-	t = f * 0x1.6ae260afe5091p-6 - 0x1.44f0d2e8403a6p-3;
-	t = f * t + 0x1.296213a52f037p-1;
-	t = (f * t + 0x1.1c90a1fb8969fp-1) * roots[j];
+	t = __libc_double_from((uint64_t)((uint32_t)(__libc_double_bits(a) >> 32) / 3 + 0x2a9f761cu) << 32);
 	t3 = t * t * t;
-	t = t * (t3 + 2.0 * m) / (2.0 * t3 + m);
-	t *= __libc_double_from((uint64_t)(q + 1023) << 52);
+	/* The quotient first: t (t^3 + 2a) would underflow near 2^-968 */
+	t = t * ((t3 + 2.0 * a) / (2.0 * t3 + a));
+	t3 = t * t * t;
+	r = (a - t3) / t3;
+	t = t + t * (r * (0x1.5555555555555p-2 - r * 0x1.c71c71c71c71cp-4));
 
-	return (float)(x < 0 ? -t : t);
+	return (float)((bits >> 31) != 0 ? -t : t);
 }
