@@ -657,12 +657,12 @@
     "insns": 13.69
    },
    "tan/latency": {
-    "cycles": 91.98,
-    "insns": 251.69
+    "cycles": 86.63,
+    "insns": 167.69
    },
    "tan/throughput": {
-    "cycles": 44.51,
-    "insns": 252.69
+    "cycles": 37.44,
+    "insns": 168.69
    },
    "tanf/latency": {
     "cycles": 47.04,

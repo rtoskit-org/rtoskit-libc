@@ -678,6 +678,9 @@ extern const double __libc_fast_erf_pieces[8][8];
 /* sin(j pi/32) for j = 0..16 as exact pairs; cos(j pi/32) is entry 16 - j (libc/math/fast/__libc_fast_sin_table.c, D196) */
 extern const struct __libc_dd __libc_fast_sin_table[17];
 
+/* tan(j pi/32) for j = 0..8 as exact pairs (libc/math/fast/__libc_fast_tan_table.c, D248) */
+extern const struct __libc_dd __libc_fast_tan_table[9];
+
 /*
  * The double sin, cos, sincos and tan of the double-FPU cores (PLAN D196; docs/research/libm-fast-double.md, section 14):
  * the strict reduction and double-double cores for |x| >= 2^20 and next to a zero, out of line
@@ -699,102 +702,6 @@ static inline double __libc_fast_trig_large(float x, int kind)
 
 	return __libc_fast_trig_slow((double)x, kind);
 }
-
-/*
- * a = n pi/32 + t + t_lo for 0 <= a < 2^20, |t| <= pi/64: Cody-Waite with pi/32 in three parts, P1 and P2 of 29 bits (so
- * n P1 and n P2 are exact for n < 2^24), a - n P1 exact (Sterbenz), the next difference exact by a fast two-difference
- * (when |a - n P1| < |n P2| the difference is exact itself), then n P3 rounded into the low part, normalized: t + t_lo
- * to about 2^-91
- */
-static inline uint32_t __libc_fast_rem_pio32(double a, double *t, double *t_lo)
-{
-	double shifted = a * 0x1.45f306dc9c883p+3 + 0x1.8p52;
-	uint32_t n = (uint32_t)__libc_double_bits(shifted);
-	double nd = shifted - 0x1.8p52;
-	double u = a - nd * 0x1.921fb54p-4;
-	double w = nd * 0x1.10b4611p-34;
-	double h = u - w;
-	double l = ((u - h) - w) - nd * 0x1.4c4c6628b80dcp-63;
-
-	/* Normalized: l reaches 2^-40, and the kernel takes t_lo to first order only (t_lo t^2/2 would be 2^-49) */
-	*t = h + l;
-	*t_lo = l - (*t - h);
-	return n;
-}
-
-/*
- * Whether a = n pi/32 + t lies next to a zero of sin, cos or tan (n a nonzero multiple of 16 and |t| below 2^-27), where
- * t's 2^-91 is not enough relative accuracy; one argument in about 2^24 of the range
- */
-static inline bool __libc_fast_trig_near_zero(uint32_t n, double t)
-{
-	return (n & 15) == 0 && n != 0 && isless(__builtin_fabs(t), 0x1p-27);
-}
-
-/* sin t - t = t sp and cos t - 1 = cp for |t| <= pi/64, from z = t^2: four terms each, fitted here (2^-65.3 relative to t, 2^-71.2) */
-static inline double __libc_fast_sin_poly(double z)
-{
-	return z * (-0x1.5555555555555p-3 + z * (0x1.11111111110dfp-7 + z * (-0x1.a01a0199b464ep-13 + z * 0x1.71da14683ddd6p-19)));
-}
-
-static inline double __libc_fast_cos_poly(double z)
-{
-	return z * (-0x1.0000000000000p-1 + z * (0x1.55555555554cap-5 + z * (-0x1.6c16c1634b0cfp-10 + z * 0x1.a0144d7b73dccp-16)));
-}
-
-/*
- * A cos t + B sin t as hi + *lo, for (A, B) = (sin c, cos c) or (cos c, -sin c), c = j pi/32, j = 0..15: A + B_hi t
- * exactly (the product's error exact, then a fast two-sum: |A| >= 0.098 >= |B t| for j >= 1, and A or B is 0 for
- * j = 0), every other term in the low part; sp and cp as __libc_fast_sin_poly and __libc_fast_cos_poly give them
- */
-static inline double __libc_fast_trig_kernel(double a_hi, double a_lo, double b_hi, double b_lo, double t, double t_lo, double sp, double cp, double *lo)
-{
-	struct __libc_dd product = __libc_dd_product(b_hi, t);
-	struct __libc_dd sum = __libc_dd_fast_sum(a_hi, product.hi);
-
-	*lo = sum.lo + product.lo + a_lo + b_lo * t + a_hi * cp + b_hi * (t * sp) + t_lo * (b_hi - a_hi * t);
-	return sum.hi;
-}
-
-/*
- * +-sin(N pi/32 + t) as hi + *lo, without the sign of bit 5 of N (the caller's, with x's): bit 4 picks sin or cos of
- * a = j pi/32 + t, j = N mod 16
- */
-static inline double __libc_fast_sin_turn(uint32_t n, double t, double t_lo, double sp, double cp, double *lo)
-{
-	uint32_t j = n & 15;
-	const struct __libc_dd *s = &__libc_fast_sin_table[j];
-	const struct __libc_dd *c = &__libc_fast_sin_table[16 - j];
-
-	if ((n & 16) == 0)
-		return __libc_fast_trig_kernel(s->hi, s->lo, c->hi, c->lo, t, t_lo, sp, cp, lo);
-
-	return __libc_fast_trig_kernel(c->hi, c->lo, -s->hi, -s->lo, t, t_lo, sp, cp, lo);
-}
-
-/* hi + lo, negated first when negative: the sign on both parts before the one rounding */
-static inline double __libc_fast_signed_sum(double hi, double lo, bool negative)
-{
-	return negative ? -hi - lo : hi + lo;
-}
-
-/*
- * The fast double lgamma's paths in double (libc/math/fast/__libc_fast_lgamma_*.c, PLAN D225): the positive x from
- * 2^-60 below 2^60 as hi + *lo, the negative x from 2^-60 in magnitude (the recurrence and the reflection), and the
- * ends; libc/math/fast/lgamma.c calls all three, the soft-double cores' fixed-point file the last two
- */
-double __libc_fast_lgamma_positive(double x, double *lo);
-double __libc_fast_lgamma_negative(double x);
-double __libc_fast_lgamma_ends(double x);
-
-/* atan(j/16) for j = 0..16 as exact pairs (libc/math/fast/__libc_fast_atan_pairs.c, D198) */
-extern const struct __libc_dd __libc_fast_atan_pairs[17];
-
-/*
- * The double atan2 of the double-FPU cores' slow path (D198): the strict file's special cases, scaling and double-double
- * core, for what the fast path leaves (libc/math/fast/__libc_fast_atan2_slow.c)
- */
-double __libc_fast_atan2_slow(double y, double x);
 
 /*
  * a b as an exact pair, always inline: the fast files build at -Os, where __libc_dd_product, called more than once, stays
@@ -842,6 +749,121 @@ double __libc_fast_atan2_slow(double y, double x);
 
 	return __libc_dd_product(a, b);
 }
+
+/*
+ * a = n pi/32 + t + t_lo for 0 <= a < 2^20, |t| <= pi/64: Cody-Waite with pi/32 in three parts, P1 and P2 of 29 bits (so
+ * n P1 and n P2 are exact for n < 2^24), a - n P1 exact (Sterbenz), the next difference exact by a fast two-difference
+ * (when |a - n P1| < |n P2| the difference is exact itself), then n P3 rounded into the low part, normalized: t + t_lo
+ * to about 2^-91
+ */
+static inline uint32_t __libc_fast_rem_pio32(double a, double *t, double *t_lo)
+{
+	double shifted = a * 0x1.45f306dc9c883p+3 + 0x1.8p52;
+	uint32_t n = (uint32_t)__libc_double_bits(shifted);
+	double nd = shifted - 0x1.8p52;
+	double u = a - nd * 0x1.921fb54p-4;
+	double w = nd * 0x1.10b4611p-34;
+	double h = u - w;
+	double l = ((u - h) - w) - nd * 0x1.4c4c6628b80dcp-63;
+
+	/* Normalized: l reaches 2^-40, and the kernel takes t_lo to first order only (t_lo t^2/2 would be 2^-49) */
+	*t = h + l;
+	*t_lo = l - (*t - h);
+	return n;
+}
+
+/*
+ * __libc_fast_rem_pio32 with n rounded to nearest in every rounding mode (P11.08d3, D248): the conversion truncates
+ * whatever the mode, where the 1.5 2^52 shift rounds n up rounding upward, which leaves t near -pi/32, outside tan's
+ * series, and keeps __libc_fast_trig_near_zero from seeing tan's zeros and poles (tan(pi) came out with the wrong sign)
+ */
+static inline uint32_t __libc_fast_rem_pio32_nearest(double a, double *t, double *t_lo)
+{
+	uint32_t n = (uint32_t)(a * 0x1.45f306dc9c883p+3 + 0.5);
+	double nd = (double)n;
+	double u = a - nd * 0x1.921fb54p-4;
+	double w = nd * 0x1.10b4611p-34;
+	double h = u - w;
+	double l = ((u - h) - w) - nd * 0x1.4c4c6628b80dcp-63;
+
+	*t = h + l;
+	*t_lo = l - (*t - h);
+	return n;
+}
+
+/*
+ * Whether a = n pi/32 + t lies next to a zero of sin, cos or tan (n a nonzero multiple of 16 and |t| below 2^-27), where
+ * t's 2^-91 is not enough relative accuracy; one argument in about 2^24 of the range
+ */
+static inline bool __libc_fast_trig_near_zero(uint32_t n, double t)
+{
+	return (n & 15) == 0 && n != 0 && isless(__builtin_fabs(t), 0x1p-27);
+}
+
+/* sin t - t = t sp and cos t - 1 = cp for |t| <= pi/64, from z = t^2: four terms each, fitted here (2^-65.3 relative to t, 2^-71.2) */
+static inline double __libc_fast_sin_poly(double z)
+{
+	return z * (-0x1.5555555555555p-3 + z * (0x1.11111111110dfp-7 + z * (-0x1.a01a0199b464ep-13 + z * 0x1.71da14683ddd6p-19)));
+}
+
+static inline double __libc_fast_cos_poly(double z)
+{
+	return z * (-0x1.0000000000000p-1 + z * (0x1.55555555554cap-5 + z * (-0x1.6c16c1634b0cfp-10 + z * 0x1.a0144d7b73dccp-16)));
+}
+
+/*
+ * A cos t + B sin t as hi + *lo, for (A, B) = (sin c, cos c) or (cos c, -sin c), c = j pi/32, j = 0..15: A + B_hi t
+ * exactly (the product's error exact, then a fast two-sum: |A| >= 0.098 >= |B t| for j >= 1, and A or B is 0 for
+ * j = 0), every other term in the low part; sp and cp as __libc_fast_sin_poly and __libc_fast_cos_poly give them
+ */
+static inline double __libc_fast_trig_kernel(double a_hi, double a_lo, double b_hi, double b_lo, double t, double t_lo, double sp, double cp, double *lo)
+{
+	struct __libc_dd product = __libc_fast_fused_product(b_hi, t);
+	struct __libc_dd sum = __libc_dd_fast_sum(a_hi, product.hi);
+
+	*lo = sum.lo + product.lo + a_lo + b_lo * t + a_hi * cp + b_hi * (t * sp) + t_lo * (b_hi - a_hi * t);
+	return sum.hi;
+}
+
+/*
+ * +-sin(N pi/32 + t) as hi + *lo, without the sign of bit 5 of N (the caller's, with x's): bit 4 picks sin or cos of
+ * a = j pi/32 + t, j = N mod 16
+ */
+static inline double __libc_fast_sin_turn(uint32_t n, double t, double t_lo, double sp, double cp, double *lo)
+{
+	uint32_t j = n & 15;
+	const struct __libc_dd *s = &__libc_fast_sin_table[j];
+	const struct __libc_dd *c = &__libc_fast_sin_table[16 - j];
+
+	if ((n & 16) == 0)
+		return __libc_fast_trig_kernel(s->hi, s->lo, c->hi, c->lo, t, t_lo, sp, cp, lo);
+
+	return __libc_fast_trig_kernel(c->hi, c->lo, -s->hi, -s->lo, t, t_lo, sp, cp, lo);
+}
+
+/* hi + lo, negated first when negative: the sign on both parts before the one rounding */
+static inline double __libc_fast_signed_sum(double hi, double lo, bool negative)
+{
+	return negative ? -hi - lo : hi + lo;
+}
+
+/*
+ * The fast double lgamma's paths in double (libc/math/fast/__libc_fast_lgamma_*.c, PLAN D225): the positive x from
+ * 2^-60 below 2^60 as hi + *lo, the negative x from 2^-60 in magnitude (the recurrence and the reflection), and the
+ * ends; libc/math/fast/lgamma.c calls all three, the soft-double cores' fixed-point file the last two
+ */
+double __libc_fast_lgamma_positive(double x, double *lo);
+double __libc_fast_lgamma_negative(double x);
+double __libc_fast_lgamma_ends(double x);
+
+/* atan(j/16) for j = 0..16 as exact pairs (libc/math/fast/__libc_fast_atan_pairs.c, D198) */
+extern const struct __libc_dd __libc_fast_atan_pairs[17];
+
+/*
+ * The double atan2 of the double-FPU cores' slow path (D198): the strict file's special cases, scaling and double-double
+ * core, for what the fast path leaves (libc/math/fast/__libc_fast_atan2_slow.c)
+ */
+double __libc_fast_atan2_slow(double y, double x);
 
 /* n / d + *lo: the quotient and its remainder over d, the remainder exact (the product's error by fma or Dekker) */
 static inline double __libc_fast_quotient(double n, double d, double *lo)
@@ -1672,9 +1694,9 @@ static inline double __libc_fast_exp_scale(int32_t k, double p)
  */
 static inline double __libc_fast_odd_series(double x, double c, double c_lo, double q, double *lo)
 {
-	struct __libc_dd square = __libc_dd_product(x, x);
-	struct __libc_dd cube = __libc_dd_product(x, square.hi);
-	struct __libc_dd term = __libc_dd_product(cube.hi, c);
+	struct __libc_dd square = __libc_fast_fused_product(x, x);
+	struct __libc_dd cube = __libc_fast_fused_product(x, square.hi);
+	struct __libc_dd term = __libc_fast_fused_product(cube.hi, c);
 	struct __libc_dd sum = __libc_dd_fast_sum(x, term.hi);
 
 	*lo = sum.lo + (term.lo + cube.hi * c_lo + (cube.lo + x * square.lo) * c + cube.hi * square.hi * q);
@@ -1707,7 +1729,7 @@ static inline void __libc_fast_sinhcosh(double a, int32_t half, double *s_hi, do
 	double t2 = __libc_double_from(minus[1]) + even;
 	double sum = s1 + s2;
 	double diff = s1 - s2;
-	struct __libc_dd product = __libc_dd_product(sum, u);
+	struct __libc_dd product = __libc_fast_fused_product(sum, u);
 	struct __libc_dd s = __libc_dd_fast_sum(diff, product.hi);
 
 	*s_hi = s.hi;

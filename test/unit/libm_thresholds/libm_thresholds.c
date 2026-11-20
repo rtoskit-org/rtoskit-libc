@@ -797,6 +797,21 @@ static void check_double_trigonometric(void)
 	 */
 	CHECK(near_double(sin(-0x1.6c87396fa11c6p+716), 0x1.70896e2e96bb7p-1) && near_double(cos(0x1.f6ad070a5e76dp+992), 0x1.73b6ae2400f75p-1) && near_double(tan(0x1.8a00d4a898abep+470), -0x1.f9526fde57bc6p-1));
 	CHECK(near_double(sin(-0x1.6cc40e19e6788p+604), 0x1.67219dd542c2bp-1) && near_double(tan(0x1.cd0e206bb0a3ep+375), 0x1.ee6c6813cdc91p-1) && near_double(sin(-0x1.06be672f31889p+354), 0x1.6918da3daf7d4p-1) && near_double(tan(0x1.a32ee4ab1235fp+168), -0x1.f9f3b2d7e83a1p-1));
+	/*
+	 * P11.08d3 (tan by a table of tan(j pi/32) and (T + u)/(1 - T u), D248): each side of the range test's 2^-27 and 2^20,
+	 * of a table step (17 pi/64), pi/4, next to the pole at pi/2, and the sweeps' worst points; the regression: u's rest
+	 * (2^-20 of it) left unnormalized cost 2^-37 relative before the commit
+	 */
+	QUIET(tan(0x1p-27) == 0x1p-27 && tan(0x1.fffffffffffffp-28) == 0x1.fffffffffffffp-28 && near_double(tan(0x1p20), 0x1.6692e5779206fp-2) && near_double(tan(0x1.fffffffffffffp19), 0x1.6692e575533f1p-2));
+	QUIET(near_double(tan(0x1.ab41b09886feap-1), 0x1.1a73d55278c4cp+0) && near_double(tan(0x1.ab41b09886fe9p-1), 0x1.1a73d55278c4bp+0) && near_double(tan(0x1.ab41b09886febp-1), 0x1.1a73d55278c4dp+0) && near_double(tan(0x1.921fb54442d18p-1), 0x1.fffffffffffffp-1));
+	QUIET(near_double(tan(0x1.921fb54442d18p+0), 0x1.d02967c31cdb5p+53) && near_double(tan(0x1.921fb54442d17p+0), 0x1.9153d9443ed0bp+51) && near_double(tan(-0x1.97c26adadefcp-5), -0x1.9818b62a7b5b4p-5) && near_double(tan(-0x1.c158ec815f5cp+13), -0x1.7852d060c8b59p-5));
+	QUIET(near_double(tan(0x1.880acf8ed430fp+0), 0x1.9612cd8cdfd95p+4) && near_double(tan(1.5), 0x1.c33ed50b88777p+3) && near_double(tan(0.8), 0x1.079664793b60bp+0));
+	/* regression_fast_tan_upward: rounding upward the shift rounded n up, so tan(pi) and tan(pi/2) missed the slow path and came out with the wrong sign */
+#ifdef FE_UPWARD
+	fesetround(FE_UPWARD);
+	CHECK(signbit(tan(0x1.921fb54442d18p+1)) && tan(0x1.921fb54442d18p+0) > 0x1p53);
+	fesetround(FE_TONEAREST);
+#endif
 	/* sincos equals sin and cos, bit for bit */
 	sincos(-4.0, &s, &c);
 	CHECK(s == sin(-4.0) && c == cos(-4.0));
