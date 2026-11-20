@@ -309,3 +309,37 @@ P12.01's four worst points on (0, 3), now correctly rounded.
 
 Bench, release and speed: `lgamma` 1.4–4.5 % fewer instructions, `tgamma`
 1.7–3.1 % more (its exp(lgamma) form reaches the new path).
+
+### P12.03b: the strict `lgamma` near its negative zeros (D256)
+
+`__libc_lgamma_core.c` takes negative x in (−24, −1) by the recurrence
+Γ(x) = Γ(z)/(x(x + 1)…(x − m)), with m = floor(x) and z = x − m + 1 in (1, 2):
+lgamma(x) = lgamma(z) − log|P|, and the sign of Γ(x) is P's.
+- Every factor and z is exact, since |x| ≥ 1 and each is an integer from x.
+- P is a normalized pair product of at most 24 factors.
+- lgamma(z) comes from P12.03a's [3/4, 9/4].
+- Near each zero both terms are small (z near 1 or 2, |P| near 1), so neither
+  cancels the other.
+
+Below −24 no double is near a zero (the zeros are within 1/24! of the
+integers), and the reflection stays, as it does in (−1, 0).
+
+Host sweep against `lgammaq` and, at the zeros, 200-bit mpmath. D252's target
+is within 0.53 ulp, or within 2^-60 absolutely.
+
+| Check | SSE2 | fma |
+|---|---|---|
+| 3562 points at the 44 zeros to −24 (±40 ulps, 2^6–2^38 ulps away) | 0 beyond both bounds; 2^-60.07 at most where \|result\| < 2^-6 (P12.01: 2^-49, 2.3·10^13 ulp) | the same |
+| (−24, −1), 5·10^7 and 10^7 samples | 0.001 % misrounded (0.29 % before); 0 of 2·10^7 beyond both bounds, 2^-60.91 at most above 0.53 ulp | 0 of 10^7 beyond both bounds |
+| ±1000 ulps about every integer −1 … −25 (5·10^4) | 0.5000 ulp | 0.5000 ulp |
+| (−1, 0), the reflection (10^7) | 0.5003 ulp | 0.5002 |
+| (−171, −24), the reflection (10^7) | 0.5001 ulp | — |
+| lgamma(−2.5) | −0x1.ccbf9f5ed0f16p-5, 0.465 ulp (was 0.535) | the same |
+| `lgammaf` on (−24, 0) (10^7) | 0.5000 ulp, 0 misrounded | — |
+
+The sampled worst in ulps (129 at −0x1.5fb40fab896dp+1, a result of
+−2.2·10^-7) is 2^-68 absolutely. `libm_thresholds` now holds the strict build
+to the fast contract's checks within 2^-60 near the zeros
+(`contract_lgamma_negative_zeros`, true for both contracts). It adds
+`regression_lgamma_negative_zero` and `regression_lgamma_minus_2_5`, the
+exact results at −2.5, −1.5 and −0x1.e0000000001ecp+3 (strict only).

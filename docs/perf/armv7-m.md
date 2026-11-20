@@ -1237,3 +1237,7 @@ Release and speed: no bench case changes beyond noise (`bench-runner diff`: 0 fa
 ## P12.03a — The strict `lgamma` below 0.53 ulp on (0, 3) (D255)
 
 Release and speed, instructions per call (throughput): `lgamma` 17,908 → 17,131 (−4.3 %), `tgamma` 24,298 → 24,797 (+2.1 %); `lgammaf` and `tgammaf` move with them where they call the double core. `tgamma` reaches the core's new [3/4, 9/4] path through its exp(lgamma) form. The gamma cases' baselines are re-recorded (D253); no other case changes.
+
+## P12.03b — The strict `lgamma` near its negative zeros (D256)
+
+Release and speed: no bench case changes beyond noise (the `lgamma` cases' arguments are positive). Baselines unchanged.

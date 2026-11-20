@@ -17,8 +17,8 @@
 #include <stdbool.h>
 
 /*
- * Whether the build type's lgamma keeps 2^-60 absolutely near its negative zeros (D219, D225): the fast file does; the
- * strict file is about 2^-57 off there and misrounds lgamma(-2.5) (Q62), a known defect outside phase 11 (D162)
+ * Whether the build type's lgamma keeps 2^-60 absolutely near its negative zeros: the fast files (D219, D225) and, since
+ * P12.03b, the strict core (D252)
  */
 bool contract_lgamma_negative_zeros(void);
 
