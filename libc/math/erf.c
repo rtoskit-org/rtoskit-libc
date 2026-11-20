@@ -16,7 +16,7 @@
 
 #include "internal/math.h"
 
-/* C23 7.12.8.1, F.10.5.1: the series below 1/2, 1 - erfc above, +-1 (inexact) from 6 */
+/* C23 7.12.8.1, F.10.5.1: two terms below 2^-28, the series below 1/2, 1 - erfc above, +-1 (inexact) from 6 */
 double erf(double x)
 {
 	const struct __libc_dd two_sqrtpi = { .hi = 0x1.20dd750429b6dp+0, .lo = 0x1.1ae3a914fed80p-56 };
@@ -30,8 +30,18 @@ double erf(double x)
 		return x + x;
 	if (isinf(x))
 		return copysign(1.0, x);
-	if (a < 0x1p-28)
-		return __libc_dd_scale_product(x, two_sqrtpi);
+	if (a < 0x1p-28) {
+		/*
+		 * x 2/sqrt(pi) + x^3 p0 = x (2/sqrt(pi) + x^2 p0), p0 = -2/(3 sqrt(pi)): x^2 p0 is up to 2^-57.6 of the constant,
+		 * which dropped cost 0.53 ulp (Q57), so it joins the constant's low part, and the product is exact as a pair
+		 * rounded once through the 2^200 scaling (subnormal results round once). Below 2^-300 it is far below the
+		 * last place and is left out, so that x x raises no spurious underflow.
+		 */
+		const double p0 = -0x1.812746b0379e7p-2;
+		double square = a < 0x1p-300 ? 0.0 : x * x;
+
+		return __libc_dd_scale_product(x, (struct __libc_dd){ .hi = two_sqrtpi.hi, .lo = two_sqrtpi.lo + square * p0 });
+	}
 	if (a >= 6.0) {
 		volatile double tiny = 0x1p-80;
 

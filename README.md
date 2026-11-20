@@ -56,7 +56,7 @@ and builds for x86-64 as well, which is where it is developed and tested.
    allocators: nano, TLSF or tiny.
 
 The project's goals, architecture and every design decision (numbered D1 to
-D253) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
+D254) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
 done in phases: conformance first, then size, then speed, then a comparison
 with Arm Optimized Routines, then a round of speed work that the size
 budgets had held back, then the POSIX subset and C++ support, faster sine
@@ -611,7 +611,7 @@ Read these first:
 - [`docs/configuration.md`](docs/configuration.md): the archives, the build
   variants, the cores, the allocators, the ports and parent builds.
 - [`docs/plan/PLAN.md`](docs/plan/PLAN.md): goals, scope and architecture,
-  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D253) and the
+  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D254) and the
   [open questions](docs/plan/PLAN.md#7-open-questions).
 - [`docs/toolchain.md`](docs/toolchain.md): the tool versions we build and
   test with.

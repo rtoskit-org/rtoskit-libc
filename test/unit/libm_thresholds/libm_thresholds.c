@@ -971,6 +971,13 @@ static void check_double_error_function(void)
 	QUIET(near_double(erf(0x1.8000000000000p+1), 0x1.fffd1ac4135f9p-1) && near_double(erf(0x1.7800000000000p+2), 0x1.fffffffffffffp-1) && near_double(erf(0x1.7ffffffffffffp+2), 0x1.0000000000000p+0) && near_double(erf(-0x1.3333333333333p-2), -0x1.50838881dea0fp-2));
 	QUIET(near_double(erf(0x1.1bb8874e36d08p+0), 0x1.c4144a3af4197p-1) && near_double(erf(0x1.1b66f7c6b691ap+0), 0x1.c3de52d6984dfp-1) && near_double(erf(-0x1.d59d70884fd86p-2), -0x1.eefc28d3f3ae9p-2) && near_double(erf(0x1.caa205731e295p-2), 0x1.e4e4f27a916c3p-2));
 	/*
+	 * regression_erf_tiny (P12.02, Q57): below 2^-28 the strict file dropped x^3 p0, 0.53 ulp at -0x1.c51f10a1c1f6bp-29
+	 * and one result in 280 misrounded there; now both contracts round these to nearest, and the term, left out below
+	 * 2^-300, raises no underflow for a normal result
+	 */
+	QUIET(erf(-0x1.c51f10a1c1f6bp-29) == -0x1.ff4aeda5e6c5bp-29 && erf(0x1.fffffffffffffp-29) == 0x1.20dd750429b6cp-28 && erf(-0x1.441a6c5f1399cp-30) == -0x1.6db618dfdce1cp-30);
+	QUIET(erf(0x1p-299) == 0x1.20dd750429b6dp-299 && erf(-0x1p-301) == -0x1.20dd750429b6dp-301 && erf(0x1p-600) == 0x1.20dd750429b6dp-600);
+	/*
 	 * P11.05o (the soft-double cores' fixed-point erf, D205): each side of the pieces' edges at 3/4, 1, 2 and 4 (the
 	 * index from x's bits changes there), the last piece, and the sweeps' worst points
 	 */

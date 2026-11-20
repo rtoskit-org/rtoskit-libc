@@ -1229,3 +1229,7 @@ Release and speed, instructions per call (latency): `log1p` 6949.88 → 6929.88,
 ## P11.07m — The strict sin and cos cores below 0.53 ulp (D228)
 
 Instructions per call (throughput), slower by the accuracy the old cores lacked (accepted by the maintainer; the size flavour's cos is 1 − 2 sin²(r/2), the speed and fast flavours' the series with exact squares). Release (size): `sin` 6523.81 → 9542.56 (+46.3 %), `cos` 6500.38 → 9568.56 (+47.2 %), `sinpi` 6158.06 → 9199.31 (+49.4 %), `cospi` 6136.44 → 9177.69 (+49.6 %), `tanpi` 12168 → 18282.5 (+50.3 %), `tan` 11534.6 → 17607.2 (+52.6 %), `sincos` 10702.4 → 16789.3 (+56.9 %). Speed: `sincos` 1400.25 → 1596.19 (+14.0 %), `cos` 1074.25 → 1270.19 (+18.2 %), `sinpi` 6158.06 → 8011.44 (+30.1 %), `cospi` 6136.44 → 7989.81 (+30.2 %), `tanpi` 12168 → 15904.4 (+30.7 %). Fast: `sinpi` 6158.06 → 8011.44 (+30.1 %), `cospi` 6136.44 → 7989.81 (+30.2 %), `tanpi` 12168 → 15904.4 (+30.7 %). No other case changed.
+
+## P12.02 — The strict `erf` below 2^-28 (D254)
+
+Release and speed: no bench case changes beyond noise (`bench-runner diff`: 0 faster, 0 regressed); no case reaches the tiny path. Baselines unchanged.

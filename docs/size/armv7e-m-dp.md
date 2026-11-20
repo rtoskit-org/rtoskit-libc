@@ -775,3 +775,7 @@ Fast re-locked at its P11.07 figures (D187): `math-mix` 16032 and `math-float` 5
 ## P11.08e — The fast figures after P11.08 (D250)
 
 Fast re-locked at its P11.08 figures (D187): `math-mix` 16032 → 15976, `math-float` 5654, unchanged. P11.08c–d4 rewrote the double path's `asin`, `acos`, `atan`, `expm1`, `log1p`, `cbrt`, `tan` and `hypot` with fused multiply-adds and their edge cases out of line, which shortened the six `math-mix` links. Against speed (12422 and 9822): `math-mix` +28.6 %, under its own D211 line; `math-float` −42.4 %, inside D191's +20 % line. The other cores' fast figures are unchanged (armv7-m's were re-locked at P11.08b, D243).
+
+## P12.02 — The strict `erf` keeps x³·p0 below 2^-28 (D254)
+
+`erf.o` 564 → 604 bytes (+40) in release and speed, the only member that changes; every `test/size` image is unchanged (none calls `erf`). Its frame is unchanged. Re-locked as the step shows it (D253). The fast build does not use this file.

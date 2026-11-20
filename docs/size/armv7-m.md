@@ -450,3 +450,7 @@ Accuracy fix; the growth was accepted by the maintainer. Members: `__libc_sin_co
 ## P11.07k — The fast figures after P11.07 (D239)
 
 Fast re-locked at its P11.07 figures (D187): `math-mix` 38568 → 38256 bytes of code, `math-float` 11456 (unchanged). Against speed (37100 and 13516): `math-mix` +3.1 %, `math-float` −15.2 %, inside D191's +20 % line. The lower figures are the P11.07 fast files (D222–D238), measured as built; the hidden accurate `atan2f`, `asinf`, `acosf` and `acoshf` (D236) link only with the float complex functions, which these images do not call. Release and speed unchanged (`size-report diff`).
+
+## P12.02 — The strict `erf` keeps x³·p0 below 2^-28 (D254)
+
+`erf.o` 1064 → 1140 bytes (+76) in release and speed, the only member that changes; every `test/size` image is unchanged (none calls `erf`). `erf`'s frame 136 → 144 bytes. Re-locked as the step shows it (D253). The fast build does not use this file.

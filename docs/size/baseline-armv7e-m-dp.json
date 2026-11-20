@@ -3394,7 +3394,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 564,
+    "text": 604,
     "unwind": 0
    },
    "erfc.o": {
@@ -8732,7 +8732,7 @@
    "rodata": 8983,
    "tbss": 362,
    "tdata": 8,
-   "text": 81160,
+   "text": 81200,
    "unwind": 36
   }
  },
