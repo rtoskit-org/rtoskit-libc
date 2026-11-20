@@ -3749,7 +3749,7 @@
     "rodata": 0,
     "tbss": 0,
     "tdata": 0,
-    "text": 1040,
+    "text": 1104,
     "unwind": 0
    },
    "erfc.o": {
@@ -9087,7 +9087,7 @@
    "rodata": 10167,
    "tbss": 362,
    "tdata": 8,
-   "text": 163762,
+   "text": 163826,
    "unwind": 36
   }
  },
@@ -10459,7 +10459,7 @@
    "dsqrtl.o:dsqrtl": 8,
    "dsubl.o:dsubl": 8,
    "dup.o:dup": 16,
-   "erf.o:erf": 136,
+   "erf.o:erf": 144,
    "erfc.o:erfc": 104,
    "erfcf.o:erfcf": 80,
    "erfcf.o:libc/math/sp-nearest/erfcf.c:__libc_ff_product": 32,

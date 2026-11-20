@@ -239,3 +239,30 @@ zeros, as the fast contract has it, and below 0.53 ulp elsewhere.
 and speed, recorded in `docs/size/` and `docs/perf/`. None of the
 `test/size` programs calls `erf` or `lgamma`, so only the archive members
 change.
+
+### P12.02: the strict `erf`'s tiny path (D254)
+
+`libc/math/erf.c` below 2^-28 now computes x(2/√π + x²·p0) with
+p0 = −0x1.812746b0379e7p-2. x²·p0, up to 2^-57.6 of the constant, joins the
+constant's low part, and `__libc_dd_scale_product` takes x times the pair
+exactly and rounds once through the 2^200 scaling, as before. Below 2^-300
+the term is left out (x·x would underflow from about 2^-511, and the term is
+then 2^-600 of the result). A first form added x³·p0 to the product's low
+part, with the scaled product inlined a second time: the same results for
+8 to 48 more bytes. `erf.o` grows by 40 bytes on armv7e-m-dp, 62 on x86_64,
+64 on armv6-m and armv6s-m, 68 on armv7e-m and armv8-m.main, 76 on armv7-m.
+
+Host sweep of the x86_64 release `libc.a` against `erfq`:
+
+| Range (samples) | Before | After |
+|---|---:|---:|
+| [2^-28, 2^-27) (10^6) | 0.5000 ulp, 0 misrounded | the same |
+| [2^-34, 2^-28) (2·10^7) | 0.5325 ulp, 0.36 % misrounded | 0.5000 ulp, 0 |
+| [2^-300, 2^-34) (4·10^6) | 0.5000 ulp, 1 misrounded in 2·10^6 | 0.5000 ulp, 0 |
+| [2^-1022, 2^-300) (10^6) | 0.5000 ulp, 0 | the same |
+| subnormal (4·10^5) | 0.5000 ulp, 0 | the same |
+
+`regression_erf_tiny` (`libm_thresholds`) holds P12.01's worst point, the
+largest argument below 2^-28 (formerly one ulp off), the sweep's worst
+after the fix, and normal results either side of 2^-300 raising no
+underflow.

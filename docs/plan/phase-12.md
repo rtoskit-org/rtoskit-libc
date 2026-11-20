@@ -59,10 +59,11 @@ double functions (D7); the fast files, except where they share a strict file.
   re-locks its growth). The strict `lgamma` is also above 0.53 ulp on (0, 3)
   (0.68 at worst), so P12.03 is split.
 
-## P12.02 — Q57: the strict `erf` below 2^-28  `[ ]`
-- [ ] The tiny path keeps x³·p0 in every strict `erf` file P12.01 names;
+## P12.02 — Q57: the strict `erf` below 2^-28  `[x]`
+- [x] The tiny path keeps x³·p0 in every strict `erf` file P12.01 names;
   below 0.53 ulp there; `regression_erf_tiny` at the worst point; size and
-  bench diffs for release and speed, re-locked as Q60 decides.
+  bench diffs for release and speed, re-locked as Q60 decides. Done (D254):
+  0.5000 ulp, `erf.o` +40 to +76 bytes, no image or bench case changes.
 
 ## P12.03 — Q62: the strict `lgamma` (D252)  `[ ]`
 - [ ] **P12.03a** positive x below 3 reduced to [1, 2] (lgamma(1 + x) −
