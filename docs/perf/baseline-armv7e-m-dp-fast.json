@@ -459,10 +459,10 @@
     "insns": 42.81
    },
    "sinh/latency": {
-    "insns": 107.44
+    "insns": 98.19
    },
    "sinh/throughput": {
-    "insns": 106.56
+    "insns": 97.31
    },
    "sinhf/latency": {
     "insns": 65.69
@@ -495,10 +495,10 @@
     "insns": 10.31
    },
    "tan/latency": {
-    "insns": 133.69
+    "insns": 99.69
    },
    "tan/throughput": {
-    "insns": 132.81
+    "insns": 98.81
    },
    "tanf/latency": {
     "insns": 71.38
@@ -507,10 +507,10 @@
     "insns": 70.31
    },
    "tanh/latency": {
-    "insns": 125.5
+    "insns": 115.31
    },
    "tanh/throughput": {
-    "insns": 124.62
+    "insns": 114.44
    },
    "tanhf/latency": {
     "insns": 68.88

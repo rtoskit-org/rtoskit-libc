@@ -3053,3 +3053,45 @@ Exact cubes come out exact: 2^-1074 gives 2^-358, where the host's glibc returns
 |---|---:|---:|---:|---:|---:|
 | `cbrt` | 89.8 | 52.8 | 65.8 | 92.7 | 88.2 |
 | `cbrtf` | 72.8 | 45.3 | 53.3 | 71.2 | 57.2 |
+
+## 42. armv7e-m-dp's tan and tanh (P11.08d3, D242, D248)
+
+Section 37's plan for the last two functions of P11.08d before `hypot`, at the double-FPU cores' 0.55 target (their bound is 1.5 ulp), in the files shared with x86_64.
+
+### 42.1 tanh, and sinh with it: the products inline
+
+`tanh`'s disassembly showed four out-of-line `__libc_dd_product` calls, each with its frame, from the hyperbolic kernel (`__libc_fast_sinhcosh`) and the odd series (`__libc_fast_odd_series`). Both helpers now take `__libc_fast_fused_product`, which is inline where the FPU has a fused multiply-add and still calls Dekker's products elsewhere. The results are bit for bit as before (the same exact pair). Measured: `tanh` 0.519 ulp over 8·10^6 samples, as before.
+
+armv7e-m-dp instructions:
+- `tanh` 124.6 → 114.4 (picolibc 121.2);
+- `sinh` 106.6 → 97.3;
+- `cosh` unchanged.
+
+The trig kernel's product was already inlined, so `sin` and `cos` are unchanged.
+
+### 42.2 tan by a table of tangents
+
+P11.05h's `tan` computed sin a and cos a as pairs around the π/32 table, by two calls of the kernel, then took their quotient. Now:
+- **the reduction:** a = jπ/32 + t, |t| ≤ π/64, with j = (n + 8) mod 16 − 8 in [−8, 7] and bit 4 of n + 8 the quadrant (the period is π);
+- **T:** tan(|j|π/32) from a new nine-entry table of pairs (144 bytes). tan and cot are odd, so for j < 0 the argument (j and t) and the result are negated;
+- **u:** tan t = t + t³·P(t²), with P of degree 3 fitted here by Remez (2^-58.9 relative to t), and u normalized by a fast two-sum. Its rest reaches 2^-20 of it, and the quotient takes the low parts to first order only;
+- **the quotient:** tan a = (T + u)/(1 − T·u), or −cot a = −(1 − T·u)/(T + u) in an odd quadrant:
+  - T + u is a fast two-sum (|T| ≥ 0.098 ≥ |u| for j ≠ 0);
+  - 1 − T·u takes T·u as an exact pair and a fast two-sum (|T·u| ≤ 0.05);
+  - the remainder of the quotient is a fused multiply-add, or Dekker's pair without one.
+
+**The reduction's n is rounded to nearest by a conversion** (`__libc_fast_rem_pio32_nearest`). Rounding upward, the 1.5·2^52 shift rounds n up, so t sat near −π/32, outside the series. That also kept the next-to-zero test (n mod 16 = 0 and |t| < 2^-27) from sending tan's zeros and poles to the slow path: tan(π) and tan(π/2) came out with the wrong sign, which the fast contract's directed-rounding check, the sign, catches in `libm_vectors`. Fixed before the commit, with `regression_fast_tan_upward`. The old file was 1 % off there with the right sign; the new one is right. `sin` and `cos` keep the shared reduction.
+
+Also fixed before the commit:
+- the first version left u unnormalized, costing 2^-37 relative;
+- a 16-entry table (j = n mod 16, no sign handling, 94.8 instructions) put armv7e-m-dp's `math-mix` 56 bytes over its own D211 line, since `math-mix` calls `tan`. The nine-entry table with the odd symmetry, and the degree-3 series in place of the Taylor terms to t^11, bring it back inside the line at 98.8.
+
+**Accuracy:** 0.5153 ulp over 2.4·10^7 samples on both headers: [−1.5, 1.5], [−10^6, 10^6], each side of π/2, around π/4, and from 10^-8 to 0.05.
+
+**Instructions:**
+
+| Function | armv7e-m-dp before | now | picolibc | x86_64 before | now |
+|---|---:|---:|---:|---:|---:|
+| `tan` | 132.8 | 98.8 | 100.0 | 252.7 | 168.7 |
+| `tanh` | 124.6 | 114.4 | 121.2 | 192.8 | 192.9 |
+| `sinh` | 106.6 | 97.3 | — | 133.5 | 133.5 |

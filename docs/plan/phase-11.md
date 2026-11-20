@@ -883,9 +883,11 @@ below AOR; the fast size budget held (re-locked as D187 says).
   `cbrt` 90 → 53 (picolibc 66), `cbrtf` 73 → 45 (53); x86_64 `cbrt` 93 → 88,
   `cbrtf` 71 → 57.
 
-#### P11.08d3 — `tan`, `tanh`  `[ ]`
-- [ ] A tangent polynomial after a pi/2 reduction, and tanh on expm1; tests,
-  gains.
+#### P11.08d3 — `tan`, `tanh`  `[x]`
+- [x] A tangent polynomial after a pi/2 reduction, and tanh on expm1; tests,
+  gains. Done (D248), differently: tan by a table of tan(j pi/32) and
+  (T + u)/(1 - T u), 133 → 99 (picolibc 100); tanh with the hyperbolic
+  kernel's products inline, 125 → 114 (121); x86_64 tan 253 → 169.
 
 #### P11.08d4 — `hypot`  `[ ]`
 - [ ] The correctly rounded double-FPU `hypot` (D222), below picolibc if it
