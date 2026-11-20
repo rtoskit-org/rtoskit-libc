@@ -28,7 +28,8 @@ and builds for x86-64 as well, which is where it is developed and tested.
 
 3. **Correct results.** `printf` and `strtod` convert floating-point values
    exactly, at any precision. The float maths functions are correctly
-   rounded, and the double functions are below 0.53 ulp. Floating-point
+   rounded, and the double functions are below 0.53 ulp (`lgamma` within
+   2^-60 absolutely next to its negative zeros, where its results are tiny). Floating-point
    exceptions are raised on every core, including those without an FPU.
    The `fast` build relaxes this for speed: below 1 ulp, to nearest.
 
@@ -56,7 +57,7 @@ and builds for x86-64 as well, which is where it is developed and tested.
    allocators: nano, TLSF or tiny.
 
 The project's goals, architecture and every design decision (numbered D1 to
-D256) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
+D257) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
 done in phases: conformance first, then size, then speed, then a comparison
 with Arm Optimized Routines, then a round of speed work that the size
 budgets had held back, then the POSIX subset and C++ support, faster sine
@@ -116,7 +117,7 @@ All of this runs as part of `make check`. See
 |---|---|---|---|
 | Float functions, round to nearest | Correctly rounded, checked over all 2^32 arguments on x86-64 and Cortex-M7. On soft-float and single-precision cores, a documented handful of hard cases are within 1 ulp. | fdlibm-style, up to about 1 ulp | 0.004–3.9 % of results misrounded per function, worst 1.09 ulp |
 | Float functions, directed rounding | Correctly rounded | not measured | Up to 2 ulp; up to 35 % misrounded upward |
-| Double functions | Below 0.53 ulp, at most 0.023 % misrounded | Up to about 1 ulp | Below 0.53 ulp, except `erf` at 0.89 ulp |
+| Double functions | Below 0.53 ulp; `lgamma` within 2^-60 absolutely next to its negative zeros, where its results are below about 2^-7. Over the functions AOR also implements, at most 0.023 % misrounded | Up to about 1 ulp | Below 0.53 ulp, except `erf` at 0.89 ulp |
 | Floating-point exceptions | Raised on every core, including the soft `<fenv.h>` on Armv6-M | — | AOR's Arm soft-float raises none |
 | The `fast` build, round to nearest | Below 1 ulp (1.5 for `tan`, the hyperbolic functions and `erf`), checked by the same tests; `erfc`, `lgamma` and `tgamma` below 1 ulp (`lgamma` within 2^-60 absolutely near its zeros); `sqrt` and `hypot` correctly rounded; the float complex functions as above. The functions aim at 0.55 ulp; on the Cortex-M4F and M33 the float functions at 0.9, and on the double-FPU cores `asin`, `acos` and `atan` at 0.9. Each function's measured worst case is in the `libm-fast-*.md` notes. Directed rounding is not supported. | — | — |
 
@@ -611,7 +612,7 @@ Read these first:
 - [`docs/configuration.md`](docs/configuration.md): the archives, the build
   variants, the cores, the allocators, the ports and parent builds.
 - [`docs/plan/PLAN.md`](docs/plan/PLAN.md): goals, scope and architecture,
-  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D256) and the
+  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D257) and the
   [open questions](docs/plan/PLAN.md#7-open-questions).
 - [`docs/toolchain.md`](docs/toolchain.md): the tool versions we build and
   test with.
