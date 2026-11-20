@@ -832,7 +832,7 @@ As P11.07b; overflow, underflow and the poles as in speed. Split as P11.07d.
   or below AOR, the fast budget held); Q54 resolved; open for later Q57,
   Q61, Q62 and Q63.
 
-## P11.08 — Q61 and Q63: the slower cases outside P11.07's check (D241)  `[ ]`
+## P11.08 — Q61 and Q63: the slower cases outside P11.07's check (D241)  `[x]`
 The maintainer's decision after P11.07l: fix Q61 and Q63 in phase 11, by its
 rules (`fast` alone; debug, release and speed byte-identical); Q57 and Q62
 go to phase 12. Exit: on every Arm core no fast maths case slower than
@@ -900,7 +900,11 @@ below AOR; the fast size budget held (re-locked as D187 says).
 - [x] README: *Choosing release, speed or fast*, the three builds compared to
   help a user pick one.
 
-### P11.08f — Phase exit  `[ ]`
-- [ ] PLAN's phase table, decisions, open questions; Q61 and Q63 closed or
-  what is left of them recorded.
+### P11.08f — Phase exit  `[x]`
+- [x] PLAN's phase table, decisions, open questions; Q61 and Q63 closed or
+  what is left of them recorded. Done (D251): no fast maths case slower than
+  picolibc on armv6-m, armv6s-m, armv7-m, armv7e-m or armv8-m.main; on
+  armv7e-m-dp the maintainer accepts `atan` (1.12), `asin` (1.07), `acos`
+  (1.04) and `log1p` (1.004); every Arm core at or below AOR; the fast budget
+  held. Q61 and Q63 resolved; Q57 and Q62 open for phase 12 (D241).
 
