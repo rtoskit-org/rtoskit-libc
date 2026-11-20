@@ -133,7 +133,7 @@ static struct __libc_dd lgamma_positive(struct __libc_dd x)
 }
 
 /*
- * Positive x directly; negative x by the reflection
+ * Positive x directly; negative x in (-24, -1) by the recurrence, the rest by the reflection
  * gamma(x) gamma(1 - x) = pi / sin(pi x): log pi - log|sin(pi x)| -
  * lgamma(1 - x), with 1 - x exact as a double-double and sin(pi x) from the
  * exact reduction x = n + f, |f| <= 1/2.
@@ -151,6 +151,24 @@ struct __libc_dd __libc_lgamma_core(double x, int *sign)
 	*sign = 1;
 	if (x > 0)
 		return lgamma_positive((struct __libc_dd){ .hi = x, .lo = 0.0 });
+	if (x > -24.0 && x < -1.0) {
+		/*
+		 * gamma(x) = gamma(z) / (x (x + 1) ... (x - m)) with m = floor(x) and z = x - m + 1 in (1, 2), every factor
+		 * and z exact (|x| >= 1): lgamma(x) = lgamma(z) - log|P|, P a normalized pair product (at most 24), its sign
+		 * gamma's. Near each zero both terms are small (z near 1 or 2, P near 1), where the reflection's terms near
+		 * log n! cancelled to 2^-49 absolutely (D252, P12.01); below -24 no double comes near a zero
+		 */
+		double m = floor(x);
+		struct __libc_dd product = { .hi = x, .lo = 0.0 };
+
+		for (double k = 1.0; k <= -m; k += 1.0)
+			product = __libc_dd_multiply(product, (struct __libc_dd){ .hi = x + k, .lo = 0.0 });
+		*sign = product.hi < 0 ? -1 : 1;
+		if (product.hi < 0)
+			product = __libc_dd_negate(product);
+
+		return __libc_dd_add(lgamma_positive((struct __libc_dd){ .hi = (x - m) + 1.0, .lo = 0.0 }), __libc_dd_negate(log_dd(product)));
+	}
 
 	n = roundeven(x);
 	f = x - n;

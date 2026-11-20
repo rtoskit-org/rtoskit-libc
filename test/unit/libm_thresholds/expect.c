@@ -13,10 +13,10 @@
 
 #include "libm_thresholds.h"
 
-/* The strict contract (debug, release, speed): its lgamma near the negative zeros is Q62 */
+/* The strict contract (debug, release, speed): within 2^-60 near the negative zeros by the recurrence since P12.03b (D252, Q62) */
 bool contract_lgamma_negative_zeros(void)
 {
-	return false;
+	return true;
 }
 
 /* The strict contract: below 0.53 ulp away from the negative zeros (D252) */

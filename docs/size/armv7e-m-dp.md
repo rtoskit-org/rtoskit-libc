@@ -783,3 +783,7 @@ Fast re-locked at its P11.08 figures (D187): `math-mix` 16032 → 15976, `math-f
 ## P12.03a — The strict `lgamma` below 0.53 ulp on (0, 3) (D255)
 
 `__libc_lgamma_core.o` 1924 → 2384 bytes (+460) in release and speed, 320 of them read-only data (the pair tables); `lgamma`'s deepest stack +128 bytes (the Horner's pairs). No `test/size` image changes (none calls `lgamma`). Re-locked as the step shows it (D253). The fast build does not use this file.
+
+## P12.03b — The strict `lgamma` near its negative zeros (D256)
+
+`__libc_lgamma_core.o` 2384 → 2584 bytes (+200) in release and speed, the recurrence's loop and its call; `lgamma`'s deepest stack +48 bytes. No `test/size` image changes. Re-locked (D253). A form with one call each of the positive path and the log was larger on every core but armv7e-m and armv8-m.main.
