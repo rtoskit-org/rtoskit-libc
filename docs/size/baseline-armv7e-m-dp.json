@@ -1393,10 +1393,10 @@
    "__libc_lgamma_core.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 392,
+    "rodata": 712,
     "tbss": 0,
     "tdata": 0,
-    "text": 1532,
+    "text": 1672,
     "unwind": 0
    },
    "__libc_log1p_core.o": {
@@ -8729,10 +8729,10 @@
   "totals": {
    "bss": 1704,
    "data": 116,
-   "rodata": 8983,
+   "rodata": 9303,
    "tbss": 362,
    "tdata": 8,
-   "text": 81200,
+   "text": 81340,
    "unwind": 36
   }
  },
@@ -8995,7 +8995,7 @@
     ]
    },
    "lgamma": {
-    "depth": 816,
+    "depth": 944,
     "notes": [],
     "path": [
      "lgamma",
@@ -9278,7 +9278,7 @@
     ]
    },
    "tgamma": {
-    "depth": 800,
+    "depth": 928,
     "notes": [],
     "path": [
      "tgamma",
@@ -9466,9 +9466,8 @@
    "__libc_lgamma_core.o:__libc_lgamma_core": 224,
    "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:__libc_dd_add": 64,
    "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:__libc_dd_multiply": 64,
-   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:lgamma_positive": 200,
+   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:lgamma_positive": 328,
    "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:log_dd": 80,
-   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:near_zero": 160,
    "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:stirling": 152,
    "__libc_log1p_core.o:__libc_log1p_core": 72,
    "__libc_log1p_dd.o:__libc_log1p_dd": 88,

@@ -266,3 +266,46 @@ Host sweep of the x86_64 release `libc.a` against `erfq`:
 largest argument below 2^-28 (formerly one ulp off), the sweep's worst
 after the fix, and normal results either side of 2^-300 raising no
 underflow.
+
+### P12.03a: the strict `lgamma` on (0, 3) (D255)
+
+`__libc_lgamma_core.c`'s positive path:
+- **[3/4, 9/4] (`lgamma_unit`):** the ζ series within 1/4 of 1 and of 2, and the
+  series about 3/2 between them. Each is a plain-double tail (the ζ terms
+  k ≥ 5 to k = 40 as before; c5 … c24 about 3/2), then one double-double
+  Horner over a table of pairs (k = 1 … 4 for the ζ series, times z; k = 0 …
+  4 about 3/2). The pairs are the terms whose plain rounding P12.01 found:
+  the third and fourth ζ terms (0.60 ulp near 5/4 and 3/4) and, as the
+  first prototype showed, c3·t³ and c4·t⁴ about 3/2 (0.552 and then 0.506 ulp
+  near |t| = 1/4).
+- **Below 3/4:** lgamma(1 + x) − log x. **On (9/4, 3):** lgamma(x − 1) +
+  log(x − 1). Each kernel is reached from one call site.
+- From 3, the shift to 12 and Stirling are unchanged.
+
+The first version wrote each term as its own double-double multiply and add.
+It reached the same accuracy and cost 1.1–2.5 KB a core, because every one
+of those calls is a call sequence around `__libc_dd_multiply` and
+`__libc_dd_add`. The Horner over the tables costs 460–666 bytes, 320 of them
+data.
+
+Host sweep against `lgammaq`, 1.24·10^8 samples, the x86_64 release `libc.a`
+(SSE2, Dekker products) and the core compiled with the FPv5-DP header and
+`-mfma` (armv7e-m-dp's fused path):
+
+| Range | SSE2 (samples) | worst | misrounded | fma (samples) | worst |
+|---|---|---:|---:|---|---:|
+| (0, 3/4) | 1.5·10^7 | 0.5001 | 0.001 % | 4·10^6 | 0.5001 |
+| [3/4, 5/4) | 1.5·10^7 | 0.5022 | 0.021 % | 4·10^6 | 0.5021 |
+| [5/4, 7/4) | 1.5·10^7 | 0.5003 | 0.002 % | 4·10^6 | 0.5003 |
+| [7/4, 9/4) | 1.5·10^7 | 0.5001 | 0.000 % | 4·10^6 | 0.5000 |
+| [9/4, 3) | 1.5·10^7 | 0.5001 | 0.001 % | 4·10^6 | 0.5001 |
+| [3, 12) (unchanged) | 1.5·10^7 | 0.5253 | 0.095 % | 4·10^6 | 0.5191 |
+| (−2, 0) (through 1 − x) | 10^7 | 0.5003 | 0.002 % | — | — |
+
+±1000 ulps about 2^-60, 3/4, 5/4, 3/2, 7/4, 9/4, 3 and 12: 16,008 points,
+worst 0.5019 ulp, on both paths. `regression_lgamma_minimum`
+(`libm_thresholds`, strict contract only, `contract_lgamma_half_ulp`) holds
+P12.01's four worst points on (0, 3), now correctly rounded.
+
+Bench, release and speed: `lgamma` 1.4–4.5 % fewer instructions, `tgamma`
+1.7–3.1 % more (its exp(lgamma) form reaches the new path).

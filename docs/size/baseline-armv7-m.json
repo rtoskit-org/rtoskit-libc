@@ -1922,10 +1922,10 @@
    "__libc_lgamma_core.o": {
     "bss": 0,
     "data": 0,
-    "rodata": 360,
+    "rodata": 680,
     "tbss": 0,
     "tdata": 0,
-    "text": 4060,
+    "text": 4298,
     "unwind": 0
    },
    "__libc_lgammaf_core.o": {
@@ -9411,10 +9411,10 @@
   "totals": {
    "bss": 1704,
    "data": 116,
-   "rodata": 10167,
+   "rodata": 10487,
    "tbss": 362,
    "tdata": 8,
-   "text": 170106,
+   "text": 170344,
    "unwind": 36
   }
  },
@@ -9742,7 +9742,7 @@
     ]
    },
    "lgamma": {
-    "depth": 820,
+    "depth": 956,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -9762,6 +9762,7 @@
      "__libc_lgamma_core",
      "libc/math/__libc_lgamma_core.c:lgamma_positive",
      "libc/math/__libc_lgamma_core.c:stirling",
+     "libc/math/__libc_lgamma_core.c:log_dd",
      "__libc_log_core",
      "__aeabi_ddiv",
      "__libc_softdouble_pack"
@@ -10108,7 +10109,7 @@
     ]
    },
    "tgamma": {
-    "depth": 820,
+    "depth": 956,
     "notes": [
      "assembly: __aeabi_d2iz",
      "assembly: __aeabi_dadd",
@@ -10128,6 +10129,7 @@
      "__libc_lgamma_core",
      "libc/math/__libc_lgamma_core.c:lgamma_positive",
      "libc/math/__libc_lgamma_core.c:stirling",
+     "libc/math/__libc_lgamma_core.c:log_dd",
      "__libc_log_core",
      "__aeabi_ddiv",
      "__libc_softdouble_pack"
@@ -10344,12 +10346,12 @@
    "__libc_iseqsig.o:__libc_iseqsig": 24,
    "__libc_iseqsigf.o:__libc_iseqsigf": 16,
    "__libc_iseqsigl.o:__libc_iseqsigl": 0,
-   "__libc_lgamma_core.o:__libc_lgamma_core": 144,
+   "__libc_lgamma_core.o:__libc_lgamma_core": 152,
    "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:__libc_dd_multiply": 56,
    "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:__libc_dd_product": 48,
-   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:lgamma_positive": 200,
-   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:near_zero": 176,
-   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:stirling": 136,
+   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:lgamma_positive": 280,
+   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:log_dd": 40,
+   "__libc_lgamma_core.o:libc/math/__libc_lgamma_core.c:stirling": 144,
    "__libc_lgammaf_core.o:__libc_lgammaf_core": 208,
    "__libc_lgammaf_core.o:libc/math/sp-nearest/__libc_lgammaf_core.c:__libc_ff_add": 32,
    "__libc_lgammaf_core.o:libc/math/sp-nearest/__libc_lgammaf_core.c:__libc_ff_multiply": 40,

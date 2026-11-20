@@ -18,3 +18,9 @@ bool contract_lgamma_negative_zeros(void)
 {
 	return false;
 }
+
+/* The strict contract: below 0.53 ulp away from the negative zeros (D252) */
+bool contract_lgamma_half_ulp(void)
+{
+	return true;
+}
