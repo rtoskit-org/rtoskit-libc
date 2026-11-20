@@ -343,3 +343,19 @@ to the fast contract's checks within 2^-60 near the zeros
 (`contract_lgamma_negative_zeros`, true for both contracts). It adds
 `regression_lgamma_negative_zero` and `regression_lgamma_minus_2_5`, the
 exact results at −2.5, −1.5 and −0x1.e0000000001ecp+3 (strict only).
+
+### Phase 12's summary (P12.04, D257)
+
+| Function | Before (P12.01) | After | Size per core (release and speed) | Bench |
+|---|---|---|---|---|
+| `erf` below 2^-28 | 0.5325 ulp, 0.36 % misrounded | 0.5000 ulp, 0 in 2.6·10^7 | `erf.o` +40 to +76 bytes | unchanged |
+| `lgamma` on (0, 3) | 0.68 ulp, up to 4.3 % misrounded | 0.5022 ulp, at most 0.021 % | `__libc_lgamma_core.o` +460 to +666 | `lgamma` −1.4 to −4.5 % |
+| `lgamma` near its negative zeros | 2^-49 absolutely (2.3·10^13 ulp) | within 2^-60, or 0.53 ulp | +200 to +472 more | unchanged |
+| lgamma(−2.5) | 0.535 ulp | correctly rounded | — | — |
+
+In total, `__libc_lgamma_core.o` grows by 660 bytes on armv7e-m-dp, 908 on
+armv7e-m and armv8-m.main, 1030 on armv7-m, 1094 on armv6-m and armv6s-m, and
+986 on x86_64. `tgamma` takes 1.7–3.1 % more instructions through its
+exp(lgamma) form, and no `test/size` image changes. Each step re-locked its
+own figures (D253). `lgammaf` and `erff` were correctly rounded before and
+after.

@@ -79,9 +79,10 @@ double functions (D7); the fast files, except where they share a strict file.
   `regression_lgamma_minus_2_5`; `lgammaf` re-checked where it shares the core. Done (D256):
   none beyond both 0.53 ulp and 2^-60 near the zeros; +200 to +472 bytes.
 
-## P12.04 — Wrap-up  `[ ]`
-- [ ] Size and bench: every re-lock recorded (Q60's D*); `docs/size/`,
+## P12.04 — Wrap-up  `[x]`
+- [x] Size and bench: every re-lock recorded (Q60's D*); `docs/size/`,
   `docs/perf/`.
-- [ ] README (the double functions' accuracy as measured),
+- [x] README (the double functions' accuracy as measured),
   `libm-special.md`.
-- [ ] Phase exit: PLAN's phase table, decisions, open questions.
+- [x] Phase exit: PLAN's phase table, decisions, open questions. Done (D257):
+  Q57 and Q62 resolved; no open question left for this phase.
