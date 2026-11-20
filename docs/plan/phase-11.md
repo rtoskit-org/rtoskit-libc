@@ -894,9 +894,11 @@ below AOR; the fast size budget held (re-locked as D187 says).
   can be; tests, gains. Done (D249): 109 → 61 (picolibc 62), still correctly
   rounded; x86_64 174 → 162.
 
-### P11.08e — Comparison, size and docs  `[ ]`
-- [ ] P11.07k's comparison again on every Arm core; the size budget re-locked;
-  `docs/perf/phase-11.md`, `docs/size/`, README.
+### P11.08e — Comparison, size and docs  `[x]`
+- [x] P11.07k's comparison again on every Arm core; the size budget re-locked;
+  `docs/perf/phase-11.md`, `docs/size/`, README (D250).
+- [x] README: *Choosing release, speed or fast*, the three builds compared to
+  help a user pick one.
 
 ### P11.08f — Phase exit  `[ ]`
 - [ ] PLAN's phase table, decisions, open questions; Q61 and Q63 closed or

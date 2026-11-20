@@ -771,3 +771,7 @@ Accuracy fix; the growth was accepted by the maintainer. Members: `__libc_sin_co
 ## P11.07k — The fast figures after P11.07 (D239)
 
 Fast re-locked at its P11.07 figures (D187): `math-mix` 16032 and `math-float` 5654, both unchanged; P11.07 changed nothing these images link on this core. Against speed (12422 and 9822): `math-mix` +29.1 %, the line of its own D211 set; `math-float` −42.4 %, inside D191's +20 % line.
+
+## P11.08e — The fast figures after P11.08 (D250)
+
+Fast re-locked at its P11.08 figures (D187): `math-mix` 16032 → 15976, `math-float` 5654, unchanged. P11.08c–d4 rewrote the double path's `asin`, `acos`, `atan`, `expm1`, `log1p`, `cbrt`, `tan` and `hypot` with fused multiply-adds and their edge cases out of line, which shortened the six `math-mix` links. Against speed (12422 and 9822): `math-mix` +28.6 %, under its own D211 line; `math-float` −42.4 %, inside D191's +20 % line. The other cores' fast figures are unchanged (armv7-m's were re-locked at P11.08b, D243).

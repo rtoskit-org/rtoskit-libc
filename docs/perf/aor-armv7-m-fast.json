@@ -1140,10 +1140,10 @@
     "insns": 260.5
    },
    "fmodf/latency": {
-    "insns": 221.69
+    "insns": 156.94
    },
    "fmodf/throughput": {
-    "insns": 208.5
+    "insns": 143.75
    },
    "hypot/latency": {
     "insns": 343.62
@@ -1152,10 +1152,10 @@
     "insns": 336.0
    },
    "hypotf/latency": {
-    "insns": 2956.62
+    "insns": 206.56
    },
    "hypotf/throughput": {
-    "insns": 2941.62
+    "insns": 191.56
    },
    "lgamma/latency": {
     "insns": 694.31
@@ -1320,10 +1320,10 @@
     "insns": 202.62
    },
    "sqrtf/latency": {
-    "insns": 472.38
+    "insns": 135.25
    },
    "sqrtf/throughput": {
-    "insns": 459.75
+    "insns": 122.62
    },
    "tan/latency": {
     "insns": 992.06
