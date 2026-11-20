@@ -46,35 +46,57 @@ static struct __libc_dd stirling(struct __libc_dd y)
 }
 
 /*
- * lgamma(1 + z) = -gamma z + sum_(k >= 2) (-1)^k zeta(k) z^k / k and
- * lgamma(2 + z) = (1 - gamma) z + sum_(k >= 2) (-1)^k (zeta(k) - 1) z^k / k for
- * |z| <= 1/4, keeping the relative accuracy at the zeros 1 and 2; the first
- * two terms as double-doubles, the rest to k = 40 (zeta(k) - 1 is below
- * 2^-(k - 1)).
+ * The first terms, as double-doubles (in plain double the third and fourth left 0.60 ulp near 5/4 and 3/4, and
+ * the shift to 12 cancelled to 0.68 ulp near the minimum, P12.01):
+ * - lgamma(1 + z) = -gamma z + sum_(k >= 2) (-1)^k zeta(k) z^k / k and lgamma(2 + z) = (1 - gamma) z +
+ *   sum_(k >= 2) (-1)^k (zeta(k) - 1) z^k / k for |z| <= 1/4, relative at the zeros 1 and 2: k = 1 ... 4;
+ * - lgamma(3/2 + t) = sum c_k t^k, c_k = psi^(k - 1)(3/2)/k! (mpmath at 300 bits), for |t| <= 1/4 about the
+ *   minimum near 1.4616 (-0.1215): k = 0 ... 4.
  */
-static struct __libc_dd near_zero(struct __libc_dd z, bool two)
+static const struct __libc_dd near_one[] = { { -0x1.2788cfc6fb619p-1, 0x1.6cb90701fbfabp-58 }, { 0x1.a51a6625307d3p-1, 0x1.1873d8912200cp-56 }, { -0x1.9a4d55beab2d7p-2, 0x1.4c26d1b465993p-59 }, { 0x1.151322ac7d848p-2, 0x1.b5f91211196e5p-57 } };
+static const struct __libc_dd near_two[] = { { 0x1.b0ee6072093cep-2, 0x1.6cb90701fbfabp-58 }, { 0x1.4a34cc4a60fa6p-2, 0x1.1873d8912200cp-56 }, { -0x1.13e001a557607p-4, 0x1.fb68be2f8821fp-58 }, { 0x1.51322ac7d8483p-6, 0x1.afc89088cb729p-60 } };
+static const struct __libc_dd near_three_halves[] = { { -0x1.eeb95b094c191p-4, -0x1.346863f58b075p-58 }, { 0x1.2aed059bd608ap-5, 0x1.cd3d2ca77b63ap-63 }, { 0x1.de9e64df22ef3p-2, -0x1.6d48ec9933fbap-57 }, { -0x1.1ae55b180726cp-3, -0x1.959aeebbe37a9p-59 }, { 0x1.e0f840dad61dap-5, -0x1.599fc3fe0a24cp-59 } };
+
+/* The rest about 3/2 in plain double, c5 ... c24 (2^-66 at |t| = 1/4) */
+static const double three_halves_tail[] = { -0x1.da59d5374a543p-6, 0x1.f9ca39daa929cp-7, -0x1.1a8ba4f0ea597p-7, 0x1.456f1ad666a3bp-8, -0x1.7edb812f6426ep-9, 0x1.c9735ae9db2c1p-10, -0x1.148a319eec639p-10, 0x1.517c5a1579f10p-11, -0x1.9eff1d1c8bdc2p-12, 0x1.00c41c13e4c1cp-12, -0x1.3f6dff22ac1c2p-13, 0x1.8f3619541742cp-14, -0x1.f4ea079c9c87ap-15, 0x1.3b5e73f18d398p-15, -0x1.8e583480fb843p-16, 0x1.f88eb43555368p-17, -0x1.4059677eed115p-17, 0x1.97b6b03fa7446p-18, -0x1.03fd6bf0808efp-18, 0x1.4c355353d5241p-19 };
+
+/*
+ * lgamma(y) for a double-double y in [3/4, 9/4]: within 1/4 of 1 or 2 the zeta series (z = y - 1 or y - 2, the rest
+ * to k = 40, zeta(k) - 1 below 2^-(k - 1)), else the series about 3/2; the plain tail, then one double-double Horner
+ * over the first terms
+ */
+static struct __libc_dd lgamma_unit(struct __libc_dd y)
 {
-	const struct __libc_dd euler = { .hi = 0x1.2788cfc6fb619p-1, .lo = -0x1.6cb90701fbfabp-58 };
-	const struct __libc_dd one_minus_euler = { .hi = 0x1.b0ee6072093cep-2, .lo = 0x1.6cb90701fbfabp-58 };
-	const struct __libc_dd zeta2_half = { .hi = 0x1.a51a6625307d3p-1, .lo = 0x1.1873d8912200cp-56 };
-	const struct __libc_dd zeta2m1_half = { .hi = 0x1.4a34cc4a60fa6p-2, .lo = 0x1.1873d8912200cp-56 };
+	double centre = y.hi <= 1.25 ? 1.0 : (y.hi >= 1.75 ? 2.0 : 1.5);
+	struct __libc_dd t = __libc_dd_add(y, (struct __libc_dd){ .hi = -centre, .lo = 0.0 });
+	const struct __libc_dd *head = centre == 1.5 ? near_three_halves : (centre == 2.0 ? near_two : near_one);
+	int count = centre == 1.5 ? 5 : 4;
 	double tail = 0.0;
-	struct __libc_dd first;
-	struct __libc_dd second;
+	struct __libc_dd value;
 
-	for (int k = 40; k >= 3; --k) {
-		double coefficient = (two ? zeta_minus_one[k - 2] : 1.0 + zeta_minus_one[k - 2]) / k;
+	if (centre == 1.5) {
+		for (int k = (int)(sizeof(three_halves_tail) / sizeof(three_halves_tail[0])) - 1; k >= 0; --k)
+			tail = tail * t.hi + three_halves_tail[k];
+	} else {
+		for (int k = 40; k >= 5; --k) {
+			double coefficient = (centre == 2.0 ? zeta_minus_one[k - 2] : 1.0 + zeta_minus_one[k - 2]) / k;
 
-		tail = tail * z.hi + ((k & 1) != 0 ? -coefficient : coefficient);
+			tail = tail * t.hi + ((k & 1) != 0 ? -coefficient : coefficient);
+		}
 	}
-	first = __libc_dd_multiply(two ? one_minus_euler : __libc_dd_negate(euler), z);
-	second = __libc_dd_multiply(two ? zeta2m1_half : zeta2_half, __libc_dd_multiply(z, z));
-	first = __libc_dd_add(first, second);
+	value = (struct __libc_dd){ .hi = tail, .lo = 0.0 };
+	for (int k = count - 1; k >= 0; --k)
+		value = __libc_dd_add(__libc_dd_multiply(value, t), head[k]);
 
-	return __libc_dd_fast_sum(first.hi, first.lo + z.hi * z.hi * z.hi * tail);
+	/* the zeta series have no constant term */
+	return centre == 1.5 ? value : __libc_dd_multiply(value, t);
 }
 
-/* log gamma(x) for a positive double-double x below 2^60 */
+/*
+ * log gamma(x) for a positive double-double x below 2^60: [3/4, 9/4] directly; below 3/4 lgamma(1 + x) - log x, and on
+ * (9/4, 3) lgamma(x - 1) + log(x - 1), both relative where the terms are small (near 1 and 2 they cancel by at most
+ * 1/gamma and 1/(1 - gamma)); from 3 the shift to 12 and Stirling, which no longer cancel much (lgamma(3) = log 2)
+ */
 static struct __libc_dd lgamma_positive(struct __libc_dd x)
 {
 	struct __libc_dd product;
@@ -83,10 +105,22 @@ static struct __libc_dd lgamma_positive(struct __libc_dd x)
 
 	if (x.hi >= 12.0)
 		return stirling(x);
-	if (fabs(x.hi - 1.0) <= 0.25)
-		return near_zero(__libc_dd_add(x, (struct __libc_dd){ .hi = -1.0, .lo = 0.0 }), false);
-	if (fabs(x.hi - 2.0) <= 0.25)
-		return near_zero(__libc_dd_add(x, (struct __libc_dd){ .hi = -2.0, .lo = 0.0 }), true);
+	if (x.hi < 3.0) {
+		/* below 3/4 lgamma(1 + x) - log x, on (9/4, 3) lgamma(x - 1) + log(x - 1), one call of each kernel */
+		struct __libc_dd value;
+		bool below = x.hi < 0.75;
+		bool above = x.hi > 2.25;
+
+		shifted = below ? __libc_dd_add((struct __libc_dd){ .hi = 1.0, .lo = 0.0 }, x) : (above ? __libc_dd_add(x, (struct __libc_dd){ .hi = -1.0, .lo = 0.0 }) : x);
+		value = lgamma_unit(shifted);
+		if (below || above) {
+			struct __libc_dd log = log_dd(below ? x : shifted);
+
+			value = __libc_dd_add(value, below ? __libc_dd_negate(log) : log);
+		}
+
+		return value;
+	}
 
 	/* gamma(x) = gamma(x + n) / (x (x + 1) ... (x + n - 1)) with x + n >= 12 */
 	n = (int)ceil(12.0 - x.hi);

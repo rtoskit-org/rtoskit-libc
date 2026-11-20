@@ -434,19 +434,19 @@
    },
    "lgamma/latency": {
     "cycles": 334.48,
-    "insns": 814.69
+    "insns": 784.62
    },
    "lgamma/throughput": {
     "cycles": 301.95,
-    "insns": 815.69
+    "insns": 785.62
    },
    "lgammaf/latency": {
     "cycles": 333.73,
-    "insns": 829.69
+    "insns": 799.62
    },
    "lgammaf/throughput": {
     "cycles": 298.25,
-    "insns": 830.69
+    "insns": 800.62
    },
    "log/latency": {
     "cycles": 124.9,
@@ -706,19 +706,19 @@
    },
    "tgamma/latency": {
     "cycles": 465.63,
-    "insns": 1140.38
+    "insns": 1162.69
    },
    "tgamma/throughput": {
     "cycles": 447.84,
-    "insns": 1141.38
+    "insns": 1163.69
    },
    "tgammaf/latency": {
     "cycles": 449.54,
-    "insns": 1155.38
+    "insns": 1177.69
    },
    "tgammaf/throughput": {
     "cycles": 440.9,
-    "insns": 1156.38
+    "insns": 1178.69
    }
   },
   "qsort": {

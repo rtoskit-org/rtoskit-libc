@@ -65,12 +65,13 @@ double functions (D7); the fast files, except where they share a strict file.
   bench diffs for release and speed, re-locked as Q60 decides. Done (D254):
   0.5000 ulp, `erf.o` +40 to +76 bytes, no image or bench case changes.
 
-## P12.03 — Q62: the strict `lgamma` (D252)  `[ ]`
-- [ ] **P12.03a** positive x below 3 reduced to [1, 2] (lgamma(1 + x) −
+## P12.03 — Q62: the strict `lgamma` (D252)  `[~]`
+- [x] **P12.03a** positive x below 3 reduced to [1, 2] (lgamma(1 + x) −
   log x below 1, lgamma(x − 1) + log(x − 1) on [2, 3)); on [1, 2] the ζ series
   near 1 and 2 with its coefficients as constants, and a Taylor series about
   3/2 on (5/4, 7/4); below 0.53 ulp on (0, 12) on 10^8 samples;
-  `regression_lgamma_minimum` at P12.01's worst point.
+  `regression_lgamma_minimum` at P12.01's worst point. Done (D255): 0.5022
+  ulp on (0, 3), +460 to +666 bytes.
 - [ ] **P12.03b** negative x in (−24, −1), not an integer, by D225's
   recurrence on (a): within 2^-60 absolutely near every zero to −24, below
   0.53 ulp elsewhere; lgamma(−2.5) correctly rounded;

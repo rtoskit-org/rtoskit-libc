@@ -18,3 +18,9 @@ bool contract_lgamma_negative_zeros(void)
 {
 	return true;
 }
+
+/* The fast contract: 1 ulp (D219) */
+bool contract_lgamma_half_ulp(void)
+{
+	return false;
+}

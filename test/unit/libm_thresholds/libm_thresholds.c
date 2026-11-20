@@ -1033,6 +1033,13 @@ static void check_lgamma_paths(void)
 	CHECK(near_double(lgamma(-0x1.0000000000001p+0), 0x1.205966f2b4f12p+5) && near_double(lgamma(-0x1.fffffffffffffp+3), 0x1.a56bc8280719cp+1) && near_double(lgamma(-0x1.0000000000001p+4), 0x1.4cb2bc2c1e2fep+1));
 	if (contract_lgamma_negative_zeros())
 		CHECK(fabs(lgamma(-0x1.5fb410a1bd901p+1) - 0x1.8fb8530ba7689p-53) <= 0x1p-60 && fabs(lgamma(-0x1.000034028b3f9p+3) - 0x1.34e935f3e5a5dp-36) <= 0x1p-60 && near_double(lgamma(-2.5), -0x1.ccbf9f5ed0f16p-5));
+	/*
+	 * regression_lgamma_minimum (P12.03a, D252): the strict core's shift to 12 cancelled to 0.68 ulp near gamma's minimum,
+	 * and its zeta series rounded the third and fourth terms alone (0.60 ulp near 5/4): P12.01's worst points on
+	 * (0, 3), each correctly rounded now
+	 */
+	if (contract_lgamma_half_ulp())
+		CHECK(lgamma(0x1.565cf5c906bfcp+0) == -0x1.d1c5add888176p-4 && lgamma(0x1.3ae985b884cfcp+0) == -0x1.7f07a5e971117p-4 && lgamma(0x1.2e1bae505163ep+1) == 0x1.87c6c8826aacdp-3 && lgamma(0x1.7ab533b53fc2cp-1) == 0x1.b795f5aaef961p-3);
 	RAISES(lgamma(-3.0) == INFINITY && lgamma(-0x1p52) == INFINITY && lgamma(0.0) == INFINITY, FE_DIVBYZERO);
 	CHECK(lgamma(-INFINITY) == INFINITY && isnan(lgamma(NAN)));
 }

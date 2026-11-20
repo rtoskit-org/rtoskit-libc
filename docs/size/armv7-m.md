@@ -454,3 +454,7 @@ Fast re-locked at its P11.07 figures (D187): `math-mix` 38568 → 38256 bytes of
 ## P12.02 — The strict `erf` keeps x³·p0 below 2^-28 (D254)
 
 `erf.o` 1064 → 1140 bytes (+76) in release and speed, the only member that changes; every `test/size` image is unchanged (none calls `erf`). `erf`'s frame 136 → 144 bytes. Re-locked as the step shows it (D253). The fast build does not use this file.
+
+## P12.03a — The strict `lgamma` below 0.53 ulp on (0, 3) (D255)
+
+`__libc_lgamma_core.o` 4420 → 4978 bytes (+558) in release and speed, 320 of them read-only data (the pair tables); `lgamma`'s deepest stack +136 bytes (the Horner's pairs). No `test/size` image changes (none calls `lgamma`). Re-locked as the step shows it (D253). The fast build does not use this file.

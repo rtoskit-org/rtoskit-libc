@@ -22,4 +22,7 @@
  */
 bool contract_lgamma_negative_zeros(void);
 
+/* Whether the build type's lgamma is below 0.53 ulp away from its negative zeros (the strict contract, D252); fast's bound is 1 ulp */
+bool contract_lgamma_half_ulp(void);
+
 #endif /* _LIBM_THRESHOLDS_H */
