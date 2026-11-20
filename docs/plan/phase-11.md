@@ -868,8 +868,8 @@ below AOR; the fast size budget held (re-locked as D187 says).
   141 → 102 (125), `asinf` 73 → 50 (57), `acosf` 66 → 47 (50); x86_64 `asinf`
   76 → 58, `acosf` 73 → 48.
 
-### P11.08d — armv7e-m-dp's `expm1`, `log1p`, `cbrt`, `tan`, `tanh`, `hypot`  `[~]`
-- [ ] The rest of Q63 and Q61's `hypot` (correctly rounded), split further if
+### P11.08d — armv7e-m-dp's `expm1`, `log1p`, `cbrt`, `tan`, `tanh`, `hypot`  `[x]`
+- [x] The rest of Q63 and Q61's `hypot` (correctly rounded), split further if
   P11.08a finds it needed; tests, gains. Split into four steps, one commit each:
 
 #### P11.08d1 — `expm1`, `expm1f`, `log1p`, `log1pf`  `[x]`
@@ -889,9 +889,10 @@ below AOR; the fast size budget held (re-locked as D187 says).
   (T + u)/(1 - T u), 133 → 99 (picolibc 100); tanh with the hyperbolic
   kernel's products inline, 125 → 114 (121); x86_64 tan 253 → 169.
 
-#### P11.08d4 — `hypot`  `[ ]`
-- [ ] The correctly rounded double-FPU `hypot` (D222), below picolibc if it
-  can be; tests, gains.
+#### P11.08d4 — `hypot`  `[x]`
+- [x] The correctly rounded double-FPU `hypot` (D222), below picolibc if it
+  can be; tests, gains. Done (D249): 109 → 61 (picolibc 62), still correctly
+  rounded; x86_64 174 → 162.
 
 ### P11.08e — Comparison, size and docs  `[ ]`
 - [ ] P11.07k's comparison again on every Arm core; the size budget re-locked;

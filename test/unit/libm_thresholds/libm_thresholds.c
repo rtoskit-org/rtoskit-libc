@@ -806,6 +806,14 @@ static void check_double_trigonometric(void)
 	QUIET(near_double(tan(0x1.ab41b09886feap-1), 0x1.1a73d55278c4cp+0) && near_double(tan(0x1.ab41b09886fe9p-1), 0x1.1a73d55278c4bp+0) && near_double(tan(0x1.ab41b09886febp-1), 0x1.1a73d55278c4dp+0) && near_double(tan(0x1.921fb54442d18p-1), 0x1.fffffffffffffp-1));
 	QUIET(near_double(tan(0x1.921fb54442d18p+0), 0x1.d02967c31cdb5p+53) && near_double(tan(0x1.921fb54442d17p+0), 0x1.9153d9443ed0bp+51) && near_double(tan(-0x1.97c26adadefcp-5), -0x1.9818b62a7b5b4p-5) && near_double(tan(-0x1.c158ec815f5cp+13), -0x1.7852d060c8b59p-5));
 	QUIET(near_double(tan(0x1.880acf8ed430fp+0), 0x1.9612cd8cdfd95p+4) && near_double(tan(1.5), 0x1.c33ed50b88777p+3) && near_double(tan(0.8), 0x1.079664793b60bp+0));
+	/*
+	 * P11.08d4 (hypot ordered in floating point, one test on the high words, the midpoint window on the high words, D249):
+	 * correctly rounded each side of the range's 2^-400 and 2^500 and of the 2^27 gap, a NaN in either place, and an
+	 * infinity winning over a NaN (C23 F.10.4.4)
+	 */
+	CHECK(hypot(0x1p-400, 0x1p-400) == 0x1.6a09e667f3bcdp-400 && hypot(0x1.fffffffffffffp-401, 0x1p-401) == 0x1.1e3779b97f4a7p-400 && hypot(0x1p500, 0x1p499) == 0x1.1e3779b97f4a8p+500 && hypot(0x1.fffffffffffffp499, 0x1p499) == 0x1.1e3779b97f4a7p+500);
+	CHECK(hypot(1.0, 0x1p-27) == 1.0 && hypot(0x1.fffffffffffffp-28, 1.0) == 1.0 && hypot(0x1.8p0, 0x1.0000000000001p-28) == 0x1.8p0 && hypot(-0x1.6a09e667f3bcdp0, 0x1.6a09e667f3bccp0) == 2.0);
+	QUIET(isnan(hypot(NAN, 1.0)) && isnan(hypot(1.0, NAN)) && hypot(NAN, -INFINITY) == INFINITY && hypot(INFINITY, NAN) == INFINITY && hypot(-3.0, 4.0) == 5.0);
 	/* regression_fast_tan_upward: rounding upward the shift rounded n up, so tan(pi) and tan(pi/2) missed the slow path and came out with the wrong sign */
 #ifdef FE_UPWARD
 	fesetround(FE_UPWARD);

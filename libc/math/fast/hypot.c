@@ -14,7 +14,7 @@
 #include <math.h>
 #include <stdint.h>
 
-#include "internal/math.h"
+#include "internal/math-fast.h"
 
 /* The squares' pieces and the root: H = h + mid + al + bl exactly, s = sqrt(h), the correction c = d/(2 s) */
 struct hypot_root {
@@ -29,14 +29,14 @@ struct hypot_root {
 
 /*
  * sqrt(a^2 + b^2) for a >= b > 0, a in [2^-400, 2^500) and b within 2^27 of a, so that every piece below is normal: the
- * squares as exact pairs (__libc_dd_product: an fma, or Dekker's product), h + mid their high parts' exact sum (a fast
+ * squares as exact pairs (__libc_fast_fused_product: an fma inline, or Dekker's product), h + mid their high parts' exact sum (a fast
  * two-sum), s = sqrt(h), d = h - s^2 (exact: s^2 is within an ulp of h) plus the low parts, so that the root is
  * s + c, c = d/(2 s), to about 2^-100 (a quotient rather than d times 1/(2 s), so that an exact root raises no inexact)
  */
 [[gnu::always_inline]] static inline void hypot_root(double a, double b, struct hypot_root *r)
 {
-	struct __libc_dd a2 = __libc_dd_product(a, a);
-	struct __libc_dd b2 = __libc_dd_product(b, b);
+	struct __libc_dd a2 = __libc_fast_fused_product(a, a);
+	struct __libc_dd b2 = __libc_fast_fused_product(b, b);
 	struct __libc_dd s2;
 
 	r->h = a2.hi + b2.hi;
@@ -44,8 +44,13 @@ struct hypot_root {
 	r->al = a2.lo;
 	r->bl = b2.lo;
 	r->s = __builtin_sqrt(r->h);
-	s2 = __libc_dd_product(r->s, r->s);
-	r->d = ((r->h - s2.hi) - s2.lo) + (r->mid + (r->al + r->bl));
+	/* h - s^2 exactly: one fused multiply-add (s^2 is within an ulp of h), or the square as Dekker's pair */
+	if (__libc_fpu_fma) {
+		r->d = __builtin_fma(-r->s, r->s, r->h) + (r->mid + (r->al + r->bl));
+	} else {
+		s2 = __libc_dd_product(r->s, r->s);
+		r->d = ((r->h - s2.hi) - s2.lo) + (r->mid + (r->al + r->bl));
+	}
 	r->c = r->d / (r->s + r->s);
 }
 
@@ -70,7 +75,7 @@ static inline int hypot_grow(double *e, int n, double t)
  */
 [[gnu::noinline]] static double hypot_tie(const struct hypot_root *r)
 {
-	struct __libc_dd s2 = __libc_dd_product(r->s, r->s);
+	struct __libc_dd s2 = __libc_fast_fused_product(r->s, r->s);
 	double u = __libc_double_from((__libc_double_bits(r->s) & 0x7ff0000000000000ull) - (52ull << 52));
 	double sign = r->c > 0 ? 1.0 : -1.0;
 	double away = r->s + sign * u;
@@ -92,7 +97,17 @@ static inline int hypot_grow(double *e, int n, double t)
 	return (__libc_double_bits(r->s) & 1) == 0 ? r->s : away;
 }
 
-/* The root rounded once, correctly: s + c, or hypot_tie within 2^-40 ulp of a midpoint (an exact one is a tie) */
+/* The tie test for the common path, out of line and from a and b, so that the common path keeps its pieces in registers */
+[[gnu::noinline]] static double hypot_tie_from(double a, double b)
+{
+	struct hypot_root r;
+
+	hypot_root(a, b, &r);
+
+	return hypot_tie(&r);
+}
+
+/* The root rounded once, correctly: s + c, or the tie test within 2^-40 ulp of a midpoint (an exact one is a tie) */
 [[gnu::always_inline]] static inline double hypot_rounded(double a, double b, struct hypot_root *r)
 {
 	double u;
@@ -104,6 +119,26 @@ static inline int hypot_grow(double *e, int n, double t)
 
 	/* c's own rounding moves the sum only within 2^-52 ulp of a midpoint, which the test above takes */
 	return r->s + r->c;
+}
+
+/*
+ * hypot_rounded for the common path (P11.08d4, D249): the same root, with the midpoint test on the high words alone,
+ * which takes |c| within 2^-20 of half an ulp of s (high word that of u/2 or the one below), a superset of
+ * hypot_rounded's 2^-40 window, about once in 2^19 calls, and the tie test taking a and b
+ */
+[[gnu::always_inline]] static inline double hypot_common(double a, double b)
+{
+	struct hypot_root r;
+	uint32_t half;
+	uint32_t high;
+
+	hypot_root(a, b, &r);
+	half = ((uint32_t)(__libc_double_bits(r.s) >> 32) & 0x7ff00000u) - (53u << 20);
+	high = (uint32_t)(__libc_double_bits(r.c) >> 32) & 0x7fffffffu;
+	if (high - (half - 1u) <= 1u)
+		return hypot_tie_from(a, b);
+
+	return r.s + r.c;
 }
 
 /*
@@ -175,19 +210,18 @@ static inline int hypot_grow(double *e, int n, double t)
  */
 double hypot(double x, double y)
 {
-	uint64_t ia = __libc_double_bits(x) & 0x7fffffffffffffffull;
-	uint64_t ib = __libc_double_bits(y) & 0x7fffffffffffffffull;
-	struct hypot_root r;
+	double fx = __builtin_fabs(x);
+	double fy = __builtin_fabs(y);
+	/* Ordered by a quiet comparison (P11.08d4, D249): with a NaN either way, the tests below send it to hypot_wide */
+	bool swap = isless(fx, fy);
+	double a = swap ? fy : fx;
+	double b = swap ? fx : fy;
+	uint32_t ha = (uint32_t)(__libc_double_bits(a) >> 32);
+	uint32_t hb = (uint32_t)(__libc_double_bits(b) >> 32);
 
-	if (ia < ib) {
-		uint64_t swap = ia;
+	/* a in [2^-400, 2^500) and b within 2^27 of it, on the high words */
+	if (ha - 0x26f00000u >= 0x5f300000u - 0x26f00000u || ha - hb >= (28u << 20))
+		return hypot_wide(__libc_double_bits(a), __libc_double_bits(b));
 
-		ia = ib;
-		ib = swap;
-	}
-	/* a in [2^-400, 2^500) and b within 2^27 of it */
-	if (ia - 0x26f0000000000000ull >= 0x5f30000000000000ull - 0x26f0000000000000ull || ia - ib >= (28ull << 52))
-		return hypot_wide(ia, ib);
-
-	return hypot_rounded(__libc_double_from(ia), __libc_double_from(ib), &r);
+	return hypot_common(a, b);
 }

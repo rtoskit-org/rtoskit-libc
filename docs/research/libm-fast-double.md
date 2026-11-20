@@ -3095,3 +3095,40 @@ Also fixed before the commit:
 | `tan` | 132.8 | 98.8 | 100.0 | 252.7 | 168.7 |
 | `tanh` | 124.6 | 114.4 | 121.2 | 192.8 | 192.9 |
 | `sinh` | 106.6 | 97.3 | — | 133.5 | 133.5 |
+
+## 43. armv7e-m-dp's hypot, still correctly rounded (P11.08d4, D222, D242, D249)
+
+The last function of Q63 and Q61: P11.07b's correctly rounded `hypot` (D222), 108.7 instructions on armv7e-m-dp against picolibc's 61.9. picolibc's `hypot` is only within 1 ulp. Section 37 estimated 55–70 for ours and asked whether a correctly rounded file could get below picolibc at all. It can.
+
+**Where the instructions went:**
+- three out-of-line `__libc_dd_product` calls, each with its frame;
+- the root's pieces kept in a struct whose address went to the rare tie test, so they lived in memory;
+- the ordering and the range test in 64-bit integer arithmetic (12 instructions on a 32-bit core);
+- a midpoint test that built the exact ulp of s from its bits and compared in floating point.
+
+**What changed, the method unchanged:**
+- **The products** take `__libc_fast_fused_product`: inline, the same exact pairs.
+- **h − s²** is one fused multiply-add where the FPU has one. It is exact, since s² is within an ulp of h. Without one, the square stays Dekker's pair.
+- **The ordering** is one quiet comparison and two selects on |x| and |y|, and the range test (|a| in [2^-400, 2^500), b within 2^27) reads the high words. A NaN in either place still reaches `hypot_wide`: as the larger, its exponent fails the range; as the smaller, the exponent difference wraps around.
+- **The midpoint test** reads the high words alone. It takes |c| within 2^-20 of half an ulp of s (the high word of u/2 or the one below), a superset of the 2^-40 window. It fires about once in 2^19 calls, about 400 times in this section's 2·10^8 pairs, so the tie test gets exercised. The tie test takes a and b and recomputes, out of line, and stays exact anywhere the root lies within an ulp of s.
+- **`hypot_wide`** keeps the struct form; it is out of line anyway.
+
+**Correctly rounded:** 2·10^8 pairs on both headers, compared with `libquadmath`'s `hypotq` rounded once, gave no misrounding. The pairs:
+- uniform on [−1000, 1000]²;
+- up to 30 binades apart;
+- Pythagorean triples scaled over 1800 binades, which give exact results;
+- spread from 2^-1074 to 2^1023, both subnormal, and near DBL_MAX.
+
+The special values are also right: an infinity wins over a NaN, NaN, zeros, overflow to infinity.
+
+**Instructions:**
+
+| | armv7e-m-dp before | now | picolibc | x86_64 before | now |
+|---|---:|---:|---:|---:|---:|
+| `hypot` | 108.7 | 60.7 | 61.9 | 174.1 | 161.6 |
+
+Step by step on armv7e-m-dp:
+- 74.7 with the products inline and the struct off the common path;
+- 69.7 with the ordering in floating point;
+- 63.7 with the high-word midpoint test;
+- 60.7 with h − s² fused.
