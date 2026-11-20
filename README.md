@@ -56,7 +56,7 @@ and builds for x86-64 as well, which is where it is developed and tested.
    allocators: nano, TLSF or tiny.
 
 The project's goals, architecture and every design decision (numbered D1 to
-D240) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
+D250) are recorded in [`docs/plan/PLAN.md`](docs/plan/PLAN.md). The work was
 done in phases: conformance first, then size, then speed, then a comparison
 with Arm Optimized Routines, then a round of speed work that the size
 budgets had held back, then the POSIX subset and C++ support, faster sine
@@ -291,6 +291,83 @@ the speed build's Thumb-2 string routines use unaligned `LDR` and `STR`, as
 GCC's own code does, so use the size build if your system sets
 `CCR.UNALIGN_TRP` or copies Device memory with `memcpy`. More in
 [`docs/configuration.md`](docs/configuration.md#size-or-speed).
+
+### Choosing release, speed or fast
+
+The three optimised builds compile the same sources, install the same headers
+and archive names, and behave the same outside the maths library, except for
+speed. A program picks one by the install it links against, so trying another
+is a relink. They trade code size, instructions and, for maths only, accuracy:
+
+| | `release` | `speed` | `fast` |
+|---|---|---|---|
+| Optimised for | the least code | fewer instructions, for a few hundred bytes more | the fewest maths instructions, for maths accuracy |
+| Strings, `printf`, `strto*`, `qsort` | compact byte loops | word-at-a-time and block routines, conversion fast paths | as `speed` |
+| Float maths | correctly rounded (a documented handful within 1 ulp on the soft-float and single-precision cores) | as `release`; fixed point on the cores without an FPU | below 1 ulp (1.5 for `tanf` and the hyperbolic functions), to nearest |
+| Double maths | below 0.53 ulp | as `release` | below 1 ulp (1.5 for `tan`, the hyperbolic functions and `erf`); `sqrt` and `hypot` correctly rounded |
+| Rounding modes (`fesetround`, where the core's `<fenv.h>` has them) | every function in every mode (floats correctly rounded, doubles within 3 ulp) | as `release` | to nearest only: other modes keep the result's sign, not its accuracy |
+| `errno`, exceptions, special values | C23 Annex F | as `release` | as `release` |
+| Unaligned access | none | the Thumb-2 string routines use unaligned `LDR`/`STR` | as `speed` |
+
+**Code size** of whole `test/size` programs (text plus rodata, bytes):
+
+| Core | Program | `release` | `speed` | `fast` |
+|---|---|---:|---:|---:|
+| Cortex-M0 (`armv6-m`) | `printf("%d")` | 7,769 | 8,209 | 8,209 |
+| | float maths | 9,032 | 15,456 | 12,684 |
+| | float and double maths | 33,668 | 42,036 | 43,228 |
+| Cortex-M4F (`armv7e-m`) | `printf("%d")` | 7,181 | 7,773 | 7,773 |
+| | float maths | 4,814 | 4,814 | 4,832 |
+| | float and double maths | 26,940 | 30,716 | 31,982 |
+| Cortex-M7 (`armv7e-m-dp`) | `printf("%d")` | 7,216 | 7,808 | 7,808 |
+| | float maths | 9,478 | 9,822 | 5,654 |
+| | float and double maths | 12,070 | 12,422 | 15,976 |
+
+The float maths program calls `sinf`, `cosf`, `expf`, `logf`, `powf`, `sqrtf` and
+`fabsf`; the mixed one adds `sin`, `cos`, `tan`, `exp`, `log`, `pow`, `atan2`,
+`sqrt`, `fmod` and `floor`.
+
+**Instructions** each build takes, as a ratio to the fast build (geometric
+means of the `test/bench` cases under qemu; everything outside maths is the
+same in `speed` and `fast`):
+
+| Core | strings | `strto*` | `qsort` | maths: `release` | `speed` | `fast` |
+|---|---:|---:|---:|---:|---:|---:|
+| Cortex-M0 (`armv6-m`) | 1.13 | 8.09 | 3.75 | 11.6 | 6.2 | 1.00 |
+| Cortex-M3 (`armv7-m`) | 1.47 | 6.05 | 3.67 | 18.9 | 9.3 | 1.00 |
+| Cortex-M4F, M33 (`armv7e-m`, `armv8-m.main`) | 1.51 | 6.17 | 3.67 | 6.8 | 5.8 | 1.00 |
+| Cortex-M7 (`armv7e-m-dp`) | 1.51 | 6.55 | 3.67 | 2.9 | 2.9 | 1.00 |
+
+The first three columns are `release` against `speed` (and `fast`), which
+are 1.00 there.
+
+**Which to use:**
+
+- **`release`** when flash is what runs out, when the program spends little
+  of its time in the library (I/O-bound or event-driven code), or when the
+  system traps unaligned accesses (`CCR.UNALIGN_TRP`) or copies Device memory
+  with `memcpy`. It has the full accuracy and every rounding mode.
+- **`speed`** when string handling, formatting or parsing matter, for a few
+  hundred bytes of code (a few kilobytes more where it brings in the
+  fixed-point float maths of the cores without an FPU): the same results as `release`, with `strtod` and
+  `strtol` six to eight times quicker and the bulk copies several times
+  quicker. On cores without an FPU it also takes about half the maths
+  instructions, with no change of results.
+- **`fast`** when maths dominates and an error below an ulp is acceptable:
+  control loops, filters and signal processing, sensor fusion, graphics. Its
+  maths take a third to a nineteenth of the instructions of `release`, and
+  less than picolibc's on every core but the Cortex-M7, where `asin`,
+  `acos`, `atan` and `log1p` remain up to 12 % above
+  ([`docs/perf/phase-11.md`](docs/perf/phase-11.md)). Keep to `release` or
+  `speed` where results must match a reference bit for bit, where code
+  changes the rounding mode (interval arithmetic, error bounds), or where
+  the last digit matters. Its code is smaller than `speed`'s for float-only
+  programs on most cores, and larger where double maths come in: by 3–4 %
+  on the Cortex-M0 and M4F, and by 29 % on the Cortex-M7.
+
+A program cannot mix builds: each installs its own `libc.a`. The contract in
+full is in [`docs/research/fast-math.md`](docs/research/fast-math.md) §4;
+the per-function worst cases are in the `libm-fast-*.md` notes.
 
 ### Make goals
 
@@ -534,7 +611,7 @@ Read these first:
 - [`docs/configuration.md`](docs/configuration.md): the archives, the build
   variants, the cores, the allocators, the ports and parent builds.
 - [`docs/plan/PLAN.md`](docs/plan/PLAN.md): goals, scope and architecture,
-  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D240) and the
+  the [decision log](docs/plan/PLAN.md#2-decision-log) (D1 to D250) and the
   [open questions](docs/plan/PLAN.md#7-open-questions).
 - [`docs/toolchain.md`](docs/toolchain.md): the tool versions we build and
   test with.
