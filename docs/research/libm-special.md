@@ -120,3 +120,122 @@ unchanged lgamma.
 - Also checked: the F.10.5 special cases, the exact factorials 0! … 22!,
   and the overflow and underflow boundaries (erfc(27), erfc(30), tgamma
   past 171.6 and below -190, and the sign of Γ there).
+
+## Phase 12: the strict `erf` below 2^-28 and `lgamma` (P12.01, Q57, Q62)
+
+The vectors above (600-bit mpmath at chosen points) found neither defect.
+These measurements took the x86_64 release `libc.a` with every symbol
+renamed (`objcopy --prefix-symbols`), linked into a host program and
+compared with `libquadmath`. `lgammaq` was itself checked against 300-bit
+mpmath at the 3562 points around the negative zeros, and none was
+misrounded.
+
+### Which files
+
+- **`erf`:** `libc/math/erf.c` alone, on every core in debug, release and
+  speed. `erfl` calls it. In `fast`, `libc/math/fast/erf.c` and
+  `dp-fixed/fast/erf.c` replace it everywhere.
+- **`lgamma`:** `libc/math/__libc_lgamma_core.c`, through `lgamma.c` and
+  `lgammal.c`, on every core in debug, release and speed (`fast` has its own
+  files, D225 and D226). The generic `lgammaf` rounds the double result once
+  more: its sweeps below show no misrounding, since the double's error is far
+  below a float's ulp everywhere sampled. The single-precision FPU cores'
+  `lgammaf` has its own core (`sp-nearest/__libc_lgammaf_core.c`).
+
+### `erf` below 2^-28 (Q57)
+
+erf(x) = (2/√π)(x − x³/3 + …). Below 2^-28 the strict file returns x·2/√π,
+an exact pair rounded once (`__libc_dd_scale_product`, through the 2^200
+scaling so that subnormal results round once). It drops x³·p0 with
+p0 = −2/(3√π) = −0x1.812746b0379e7p-2, which is x²/3 of the result relative,
+up to 2^-57.6 at 2^-28, about 0.03 ulp.
+
+| Range (samples) | Worst error | Misrounded |
+|---|---:|---:|
+| [2^-28, 2^-27) (10^6) | 0.5000 ulp | 0 |
+| [2^-34, 2^-28) (4·10^6) | **0.5325 ulp** (−0x1.c51f10a1c1f6bp-29) | 14,566 (0.36 %) |
+| [2^-60, 2^-34) (2·10^6) | 0.5000 ulp | 1 |
+| [2^-1022, 2^-60) (10^6) | 0.5000 ulp | 0 |
+| subnormal (2·10^5) | 0.5000 ulp | 0 |
+| [2^-27, 1/2) (2·10^6, the series) | 0.5106 ulp | 143 |
+
+**Fix:** add x·(x·x)·p0 to the scaled pair's low part before its one
+rounding, in plain double. The term is at most 2^-57.6 of the result, so
+its own rounding is about 2^-110 of the result. x·x underflows to 0 below
+2^-538, where the term is far below the result's last place anyway. The next
+term, x⁵/10, is below 2^-115 relative. A host prototype (an fma pair for
+x·2/√π plus the term) gave a worst of 0.500000 ulp, with none misrounded in
+8·10^6 samples over [2^-34, 2^-28). The cost is three multiplies and an add
+on the tiny path only. No bench case reaches it.
+
+### `lgamma` (Q62, and the positive range)
+
+Sampled against `lgammaq`:
+
+| Range (samples) | Worst error | Misrounded | Worst absolute |
+|---|---:|---:|---:|
+| (0, 3/4) (4·10^5) | 0.5566 ulp | 0.62 % | 2^-50 |
+| [3/4, 5/4) (4·10^5) | 0.6005 ulp | 0.95 % | 2^-55.8 |
+| [5/4, 7/4) (4·10^5) | **0.6785 ulp** (0x1.565cf5c906bfcp+0) | 4.31 % | 2^-56.6 |
+| [7/4, 9/4) (4·10^5) | 0.5276 ulp | 0.28 % | 2^-56.9 |
+| [9/4, 3) (4·10^5) | 0.5910 ulp | 1.23 % | 2^-54 |
+| [3, 6) (4·10^5) | 0.5203 ulp | 0.22 % | 2^-51 |
+| [6, 12) (4·10^5) | 0.5024 ulp | 0.04 % | 2^-49 |
+| [12, 10^6) (7·10^5) | 0.5003 ulp | ≤ 0.01 % | — |
+| (−2, 0) (10^6) | 0.5195 ulp | 0.22 % | 2^-50 |
+| (−24, −2) (2·10^6) | 3266 ulp | 0.29 % | 2^-48 |
+| (−171, −24) (10^6) | 0.5000 ulp | 0.001 % | 2^-44 |
+| `lgammaf` on (−24, 0) (3·10^6) | 0.5000 ulp | 0 | — |
+
+**Near the negative zeros:** 44 zeros from −2.4570 to −24, found by
+bisection in 300-bit mpmath. At ±40 ulps of each zero's nearest double, and
+at 2^6 to 2^38 ulps away, 2453 of 3562 points are misrounded. The worst is
+2.3·10^13 ulp at −0x1.5fb410a1bd901p+1 (a result of 1.7·10^-16), and the
+largest absolute error is 2^-49.0. lgamma(−2.5) is −0x1.ccbf9f5ed0f15p-5, at
+0.535 ulp. Q62 recorded 2^-57 from P11.07d1's sample; the zeros themselves
+are worse.
+
+**Causes:**
+- **Negative x:** the reflection log π − log|sin πx| − lgamma(1 − x). Near
+  a zero the result is the small difference of terms near log n!, so their
+  absolute errors are the result's. D225 measured the same for the fast
+  file's first form.
+- **(5/4, 7/4) and (9/4, 3):** the shift to x + n ≥ 12, Stirling there, then
+  − log(x(x+1)…). The result (about −0.12 at the minimum, 0.28 at 5/2) is
+  the difference of terms near 18, and Stirling's series, in plain double,
+  is about 2^-60 absolutely.
+- **Near 1 and 2 (|z| ≤ 1/4):** the ζ series' tail, coefficients and Horner
+  steps in plain double, reaches 0.60 ulp at z = 1/4.
+
+**The maintainer's choice (D252):** an absolute bound near the negative
+zeros, as the fast contract has it, and below 0.53 ulp elsewhere.
+
+**The plan for the core** (P12.03a, then b):
+- **(a) Positive x below 3.** Reduce to [1, 2]:
+  - lgamma(x) = lgamma(1 + x) − log x below 1 (both relative near x = 1,
+    where lgamma(2 + z) and log are small);
+  - lgamma(x) = lgamma(x − 1) + log(x − 1) on [2, 3), lgamma(x − 1) ≤ 0 and
+    log(x − 1) ≥ 0 there. They cancel most near 2, by at most a factor
+    1/(1 − γ) ≈ 2.4.
+
+  On [1, 2]:
+  - within 1/4 of 1 and 2, the ζ series with its third term as a pair and
+    the tail's coefficients as constants (not formed at run time);
+  - on (5/4, 7/4), a Taylor series about 3/2: ψ^(k)(3/2)/k! fitted in
+    mpmath. Their ratio is about 1/6 for |t| ≤ 1/4, so about 25 terms reach
+    2^-65 absolutely (2^-62 of the result near the minimum, −0.1215), with
+    the first three as pairs.
+
+  Estimated at about 200 bytes of coefficients. From 3 up, the shift and
+  Stirling stay (0.52 ulp, below the 0.53 figure).
+- **(b) Negative x in (−24, −1), not an integer:** D225's recurrence
+  lgamma(x) = lgamma(z) − log|P|, z = x + n + 2 in (1, 2), P = x(x + 1)…
+  as a normalized pair product (up to 24 products), lgamma(z) from (a).
+  Near a zero both terms are small, so the result keeps about 2^-60
+  absolutely (D226 measured 2^-60 for the fast files to −18). Below −24 and
+  in (−1, 0) the reflection stays: its worst there is 0.52 ulp.
+
+**Q60 (D253):** each step re-locks its own size and bench growth in release
+and speed, recorded in `docs/size/` and `docs/perf/`. None of the
+`test/size` programs calls `erf` or `lgamma`, so only the archive members
+change.
